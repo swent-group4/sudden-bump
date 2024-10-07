@@ -1,5 +1,5 @@
 [versions]
-agp = "8.3.0"
+agp = "8.6.0"
 kotlin = "1.8.10"
 coreKtx = "1.12.0"
 ktfmt = "0.17.0"
@@ -15,6 +15,12 @@ lifecycleRuntimeKtx = "2.7.0"
 kaspresso = "1.5.5"
 robolectric = "4.11.1"
 sonar = "4.4.1.3373"
+playServicesMaps = "19.0.0"
+mapsCompose = "4.3.3"
+mapsComposeUtils = "4.3.0"
+playServicesAuth = "21.2.0"
+media3CommonKtx = "1.4.1"
+playServicesLocation = "21.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,6 +46,14 @@ kaspresso = { group = "com.kaspersky.android-components", name = "kaspresso", ve
 kaspresso-compose = { group = "com.kaspersky.android-components", name = "kaspresso-compose-support", version.ref = "kaspresso" }
 
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
+
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
+maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
+maps-compose-utils = { module = "com.google.maps.android:maps-compose-utils", version.ref = "mapsComposeUtils" }
+androidx-media3-common-ktx = { group = "androidx.media3", name = "media3-common-ktx", version.ref = "media3CommonKtx" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
