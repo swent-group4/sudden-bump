@@ -6,14 +6,25 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.resources.C
+import com.swent.suddenbump.ui.map.MapScreen
+import com.swent.suddenbump.ui.messages.MessagesScreen
+import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Route
+import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.overview.AddContactScreen
+import com.swent.suddenbump.ui.overview.ConversationScreen
+import com.swent.suddenbump.ui.overview.OverviewScreen
+import com.swent.suddenbump.ui.overview.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +48,7 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              Greeting("Hello there", Modifier.semantics { testTag = C.Tag.greeting })
+              SuddenBumpApp()
             }
       }
     }
@@ -45,45 +56,35 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-  Text(text = "Hello $name!", modifier = modifier.semantics { testTag = C.Tag.greeting })
-}
-
-/*@Composable
 fun SuddenBumpApp() {
-    val navController = rememberNavController()
-    val navigationActions = NavigationActions(navController)
+  val navController = rememberNavController()
+  val navigationActions = NavigationActions(navController)
 
-   // val listToDosViewModel: ListToDosViewModel = viewModel(factory = ListToDosViewModel.Factory)
+  // val listToDosViewModel: ListToDosViewModel = viewModel(factory = ListToDosViewModel.Factory)
 
-    NavHost(navController = navController, startDestination = Route.AUTH) {
-        navigation(
-            startDestination = Screen.AUTH,
-            route = Route.AUTH,
-        ) {
-            composable(Screen.AUTH) { SignInScreen(navigationActions) }
-        }
-
-        navigation(
-            startDestination = Screen.OVERVIEW,
-            route = Route.OVERVIEW,
-        ) {
-            composable(Screen.OVERVIEW) { OverviewScreen(listToDosViewModel, navigationActions) }
-            composable(Screen.ADD_CONTACT) { AddContactScreen(listToDosViewModel, navigationActions) }
-            composable(Screen.CONV) { ConvScreen(listToDosViewModel, navigationActions) }
-        }
-
-        navigation(
-            startDestination = Screen.MAP,
-            route = Route.MAP,
-        ) {
-            composable(Screen.MAP) { MapScreen(navigationActions) }
-        }
+  NavHost(navController = navController, startDestination = Route.OVERVIEW) {
+    navigation(
+        startDestination = Screen.OVERVIEW,
+        route = Route.OVERVIEW,
+    ) {
+      composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
+      composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
+      composable(Screen.CONV) { ConversationScreen(navigationActions) }
+      composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
     }
-}*/
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-  SampleAppTheme { Greeting("Android") }
+    navigation(
+        startDestination = Screen.MAP,
+        route = Route.MAP,
+    ) {
+      composable(Screen.MAP) { MapScreen(navigationActions) }
+    }
+
+    navigation(
+        startDestination = Screen.MESS,
+        route = Route.MESS,
+    ) {
+      composable(Screen.MESS) { MessagesScreen(navigationActions) }
+    }
+  }
 }

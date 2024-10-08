@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.MailOutline
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -11,6 +12,7 @@ object Route {
   const val OVERVIEW = "Overview"
   const val MAP = "Map"
   const val AUTH = "Auth"
+  const val MESS = "Messages"
 }
 
 object Screen {
@@ -19,6 +21,8 @@ object Screen {
   const val AUTH = "Auth Screen"
   const val MAP = "Map Screen"
   const val CONV = "Conversation Screen"
+  const val MESS = "Messages Screen"
+  const val SETTINGS = "Settings Screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
@@ -26,10 +30,14 @@ data class TopLevelDestination(val route: String, val icon: ImageVector, val tex
 object TopLevelDestinations {
   val OVERVIEW =
       TopLevelDestination(route = Route.OVERVIEW, icon = Icons.Outlined.Menu, textId = "Overview")
+  val MESSAGES =
+      TopLevelDestination(
+          route = Route.MESS, icon = Icons.Outlined.MailOutline, textId = "Messages")
   val MAP = TopLevelDestination(route = Route.MAP, icon = Icons.Outlined.Place, textId = "Map")
 }
 
-val LIST_TOP_LEVEL_DESTINATION = listOf(TopLevelDestinations.OVERVIEW, TopLevelDestinations.MAP)
+val LIST_TOP_LEVEL_DESTINATION =
+    listOf(TopLevelDestinations.OVERVIEW, TopLevelDestinations.MESSAGES, TopLevelDestinations.MAP)
 
 open class NavigationActions(
     private val navController: NavHostController,
@@ -48,7 +56,7 @@ open class NavigationActions(
       // avoid building up a large stack of destinations
       popUpTo(navController.graph.findStartDestination().id) {
         saveState = true
-        inclusive = true
+        // inclusive = true
       }
 
       // Avoid multiple copies of the same destination when reselecting same item
