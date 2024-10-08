@@ -167,6 +167,9 @@ dependencies {
   implementation(libs.androidx.navigation.fragment.ktx)
   implementation(libs.androidx.navigation.ui.ktx)
 
+  // Phone number formatting
+  implementation(libs.libphonenumber)
+
   // Google Service and Maps
   implementation(libs.play.services.maps)
   implementation(libs.maps.compose)

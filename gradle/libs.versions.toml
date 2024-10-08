@@ -7,6 +7,7 @@ gms = "4.4.2"
 ktfmt = "0.17.0"
 
 # UI Compose
+libphonenumber = "8.12.40"
 mockitoAndroid = "5.13.0"
 ui = "1.6.8"
 uiTestJunit4 = "1.6.8"
@@ -100,6 +101,7 @@ kaspresso-allure-support = { module = "com.kaspersky.android-components:kaspress
 kaspresso-compose-support = { module = "com.kaspersky.android-components:kaspresso-compose-support", version.ref = "kaspressoComposeSupport" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+libphonenumber = { module = "com.googlecode.libphonenumber:libphonenumber", version.ref = "libphonenumber" }
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 maps-compose-utils = { module = "com.google.maps.android:maps-compose-utils", version.ref = "mapsComposeUtils" }
 material = { module = "com.google.android.material:material", version.ref = "materialVersion" }
