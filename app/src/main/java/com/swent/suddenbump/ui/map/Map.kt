@@ -1,4 +1,4 @@
-package com.android.sample.ui.map
+package com.swent.suddenbump.ui.map
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -10,9 +10,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.core.content.ContextCompat
-import com.android.sample.model.LocationGetter
-import com.android.sample.resources.C
+import com.swent.suddenbump.model.LocationGetter
 import com.example.locationpermission.LocationPermissionHelper
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap

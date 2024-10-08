@@ -1,4 +1,4 @@
-package com.android.sample.model
+package com.swent.suddenbump.model
 
 import android.Manifest
 import android.annotation.SuppressLint
