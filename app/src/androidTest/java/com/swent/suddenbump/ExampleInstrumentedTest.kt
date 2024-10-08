@@ -1,4 +1,4 @@
-package com.android.sample
+package com.swent.suddenbump
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
