@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import com.swent.suddenbump.resources.C
+import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -24,7 +25,7 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              Greeting("Android")
+              MapScreen(this)
             }
       }
     }
