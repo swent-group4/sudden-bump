@@ -53,16 +53,16 @@ class LocationGetterTest {
     assertNotNull(locationGetter)
   }
 
-  //  @Test
-  //  fun requestLocationUpdates_permissionDenied_callsOnLocationFailure() {
-  //    ShadowApplication.getInstance()
-  //        .denyPermissions(android.Manifest.permission.ACCESS_FINE_LOCATION)
-  //
-  //    locationGetter.requestLocationUpdates()
-  //
-  //    // Ensure that the failure message is handled correctly (you can mock listener if needed)
-  //    // Replace with assertions to ensure correctness
-  //  }
+  @Test
+  fun requestLocationUpdates_permissionDenied_callsOnLocationFailure() {
+    ShadowApplication.getInstance()
+        .denyPermissions(android.Manifest.permission.ACCESS_FINE_LOCATION)
+
+    locationGetter.requestLocationUpdates()
+
+    // Ensure that the failure message is handled correctly (you can mock listener if needed)
+    // Replace with assertions to ensure correctness
+  }
 
   @Test
   fun onLocationResult_locationAvailable_callsOnLocationResult() {
@@ -105,12 +105,12 @@ class LocationGetterTest {
     // Add your assertions here for the failure case
   }
 
-  //  @Test
-  //  fun stopLocationUpdates_removesLocationUpdates() {
-  //    locationGetter.requestLocationUpdates()
-  //
-  //    locationGetter.stopLocationUpdates()
-  //
-  //    assertNotNull(locationGetter)
-  //  }
+  @Test
+  fun stopLocationUpdates_removesLocationUpdates() {
+    locationGetter.requestLocationUpdates()
+
+    locationGetter.stopLocationUpdates()
+
+    assertNotNull(locationGetter)
+  }
 }

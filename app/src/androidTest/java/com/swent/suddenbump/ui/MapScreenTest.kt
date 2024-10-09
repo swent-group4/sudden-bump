@@ -19,7 +19,7 @@ class MapScreenTest {
     // Start the composable under test
     composeTestRule.setContent {
       // Pass a mock context to MapScreen
-      MapScreen(LocalContext.current)
+      MapScreen(LocalContext.current, null)
     }
 
     // Check that the Google Map is being displayed by looking for the testTag

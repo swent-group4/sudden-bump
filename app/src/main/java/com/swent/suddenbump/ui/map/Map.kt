@@ -3,7 +3,6 @@ package com.swent.suddenbump.ui.map
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
@@ -14,51 +13,17 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberMarkerState
-import com.swent.suddenbump.model.LocationGetter
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MapScreen(context: Context) {
-  var location by remember { mutableStateOf<Location?>(null) }
-
-  LocationHandler(context) { newLocation -> location = newLocation }
+fun MapScreen(context: Context, location: Location?) {
 
   Scaffold(modifier = Modifier.testTag("overviewScreen"), content = { SimpleMap(location) })
 }
 
 @Composable
-fun LocationHandler(context: Context, onLocationUpdate: (Location?) -> Unit) {
-  val locationGetter = remember {
-    LocationGetter(
-        context,
-        object : LocationGetter.LocationListener {
-          override fun onLocationResult(location: Location?) {
-            onLocationUpdate(location)
-          }
-
-          override fun onLocationFailure(message: String) {
-            Log.e("LocationHandler", "Location Error: $message")
-          }
-        })
-  }
-
-  LaunchedEffect(Unit) {
-    //        val locationPermissionHelper = LocationPermissionHelper(context as ComponentActivity)
-    //
-    //        if (locationPermissionHelper.isLocationPermissionGranted()) {
-    //            locationGetter.requestLocationUpdates()
-    //        } else {
-    //            locationPermissionHelper.requestLocationPermission()
-    //        }
-    locationGetter.requestLocationUpdates()
-  }
-
-  DisposableEffect(Unit) { onDispose { locationGetter.stopLocationUpdates() } }
-}
-
-@Composable
 fun SimpleMap(location: Location?) {
-  val markerState = rememberMarkerState(position = LatLng(35.0, 139.0))
+  val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
 
   LaunchedEffect(location) {
     location?.let { markerState.position = LatLng(it.latitude, it.longitude) }

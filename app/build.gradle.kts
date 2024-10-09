@@ -170,14 +170,12 @@ dependencies {
     testImplementation(libs.robolectric)
 
     // Google Service and Maps
-    implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
     implementation(libs.maps.compose.utils)
     implementation(libs.play.services.auth)
 
 
     // Testing Unit
-    testImplementation(libs.junit)
     androidTestImplementation(libs.mockk)
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
@@ -194,7 +192,6 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     androidTestImplementation(libs.mockito.android)
     androidTestImplementation(libs.mockito.kotlin)
-    testImplementation(libs.robolectric)
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.allure.support)
     //androidTestImplementation(libs.kaspresso.compose.support)

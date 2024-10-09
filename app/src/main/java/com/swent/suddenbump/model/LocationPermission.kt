@@ -1,4 +1,4 @@
-package com.example.locationpermission
+package com.swent.suddenbump.model
 
 import android.Manifest
 import android.app.Activity
