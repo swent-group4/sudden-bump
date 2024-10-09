@@ -176,6 +176,8 @@ dependencies {
   // Firebase
   implementation(libs.firebase.database.ktx)
   implementation(libs.firebase.firestore)
+  implementation(platform(libs.firebase.bom))
+  implementation(libs.firebase.storage)
   implementation(libs.firebase.ui.auth)
   implementation(libs.firebase.auth.ktx)
   implementation(libs.firebase.auth)
