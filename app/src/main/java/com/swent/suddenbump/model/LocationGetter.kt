@@ -7,7 +7,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
+import androidx.activity.ComponentActivity
 import androidx.core.app.ActivityCompat
+import com.example.locationpermission.LocationPermissionHelper
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -38,12 +40,14 @@ class LocationGetter(private val context: Context, private val listener: Locatio
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             listener.onLocationFailure("Location permission not granted")
-            return
+            val locationPermissionHelper = LocationPermissionHelper(context as ComponentActivity)
+            locationPermissionHelper.requestLocationPermission()
+            requestLocationUpdates()
         }
 
         val locationRequest = LocationRequest.create().apply {
-            interval = 10000 // 10 seconds
-            fastestInterval = 5000 // 5 seconds
+            interval = 5000 // 5 seconds
+            fastestInterval = 1000 // 1 seconds
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
 

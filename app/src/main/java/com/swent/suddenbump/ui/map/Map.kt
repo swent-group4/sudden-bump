@@ -46,13 +46,14 @@ fun LocationHandler(context: Context, onLocationUpdate: (Location?) -> Unit) {
     }) }
 
     LaunchedEffect(Unit) {
-        val locationPermissionHelper = LocationPermissionHelper(context as ComponentActivity)
-
-        if (locationPermissionHelper.isLocationPermissionGranted()) {
-            locationGetter.requestLocationUpdates()
-        } else {
-            locationPermissionHelper.requestLocationPermission()
-        }
+//        val locationPermissionHelper = LocationPermissionHelper(context as ComponentActivity)
+//
+//        if (locationPermissionHelper.isLocationPermissionGranted()) {
+//            locationGetter.requestLocationUpdates()
+//        } else {
+//            locationPermissionHelper.requestLocationPermission()
+//        }
+        locationGetter.requestLocationUpdates()
     }
 
     DisposableEffect(Unit) {
@@ -62,9 +63,10 @@ fun LocationHandler(context: Context, onLocationUpdate: (Location?) -> Unit) {
     }
 }
 
+
 @Composable
 fun SimpleMap(location: Location?) {
-    val markerState = rememberMarkerState(position = LatLng(0.0, 0.0))
+    val markerState = rememberMarkerState(position = LatLng(35.0, 139.0))
 
     LaunchedEffect(location) {
         location?.let {

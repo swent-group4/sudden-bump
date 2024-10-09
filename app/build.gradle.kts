@@ -5,8 +5,9 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.ktfmt)
-    alias(libs.plugins.sonar)
+    //alias(libs.plugins.sonar)
     id("jacoco")
+    id("org.sonarqube") version "5.1.0.4882"
 }
 
 android {
@@ -108,9 +109,8 @@ android {
 
 sonar {
     properties {
-        property("sonar.projectKey", "gf_android-sample")
-        property("sonar.projectName", "Android-Sample")
-        property("sonar.organization", "gabrielfleischer")
+        property("sonar.projectKey", "swent-group4_sudden-bump")
+        property("sonar.organization", "swent-group4")
         property("sonar.host.url", "https://sonarcloud.io")
         // Comma-separated paths to the various directories containing the *.xml JUnit report files. Each path may be absolute or relative to the project base directory.
         property("sonar.junit.reportPaths", "${project.layout.buildDirectory.get()}/test-results/testDebugunitTest/")
@@ -135,6 +135,8 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
+    implementation(libs.test.core.ktx)
+    implementation(libs.androidx.lifecycle.common.jvm)
     //implementation(libs.androidx.media3.common.ktx)
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
@@ -197,6 +199,7 @@ dependencies {
     androidTestImplementation(libs.kaspresso.allure.support)
     //androidTestImplementation(libs.kaspresso.compose.support)
     testImplementation(libs.kotlinx.coroutines.test)
+    implementation(kotlin("test"))
 }
 
 tasks.withType<Test> {
