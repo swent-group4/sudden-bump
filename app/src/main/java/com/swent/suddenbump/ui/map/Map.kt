@@ -1,15 +1,11 @@
 package com.swent.suddenbump.ui.map
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.location.Location
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
@@ -32,13 +28,13 @@ fun MapScreen(navigationActions: NavigationActions, location: Location?) {
       content = { pd -> SimpleMap(location) })
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewMapScreen() {
+// @Preview(showBackground = true)
+// @Composable
+// fun PreviewMapScreen() {
 //    val navController = rememberNavController()
 //    val navigationActions = NavigationActions(navController)
 //    MapScreen(navigationActions)
-//}
+// }
 
 @Composable
 fun SimpleMap(location: Location?) {
@@ -53,4 +49,3 @@ fun SimpleMap(location: Location?) {
         Marker(state = markerState, title = "Current Position", snippet = "DescriptionTest")
       }
 }
-

@@ -153,6 +153,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.common.jvm)
     //implementation(libs.androidx.media3.common.ktx)
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.espresso.intents)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
 
