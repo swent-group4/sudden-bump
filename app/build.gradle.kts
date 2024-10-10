@@ -5,8 +5,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.ktfmt)
-    //alias(libs.plugins.gms)
-    //alias(libs.plugins.sonar)
+    alias(libs.plugins.gms)
     id("jacoco")
     id("org.sonarqube") version "5.1.0.4882"
 }
@@ -204,6 +203,7 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
+    implementation(libs.firebase.bom)
 
 
     // Testing Unit

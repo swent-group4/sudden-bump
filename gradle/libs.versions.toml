@@ -1,6 +1,7 @@
 [versions]
 # Plugins
 agp = "8.6.1"
+firebaseBom = "33.4.0"
 json = "20240303"
 kotlin = "1.9.0"
 gms = "4.4.2"
@@ -74,6 +75,7 @@ lifecycleCommonJvm = "2.8.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

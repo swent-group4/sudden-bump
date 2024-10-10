@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -49,6 +48,7 @@ class MainActivity : ComponentActivity() {
   private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
   private lateinit var locationGetter: LocationGetter
 
+  @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     var newLocation by mutableStateOf<Location?>(null)
@@ -66,14 +66,15 @@ class MainActivity : ComponentActivity() {
                 Log.e("MainActivity", "Location Error: $message")
               }
             })
+
     FirebaseApp.initializeApp(this)
-    //// Initialize Firebase Auth
-    // auth = FirebaseAuth.getInstance()
-    // auth.currentUser?.let {
-    //  // Sign out the user if they are already signed in
-    //  // This is useful for testing purposes
-    //  auth.signOut()
-    // }
+    // Initialize Firebase Auth
+    auth = FirebaseAuth.getInstance()
+    auth.currentUser?.let {
+      // Sign out the user if they are already signed in
+      // This is useful for testing purposes
+      auth.signOut()
+    }
 
     setContent {
       SampleAppTheme {
@@ -134,7 +135,7 @@ class MainActivity : ComponentActivity() {
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
-          composable(Screen.CONTACT) { ContactScreen(navigationActions) }
+        composable(Screen.CONTACT) { ContactScreen(navigationActions) }
       }
 
       navigation(
@@ -167,41 +168,8 @@ class MainActivity : ComponentActivity() {
         locationGetter.requestLocationUpdates()
       }
       else -> {
-        Toast.makeText(this, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
+        // Toast.makeText(this, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
       }
     }
   }
-
-  //    @Composable
-  //    fun LocationHandler(context: Context, onLocationUpdate: (Location?) -> Unit) {
-  //        var locationGetter = remember {
-  //            LocationGetter(
-  //                context,
-  //                object : LocationGetter.LocationListener {
-  //                    override fun onLocationResult(location: Location?) {
-  //                        onLocationUpdate(location)
-  //                    }
-  //
-  //                    override fun onLocationFailure(message: String) {
-  //                        Log.e("LocationHandler", "Location Error: $message")
-  //                    }
-  //                })
-  //        }
-  //
-  //        LaunchedEffect(Unit) {
-  //            Log.e("CREATED", "LocationHandler, LaunchedEffect")
-  //            val locationPermissionHelper = LocationPermissionHelper(context as
-  // ComponentActivity)
-  //
-  //            if (!locationPermissionHelper.isLocationPermissionGranted()) {
-  //                locationPermissionHelper.requestLocationPermission()
-  //            }
-  //            locationGetter.requestLocationUpdates()
-  //            Log.e("CREATED", "LocationHandler, after requestLocationUpdates")
-  //        }
-  //
-  //        DisposableEffect(Unit) { onDispose { locationGetter.stopLocationUpdates() } }
-  //
-  //    }
-
 }
