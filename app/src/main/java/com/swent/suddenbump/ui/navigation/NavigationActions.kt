@@ -24,6 +24,7 @@ object Screen {
   const val MESS = "Messages Screen"
   const val SETTINGS = "Settings Screen"
   const val SIGNUP = "Sign Up Screen"
+  const val CONTACT = "Contact Page"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)

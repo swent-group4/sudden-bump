@@ -1,4 +1,4 @@
-package com.swent.suddenbump
+package com.swent.suddenbump.ui.profile
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,9 +26,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.swent.suddenbump.R
+import com.swent.suddenbump.ui.navigation.NavigationActions
 
 //import coil3.compose.AsyncImage
 
@@ -44,39 +50,30 @@ data class MockUser(
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ProfileScreen() {
+fun ContactScreen(navigationActions: NavigationActions) {
     val user = MockUser(
         uid = "123",
-        firstName= "John",
-        lastName= "Doe",
-        profilePictureUrl = "https://i.pravatar.cc/300",
+        firstName= "Jane",
+        lastName= "Smith",
+        profilePictureUrl = "https://api.dicebear.com/9.x/lorelei/png?seed=JaneSmith",
         phoneNumber = "+3345676543",
-        email = "john.doe@gmail.com",
+        email = "jane.smith@gmail.com",
         birthDate = "28 February 1998"
     )
 
     Scaffold (
         modifier=Modifier.fillMaxSize(),
         topBar = {
-
-
-            Row (
-                modifier = Modifier.padding(20.dp).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ){
-                IconButton(
-                    onClick = { println("Go Back !") },
-                ) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-
-                Text(
-                    text = user.firstName + " " + user.lastName
-                )
-
-                Spacer(modifier = Modifier.width(50.dp))
-            }
+            TopAppBar(
+                title = { Text("Contact") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = { navigationActions.goBack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = "Back")
+                    }
+                })
         },
         content={
                 padding ->
@@ -88,10 +85,26 @@ fun ProfileScreen() {
             {
                 Column (horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top,) {
-                    Image(
-                        painter = painterResource(id = R.drawable.profile), // Ensure this drawable exists
-                        contentDescription = "App Logo",
-                        modifier = Modifier.size(150.dp))
+                    AsyncImage(
+                        model = user.profilePictureUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .width(150.dp)
+                            .height(150.dp)
+                            .padding(8.dp)
+                    )
+                    Column(
+                        Modifier.fillMaxWidth().padding(top = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            user.firstName + " " + user.lastName,
+                            style = androidx.compose.ui.text.TextStyle(
+                                fontSize = 20.sp, // Adjust the size as needed
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
