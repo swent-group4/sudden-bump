@@ -7,16 +7,17 @@ gms = "4.4.2"
 ktfmt = "0.17.0"
 
 # UI Compose
-libphonenumber = "8.12.40"
-mockitoAndroid = "5.13.0"
-ui = "1.6.8"
-uiTestJunit4 = "1.6.8"
-uiTestManifest = "1.6.8"
-uiTooling = "1.6.8"
-composeBom = "2024.08.00"
+libphonenumber = "8.13.47"
+mockitoAndroid = "5.14.1"
+ucrop = "2.2.6"
+ui = "1.7.3"
+uiTestJunit4 = "1.7.3"
+uiTestManifest = "1.7.3"
+uiTooling = "1.7.3"
+composeBom = "2024.09.03"
 constraintlayout = "2.1.4"
-material = "1.6.8"
-material3 = "1.2.1"
+material = "1.7.3"
+material3 = "1.3.0"
 materialVersion = "1.12.0"
 
 # Firebase
@@ -24,46 +25,46 @@ firebaseAuth = "23.0.0"
 firebaseAuthKtx = "23.0.0"
 firebaseDatabaseKtx = "21.0.0"
 firebaseFirestore = "25.1.0"
-firebaseUiAuth = "8.0.0"
+firebaseUiAuth = "8.0.2"
 
 # Google Service and Maps
 playServicesAuth = "21.2.0"
 playServicesMaps = "19.0.0"
-mapsCompose = "4.3.3"
-mapsComposeUtils = "4.3.0"
+mapsCompose = "6.1.2"
+mapsComposeUtils = "6.1.2"
 
 # Networking
 okhttp = "4.12.0"
 
 # Testing Unit
 junit = "4.13.2"
-mockitoCore = "3.12.4"
-mockitoInline = "3.12.4"
+mockitoCore = "5.14.1"
+mockitoInline = "5.2.0"
 mockitoKotlin = "5.4.0"
-mockk = "1.13.7"
+mockk = "1.13.13"
 
 # Testing UI
 espressoCore = "3.6.1"
 junitVersion = "1.2.1"
 kaspresso = "1.5.5"
-kaspressoAllureSupport = "1.4.3"
+kaspressoAllureSupport = "1.5.5"
 kaspressoComposeSupport = "1.5.5"
-mockkAgent = "1.13.7"
-mockkAndroid = "1.13.7"
-navigationCompose = "2.7.7"
-robolectric = "4.11.1"
+mockkAgent = "1.13.13"
+mockkAndroid = "1.13.13"
+navigationCompose = "2.8.2"
+robolectric = "4.13"
 
 # CI
 sonar = "4.4.1.3373"
 
 # AndroidX and Core Libraries
-activityCompose = "1.9.1"
+activityCompose = "1.9.2"
 appcompat = "1.7.0"
 coreKtx = "1.13.1"
 coreKtxVersion = "1.8.1"
-lifecycleRuntimeKtx = "2.8.4"
-fragmentKtx = "1.8.2"
-kotlinxSerializationJson = "1.6.2"
+lifecycleRuntimeKtx = "2.8.6"
+fragmentKtx = "1.8.4"
+kotlinxSerializationJson = "1.7.3"
 androidxCoreKtx = "1.6.1"
 
 [libraries]
@@ -117,6 +118,7 @@ play-services-auth = { module = "com.google.android.gms:play-services-auth", ver
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "androidxCoreKtx" }
+ucrop = { module = "com.github.yalantis:ucrop", name = "ucrop", version.ref = "ucrop" }
 
 
 [plugins]

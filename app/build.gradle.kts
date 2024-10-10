@@ -170,6 +170,9 @@ dependencies {
   // Phone number formatting
   implementation(libs.libphonenumber)
 
+  // Image cropping/compressing
+//  implementation(libs.ucrop)
+
   // Google Service and Maps
   implementation(libs.play.services.maps)
   implementation(libs.maps.compose)
