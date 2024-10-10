@@ -183,6 +183,8 @@ dependencies {
     // Networking with OkHttp
     implementation(libs.okhttp)
 
+    implementation("io.coil-kt:coil-compose:2.0.0")
+
     // Testing Unit
     testImplementation(libs.junit)
     androidTestImplementation(libs.mockk)
