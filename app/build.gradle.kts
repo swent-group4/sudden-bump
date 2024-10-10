@@ -149,29 +149,38 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.kotlinx.serialization.json)
 
-    // Jetpack Compose UI
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.material)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.navigation.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    testImplementation(libs.test.core.ktx)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.material)
+  // Jetpack Compose UI
+  implementation(libs.androidx.ui)
+  implementation(libs.androidx.ui.tooling.preview)
+  implementation(libs.androidx.ui.graphics)
+  implementation(libs.androidx.material)
+  implementation(libs.androidx.material3)
+  implementation(libs.androidx.navigation.compose)
+  implementation(platform(libs.androidx.compose.bom))
+  implementation(libs.androidx.junit.ktx)
+  implementation(libs.androidx.ui.test.junit4.android)
+  testImplementation(libs.test.core.ktx)
+  testImplementation(libs.androidx.espresso.intents)
+  debugImplementation(libs.androidx.ui.tooling)
+  debugImplementation(libs.androidx.ui.test.manifest)
+  implementation(libs.material)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // Google Service and Maps
-    implementation(libs.play.services.maps)
-    implementation(libs.maps.compose)
-    implementation(libs.maps.compose.utils)
-    implementation(libs.play.services.auth)
+  // Phone number formatting
+  implementation(libs.libphonenumber)
+
+  // Image cropping/compressing
+//  implementation(libs.ucrop)
+
+  // Google Service and Maps
+  implementation(libs.play.services.maps)
+  implementation(libs.maps.compose)
+  implementation(libs.maps.compose.utils)
+  implementation(libs.play.services.auth)
 
     // Firebase
     implementation(libs.firebase.database.ktx)
@@ -183,14 +192,16 @@ dependencies {
     // Networking with OkHttp
     implementation(libs.okhttp)
 
-    implementation("io.coil-kt:coil-compose:2.0.0")
+  // Image from internet with coil
+  implementation(libs.coil.compose)
+  implementation(libs.coil.network.okhttp)
 
-    // Testing Unit
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.mockk)
-    androidTestImplementation(libs.mockk.android)
-    androidTestImplementation(libs.mockk.agent)
-    testImplementation(libs.json)
+  // Testing Unit
+  testImplementation(libs.junit)
+  androidTestImplementation(libs.mockk)
+  androidTestImplementation(libs.mockk.android)
+  androidTestImplementation(libs.mockk.agent)
+  testImplementation(libs.json)
 
     // Test UI
     androidTestImplementation(libs.androidx.junit)

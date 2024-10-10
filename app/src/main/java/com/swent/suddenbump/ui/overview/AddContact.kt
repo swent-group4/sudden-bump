@@ -24,7 +24,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
@@ -33,6 +32,8 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.input.TextFieldValue
+import coil3.compose.AsyncImage
+import com.swent.suddenbump.ui.navigation.Screen
 
 data class User(
     val uid: String,
@@ -48,7 +49,7 @@ data class User(
 fun UserCard(user: User, navigationActions: NavigationActions) {
     Card(
         onClick = {
-            navigationActions.navigateTo("profile")
+            navigationActions.navigateTo(Screen.CONTACT)
         },
         modifier = Modifier
             .fillMaxWidth()
@@ -90,7 +91,7 @@ fun generateMockUsers(): List<User> {
             lastName = lastName,
             profilePictureUrl = "https://api.dicebear.com/9.x/lorelei/png?seed=${firstName}${lastName}",
             birthDate = birthDates[index % birthDates.size],
-            mail = "${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com",
+            mail = "${firstName.lowercase()}.${lastName.lowercase()}@example.com",
             phoneNumber = "123-456-78${index.toString().padStart(2, '0')}"
         )
     }
