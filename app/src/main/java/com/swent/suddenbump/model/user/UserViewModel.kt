@@ -13,9 +13,16 @@ class UserViewModel(private val repository: UserRepository) {
   private val logTag = "UserViewModel"
 
   private val _user: MutableStateFlow<User> =
-      MutableStateFlow(User("", "", "", Icons.Outlined.AccountCircle, "", ""))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
-  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
+      MutableStateFlow(
+          User(
+              "1",
+              "Martin",
+              "Vetterli",
+              Icons.Outlined.AccountCircle,
+              "+41 00 000 00 01",
+              "martin.vetterli@epfl.ch"))
+  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
   private val _userLocation: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
 
   init {
@@ -47,15 +54,11 @@ class UserViewModel(private val repository: UserRepository) {
     repository.createUserAccount(user, onSuccess, onFailure)
   }
 
-  fun getUser(): StateFlow<User> {
+  fun getCurrentUser(): StateFlow<User> {
     return _user.asStateFlow()
   }
 
-  fun getUserFriends(user: User = _user.value): StateFlow<List<User>> {
-    repository.getUserFriends(
-        user = user,
-        onSuccess = { _userFriends.value = it },
-        onFailure = { Log.e(logTag, it.toString()) })
+  fun getUserFriends(): StateFlow<List<User>> {
     return _userFriends.asStateFlow()
   }
 
@@ -65,11 +68,32 @@ class UserViewModel(private val repository: UserRepository) {
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
+    _userFriends.value = friendsList
     repository.setUserFriends(user, friendsList, onSuccess, onFailure)
   }
 
   fun getBlockedFriends(): StateFlow<List<User>> {
     return _blockedFriends.asStateFlow()
+  }
+
+  fun setBlockedFriends(
+      user: User = _user.value,
+      blockedFriendsList: List<User>,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _blockedFriends.value = blockedFriendsList
+    repository.setBlockedFriends(user, blockedFriendsList, onSuccess, onFailure)
+  }
+
+  fun updateLocation(
+      user: User = _user.value,
+      location: Location,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _userLocation.value = location
+    repository.updateLocation(user, location, onSuccess, onFailure)
   }
 
   fun getLocation(): StateFlow<Location> {
