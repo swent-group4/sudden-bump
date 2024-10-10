@@ -1,18 +1,23 @@
 package com.swent.suddenbump.ui.map
 
-import androidx.compose.foundation.layout.padding
+import android.annotation.SuppressLint
+import android.location.Location
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberMarkerState
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MapScreen(navigationActions: NavigationActions) {
+fun MapScreen(navigationActions: NavigationActions, location: Location?) {
   Scaffold(
       bottomBar = {
         BottomNavigationMenu(
@@ -20,13 +25,27 @@ fun MapScreen(navigationActions: NavigationActions) {
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { pd -> Text("Map Screen", modifier = Modifier.padding(pd)) })
+      content = { pd -> SimpleMap(location) })
 }
 
-@Preview(showBackground = true)
+// @Preview(showBackground = true)
+// @Composable
+// fun PreviewMapScreen() {
+//    val navController = rememberNavController()
+//    val navigationActions = NavigationActions(navController)
+//    MapScreen(navigationActions)
+// }
+
 @Composable
-fun PreviewMapScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  MapScreen(navigationActions)
+fun SimpleMap(location: Location?) {
+  val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
+
+  LaunchedEffect(location) {
+    location?.let { markerState.position = LatLng(it.latitude, it.longitude) }
+  }
+
+  GoogleMap(
+      modifier = Modifier.fillMaxSize(), uiSettings = MapUiSettings(zoomControlsEnabled = false)) {
+        Marker(state = markerState, title = "Current Position", snippet = "DescriptionTest")
+      }
 }
