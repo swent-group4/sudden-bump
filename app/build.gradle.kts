@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.ktfmt)
+    //alias(libs.plugins.gms)
     //alias(libs.plugins.sonar)
     id("jacoco")
     id("org.sonarqube") version "5.1.0.4882"
@@ -24,7 +25,7 @@ android {
     val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY") ?: ""
 
     defaultConfig {
-        applicationId = "com.android.sample"
+        applicationId = "com.swent.suddenbump"
         minSdk = 28
         targetSdk = 34
         versionCode = 1
@@ -61,23 +62,27 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.2"
+        kotlinCompilerExtensionVersion = "1.5.1"
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+    kotlinOptions { jvmTarget = "11" }
 
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             merges += "META-INF/LICENSE.md"
             merges += "META-INF/LICENSE-notice.md"
+            excludes += "META-INF/LICENSE-notice.md"
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
         }
     }
 
@@ -86,9 +91,18 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
+        packagingOptions { jniLibs { useLegacyPackaging = true } }
     }
 
-    // Robolectric needs to be run only in debug. But its tests are placed in the shared source set (test)
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
+    kotlinOptions { jvmTarget = "11" }
+
+    // Robolectric needs to be run only in debug. But its tests are placed in the shared source set
+    // (test)
     // The next lines transfers the src/test/* from shared to the testDebug one
     //
     // This prevent errors from occurring during unit tests
@@ -169,10 +183,26 @@ dependencies {
     // ----------       Robolectric     ------------
     testImplementation(libs.robolectric)
 
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+
+
+    // Phone number formatting
+    implementation(libs.libphonenumber)
+
     // Google Service and Maps
     implementation(libs.maps.compose)
     implementation(libs.maps.compose.utils)
     implementation(libs.play.services.auth)
+
+    // Firebase
+    implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.ui.auth)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.auth)
 
 
     // Testing Unit
@@ -180,6 +210,13 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.json)
+
+    // Networking with OkHttp
+    implementation(libs.okhttp)
+
+    // Image from internet with coil
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     // Test UI
     androidTestImplementation(libs.androidx.junit)
@@ -222,6 +259,7 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         "**/Manifest*.*",
         "**/*Test*.*",
         "android/**/*.*",
+        "**/sigchecks/**",
     )
 
     val debugTree = fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {

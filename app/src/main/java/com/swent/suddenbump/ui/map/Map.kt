@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -13,13 +15,30 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberMarkerState
+import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
+import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
+import com.swent.suddenbump.ui.navigation.NavigationActions
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MapScreen(context: Context, location: Location?) {
-
-  Scaffold(modifier = Modifier.testTag("overviewScreen"), content = { SimpleMap(location) })
+fun MapScreen(navigationActions: NavigationActions, location: Location?) {
+  Scaffold(
+      bottomBar = {
+        BottomNavigationMenu(
+            onTabSelect = { route -> navigationActions.navigateTo(route) },
+            tabList = LIST_TOP_LEVEL_DESTINATION,
+            selectedItem = navigationActions.currentRoute())
+      },
+      content = { pd -> SimpleMap(location) })
 }
+
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewMapScreen() {
+//    val navController = rememberNavController()
+//    val navigationActions = NavigationActions(navController)
+//    MapScreen(navigationActions)
+//}
 
 @Composable
 fun SimpleMap(location: Location?) {
@@ -34,3 +53,4 @@ fun SimpleMap(location: Location?) {
         Marker(state = markerState, title = "Current Position", snippet = "DescriptionTest")
       }
 }
+
