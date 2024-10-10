@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.Preview
+import com.github.se.bootcamp.ui.authentication.SignInScreen
 
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.theme.SampleAppTheme
@@ -25,7 +26,7 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              Greeting("Android")
+            SignInScreen()
             }
       }
     }
@@ -42,3 +43,4 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 fun GreetingPreview() {
   SampleAppTheme { Greeting("Android") }
 }
+
