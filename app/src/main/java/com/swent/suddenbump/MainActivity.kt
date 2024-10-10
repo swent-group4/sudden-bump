@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.resources.C
+import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.messages.MessagesScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -63,7 +64,13 @@ fun SuddenBumpApp() {
 
   // val listToDosViewModel: ListToDosViewModel = viewModel(factory = ListToDosViewModel.Factory)
 
-  NavHost(navController = navController, startDestination = Route.OVERVIEW) {
+  NavHost(navController = navController, startDestination = Route.AUTH) {
+    navigation(
+        startDestination = Screen.AUTH,
+        route = Route.AUTH,
+    ) {
+      composable(Screen.AUTH) { SignInScreen(navigationActions) }
+    }
     navigation(
         startDestination = Screen.OVERVIEW,
         route = Route.OVERVIEW,
@@ -72,7 +79,7 @@ fun SuddenBumpApp() {
       composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
       composable(Screen.CONV) { ConversationScreen(navigationActions) }
       composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
-        composable(Screen.CONTACT) { ContactScreen(navigationActions) }
+      composable(Screen.CONTACT) { ContactScreen(navigationActions) }
     }
 
     navigation(
