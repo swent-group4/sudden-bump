@@ -192,6 +192,9 @@ dependencies {
     // Phone number formatting
     implementation(libs.libphonenumber)
 
+    // Image picker
+    implementation(libs.ucrop)
+
     // Google Service and Maps
     implementation(libs.maps.compose)
     implementation(libs.maps.compose.utils)
