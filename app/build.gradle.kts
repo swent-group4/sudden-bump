@@ -6,8 +6,8 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.ktfmt)
     alias(libs.plugins.gms)
+    alias(libs.plugins.sonar)
     id("jacoco")
-    id("org.sonarqube") version "5.1.0.4882"
 }
 
 android {
@@ -90,7 +90,7 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
-        packagingOptions { jniLibs { useLegacyPackaging = true } }
+        //packagingOptions { jniLibs { useLegacyPackaging = true } }
     }
 
     buildFeatures {
@@ -122,6 +122,7 @@ android {
 
 sonar {
     properties {
+        property("sonar.projectName", "Sudden-Bump")
         property("sonar.projectKey", "swent-group4_sudden-bump")
         property("sonar.organization", "swent-group4")
         property("sonar.host.url", "https://sonarcloud.io")
@@ -150,7 +151,6 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.test.core.ktx)
     implementation(libs.androidx.lifecycle.common.jvm)
-    //implementation(libs.androidx.media3.common.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
     globalTestImplementation(libs.androidx.junit)
@@ -176,9 +176,6 @@ dependencies {
     globalTestImplementation(libs.compose.test.junit)
     debugImplementation(libs.compose.test.manifest)
 
-    // --------- Kaspresso test framework ----------
-    globalTestImplementation(libs.kaspresso)
-    globalTestImplementation(libs.kaspresso.compose)
 
     // ----------       Robolectric     ------------
     testImplementation(libs.robolectric)
@@ -203,7 +200,7 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.bom)
+    implementation(platform(libs.firebase.bom))
 
 
     // Testing Unit
@@ -211,6 +208,8 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.json)
+    globalTestImplementation(libs.kaspresso)
+    globalTestImplementation(libs.kaspresso.compose)
 
     // Networking with OkHttp
     implementation(libs.okhttp)
@@ -224,7 +223,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.espresso.intents)
     androidTestImplementation(libs.androidx.ui.test.junit4)
-    //androidTestImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.inline)
     testImplementation(libs.mockito.kotlin)
@@ -232,7 +230,6 @@ dependencies {
     androidTestImplementation(libs.mockito.kotlin)
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.allure.support)
-    //androidTestImplementation(libs.kaspresso.compose.support)
     testImplementation(libs.kotlinx.coroutines.test)
     implementation(kotlin("test"))
 }
