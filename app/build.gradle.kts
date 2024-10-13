@@ -141,6 +141,12 @@ fun DependencyHandlerScope.globalTestImplementation(dep: Any) {
     testImplementation(dep)
 }
 
+buildscript {
+    dependencies {
+        classpath("com.google.gms:google-services:4.3.13")
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -232,6 +238,12 @@ dependencies {
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
     implementation(kotlin("test"))
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("androidx.test.espresso:espresso-core:3.5.1")
+    }
 }
 
 tasks.withType<Test> {
