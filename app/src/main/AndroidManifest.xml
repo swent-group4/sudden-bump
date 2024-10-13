@@ -26,12 +26,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SampleApp"
-        tools:targetApi="31">
-        <activity
-            android:name="com.swent.suddenbump.SecondActivity"
-            android:exported="false"
-            android:label="@string/title_activity_second"
-            android:theme="@style/Theme.SampleApp" />
+        tools:targetApi="34">
         <activity
             android:name="com.swent.suddenbump.MainActivity"
             android:exported="true"
