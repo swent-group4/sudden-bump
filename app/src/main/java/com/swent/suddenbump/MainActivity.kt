@@ -29,6 +29,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.LocationGetter
 import com.swent.suddenbump.resources.C
+import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.messages.MessagesScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -37,8 +38,8 @@ import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.overview.AddContactScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
-import com.swent.suddenbump.ui.overview.SettingsScreen
 import com.swent.suddenbump.ui.profile.ContactScreen
+import com.swent.suddenbump.ui.settings.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -126,7 +127,13 @@ class MainActivity : ComponentActivity() {
 
     // val listToDosViewModel: ListToDosViewModel = viewModel(factory = ListToDosViewModel.Factory)
 
-    NavHost(navController = navController, startDestination = Route.OVERVIEW) {
+    NavHost(navController = navController, startDestination = Route.AUTH) {
+      navigation(
+          startDestination = Screen.AUTH,
+          route = Route.AUTH,
+      ) {
+        composable(Screen.AUTH) { SignInScreen(navigationActions) }
+      }
       navigation(
           startDestination = Screen.OVERVIEW,
           route = Route.OVERVIEW,
