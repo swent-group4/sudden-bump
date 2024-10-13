@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Sudden bump"
+rootProject.name = "SuddenBump"
 include(":app")
  
