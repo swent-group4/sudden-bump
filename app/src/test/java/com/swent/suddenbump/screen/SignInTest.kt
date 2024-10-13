@@ -1,4 +1,4 @@
-package com.swent.suddenbump.screen
+package com.swent.suddenbump.authentication
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
