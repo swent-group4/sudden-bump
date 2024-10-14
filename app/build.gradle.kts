@@ -157,6 +157,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.test.core.ktx)
     implementation(libs.androidx.lifecycle.common.jvm)
+    implementation(libs.firebase.storage.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
     globalTestImplementation(libs.androidx.junit)
