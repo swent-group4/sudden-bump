@@ -3,18 +3,12 @@ package com.swent.suddenbump.model.user
 import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBox
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import com.swent.suddenbump.model.location.Location
-import kotlin.math.log
 
-class UserRepositoryFirestore(
-    private val db: FirebaseFirestore
-) : UserRepository {
+class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
 

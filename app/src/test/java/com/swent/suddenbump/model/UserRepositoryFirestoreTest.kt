@@ -29,10 +29,8 @@ import org.mockito.MockedStatic
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.withSettings
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
@@ -229,8 +227,7 @@ class UserRepositoryFirestoreTest {
    */
   @Test
   fun setUserFriends_shouldCallFirestoreCollection() {
-    `when`(mockUserDocumentReference.update(anyString(), any()))
-        .thenReturn(mockTaskVoid)
+    `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
     userRepositoryFirestore.setUserFriends(
         user = user, friendsList = listOf(user), onSuccess = {}, onFailure = {})
@@ -250,7 +247,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
 
     userRepositoryFirestore.getBlockedFriends(
-      user = user, onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
+        user = user, onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
 
     verify(timeout(100)) { (mockUserQuerySnapshot).documents }
   }
@@ -261,11 +258,10 @@ class UserRepositoryFirestoreTest {
    */
   @Test
   fun setUserBlockedFriends_shouldCallFirestoreCollection() {
-    `when`(mockUserDocumentReference.update(anyString(), any()))
-      .thenReturn(mockTaskVoid)
+    `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
     userRepositoryFirestore.setBlockedFriends(
-      user = user, blockedFriendsList = listOf(user), onSuccess = {}, onFailure = {})
+        user = user, blockedFriendsList = listOf(user), onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle()
 
@@ -278,11 +274,10 @@ class UserRepositoryFirestoreTest {
    */
   @Test
   fun setLocation_shouldCallFirestoreCollection() {
-    `when`(mockUserDocumentReference.update(anyString(), any()))
-      .thenReturn(mockTaskVoid)
+    `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
     userRepositoryFirestore.updateLocation(
-      user = user, location = location, onSuccess = {}, onFailure = {})
+        user = user, location = location, onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle()
 
