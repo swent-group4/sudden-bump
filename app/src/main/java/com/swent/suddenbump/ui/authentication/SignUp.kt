@@ -1,3 +1,5 @@
+package com.swent.suddenbump.ui.authentication
+
 import android.app.Activity
 import android.net.Uri
 import android.provider.MediaStore
