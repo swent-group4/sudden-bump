@@ -1,6 +1,5 @@
 package com.swent.suddenbump.ui.authentication
 
-import SignUpScreen
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
