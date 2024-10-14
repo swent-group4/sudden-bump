@@ -29,8 +29,6 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.swent.suddenbump.ui.navigation.NavigationActions
 
-// import coil3.compose.AsyncImage
-
 data class MockUser(
     val uid: String,
     val firstName: String,

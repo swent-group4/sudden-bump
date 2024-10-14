@@ -1,6 +1,5 @@
 package com.swent.suddenbump.ui.authentication
 
-import SignUpScreen
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -10,12 +9,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.navigation.Screen
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
 
 class SignUpScreenTest {
 
@@ -24,9 +21,7 @@ class SignUpScreenTest {
 
   @Before
   fun setUp() {
-    composeTestRule.setContent {
-      SignUpScreen(navigationActions)
-    }
+    composeTestRule.setContent { SignUpScreen(navigationActions) }
   }
 
   @Test
@@ -64,7 +59,7 @@ class SignUpScreenTest {
     //        composeTestRule.onNodeWithTag("noProfilePic").assertIsDisplayed()
 
     // Perform create account button click
-//    composeTestRule.onNodeWithTag("createAccountButton").performClick()
-//    verify(navigationActions).navigateTo(Screen.OVERVIEW)
+    //    composeTestRule.onNodeWithTag("createAccountButton").performClick()
+    //    verify(navigationActions).navigateTo(Screen.OVERVIEW)
   }
 }

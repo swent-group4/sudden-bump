@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - add-map
+      - clean-up
 
   pull_request:
     types:
