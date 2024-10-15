@@ -18,13 +18,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.theme.violetColor
 
 
 @Composable
@@ -41,6 +45,17 @@ fun OverviewScreen(navigationActions: NavigationActions) {
                   modifier = Modifier.testTag("SettingsFab")) {
                     Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
                   }
+            Text(
+                modifier = Modifier.testTag("appName").weight(1f),
+                text = "SuddenBump!",
+                style =
+                MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 30.sp,
+                    lineHeight = 44.sp),
+                color = violetColor,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center)
+            
               FloatingActionButton(
                   onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
                   modifier = Modifier.testTag("AddContactFab")) {
@@ -59,6 +74,7 @@ fun OverviewScreen(navigationActions: NavigationActions) {
       },
       content = { pd ->  Column(
           modifier = Modifier.padding(pd), horizontalAlignment = Alignment.CenterHorizontally) {
+
           if (mockUsers.isNotEmpty()) {
               LazyColumn { var currentDist: Int? = null
                   mockUsers.forEach { user ->

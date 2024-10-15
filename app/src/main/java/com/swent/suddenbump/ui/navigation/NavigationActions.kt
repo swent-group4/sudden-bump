@@ -58,7 +58,7 @@ open class NavigationActions(
       // avoid building up a large stack of destinations
       popUpTo(navController.graph.findStartDestination().id) {
         saveState = true
-        // inclusive = true
+        inclusive = true
       }
 
       // Avoid multiple copies of the same destination when reselecting same item
