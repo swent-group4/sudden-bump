@@ -30,16 +30,16 @@ object Screen {
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
 
 object TopLevelDestinations {
-  val OVERVIEW =
-      TopLevelDestination(route = Route.OVERVIEW, icon = Icons.Outlined.Menu, textId = "Overview")
   val MESSAGES =
       TopLevelDestination(
           route = Route.MESS, icon = Icons.Outlined.MailOutline, textId = "Messages")
+  val OVERVIEW =
+    TopLevelDestination(route = Route.OVERVIEW, icon = Icons.Outlined.Menu, textId = "Overview")
   val MAP = TopLevelDestination(route = Route.MAP, icon = Icons.Outlined.Place, textId = "Map")
 }
 
 val LIST_TOP_LEVEL_DESTINATION =
-    listOf(TopLevelDestinations.OVERVIEW, TopLevelDestinations.MESSAGES, TopLevelDestinations.MAP)
+    listOf(TopLevelDestinations.MESSAGES, TopLevelDestinations.OVERVIEW, TopLevelDestinations.MAP)
 
 open class NavigationActions(
     private val navController: NavHostController,
