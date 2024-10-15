@@ -39,7 +39,7 @@ import com.swent.suddenbump.ui.overview.AddContactScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.profile.ContactScreen
-import com.swent.suddenbump.ui.settings.SettingsScreen
+import com.swent.suddenbump.ui.overview.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 
 class MainActivity : ComponentActivity() {
