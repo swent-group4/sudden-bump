@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Settings
@@ -15,7 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,7 +79,11 @@ fun OverviewScreen(navigationActions: NavigationActions) {
                       }
                   } }
           } else {
-              Text(text = "Looks like no friends are nearby")
+              Text(text = "Looks like no friends are nearby",
+                  modifier = Modifier
+                      .fillMaxWidth()
+                      .padding(vertical = 8.dp),
+                  style = MaterialTheme.typography.titleLarge)
           }
       } })
 }
