@@ -34,7 +34,7 @@ object TopLevelDestinations {
       TopLevelDestination(
           route = Route.MESS, icon = Icons.Outlined.MailOutline, textId = "Messages")
   val OVERVIEW =
-    TopLevelDestination(route = Route.OVERVIEW, icon = Icons.Outlined.Menu, textId = "Overview")
+      TopLevelDestination(route = Route.OVERVIEW, icon = Icons.Outlined.Menu, textId = "Overview")
   val MAP = TopLevelDestination(route = Route.MAP, icon = Icons.Outlined.Place, textId = "Map")
 }
 

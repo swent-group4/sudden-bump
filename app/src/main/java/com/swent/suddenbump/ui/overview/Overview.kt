@@ -30,10 +30,9 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
 
-
 @Composable
 fun OverviewScreen(navigationActions: NavigationActions) {
-    val mockUsers = generateMockUsers().sortedBy { it.relativeDist }
+  val mockUsers = generateMockUsers().sortedBy { it.relativeDist }
 
   Scaffold(
       topBar = {
@@ -42,23 +41,22 @@ fun OverviewScreen(navigationActions: NavigationActions) {
             horizontalArrangement = Arrangement.SpaceBetween) {
               FloatingActionButton(
                   onClick = { navigationActions.navigateTo(Screen.SETTINGS) },
-                  modifier = Modifier.testTag("SettingsFab")) {
+                  modifier = Modifier.testTag("settingsFab")) {
                     Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
                   }
-            Text(
-                modifier = Modifier.testTag("appName").weight(1f),
-                text = "SuddenBump!",
-                style =
-                MaterialTheme.typography.headlineMedium.copy(
-                    fontSize = 30.sp,
-                    lineHeight = 44.sp),
-                color = violetColor,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center)
-            
+              Text(
+                  modifier = Modifier.testTag("appName").weight(1f),
+                  text = "SuddenBump!",
+                  style =
+                      MaterialTheme.typography.headlineMedium.copy(
+                          fontSize = 30.sp, lineHeight = 44.sp),
+                  color = violetColor,
+                  fontWeight = FontWeight.Bold,
+                  textAlign = TextAlign.Center)
+
               FloatingActionButton(
                   onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
-                  modifier = Modifier.testTag("AddContactFab")) {
+                  modifier = Modifier.testTag("addContactFab")) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "Add Contact")
@@ -72,36 +70,34 @@ fun OverviewScreen(navigationActions: NavigationActions) {
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { pd ->  Column(
-          modifier = Modifier.padding(pd), horizontalAlignment = Alignment.CenterHorizontally) {
-
-          if (mockUsers.isNotEmpty()) {
-              LazyColumn { var currentDist: Int? = null
+      content = { pd ->
+        Column(
+            modifier = Modifier.padding(pd), horizontalAlignment = Alignment.CenterHorizontally) {
+              if (mockUsers.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.testTag("userList")) {
+                  var currentDist: Int? = null
                   mockUsers.forEach { user ->
-                      if (currentDist != user.relativeDist) {
-                          currentDist = user.relativeDist
-                          item {
-                              Text(
-                                  text = "Distance: ${user.relativeDist} km",
-                                  modifier = Modifier
-                                      .fillMaxWidth()
-                                      .padding(vertical = 8.dp),
-                                  style = MaterialTheme.typography.headlineSmall
-                              )
-                          }
-                      }
+                    if (currentDist != user.relativeDist) {
+                      currentDist = user.relativeDist
                       item {
-                          UserCard(user = user, navigationActions)
+                        Text(
+                            text = "Distance: ${user.relativeDist} km",
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            style = MaterialTheme.typography.headlineSmall)
                       }
-                  } }
-          } else {
-              Text(text = "Looks like no friends are nearby",
-                  modifier = Modifier
-                      .fillMaxWidth()
-                      .padding(vertical = 8.dp),
-                  style = MaterialTheme.typography.titleLarge)
-          }
-      } })
+                    }
+                    item { UserCard(user = user, navigationActions) }
+                  }
+                }
+              } else {
+                Text(
+                    text = "Looks like no friends are nearby",
+                    modifier =
+                        Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 8.dp),
+                    style = MaterialTheme.typography.titleLarge)
+              }
+            }
+      })
 }
 
 @Preview(showBackground = true)
