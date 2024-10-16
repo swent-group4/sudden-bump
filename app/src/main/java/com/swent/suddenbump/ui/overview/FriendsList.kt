@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.overview
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -10,21 +11,30 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
@@ -109,7 +119,7 @@ fun generateMockUsers(): List<User> {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddContactScreen(navigationActions: NavigationActions) {
+fun FriendsListScreen(navigationActions: NavigationActions) {
   var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
   var mockUsers = generateMockUsers()
 
@@ -120,18 +130,35 @@ fun AddContactScreen(navigationActions: NavigationActions) {
       }
 
   Scaffold(
-      modifier = Modifier.testTag("addContactScreen"),
+      modifier = Modifier.testTag("friendsListScreen"),
       topBar = {
-        TopAppBar(
-            title = { Text("Add Contacts", Modifier.testTag("addContactsTitle")) },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() }, Modifier.testTag("goBackButton")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                        contentDescription = "Back")
+          CenterAlignedTopAppBar(
+              title = {
+                  Text(
+                      "Friends",
+                      maxLines = 1,
+                      overflow = TextOverflow.Ellipsis
+                  )
+              },
+              navigationIcon = {
+                  IconButton(onClick = {
+                        navigationActions.goBack()
+                  }) {
+                      Icon(
+                          imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                          contentDescription = "Go back"
+                      )
                   }
-            })
+              },
+              actions = {
+                  IconButton(onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) }) {
+                      Icon(
+                          imageVector = Icons.Default.AddCircle,
+                          contentDescription = "Add new friends"
+                      )
+                  }
+              },
+          )
       },
       content = { pd ->
         Column(
@@ -156,5 +183,5 @@ fun AddContactScreen(navigationActions: NavigationActions) {
 fun PreviewAddContactScreen() {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
-  AddContactScreen(navigationActions)
+    FriendsListScreen(navigationActions)
 }

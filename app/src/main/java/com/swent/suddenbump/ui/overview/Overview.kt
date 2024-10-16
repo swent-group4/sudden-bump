@@ -35,7 +35,7 @@ fun OverviewScreen(navigationActions: NavigationActions) {
                     Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
                   }
               FloatingActionButton(
-                  onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
+                  onClick = { navigationActions.navigateTo(Screen.FRIENDS_LIST) },
                   modifier = Modifier.testTag("AddContactFab")) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,

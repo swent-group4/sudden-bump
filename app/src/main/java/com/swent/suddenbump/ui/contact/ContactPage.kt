@@ -1,4 +1,4 @@
-package com.swent.suddenbump.ui.profile
+package com.swent.suddenbump.ui.contact
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -37,6 +36,7 @@ data class MockUser(
     val profilePictureUrl: String,
     val phoneNumber: String,
     val email: String,
+    val isFriend: Boolean = false,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,7 +51,9 @@ fun ContactScreen(navigationActions: NavigationActions) {
           profilePictureUrl = "https://api.dicebear.com/9.x/lorelei/png?seed=JaneSmith",
           phoneNumber = "+3345676543",
           email = "jane.smith@gmail.com",
-          birthDate = "28 February 1998")
+          birthDate = "28 February 1998",
+          isFriend = true,
+      )
 
   Scaffold(
       modifier = Modifier.fillMaxSize(),
@@ -107,11 +109,20 @@ fun ContactScreen(navigationActions: NavigationActions) {
             }
           }
 
-          Button(
-              modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 30.dp),
-              onClick = { println("Button click !") }) {
-                Text("Send a message")
-              }
+            if(user.isFriend) {
+                Button(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 30.dp),
+                    onClick = { println("Button click !") }) {
+                    Text("Send a message")
+                }
+            } else {
+                Button(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 30.dp),
+                    onClick = { println("Button click !") }) {
+                    Text("Add to contacts")
+                }
+            }
+
         }
       })
 }

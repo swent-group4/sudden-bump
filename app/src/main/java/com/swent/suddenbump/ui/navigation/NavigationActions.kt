@@ -17,6 +17,7 @@ object Route {
 
 object Screen {
   const val OVERVIEW = "Overview Screen"
+  const val FRIENDS_LIST = "Friends List Screen"
   const val ADD_CONTACT = "Add Contact Screen"
   const val AUTH = "Auth Screen"
   const val MAP = "Map Screen"
