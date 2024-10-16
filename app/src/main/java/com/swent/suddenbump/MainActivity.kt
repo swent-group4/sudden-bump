@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -28,8 +29,10 @@ import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.LocationGetter
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
+import com.swent.suddenbump.ui.authentication.SignUpScreen
 import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.messages.MessagesScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -125,7 +128,7 @@ class MainActivity : ComponentActivity() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
-    // val listToDosViewModel: ListToDosViewModel = viewModel(factory = ListToDosViewModel.Factory)
+    val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(
@@ -133,6 +136,7 @@ class MainActivity : ComponentActivity() {
           route = Route.AUTH,
       ) {
         composable(Screen.AUTH) { SignInScreen(navigationActions) }
+        composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
       }
       navigation(
           startDestination = Screen.OVERVIEW,

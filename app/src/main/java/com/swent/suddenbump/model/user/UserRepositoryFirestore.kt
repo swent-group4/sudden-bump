@@ -1,8 +1,7 @@
 package com.swent.suddenbump.model.user
 
 import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountBox
+import androidx.compose.ui.graphics.ImageBitmap
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -217,7 +216,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         uid = document.data!!.get("uid").toString(),
         firstName = document.data!!.get("firstName").toString(),
         lastName = document.data!!.get("lastName").toString(),
-        Icons.Outlined.AccountBox,
+        ImageBitmap(1, 1),
         phoneNumber = document.data!!.get("phoneNumber").toString(),
         emailAddress = document.data!!.get("emailAddress").toString())
   }

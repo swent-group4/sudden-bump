@@ -1,14 +1,17 @@
 package com.swent.suddenbump.model.user
 
 import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import com.swent.suddenbump.model.location.Location
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class UserViewModel(private val repository: UserRepository) {
+class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
   private val logTag = "UserViewModel"
 
@@ -18,7 +21,7 @@ class UserViewModel(private val repository: UserRepository) {
               "1",
               "Martin",
               "Vetterli",
-              Icons.Outlined.AccountCircle,
+              ImageBitmap(10, 10),
               "+41 00 000 00 01",
               "martin.vetterli@epfl.ch"))
   private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
@@ -27,6 +30,16 @@ class UserViewModel(private val repository: UserRepository) {
 
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
+  }
+
+  companion object {
+    val Factory: ViewModelProvider.Factory =
+        object : ViewModelProvider.Factory {
+          @Suppress("UNCHECKED_CAST")
+          override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return UserViewModel(UserRepositoryFirestore(Firebase.firestore)) as T
+          }
+        }
   }
 
   fun setCurrentUser() {
