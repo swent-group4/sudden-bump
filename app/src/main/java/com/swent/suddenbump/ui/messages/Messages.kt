@@ -72,18 +72,20 @@ fun MessagesScreen(navigationActions: NavigationActions) {
             modifier = Modifier
                 .padding(padding)
                 .background(Color.Black)
-                .testTag("messages_list")  // Ajout d'un testTag pour la liste des messages
+                .testTag("messages_list")
         ) {
-            items(messages) { message ->
+            itemsIndexed(messages) { index, message ->
                 MessageItem(message)
-                Divider(
-                    color = Color.Gray,  // Ligne grise
-                    thickness = 1.dp,
-                    modifier = Modifier.testTag("divider")  // Ajout du testTag pour le Divider
-                )
+                if (index < messages.size - 1) {
+                    // Ajouter un Divider seulement si ce n'est pas le dernier message
+                    Divider(
+                        color = Color.Gray,
+                        thickness = 1.dp,
+                        modifier = Modifier.testTag("divider")
+                    )
+                }
             }
         }
-    }
 }
 
 @Composable

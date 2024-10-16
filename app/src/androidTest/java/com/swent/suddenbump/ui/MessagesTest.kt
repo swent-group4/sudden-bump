@@ -1,4 +1,4 @@
-package com.swent.suddenbump.screen
+package com.swent.suddenbump.ui
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -74,6 +74,7 @@ class MessagesScreenTest {
 
         // Vérifie que le contenu des messages est correctement affiché
         composeTestRule.onNodeWithText("Hi Marc! Thanks for your message, I'd love to go for a drink! Let's say 9pm?")
+            .performScrollTo()
             .assertIsDisplayed()
     }
 }
