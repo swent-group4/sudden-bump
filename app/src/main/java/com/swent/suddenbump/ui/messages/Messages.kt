@@ -118,6 +118,7 @@ fun MessageItem(message: Message) {
                 text = "You: ${message.content}",
                 color = Color.Gray,
                 fontSize = 14.sp,
+                modifier = Modifier.testTag("message_content")
             )
             Text(
                 text = message.date,

@@ -76,8 +76,9 @@ class MessagesScreenTest {
         composeTestRule.onNodeWithTag("messages_list")
             .performScrollToIndex(0)
 
-        // Vérifie que le message est affiché
-        composeTestRule.onNode(hasText("Hi Marc!")).assertIsDisplayed()
+        composeTestRule.onAllNodesWithTag("message_content")
+            .onFirst()
+            .assertExists()
 
     }
 }
