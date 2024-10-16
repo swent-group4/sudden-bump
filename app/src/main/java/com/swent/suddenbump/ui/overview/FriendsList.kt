@@ -103,7 +103,7 @@ fun generateMockUsers(): List<User> {
           "18 Octobre 1965",
           "25 Novembre 1960")
 
-  return (1..20).map { index ->
+  return (1..10).map { index ->
     val firstName = firstNames[index % firstNames.size]
     val lastName = lastNames[index % lastNames.size]
     User(

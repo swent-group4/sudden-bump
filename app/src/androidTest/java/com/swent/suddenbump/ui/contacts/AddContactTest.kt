@@ -1,0 +1,79 @@
+package com.swent.suddenbump.ui.contacts
+
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.navigation.compose.rememberNavController
+import com.swent.suddenbump.ui.contact.AddContactScreen
+import com.swent.suddenbump.ui.navigation.NavigationActions
+import org.junit.Rule
+import org.junit.Test
+
+class AddContactScreenTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    @Test
+    fun testInitialScreenState() {
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val navigationActions = NavigationActions(navController)
+            AddContactScreen(navigationActions)
+        }
+
+        // Verify the top bar title
+        composeTestRule.onNodeWithText("Add contact").assertIsDisplayed()
+
+        // Verify the search field is displayed
+        composeTestRule.onNodeWithTag("searchTextField").assertIsDisplayed()
+
+        // Verify the recommended row is displayed
+        composeTestRule.onNodeWithTag("recommendedRow").assertIsDisplayed()
+
+        // Verify the list of users is displayed
+        composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
+    }
+
+    @Test
+    fun testSearchFunctionality() {
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val navigationActions = NavigationActions(navController)
+            AddContactScreen(navigationActions)
+        }
+
+        // Enter a search query
+        composeTestRule.onNodeWithTag("searchTextField").performTextInput("John")
+
+        // Verify that the list is filtered
+        composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Jane Smith").assertDoesNotExist()
+    }
+
+    @Test
+    fun testNoResultsMessage() {
+        composeTestRule.setContent {
+            val navController = rememberNavController()
+            val navigationActions = NavigationActions(navController)
+            AddContactScreen(navigationActions)
+        }
+
+        // Enter a search query that yields no results
+        composeTestRule.onNodeWithTag("searchTextField").performTextInput("NonExistentName")
+
+        // Verify that the no results message is displayed
+        composeTestRule.onNodeWithText("Looks like no user corresponds to your query").assertIsDisplayed()
+    }
+
+//    @Test
+//    fun testNavigationBackButton() {
+//        composeTestRule.setContent {
+//            val navController = rememberNavController()
+//            val navigationActions = NavigationActions(navController)
+//            AddContactScreen(navigationActions)
+//        }
+//
+//        // Click the back button
+//        composeTestRule.onNodeWithTag("backButton").performClick()
+//    }
+}
