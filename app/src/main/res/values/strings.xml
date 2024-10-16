@@ -3,4 +3,5 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
     <string name="default_web_client_id">309404538142-bp43jqg0vol601h45qii4vm0d9a87nj9.apps.googleusercontent.com</string>
+    <string name="default_profile_picture_path">user/profile_picture.png</string>
 </resources>

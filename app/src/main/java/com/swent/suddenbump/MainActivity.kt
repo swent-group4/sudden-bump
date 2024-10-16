@@ -27,7 +27,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.LocationGetter
+import com.swent.suddenbump.model.image.TestComposableScreen
+import com.swent.suddenbump.model.user.UserRepositoryFirestore
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.map.MapScreen
@@ -83,11 +88,9 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              SuddenBumpApp(newLocation)
-              // MapScreen(this, newLocation)
-
-              // LocationHandler(this) { location -> newLocation = location }
-              //
+              // SuddenBumpApp(newLocation)
+              val userViewModel = UserViewModel(UserRepositoryFirestore(Firebase.firestore))
+              TestComposableScreen(userViewModel)
             }
       }
     }
@@ -125,7 +128,7 @@ class MainActivity : ComponentActivity() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
-    // val listToDosViewModel: ListToDosViewModel = viewModel(factory = ListToDosViewModel.Factory)
+    // val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(

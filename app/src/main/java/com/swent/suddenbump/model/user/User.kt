@@ -1,12 +1,12 @@
 package com.swent.suddenbump.model.user
 
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.ImageBitmap
 
 data class User(
     val uid: String,
     val firstName: String,
     val lastName: String,
-    val profilePicture: ImageVector,
     val phoneNumber: String,
+    val profilePicture: ImageBitmap?,
     val emailAddress: String,
 )

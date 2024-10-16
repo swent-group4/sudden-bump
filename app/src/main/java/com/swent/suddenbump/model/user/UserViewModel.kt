@@ -1,8 +1,7 @@
 package com.swent.suddenbump.model.user
 
 import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
+import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.model.location.Location
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,19 +10,15 @@ import kotlinx.coroutines.flow.asStateFlow
 class UserViewModel(private val repository: UserRepository) {
 
   private val logTag = "UserViewModel"
+  private val profilePicture = ImageBitMapIO()
 
   private val _user: MutableStateFlow<User> =
       MutableStateFlow(
-          User(
-              "1",
-              "Martin",
-              "Vetterli",
-              Icons.Outlined.AccountCircle,
-              "+41 00 000 00 01",
-              "martin.vetterli@epfl.ch"))
+          User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch"))
   private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
   private val _userLocation: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
+  private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
@@ -40,6 +35,10 @@ class UserViewModel(private val repository: UserRepository) {
         user = _user.value,
         onSuccess = { _blockedFriends.value = it },
         onFailure = { Log.e(logTag, it.toString()) })
+  }
+
+  fun setUser(user: User) {
+    _user.value = user
   }
 
   fun verifyNoAccountExists(
@@ -86,6 +85,10 @@ class UserViewModel(private val repository: UserRepository) {
     repository.setBlockedFriends(user, blockedFriendsList, onSuccess, onFailure)
   }
 
+  fun getLocation(): StateFlow<Location> {
+    return _userLocation.asStateFlow()
+  }
+
   fun updateLocation(
       user: User = _user.value,
       location: Location,
@@ -94,10 +97,6 @@ class UserViewModel(private val repository: UserRepository) {
   ) {
     _userLocation.value = location
     repository.updateLocation(user, location, onSuccess, onFailure)
-  }
-
-  fun getLocation(): StateFlow<Location> {
-    return _userLocation.asStateFlow()
   }
 
   fun getNewUid(): String {
