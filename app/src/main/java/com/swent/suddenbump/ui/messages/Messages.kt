@@ -117,7 +117,7 @@ fun MessageItem(message: Message) {
             Text(
                 text = "You: ${message.content}",
                 color = Color.Gray,
-                fontSize = 14.sp
+                fontSize = 14.sp,
             )
             Text(
                 text = message.date,
