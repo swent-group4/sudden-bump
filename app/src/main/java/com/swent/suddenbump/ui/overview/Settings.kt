@@ -1,4 +1,4 @@
-package com.swent.suddenbump.ui.settings
+package com.swent.suddenbump.ui.overview
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
