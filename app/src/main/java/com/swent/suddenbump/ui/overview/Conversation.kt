@@ -5,6 +5,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
@@ -14,13 +15,14 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 @Composable
 fun ConversationScreen(navigationActions: NavigationActions) {
   Scaffold(
+      modifier = Modifier.testTag("conversationScreen"),
       bottomBar = {
         BottomNavigationMenu(
             onTabSelect = { route -> navigationActions.navigateTo(route) },
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { pd -> Text("Conversation Screen", modifier = Modifier.padding(pd)) })
+      content = { pd -> Text("Conversation Screen", modifier = Modifier.padding(pd).testTag("convText")) })
 }
 
 @Preview(showBackground = true)
