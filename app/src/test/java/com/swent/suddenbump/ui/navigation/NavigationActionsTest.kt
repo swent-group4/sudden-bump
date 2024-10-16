@@ -33,6 +33,9 @@ class NavigationActionsTest {
 
     navigationActions.navigateTo(Screen.MAP)
     verify(navHostController).navigate(Screen.MAP)
+
+    navigationActions.navigateTo(Screen.MESS)
+    verify(navHostController).navigate(Screen.MESS)
   }
 
   @Test
