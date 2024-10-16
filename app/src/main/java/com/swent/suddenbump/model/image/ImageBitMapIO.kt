@@ -6,13 +6,11 @@ import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import com.swent.suddenbump.R
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
 class ImageBitMapIO {
-
     fun getInternalImageBitMap(
         context: Context,
         path: String,
@@ -45,33 +43,5 @@ class ImageBitMapIO {
         } catch (e: Exception) {
             onFailure(e)
         }
-    }
-
-    fun getInternalProfilePicture(
-        context: Context,
-        onSuccess: (ImageBitmap) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        getInternalImageBitMap(
-            context,
-            R.string.default_profile_picture_path.toString(),
-            onSuccess,
-            onFailure
-        )
-    }
-
-    fun setInternalProfilePicture(
-        context: Context,
-        imageBitmap: ImageBitmap,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        setInternalImageBitMap(
-            context,
-            R.string.default_profile_picture_path.toString(),
-            imageBitmap,
-            onSuccess,
-            onFailure
-        )
     }
 }

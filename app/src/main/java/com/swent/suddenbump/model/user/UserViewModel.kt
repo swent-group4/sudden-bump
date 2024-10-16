@@ -1,9 +1,6 @@
 package com.swent.suddenbump.model.user
 
-import android.content.Context
 import android.util.Log
-import androidx.compose.ui.graphics.ImageBitmap
-import com.swent.suddenbump.R
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.model.location.Location
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +19,7 @@ class UserViewModel(private val repository: UserRepository) {
                 "Martin",
                 "Vetterli",
                 "+41 00 000 00 01",
+                null,
                 "martin.vetterli@epfl.ch"
             )
         )
@@ -46,6 +44,10 @@ class UserViewModel(private val repository: UserRepository) {
             user = _user.value,
             onSuccess = { _blockedFriends.value = it },
             onFailure = { Log.e(logTag, it.toString()) })
+    }
+
+    fun setUser(user: User) {
+        _user.value = user
     }
 
     fun verifyNoAccountExists(
@@ -104,28 +106,6 @@ class UserViewModel(private val repository: UserRepository) {
     ) {
         _userLocation.value = location
         repository.updateLocation(user, location, onSuccess, onFailure)
-    }
-
-    fun hasProfilePictureChanged() : StateFlow<Boolean> {
-        return _userProfilePictureChanging.asStateFlow()
-    }
-
-    fun getProfilePicture(
-        context: Context,
-        onSuccess: (ImageBitmap) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        profilePicture.getInternalProfilePicture(context, onSuccess, onFailure)
-    }
-
-    fun setProfilePicture(
-        context: Context,
-        imageBitmap: ImageBitmap,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        profilePicture.setInternalProfilePicture(context, imageBitmap, onSuccess, onFailure)
-        _userProfilePictureChanging.value = _userProfilePictureChanging.value.not()
     }
 
     fun getNewUid(): String {

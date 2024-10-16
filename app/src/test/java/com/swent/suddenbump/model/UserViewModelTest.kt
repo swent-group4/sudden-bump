@@ -27,6 +27,7 @@ class UserViewModelTest {
           "Martin",
           "Vetterli",
           "+41 00 000 00 01",
+          null,
           "martin.vetterli@epfl.ch")
 
   @Before
@@ -43,6 +44,7 @@ class UserViewModelTest {
             "Martin",
             "Vetterli",
             "+41 00 000 00 01",
+            null,
             "martin.vetterli@epfl.ch")
 
     doAnswer { invocationOnMock ->
@@ -116,6 +118,7 @@ class UserViewModelTest {
             "Martin",
             "Vetterli",
             "+41 00 000 00 01",
+            null,
             "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user.uid))
@@ -130,6 +133,7 @@ class UserViewModelTest {
             "Martin",
             "Vetterli",
             "+41 00 000 00 01",
+            null,
             "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user.uid))
@@ -146,6 +150,7 @@ class UserViewModelTest {
             "Martin",
             "Vetterli",
             "+41 00 000 00 01",
+            null,
             "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getBlockedFriends().value.map { it.uid }.contains(user.uid))
@@ -160,6 +165,7 @@ class UserViewModelTest {
             "Martin",
             "Vetterli",
             "+41 00 000 00 01",
+            null,
             "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getBlockedFriends().value.map { it.uid }.contains(user.uid))

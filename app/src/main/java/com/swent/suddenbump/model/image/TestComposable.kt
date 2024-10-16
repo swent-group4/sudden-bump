@@ -1,10 +1,8 @@
 package com.swent.suddenbump.model.image
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,36 +10,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
 import androidx.core.graphics.alpha
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
+import com.swent.suddenbump.R
+import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 
-@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun TestComposableScreen(userViewModel: UserViewModel) {
-    val context = LocalContext.current
 
-    val mutableImageBitmap = remember { mutableStateOf(ImageBitmap(100, 100)) }
-
-    LaunchedEffect(Unit) {
-        userViewModel.hasProfilePictureChanged().collect {
-            userViewModel.getProfilePicture(context, onSuccess = {
-                mutableImageBitmap.value = it
-            }, onFailure = {
-                Log.i("Main", "FAILED UPDATE IN LAUNCHED EFFECT")
-            })
-        }
-    }
+    val image = userViewModel.getCurrentUser().collectAsState()
+    val bitmap = ImageBitmap.imageResource(R.drawable.profile)
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -50,17 +37,17 @@ fun TestComposableScreen(userViewModel: UserViewModel) {
     ) {
         Button(onClick = {
             val imageBitmap = generateBitmap()
-            userViewModel.setProfilePicture(
-                context = context,
-                imageBitmap = imageBitmap,
-                onSuccess = {},
-                onFailure = {
-                    Log.i("Main", "FAILED!!")
-                    Log.i("Main", it.toString())
-                })
+            userViewModel.setUser(User(
+                "1",
+                "Martin",
+                "Vetterli",
+                "+41 00 000 00 01",
+                bitmap,
+                "martin.vetterli@epfl.ch"
+            ))
         }) { Text("Generate new ImageBitmap") }
 
-        Image(bitmap = mutableImageBitmap.value, contentDescription = null)
+        image.value.profilePicture?.let { Image(bitmap = it, contentDescription = null) }
     }
 }
 

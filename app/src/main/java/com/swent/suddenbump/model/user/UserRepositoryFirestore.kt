@@ -218,6 +218,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         firstName = document.data!!.get("firstName").toString(),
         lastName = document.data!!.get("lastName").toString(),
         phoneNumber = document.data!!.get("phoneNumber").toString(),
+        profilePicture = null,
         emailAddress = document.data!!.get("emailAddress").toString())
   }
 
