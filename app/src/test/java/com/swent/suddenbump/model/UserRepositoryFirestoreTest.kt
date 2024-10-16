@@ -35,278 +35,249 @@ import org.robolectric.Shadows.shadowOf
 @RunWith(RobolectricTestRunner::class)
 class UserRepositoryFirestoreTest {
 
-    @Mock
-    private lateinit var mockFirestoreStorage: FirebaseStorage
-    @Mock
-    private lateinit var mockFirestore: FirebaseFirestore
-    @Mock
-    private lateinit var mockUserCollectionReference: CollectionReference
-    @Mock
-    private lateinit var mockEmailCollectionReference: CollectionReference
-    @Mock
-    private lateinit var mockUserDocumentReference: DocumentReference
-    @Mock
-    private lateinit var mockEmailDocumentReference: DocumentReference
-    @Mock
-    private lateinit var mockUserDocumentSnapshot: DocumentSnapshot
-    @Mock
-    private lateinit var mockEmailDocumentSnapshot: DocumentSnapshot
-    @Mock
-    private lateinit var mockUserQuerySnapshot: QuerySnapshot
-    @Mock
-    private lateinit var mockEmailQuerySnapshot: QuerySnapshot
-    @Mock
-    private lateinit var mockFirebaseAuth: FirebaseAuth
-    @Mock
-    private lateinit var mockFirebaseUser: FirebaseUser
-    @Mock
-    private lateinit var firebaseAuthMockStatic: MockedStatic<FirebaseAuth>
-    @Mock
-    private lateinit var mockTaskVoid: Task<Void>
+  @Mock private lateinit var mockFirestoreStorage: FirebaseStorage
+  @Mock private lateinit var mockFirestore: FirebaseFirestore
+  @Mock private lateinit var mockUserCollectionReference: CollectionReference
+  @Mock private lateinit var mockEmailCollectionReference: CollectionReference
+  @Mock private lateinit var mockUserDocumentReference: DocumentReference
+  @Mock private lateinit var mockEmailDocumentReference: DocumentReference
+  @Mock private lateinit var mockUserDocumentSnapshot: DocumentSnapshot
+  @Mock private lateinit var mockEmailDocumentSnapshot: DocumentSnapshot
+  @Mock private lateinit var mockUserQuerySnapshot: QuerySnapshot
+  @Mock private lateinit var mockEmailQuerySnapshot: QuerySnapshot
+  @Mock private lateinit var mockFirebaseAuth: FirebaseAuth
+  @Mock private lateinit var mockFirebaseUser: FirebaseUser
+  @Mock private lateinit var firebaseAuthMockStatic: MockedStatic<FirebaseAuth>
+  @Mock private lateinit var mockTaskVoid: Task<Void>
 
-    private lateinit var userRepositoryFirestore: UserRepositoryFirestore
+  private lateinit var userRepositoryFirestore: UserRepositoryFirestore
 
-    private val location = Location(0.0, 0.0)
-    private val user =
-        User(
-            uid = "1",
-            firstName = "Alexandre",
-            lastName = "Carel",
-            phoneNumber = "+33 6 59 20 70 02",
-            null,
-            emailAddress = "alexandre.carel@epfl.ch"
-        )
+  private val location = Location(0.0, 0.0)
+  private val user =
+      User(
+          uid = "1",
+          firstName = "Alexandre",
+          lastName = "Carel",
+          phoneNumber = "+33 6 59 20 70 02",
+          null,
+          emailAddress = "alexandre.carel@epfl.ch")
 
-    @Before
-    fun setUp() {
-        MockitoAnnotations.openMocks(this)
+  @Before
+  fun setUp() {
+    MockitoAnnotations.openMocks(this)
 
-        System.setProperty("mockito.verbose", "true")
+    System.setProperty("mockito.verbose", "true")
 
-        // Initialize Firebase if necessary
-        if (FirebaseApp.getApps(ApplicationProvider.getApplicationContext()).isEmpty()) {
-            FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
-        }
-
-        userRepositoryFirestore = UserRepositoryFirestore(mockFirestore)
-
-        `when`(mockTaskVoid.isSuccessful).thenReturn(true)
-        `when`(mockTaskVoid.isCanceled).thenReturn(false)
-        `when`(mockTaskVoid.isComplete).thenReturn(true)
-        `when`(mockTaskVoid.addOnSuccessListener(any())).thenReturn(mockTaskVoid)
-        `when`(mockTaskVoid.addOnCompleteListener(any())).thenReturn(mockTaskVoid)
-        `when`(mockTaskVoid.addOnFailureListener(any())).thenReturn(mockTaskVoid)
-
-        `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
-        `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
-        `when`(mockUserCollectionReference.document()).thenReturn(mockUserDocumentReference)
-        `when`(mockUserDocumentReference.set(any())).thenReturn(mockTaskVoid)
-        `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
-        `when`(mockUserDocumentReference.id).thenReturn("1")
-        `when`(mockUserDocumentSnapshot.data)
-            .thenReturn(
-                mapOf(
-                    "uid" to "1",
-                    "firstName" to "Alexandre",
-                    "lastName" to "Carel",
-                    "phoneNumber" to "+33 6 59 20 70 02",
-                    "emailAddress" to "alexandre.carel@epfl.ch"
-                )
-            )
-
-        `when`(mockFirestore.collection("Emails")).thenReturn(mockEmailCollectionReference)
-        `when`(mockEmailCollectionReference.document(any())).thenReturn(mockEmailDocumentReference)
-        `when`(mockEmailCollectionReference.document()).thenReturn(mockEmailDocumentReference)
-        `when`(mockEmailDocumentReference.id).thenReturn("alexandre.carel@epfl.ch")
-        `when`(mockEmailDocumentSnapshot.data).thenReturn(mapOf("uid" to "1"))
-
-        firebaseAuthMockStatic
-            .`when`<FirebaseAuth> { FirebaseAuth.getInstance() }
-            .thenReturn(mockFirebaseAuth)
-        `when`(mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser)
-
-        `when`(mockFirebaseUser.uid).thenReturn("1")
-        `when`(mockFirebaseUser.email).thenReturn("alexandre.carel@epfl.ch")
-        `when`(mockFirebaseUser.displayName).thenReturn("Alexandre Carel")
+    // Initialize Firebase if necessary
+    if (FirebaseApp.getApps(ApplicationProvider.getApplicationContext()).isEmpty()) {
+      FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
 
-    @Test
-    fun getNewUid() {
-        `when`(mockUserDocumentReference.id).thenReturn("1")
-        val uid = userRepositoryFirestore.getNewUid()
-        assert(uid == "1")
-    }
+    userRepositoryFirestore = UserRepositoryFirestore(mockFirestore)
 
-    @After
-    fun tearDown() {
-        // Release the mockStatic object after each test to prevent memory leaks
-        firebaseAuthMockStatic.close()
-    }
+    `when`(mockTaskVoid.isSuccessful).thenReturn(true)
+    `when`(mockTaskVoid.isCanceled).thenReturn(false)
+    `when`(mockTaskVoid.isComplete).thenReturn(true)
+    `when`(mockTaskVoid.addOnSuccessListener(any())).thenReturn(mockTaskVoid)
+    `when`(mockTaskVoid.addOnCompleteListener(any())).thenReturn(mockTaskVoid)
+    `when`(mockTaskVoid.addOnFailureListener(any())).thenReturn(mockTaskVoid)
 
-    @Test
-    fun verifyNoAccountExists_callsDocuments() {
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
+    `when`(mockUserCollectionReference.document()).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.set(any())).thenReturn(mockTaskVoid)
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
+    `when`(mockUserDocumentReference.id).thenReturn("1")
+    `when`(mockUserDocumentSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "uid" to "1",
+                "firstName" to "Alexandre",
+                "lastName" to "Carel",
+                "phoneNumber" to "+33 6 59 20 70 02",
+                "emailAddress" to "alexandre.carel@epfl.ch"))
 
-        `when`(mockEmailCollectionReference.get()).thenReturn(Tasks.forResult(mockEmailQuerySnapshot))
-        `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
+    `when`(mockFirestore.collection("Emails")).thenReturn(mockEmailCollectionReference)
+    `when`(mockEmailCollectionReference.document(any())).thenReturn(mockEmailDocumentReference)
+    `when`(mockEmailCollectionReference.document()).thenReturn(mockEmailDocumentReference)
+    `when`(mockEmailDocumentReference.id).thenReturn("alexandre.carel@epfl.ch")
+    `when`(mockEmailDocumentSnapshot.data).thenReturn(mapOf("uid" to "1"))
 
-        `when`(mockEmailDocumentReference.get()).thenReturn(
-            Tasks.forResult(
-                mockEmailDocumentSnapshot
-            )
-        )
+    firebaseAuthMockStatic
+        .`when`<FirebaseAuth> { FirebaseAuth.getInstance() }
+        .thenReturn(mockFirebaseAuth)
+    `when`(mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser)
 
-        userRepositoryFirestore.verifyNoAccountExists(
-            user.emailAddress,
-            onSuccess = {},
-            onFailure = { fail("Failure callback should not be called") })
+    `when`(mockFirebaseUser.uid).thenReturn("1")
+    `when`(mockFirebaseUser.email).thenReturn("alexandre.carel@epfl.ch")
+    `when`(mockFirebaseUser.displayName).thenReturn("Alexandre Carel")
+  }
 
-        verify(timeout(100)) { (mockUserQuerySnapshot).documents }
-    }
+  @Test
+  fun getNewUid() {
+    `when`(mockUserDocumentReference.id).thenReturn("1")
+    val uid = userRepositoryFirestore.getNewUid()
+    assert(uid == "1")
+  }
 
-    /**
-     * This test verifies that when we create a new User account, the Firestore `set()` is called on
-     * the document reference. This does NOT CHECK the actual data being added
-     */
-    @Test
-    fun createUserAccount_shouldCallFirestoreCollection() {
-        userRepositoryFirestore.createUserAccount(user, onSuccess = {}, onFailure = {})
+  @After
+  fun tearDown() {
+    // Release the mockStatic object after each test to prevent memory leaks
+    firebaseAuthMockStatic.close()
+  }
 
-        shadowOf(Looper.getMainLooper()).idle()
+  @Test
+  fun verifyNoAccountExists_callsDocuments() {
 
-        verify(mockUserDocumentReference).set(any())
-    }
+    `when`(mockEmailCollectionReference.get()).thenReturn(Tasks.forResult(mockEmailQuerySnapshot))
+    `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
 
-    /**
-     * This test verifies that when fetching a User, the Firestore `get()` is called on the collection
-     * reference and not the document reference.
-     */
-    @Test
-    fun getUserAccount_callsDocuments() {
-        `when`(mockUserCollectionReference.get()).thenReturn(Tasks.forResult(mockUserQuerySnapshot))
-        `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
+    `when`(mockEmailDocumentReference.get()).thenReturn(Tasks.forResult(mockEmailDocumentSnapshot))
 
-        `when`(mockEmailCollectionReference.get()).thenReturn(Tasks.forResult(mockEmailQuerySnapshot))
-        `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
+    userRepositoryFirestore.verifyNoAccountExists(
+        user.emailAddress,
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
 
-        `when`(mockEmailDocumentReference.get()).thenReturn(
-            Tasks.forResult(
-                mockEmailDocumentSnapshot
-            )
-        )
+    verify(timeout(100)) { (mockUserQuerySnapshot).documents }
+  }
 
-        userRepositoryFirestore.getUserAccount(
-            onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
+  /**
+   * This test verifies that when we create a new User account, the Firestore `set()` is called on
+   * the document reference. This does NOT CHECK the actual data being added
+   */
+  @Test
+  fun createUserAccount_shouldCallFirestoreCollection() {
+    userRepositoryFirestore.createUserAccount(user, onSuccess = {}, onFailure = {})
 
-        verify(timeout(100)) { (mockUserQuerySnapshot).documents }
-    }
+    shadowOf(Looper.getMainLooper()).idle()
 
-    /**
-     * This test verifies that when we create a new User account, the Firestore `set()` is called on
-     * the document reference. This does NOT CHECK the actual data being added
-     */
-    @Test
-    fun updateUserAccount_shouldCallFirestoreCollection() {
-        userRepositoryFirestore.updateUserAccount(user, onSuccess = {}, onFailure = {})
+    verify(mockUserDocumentReference).set(any())
+  }
 
-        shadowOf(Looper.getMainLooper()).idle()
+  /**
+   * This test verifies that when fetching a User, the Firestore `get()` is called on the collection
+   * reference and not the document reference.
+   */
+  @Test
+  fun getUserAccount_callsDocuments() {
+    `when`(mockUserCollectionReference.get()).thenReturn(Tasks.forResult(mockUserQuerySnapshot))
+    `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
 
-        verify(mockUserDocumentReference).set(any())
-    }
+    `when`(mockEmailCollectionReference.get()).thenReturn(Tasks.forResult(mockEmailQuerySnapshot))
+    `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
 
-    /**
-     * This check that the correct Firestore method is called when deleting. Does NOT CHECK that the
-     * correct data is deleted.
-     */
-    @Test
-    fun deleteUserById_shouldCallDocumentReferenceDelete() {
-        `when`(mockUserDocumentReference.delete()).thenReturn(mockTaskVoid)
+    `when`(mockEmailDocumentReference.get()).thenReturn(Tasks.forResult(mockEmailDocumentSnapshot))
 
-        userRepositoryFirestore.deleteUserAccount("1", onSuccess = {}, onFailure = {})
+    userRepositoryFirestore.getUserAccount(
+        onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
 
-        shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
+    verify(timeout(100)) { (mockUserQuerySnapshot).documents }
+  }
 
-        verify(mockUserDocumentReference).delete()
-    }
+  /**
+   * This test verifies that when we create a new User account, the Firestore `set()` is called on
+   * the document reference. This does NOT CHECK the actual data being added
+   */
+  @Test
+  fun updateUserAccount_shouldCallFirestoreCollection() {
+    userRepositoryFirestore.updateUserAccount(user, onSuccess = {}, onFailure = {})
 
-    /**
-     * This test verifies that when fetching a User, the Firestore `get()` is called on the collection
-     * reference and not the document reference.
-     */
-    @Test
-    fun getUserFriends_callsDocuments() {
-        `when`(mockUserCollectionReference.get()).thenReturn(Tasks.forResult(mockUserQuerySnapshot))
-        `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
+    shadowOf(Looper.getMainLooper()).idle()
 
-        userRepositoryFirestore.getUserFriends(
-            user = user,
-            onSuccess = {},
-            onFailure = { fail("Failure callback should not be called") })
+    verify(mockUserDocumentReference).set(any())
+  }
 
-        verify(timeout(100)) { (mockUserQuerySnapshot).documents }
-    }
+  /**
+   * This check that the correct Firestore method is called when deleting. Does NOT CHECK that the
+   * correct data is deleted.
+   */
+  @Test
+  fun deleteUserById_shouldCallDocumentReferenceDelete() {
+    `when`(mockUserDocumentReference.delete()).thenReturn(mockTaskVoid)
 
-    /**
-     * This test verifies that when we create a new User account, the Firestore `set()` is called on
-     * the document reference. This does NOT CHECK the actual data being added
-     */
-    @Test
-    fun setUserFriends_shouldCallFirestoreCollection() {
-        `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
+    userRepositoryFirestore.deleteUserAccount("1", onSuccess = {}, onFailure = {})
 
-        userRepositoryFirestore.setUserFriends(
-            user = user, friendsList = listOf(user), onSuccess = {}, onFailure = {})
+    shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
 
-        shadowOf(Looper.getMainLooper()).idle()
+    verify(mockUserDocumentReference).delete()
+  }
 
-        verify(mockUserDocumentReference).update(anyString(), any())
-    }
+  /**
+   * This test verifies that when fetching a User, the Firestore `get()` is called on the collection
+   * reference and not the document reference.
+   */
+  @Test
+  fun getUserFriends_callsDocuments() {
+    `when`(mockUserCollectionReference.get()).thenReturn(Tasks.forResult(mockUserQuerySnapshot))
+    `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
 
-    /**
-     * This test verifies that when fetching a User, the Firestore `get()` is called on the collection
-     * reference and not the document reference.
-     */
-    @Test
-    fun getUserBlockedFriends_callsDocuments() {
-        `when`(mockUserCollectionReference.get()).thenReturn(Tasks.forResult(mockUserQuerySnapshot))
-        `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
+    userRepositoryFirestore.getUserFriends(
+        user = user, onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
 
-        userRepositoryFirestore.getBlockedFriends(
-            user = user,
-            onSuccess = {},
-            onFailure = { fail("Failure callback should not be called") })
+    verify(timeout(100)) { (mockUserQuerySnapshot).documents }
+  }
 
-        verify(timeout(100)) { (mockUserQuerySnapshot).documents }
-    }
+  /**
+   * This test verifies that when we create a new User account, the Firestore `set()` is called on
+   * the document reference. This does NOT CHECK the actual data being added
+   */
+  @Test
+  fun setUserFriends_shouldCallFirestoreCollection() {
+    `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
-    /**
-     * This test verifies that when we create a new User account, the Firestore `set()` is called on
-     * the document reference. This does NOT CHECK the actual data being added
-     */
-    @Test
-    fun setUserBlockedFriends_shouldCallFirestoreCollection() {
-        `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
+    userRepositoryFirestore.setUserFriends(
+        user = user, friendsList = listOf(user), onSuccess = {}, onFailure = {})
 
-        userRepositoryFirestore.setBlockedFriends(
-            user = user, blockedFriendsList = listOf(user), onSuccess = {}, onFailure = {})
+    shadowOf(Looper.getMainLooper()).idle()
 
-        shadowOf(Looper.getMainLooper()).idle()
+    verify(mockUserDocumentReference).update(anyString(), any())
+  }
 
-        verify(mockUserDocumentReference).update(anyString(), any())
-    }
+  /**
+   * This test verifies that when fetching a User, the Firestore `get()` is called on the collection
+   * reference and not the document reference.
+   */
+  @Test
+  fun getUserBlockedFriends_callsDocuments() {
+    `when`(mockUserCollectionReference.get()).thenReturn(Tasks.forResult(mockUserQuerySnapshot))
+    `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
 
-    /**
-     * This test verifies that when fetching a new user's Location, the Firestore `set()` is called on
-     * the document reference. This does NOT CHECK the actual data being added
-     */
-    @Test
-    fun setLocation_shouldCallFirestoreCollection() {
-        `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
+    userRepositoryFirestore.getBlockedFriends(
+        user = user, onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
 
-        userRepositoryFirestore.updateLocation(
-            user = user, location = location, onSuccess = {}, onFailure = {})
+    verify(timeout(100)) { (mockUserQuerySnapshot).documents }
+  }
 
-        shadowOf(Looper.getMainLooper()).idle()
+  /**
+   * This test verifies that when we create a new User account, the Firestore `set()` is called on
+   * the document reference. This does NOT CHECK the actual data being added
+   */
+  @Test
+  fun setUserBlockedFriends_shouldCallFirestoreCollection() {
+    `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
-        verify(mockUserDocumentReference).update(anyString(), any())
-    }
+    userRepositoryFirestore.setBlockedFriends(
+        user = user, blockedFriendsList = listOf(user), onSuccess = {}, onFailure = {})
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    verify(mockUserDocumentReference).update(anyString(), any())
+  }
+
+  /**
+   * This test verifies that when fetching a new user's Location, the Firestore `set()` is called on
+   * the document reference. This does NOT CHECK the actual data being added
+   */
+  @Test
+  fun setLocation_shouldCallFirestoreCollection() {
+    `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
+
+    userRepositoryFirestore.updateLocation(
+        user = user, location = location, onSuccess = {}, onFailure = {})
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    verify(mockUserDocumentReference).update(anyString(), any())
+  }
 }

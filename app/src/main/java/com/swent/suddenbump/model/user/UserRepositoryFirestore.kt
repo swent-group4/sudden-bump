@@ -1,8 +1,6 @@
 package com.swent.suddenbump.model.user
 
 import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountBox
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
