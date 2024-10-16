@@ -22,6 +22,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,7 +39,6 @@ data class MockUser(
     val email: String,
     val isFriend: Boolean = false,
 )
-
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -56,12 +56,15 @@ fun ContactScreen(navigationActions: NavigationActions) {
       )
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
+      modifier = Modifier.fillMaxSize().testTag("contactScreen"),
       topBar = {
         TopAppBar(
             title = { Text("Contact") },
             navigationIcon = {
-              IconButton(onClick = { navigationActions.goBack() }) {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")
+              ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                     contentDescription = "Back")
@@ -70,7 +73,7 @@ fun ContactScreen(navigationActions: NavigationActions) {
       },
       content = { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize().padding(padding).testTag("contactContent"),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -81,7 +84,7 @@ fun ContactScreen(navigationActions: NavigationActions) {
             AsyncImage(
                 model = user.profilePictureUrl,
                 contentDescription = null,
-                modifier = Modifier.width(150.dp).height(150.dp).padding(8.dp))
+                modifier = Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
             Column(
                 Modifier.fillMaxWidth().padding(top = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -91,33 +94,35 @@ fun ContactScreen(navigationActions: NavigationActions) {
                   style =
                       androidx.compose.ui.text.TextStyle(
                           fontSize = 20.sp, // Adjust the size as needed
-                          fontWeight = FontWeight.Bold))
+                          fontWeight = FontWeight.Bold),
+                  modifier = Modifier.testTag("userName")
+              )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 10.dp)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 10.dp).testTag("birthdayCard")) {
               Text(modifier = Modifier.padding(10.dp), text = "Birthday: " + user.birthDate)
             }
 
-            Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 10.dp)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 10.dp).testTag("phoneCard")) {
               Text(modifier = Modifier.padding(10.dp), text = "Phone: " + user.phoneNumber)
             }
 
-            Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 10.dp)) {
+            Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 10.dp).testTag("emailCard")) {
               Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.email)
             }
           }
 
             if(user.isFriend) {
                 Button(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 30.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 30.dp).testTag("sendMessageButton"),
                     onClick = { println("Button click !") }) {
                     Text("Send a message")
                 }
             } else {
                 Button(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 30.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp, vertical = 30.dp).testTag("addToContactsButton"),
                     onClick = { println("Button click !") }) {
                     Text("Add to contacts")
                 }

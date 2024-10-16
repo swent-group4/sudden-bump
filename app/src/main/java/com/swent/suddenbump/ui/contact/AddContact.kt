@@ -121,7 +121,6 @@ fun UserCard(user: User, navigationActions: NavigationActions) {
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddContactScreen(navigationActions: NavigationActions) {
@@ -135,7 +134,7 @@ fun AddContactScreen(navigationActions: NavigationActions) {
         }
 
     Scaffold(
-        modifier = Modifier.testTag("friendsListScreen"),
+        modifier = Modifier.testTag("addContactScreen"),
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -146,9 +145,10 @@ fun AddContactScreen(navigationActions: NavigationActions) {
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        navigationActions.goBack()
-                    }) {
+                    IconButton(
+                        onClick = { navigationActions.goBack() },
+                        modifier = Modifier.testTag("backButton")
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Go back"
@@ -159,15 +159,17 @@ fun AddContactScreen(navigationActions: NavigationActions) {
         },
         content = { pd ->
             Column(
-                modifier = Modifier.padding(pd), horizontalAlignment = Alignment.CenterHorizontally) {
+                modifier = Modifier.padding(pd).testTag("addContactContent"),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 TextField(
                     value = searchQuery,
                     onValueChange = { newValue -> searchQuery = newValue },
                     label = { Text("Search") },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp).testTag("searchTextField"),
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("recommendedRow"),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -180,9 +182,16 @@ fun AddContactScreen(navigationActions: NavigationActions) {
                     HorizontalDivider(modifier = Modifier.weight(1f))
                 }
                 if (mockUsers.isNotEmpty()) {
-                    LazyColumn { items(mockUsers) { user -> UserCard(user = user, navigationActions) } }
+                    LazyColumn(modifier = Modifier.testTag("userList")) {
+                        items(mockUsers) { user ->
+                            UserCard(user = user, navigationActions)
+                        }
+                    }
                 } else {
-                    Text(text = "Looks like no user corresponds to your query")
+                    Text(
+                        text = "Looks like no user corresponds to your query",
+                        modifier = Modifier.testTag("noUsersText")
+                    )
                 }
             }
         })
