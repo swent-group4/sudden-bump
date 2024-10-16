@@ -1,10 +1,12 @@
 package com.swent.suddenbump.ui.authentication
 
-import SignUpScreen
+import android.content.Intent
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.swent.suddenbump.model.user.UserRepository
@@ -13,6 +15,7 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mock
 import org.mockito.Mockito.mock
 
 class SignUpScreenTest {
@@ -21,6 +24,9 @@ class SignUpScreenTest {
   private lateinit var navigationActions: NavigationActions
   private lateinit var userViewModel: UserViewModel
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+  @Mock
+  lateinit var mockLauncher: ActivityResultLauncher<Intent> // not used yet - needed to mock uCrop
 
   @Before
   fun setUp() {
@@ -76,100 +82,50 @@ class SignUpScreenTest {
     composeTestRule.onNodeWithTag("phoneField").performTextClearance()
     composeTestRule.onNodeWithTag("phoneField").performTextInput("+41791234567")
     composeTestRule.onNodeWithTag("phoneField").assertTextContains("+41 79 123 45 67")
+
+    // Perform button click
+    composeTestRule.onNodeWithTag("profilePictureButton").performClick()
+    //        composeTestRule.onNodeWithTag("noProfilePic").assertIsDisplayed()
+
+    // Perform create account button click
+    //    composeTestRule.onNodeWithTag("createAccountButton").performClick()
+    //    verify(navigationActions).navigateTo(Screen.OVERVIEW)
   }
 
   /*@Test
-    fun testProfilePictureUpload() {
-      // Set the content of the ComposeTestRule
-      composeTestRule.setContent {
-        SignUpScreen(navigationActions, userViewModel)
-      }
-
-      // Wait for the Compose hierarchy to be set up
-      composeTestRule.waitForIdle()
-
-      // Create a hardcoded URI that will be returned as the cropping result
-      val context = InstrumentationRegistry.getInstrumentation().targetContext
-      val hardcodedUri = Uri.parse("android.resource://${context.packageName}/raw/profile")
-
-      // Mock the ActivityResultLauncher for uCrop
-      val mockLauncher = mock<ActivityResultLauncher<Intent>>()
-
-      // Simulate the uCrop result
-      val resultIntent = Intent().apply {
-        data = hardcodedUri
-      }
-      val result = Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent)
-
-      // When the launcher is invoked, simulate the result callback with the hardcoded URI
-  //    doAnswer { invocation ->
-  //      val callback = invocation.arguments[0] as (Instrumentation.ActivityResult) -> Unit
-  //      callback(result)  // Pass the hardcoded result
-  //      null
-  //    }.`when`(mockLauncher).launch(any())
-      doAnswer { invocation ->
-        val callback = invocation.getArgument<(Instrumentation.ActivityResult) -> Unit>(0)
-        callback(result) // Pass the hardcoded result
-        null
-      }.whenever(mockLauncher).launch(any())
-
-      // Now proceed with your test and verify behavior after uCrop result
-      composeTestRule.onNodeWithTag("profilePictureButton").performClick()
-      composeTestRule.waitForIdle()
-      composeTestRule.onNodeWithTag("profilePicture").assertExists()
-    }*/
-
-  /*@Test
-  fun testProfilePictureUpload() {
-    // Ensure that the test rule is correctly initialized
+  fun testProfilePictureUpload() { // Having difficulty setting up this test and mocking uCrop
+    // Set up the content in the test
     composeTestRule.setContent {
       SignUpScreen(navigationActions, userViewModel)
     }
 
-    // Mock the cropLauncher and image picking
-    val mockLauncher = mock<ActivityResultLauncher<Intent>>()
-    val mockCropLauncher = mock<ActivityResultLauncher<Intent>>()
-    val context = InstrumentationRegistry.getInstrumentation().targetContext
-    val hardcodedUri = Uri.parse("android.resource://${context.packageName}/raw/profile")
-
-    // Simulate cropping result
+    // Prepare the Uri for the cropped image
+    val croppedImageUri = Uri.parse("content://path/to/cropped/image.jpg")
     val resultIntent = Intent().apply {
-      putExtra(UCrop.EXTRA_OUTPUT_URI, hardcodedUri)
+      putExtra(UCrop.EXTRA_OUTPUT_URI, croppedImageUri)
     }
-    val cropResult = Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent)
 
-    // Set up the mock behavior for cropLauncher
-    doAnswer { invocation ->
-      val callback = invocation.getArgument<(Instrumentation.ActivityResult) -> Unit>(0)
-      callback(cropResult) // Pass the hardcoded result for cropping
-      null
-    }.whenever(mockCropLauncher).launch(any())
+    // Mock the result from UCrop
+    val result = Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent)
 
-    // Simulate image selection
-    val selectedImageUri = Uri.parse("android.resource://${context.packageName}/raw/profile")
-    val resultIntentFromPicker = Intent().apply {
-      putExtra(Intent.EXTRA_STREAM, selectedImageUri)
+    // Mock the behavior of the UCrop launcher
+    `when`(mockLauncher.launch(any())).then {
+      mockLauncher.launch(resultIntent)  // This is just an illustrative example
     }
-    val imageResult = Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntentFromPicker)
 
-    // Mock the launcher behavior to invoke cropping
-    doAnswer { invocation ->
-      val callback = invocation.getArgument<(Instrumentation.ActivityResult) -> Unit>(0)
-      callback(imageResult) // Pass the selected image URI
-      null
-    }.whenever(mockLauncher).launch(any())
 
-    // Trigger the image picker by clicking the profile picture button
-    composeTestRule.onNodeWithTag("profilePictureButton", useUnmergedTree = true).performClick()
+    // Trigger the profile picture upload by clicking the button
+    composeTestRule.onNodeWithTag("profilePictureButton").performClick()
 
-    // Optional: Print the current UI hierarchy for debugging
-    composeTestRule.onRoot(useUnmergedTree = true).printToLog("Current UI Hierarchy")
+    // Here you would simulate the result of the UCrop in the launcher
+    // This assumes your UI reacts to the result being set
+    mockLauncher.launch(resultIntent)
 
-    // Check if the profile picture was updated
-    composeTestRule.onNodeWithTag("profilePicture", useUnmergedTree = true).assertExists()
-  }*/
+    // Verify that the profile picture was uploaded correctly
+    composeTestRule.onNodeWithTag("profilePicture").assertExists()
+  }
 
-  /*@Test
+  @Test
   fun testCreateAccountButton_success() { // Not yet implemented as we need to mock the navigation actions
     composeTestRule.setContent {
       SignUpScreen(navigationActions, userViewModel)
