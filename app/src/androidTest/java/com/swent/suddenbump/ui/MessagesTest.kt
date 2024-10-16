@@ -72,9 +72,12 @@ class MessagesScreenTest {
             MessagesScreen(navigationActions)
         }
 
-        // Vérifie que le contenu des messages est correctement affiché
-        composeTestRule.onNodeWithText("Hi Marc! Thanks for your message, I'd love to go for a drink! Let's say 9pm?")
-            .performScrollTo()
+        // Fais défiler jusqu'au premier élément (ou l'élément souhaité)
+        composeTestRule.onNodeWithTag("messages_list")
+            .performScrollToIndex(0)
+
+        // Vérifie que le message est affiché
+        composeTestRule.onNodeWithText("Hi Marc! Thanks for your message")
             .assertIsDisplayed()
     }
 }
