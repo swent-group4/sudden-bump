@@ -112,22 +112,20 @@ class UserViewModel(private val repository: UserRepository) {
 
     fun getProfilePicture(
         context: Context,
-        path: String = R.string.default_profile_picture_path.toString(),
         onSuccess: (ImageBitmap) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        profilePicture.getInternalProfilePicture(context, path, onSuccess, onFailure)
+        profilePicture.getInternalProfilePicture(context, onSuccess, onFailure)
     }
 
     fun setProfilePicture(
         context: Context,
         imageBitmap: ImageBitmap,
-        path: String = R.string.default_profile_picture_path.toString(),
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        profilePicture.setInternalProfilePicture(context, path, imageBitmap, onSuccess, onFailure)
-        _userProfilePictureChanging.value = !_userProfilePictureChanging.value
+        profilePicture.setInternalProfilePicture(context, imageBitmap, onSuccess, onFailure)
+        _userProfilePictureChanging.value = _userProfilePictureChanging.value.not()
     }
 
     fun getNewUid(): String {

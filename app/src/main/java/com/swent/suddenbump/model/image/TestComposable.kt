@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.image
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -19,25 +20,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.core.graphics.alpha
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
 import com.swent.suddenbump.model.user.UserViewModel
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun TestComposableScreen(userViewModel: UserViewModel) {
     val context = LocalContext.current
 
-    var mutableImageBitmap = remember { mutableStateOf(ImageBitmap(100, 100)) }
+    val mutableImageBitmap = remember { mutableStateOf(ImageBitmap(100, 100)) }
 
-    LaunchedEffect(userViewModel.hasProfilePictureChanged()) {
-        userViewModel.getProfilePicture(context, onSuccess = {
-            mutableImageBitmap.value = it
-        }, onFailure = {
-            Log.i("Main", "FAILED UPDATE IN LAUNCHED EFFECT")
-        })
+    LaunchedEffect(Unit) {
+        userViewModel.hasProfilePictureChanged().collect {
+            userViewModel.getProfilePicture(context, onSuccess = {
+                mutableImageBitmap.value = it
+            }, onFailure = {
+                Log.i("Main", "FAILED UPDATE IN LAUNCHED EFFECT")
+            })
+        }
     }
 
     Column(
@@ -47,12 +50,14 @@ fun TestComposableScreen(userViewModel: UserViewModel) {
     ) {
         Button(onClick = {
             val imageBitmap = generateBitmap()
-            userViewModel.setProfilePicture(context = context, imageBitmap = imageBitmap, onSuccess = {
-                Log.i("Main", imageBitmap.toString())
-            }, onFailure = {
-                Log.i("Main", "FAILED!!")
-                Log.i("Main", it.toString())
-            })
+            userViewModel.setProfilePicture(
+                context = context,
+                imageBitmap = imageBitmap,
+                onSuccess = {},
+                onFailure = {
+                    Log.i("Main", "FAILED!!")
+                    Log.i("Main", it.toString())
+                })
         }) { Text("Generate new ImageBitmap") }
 
         Image(bitmap = mutableImageBitmap.value, contentDescription = null)
