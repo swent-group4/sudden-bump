@@ -3,6 +3,7 @@ package com.swent.suddenbump.ui.authentication
 import android.app.Activity
 import android.net.Uri
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -24,8 +25,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.R
+import com.swent.suddenbump.model.user.User
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.utils.PhoneNumberVisualTransformation
@@ -35,7 +40,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpScreen(navigationActions: NavigationActions) {
+fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   var firstName by remember { mutableStateOf("") }
   var lastName by remember { mutableStateOf("") }
   var email by remember { mutableStateOf("") }
@@ -43,6 +48,7 @@ fun SignUpScreen(navigationActions: NavigationActions) {
   var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
   val coroutineScope = rememberCoroutineScope()
   val context = LocalContext.current
+  val auth = FirebaseAuth.getInstance()
 
   val cropLauncher =
       rememberLauncherForActivityResult(
@@ -136,7 +142,23 @@ fun SignUpScreen(navigationActions: NavigationActions) {
               keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone))
           Spacer(modifier = Modifier.height(16.dp))
           Button(
-              onClick = { navigationActions.navigateTo(Screen.OVERVIEW) },
+              onClick = {
+                userViewModel.createUserAccount(
+                    User(
+                        uid = auth.currentUser!!.uid,
+                        firstName = firstName,
+                        lastName = lastName,
+                        emailAddress = email,
+                        phoneNumber = phoneNumber,
+                        profilePicture =
+                            MediaStore.Images.Media.getBitmap(
+                                    context.contentResolver, profilePictureUri)
+                                .asImageBitmap()),
+                    onSuccess = { navigationActions.navigateTo(Screen.OVERVIEW) },
+                    onFailure = {
+                      Toast.makeText(context, "Account creation failed", Toast.LENGTH_SHORT).show()
+                    })
+              },
               modifier = Modifier.fillMaxWidth().testTag("createAccountButton")) {
                 Text("Create Account")
               }
@@ -149,5 +171,6 @@ fun SignUpScreen(navigationActions: NavigationActions) {
 fun SignUpScreenPreview() {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
-  SignUpScreen(navigationActions)
+  val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+  SignUpScreen(navigationActions, userViewModel)
 }
