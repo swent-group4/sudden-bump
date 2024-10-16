@@ -1,7 +1,5 @@
-package com.github.se.bootcamp.model.todo
+package com.swent.suddenbump.model
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
 import com.swent.suddenbump.model.location.Location
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
@@ -17,7 +15,7 @@ import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
-class ListToDosViewModelTest {
+class UserViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
 
@@ -28,7 +26,6 @@ class ListToDosViewModelTest {
           "1",
           "Martin",
           "Vetterli",
-          Icons.Outlined.AccountCircle,
           "+41 00 000 00 01",
           "martin.vetterli@epfl.ch")
 
@@ -45,7 +42,6 @@ class ListToDosViewModelTest {
             "2222",
             "Martin",
             "Vetterli",
-            Icons.Outlined.AccountCircle,
             "+41 00 000 00 01",
             "martin.vetterli@epfl.ch")
 
@@ -119,7 +115,6 @@ class ListToDosViewModelTest {
             "2222",
             "Martin",
             "Vetterli",
-            Icons.Outlined.AccountCircle,
             "+41 00 000 00 01",
             "martin.vetterli@epfl.ch")
 
@@ -134,7 +129,6 @@ class ListToDosViewModelTest {
             "2222",
             "Martin",
             "Vetterli",
-            Icons.Outlined.AccountCircle,
             "+41 00 000 00 01",
             "martin.vetterli@epfl.ch")
 
@@ -151,7 +145,6 @@ class ListToDosViewModelTest {
             "2222",
             "Martin",
             "Vetterli",
-            Icons.Outlined.AccountCircle,
             "+41 00 000 00 01",
             "martin.vetterli@epfl.ch")
 
@@ -166,7 +159,6 @@ class ListToDosViewModelTest {
             "2222",
             "Martin",
             "Vetterli",
-            Icons.Outlined.AccountCircle,
             "+41 00 000 00 01",
             "martin.vetterli@epfl.ch")
 

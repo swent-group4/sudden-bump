@@ -60,7 +60,6 @@ class UserRepositoryFirestoreTest {
           uid = "1",
           firstName = "Alexandre",
           lastName = "Carel",
-          profilePicture = Icons.Outlined.AccountCircle,
           phoneNumber = "+33 6 59 20 70 02",
           emailAddress = "alexandre.carel@epfl.ch")
 
@@ -96,7 +95,6 @@ class UserRepositoryFirestoreTest {
                 "uid" to "1",
                 "firstName" to "Alexandre",
                 "lastName" to "Carel",
-                "profilePicture" to Icons.Outlined.AccountCircle,
                 "phoneNumber" to "+33 6 59 20 70 02",
                 "emailAddress" to "alexandre.carel@epfl.ch"))
 
