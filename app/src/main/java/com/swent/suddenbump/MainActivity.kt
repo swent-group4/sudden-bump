@@ -1,5 +1,6 @@
 package com.swent.suddenbump
 
+import SignUpScreen
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
@@ -32,7 +33,6 @@ import com.swent.suddenbump.model.LocationGetter
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
-import com.swent.suddenbump.ui.authentication.SignUpScreen
 import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.messages.MessagesScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
