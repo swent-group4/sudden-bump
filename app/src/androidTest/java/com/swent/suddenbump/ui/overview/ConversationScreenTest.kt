@@ -12,26 +12,25 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
 class ConversationScreenTest {
-    private lateinit var navigationActions: NavigationActions
-    @get:Rule val composeTestRule = createComposeRule()
+  private lateinit var navigationActions: NavigationActions
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Before
-    fun setUp() {
-        navigationActions = mock(NavigationActions::class.java)
+  @Before
+  fun setUp() {
+    navigationActions = mock(NavigationActions::class.java)
 
-        `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
-        composeTestRule.setContent { ConversationScreen(navigationActions) }
-    }
+    `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
+    composeTestRule.setContent { ConversationScreen(navigationActions) }
+  }
 
-    @Test
-    fun hasRequiredComponents() {
-        composeTestRule.onNodeWithTag("conversationScreen").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
-    }
+  @Test
+  fun hasRequiredComponents() {
+    composeTestRule.onNodeWithTag("conversationScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
+  }
 
-    @Test
-    fun conversationScreenTextIsDisplayed() {
-        composeTestRule.onNodeWithTag("convText").assertIsDisplayed()
-    }
-
+  @Test
+  fun conversationScreenTextIsDisplayed() {
+    composeTestRule.onNodeWithTag("convText").assertIsDisplayed()
+  }
 }

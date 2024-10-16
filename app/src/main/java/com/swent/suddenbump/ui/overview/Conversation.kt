@@ -22,7 +22,9 @@ fun ConversationScreen(navigationActions: NavigationActions) {
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { pd -> Text("Conversation Screen", modifier = Modifier.padding(pd).testTag("convText")) })
+      content = { pd ->
+        Text("Conversation Screen", modifier = Modifier.padding(pd).testTag("convText"))
+      })
 }
 
 @Preview(showBackground = true)
