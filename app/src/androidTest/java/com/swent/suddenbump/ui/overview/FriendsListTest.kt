@@ -37,6 +37,17 @@ class FriendsListTest {
   }
 
   @Test
+  fun testScaffoldDisplay() {
+    composeTestRule.onNodeWithTag("friendsListScreen").assertIsDisplayed()
+    // Verify the top bar title
+    composeTestRule.onNodeWithText("Friends").assertIsDisplayed()
+    // Verify the search field is displayed
+    composeTestRule.onNodeWithTag("searchTextField").assertIsDisplayed()
+    // Verify the list of users is displayed
+    composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
+  }
+
+  @Test
   fun testSearchFunctionality() {
     // Enter a search query
     composeTestRule.onNodeWithTag("searchTextField").performTextInput("John")

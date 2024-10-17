@@ -14,19 +14,20 @@ import org.mockito.kotlin.verify
 
 class ContactScreenTest {
   private lateinit var navigationActions: NavigationActions
+
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
-
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
+
+    // Initialize the content once before all tests
     composeTestRule.setContent { ContactScreen(navigationActions) }
   }
 
   @Test
   fun testInitialScreenState() {
-
     // Verify the top bar title
     composeTestRule.onNodeWithText("Contact").assertIsDisplayed()
 
@@ -35,6 +36,7 @@ class ContactScreenTest {
 
     // Verify the user's name is displayed
     composeTestRule.onNodeWithTag("userName").assertIsDisplayed()
+
     // Verify the birthday card is displayed
     composeTestRule.onNodeWithTag("birthdayCard").assertIsDisplayed()
 
@@ -50,37 +52,39 @@ class ContactScreenTest {
 
   @Test
   fun testNavigationBackButton() {
+    // Verify the back button is displayed
     composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+
+    // Perform click on the back button
     composeTestRule.onNodeWithTag("backButton").performClick()
+
+    // Verify that navigation action 'goBack' is called
     verify(navigationActions).goBack()
   }
 
   @Test
   fun testSendMessageButtonClick() {
-    // Click the send message button
+    // Verify the send message button is displayed
     composeTestRule.onNodeWithTag("sendMessageButton").assertIsDisplayed()
+
+    // Perform click on the send message button
     composeTestRule.onNodeWithTag("sendMessageButton").performClick()
+
+    // Verify that navigation to the message screen is triggered
+    //    verify(navigationActions).navigateTo(Route.MESSAGE)
   }
 
-  //    @Test
-  //    fun testAddToContactsButtonWhenNotFriend() {
-  //        composeTestRule.setContent {
-  //            val navController = rememberNavController()
-  //            val navigationActions = NavigationActions(navController)
-  //            ContactScreen(navigationActions)
-  //        }
-  //
-  //        // Modify the user to not be a friend
-  //        composeTestRule.setContent {
-  //            val navController = rememberNavController()
-  //            val navigationActions = NavigationActions(navController)
-  //            ContactScreen(navigationActions)
-  //        }
-  //
-  //        // Verify the add to contacts button is displayed
-  //        composeTestRule.onNodeWithTag("addToContactsButton").assertIsDisplayed()
-  //
-  //        // Click the add to contacts button
-  ////        composeTestRule.onNodeWithTag("addToContactsButton").performClick()
-  //    }
+  @Test
+  fun testBirthdayCardDisplaysCorrectInfo() {
+    // Verify the birthday card is displayed
+    composeTestRule.onNodeWithTag("birthdayCard").assertIsDisplayed()
+
+    // Verify the birthday text is correct
+    composeTestRule.onNodeWithTag("birthdayText").assertTextEquals("Birthday: 28 February 1998")
+  }
+
+  @Test
+  fun testContactNameDisplaysCorrectly() {
+    composeTestRule.onNodeWithTag("userName").assertTextEquals("Jane Smith")
+  }
 }

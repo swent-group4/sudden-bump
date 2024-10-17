@@ -62,6 +62,27 @@ class AddContactScreenTest {
   }
 
   @Test
+  fun testSearchFunctionalityCaseInsensitivity() {
+    // Enter a search query in uppercase
+    composeTestRule.onNodeWithTag("searchTextField").performTextInput("JOHN")
+
+    // Verify that "John Doe" is displayed
+    composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
+  }
+
+  @Test
+  fun testEmptyUserListDisplaysNoUsersMessage() {
+
+    // Clear the search field to ensure no users are shown
+    composeTestRule.onNodeWithTag("searchTextField").performTextInput("qowve0iwqnev0oiwnev")
+
+    // Verify that the 'no users' message is displayed
+    composeTestRule
+        .onNodeWithText("Looks like no user corresponds to your query")
+        .assertIsDisplayed()
+  }
+
+  @Test
   fun testNavigationBackButton() {
     composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("backButton").performClick()

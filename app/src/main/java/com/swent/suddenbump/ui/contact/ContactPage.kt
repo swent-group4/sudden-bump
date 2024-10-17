@@ -106,7 +106,9 @@ fun ContactScreen(navigationActions: NavigationActions) {
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 10.dp)
                         .testTag("birthdayCard")) {
-                  Text(modifier = Modifier.padding(10.dp), text = "Birthday: " + user.birthDate)
+                  Text(
+                      modifier = Modifier.padding(10.dp).testTag("birthdayText"),
+                      text = "Birthday: " + user.birthDate)
                 }
 
             Card(

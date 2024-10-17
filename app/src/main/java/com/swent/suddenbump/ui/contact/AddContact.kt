@@ -30,9 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
@@ -177,12 +175,4 @@ fun AddContactScreen(navigationActions: NavigationActions) {
               }
             }
       })
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewAddContactScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  AddContactScreen(navigationActions)
 }
