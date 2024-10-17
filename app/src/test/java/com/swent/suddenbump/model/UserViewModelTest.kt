@@ -1,6 +1,5 @@
-package com.github.se.bootcamp.model.todo
+package com.swent.suddenbump.model
 
-import androidx.compose.ui.graphics.ImageBitmap
 import com.swent.suddenbump.model.location.Location
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
@@ -19,14 +18,11 @@ import org.mockito.kotlin.whenever
 class UserViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
-  //  private lateinit var mockImageBitmap: ImageBitmap
-  private var mockImageBitmap = mock(ImageBitmap::class.java)
 
   private val exception = Exception()
   private val location = Location(0.0, 0.0)
   private val user =
-      User(
-          "1", "Martin", "Vetterli", mockImageBitmap, "+41 00 000 00 01", "martin.vetterli@epfl.ch")
+      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
   @Before
   fun setUp() {
@@ -37,13 +33,7 @@ class UserViewModelTest {
   @Test
   fun setCurrentUser() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            mockImageBitmap,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     doAnswer { invocationOnMock ->
           val onSuccess = invocationOnMock.getArgument<(User) -> Unit>(0)
@@ -111,13 +101,7 @@ class UserViewModelTest {
   @Test
   fun getUserFriends() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            mockImageBitmap,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user.uid))
     assert(!userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
@@ -126,13 +110,7 @@ class UserViewModelTest {
   @Test
   fun setUserFriends() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            mockImageBitmap,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user.uid))
 
@@ -143,13 +121,7 @@ class UserViewModelTest {
   @Test
   fun getBlockedFriends() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            mockImageBitmap,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getBlockedFriends().value.map { it.uid }.contains(user.uid))
     assert(!userViewModel.getBlockedFriends().value.map { it.uid }.contains(user2.uid))
@@ -158,13 +130,7 @@ class UserViewModelTest {
   @Test
   fun setBlockedFriends() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            mockImageBitmap,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getBlockedFriends().value.map { it.uid }.contains(user.uid))
 

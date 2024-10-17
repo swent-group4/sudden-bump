@@ -40,6 +40,7 @@ data class User(
     val birthDate: String,
     val mail: String,
     val phoneNumber: String,
+    val relativeDist: Int,
 )
 
 @Composable
@@ -66,6 +67,7 @@ fun UserCard(user: User, navigationActions: NavigationActions) {
 }
 
 fun generateMockUsers(): List<User> {
+  val relativeDistances = listOf(5, 5, 5, 5, 10, 10, 10, 15, 15, 15)
   val firstNames =
       listOf("John", "Jane", "Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Hank")
   val lastNames =
@@ -94,6 +96,7 @@ fun generateMockUsers(): List<User> {
           "25 Novembre 1960")
 
   return (1..20).map { index ->
+    val relativeDist = relativeDistances[index % relativeDistances.size]
     val firstName = firstNames[index % firstNames.size]
     val lastName = lastNames[index % lastNames.size]
     User(
@@ -103,7 +106,8 @@ fun generateMockUsers(): List<User> {
         profilePictureUrl = "https://api.dicebear.com/9.x/lorelei/png?seed=${firstName}${lastName}",
         birthDate = birthDates[index % birthDates.size],
         mail = "${firstName.lowercase()}.${lastName.lowercase()}@example.com",
-        phoneNumber = "123-456-78${index.toString().padStart(2, '0')}")
+        phoneNumber = "123-456-78${index.toString().padStart(2, '0')}",
+        relativeDist = relativeDist)
   }
 }
 

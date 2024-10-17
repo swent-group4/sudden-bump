@@ -33,6 +33,27 @@ class NavigationActionsTest {
 
     navigationActions.navigateTo(Screen.MAP)
     verify(navHostController).navigate(Screen.MAP)
+
+    navigationActions.navigateTo(Screen.MESS)
+    verify(navHostController).navigate(Screen.MESS)
+  }
+
+  @Test
+  fun navigateToMapTopLevelDestination() {
+    navigationActions.navigateTo(TopLevelDestinations.MAP)
+    verify(navHostController).navigate(eq(Route.MAP), any<NavOptionsBuilder.() -> Unit>())
+  }
+
+  @Test
+  fun navigateToMessagesTopLevelDestination() {
+    navigationActions.navigateTo(TopLevelDestinations.MESSAGES)
+    verify(navHostController).navigate(eq(Route.MESS), any<NavOptionsBuilder.() -> Unit>())
+  }
+
+  @Test
+  fun currentRouteReturnsEmptyStringWhenNoDestination() {
+    `when`(navHostController.currentDestination).thenReturn(null)
+    assertThat(navigationActions.currentRoute(), `is`(""))
   }
 
   @Test

@@ -1,6 +1,5 @@
 package com.swent.suddenbump
 
-import SignUpScreen
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
@@ -22,18 +21,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.LocationGetter
+import com.swent.suddenbump.model.image.TestComposableScreen
+import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
-import com.swent.suddenbump.ui.authentication.SignUpScreen
 import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.messages.MessagesScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -87,11 +88,9 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              SuddenBumpApp(newLocation)
-              // MapScreen(this, newLocation)
-
-              // LocationHandler(this) { location -> newLocation = location }
-              //
+              // SuddenBumpApp(newLocation)
+              val userViewModel = UserViewModel(UserRepositoryFirestore(Firebase.firestore))
+              TestComposableScreen(userViewModel)
             }
       }
     }
@@ -129,7 +128,7 @@ class MainActivity : ComponentActivity() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
-    val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+    // val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(
@@ -137,7 +136,6 @@ class MainActivity : ComponentActivity() {
           route = Route.AUTH,
       ) {
         composable(Screen.AUTH) { SignInScreen(navigationActions) }
-        composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
       }
       navigation(
           startDestination = Screen.OVERVIEW,

@@ -2,10 +2,12 @@ package com.swent.suddenbump.ui.map
 
 import android.annotation.SuppressLint
 import android.location.Location
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
@@ -28,14 +30,6 @@ fun MapScreen(navigationActions: NavigationActions, location: Location?) {
       content = { pd -> SimpleMap(location) })
 }
 
-// @Preview(showBackground = true)
-// @Composable
-// fun PreviewMapScreen() {
-//    val navController = rememberNavController()
-//    val navigationActions = NavigationActions(navController)
-//    MapScreen(navigationActions)
-// }
-
 @Composable
 fun SimpleMap(location: Location?) {
   val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
@@ -43,9 +37,11 @@ fun SimpleMap(location: Location?) {
   LaunchedEffect(location) {
     location?.let { markerState.position = LatLng(it.latitude, it.longitude) }
   }
-
-  GoogleMap(
-      modifier = Modifier.fillMaxSize(), uiSettings = MapUiSettings(zoomControlsEnabled = false)) {
-        Marker(state = markerState, title = "Current Position", snippet = "DescriptionTest")
-      }
+  Box(modifier = Modifier.fillMaxSize().testTag("mapView")) {
+    GoogleMap(
+        modifier = Modifier.fillMaxSize(),
+        uiSettings = MapUiSettings(zoomControlsEnabled = false)) {
+          Marker(state = markerState, title = "Current Position", snippet = "DescriptionTest")
+        }
+  }
 }
