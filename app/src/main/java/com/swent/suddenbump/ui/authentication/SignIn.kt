@@ -27,10 +27,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
@@ -39,14 +37,16 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.swent.suddenbump.R
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.navigation.TopLevelDestinations
 import com.swent.suddenbump.ui.theme.violetColor
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 @Composable
-fun SignInScreen(navigationActions: NavigationActions) {
+fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val context = LocalContext.current
 
   val launcher =
@@ -54,7 +54,22 @@ fun SignInScreen(navigationActions: NavigationActions) {
           onAuthComplete = { result ->
             Log.d("SignInScreen", "User signed in: ${result.user?.displayName}")
             Toast.makeText(context, "Login successful!", Toast.LENGTH_LONG).show()
-            navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
+            userViewModel.verifyNoAccountExists(
+                result.user?.email ?: "",
+                onSuccess = { bool ->
+                  if (bool) {
+                    Log.d("SignInScreen", "Account does not exist")
+                    navigationActions.navigateTo(Screen.SIGNUP)
+                  } else {
+                    Log.d("SignInScreen", "Account exists")
+                    userViewModel.setCurrentUser()
+                    navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
+                  }
+                },
+                onFailure = {
+                  Log.d("SignInScreen", "Failure to reach Firestore")
+                  Toast.makeText(context, "Failure to reach database", Toast.LENGTH_LONG).show()
+                })
           },
           onAuthError = {
             Log.e("SignInScreen", "Failed to sign in: ${it.statusCode}")
@@ -166,10 +181,10 @@ fun rememberFirebaseAuthLauncher(
   }
 }
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun PreviewSignInScreen() {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   SignInScreen(navigationActions = navigationActions)
-}
+}*/

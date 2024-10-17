@@ -1,13 +1,17 @@
 package com.swent.suddenbump.model.user
 
 import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.model.location.Location
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class UserViewModel(private val repository: UserRepository) {
+class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
   private val logTag = "UserViewModel"
   private val profilePicture = ImageBitMapIO()
@@ -22,6 +26,17 @@ class UserViewModel(private val repository: UserRepository) {
 
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
+  }
+
+  // create factory
+  companion object {
+    val Factory: ViewModelProvider.Factory =
+        object : ViewModelProvider.Factory {
+          @Suppress("UNCHECKED_CAST")
+          override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return UserViewModel(UserRepositoryFirestore(Firebase.firestore)) as T
+          }
+        }
   }
 
   fun setCurrentUser() {

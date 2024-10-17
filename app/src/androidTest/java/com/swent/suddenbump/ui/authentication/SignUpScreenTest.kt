@@ -1,8 +1,7 @@
 package com.swent.suddenbump.ui.authentication
 
-import android.content.Intent
 import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -15,8 +14,8 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mock
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 class SignUpScreenTest {
 
@@ -25,8 +24,9 @@ class SignUpScreenTest {
   private lateinit var userViewModel: UserViewModel
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-  @Mock
-  lateinit var mockLauncher: ActivityResultLauncher<Intent> // not used yet - needed to mock uCrop
+  //  @Mock
+  //  lateinit var mockLauncher: ActivityResultLauncher<Intent> // not used yet - needed to mock
+  // uCrop
 
   @Before
   fun setUp() {
@@ -55,6 +55,8 @@ class SignUpScreenTest {
     // Set the initial content for testing
     composeTestRule.setContent { SignUpScreen(navigationActions, userViewModel) }
 
+    `when`(userViewModel.getNewUid()).thenReturn("UnIntGenre5")
+
     // Test user input in the text fields
     composeTestRule.onNodeWithTag("firstNameField").performTextInput("John")
     composeTestRule.onNodeWithTag("firstNameField").assertTextContains("John")
@@ -67,6 +69,8 @@ class SignUpScreenTest {
 
     composeTestRule.onNodeWithTag("phoneField").performTextInput("+1234567890")
     composeTestRule.onNodeWithTag("phoneField").assertTextContains("+1 234-567-890")
+
+    composeTestRule.onNodeWithTag("createAccountButton").performClick()
   }
 
   @Test
@@ -84,7 +88,7 @@ class SignUpScreenTest {
     composeTestRule.onNodeWithTag("phoneField").assertTextContains("+41 79 123 45 67")
 
     // Perform button click
-    composeTestRule.onNodeWithTag("profilePictureButton").performClick()
+    composeTestRule.onNodeWithTag("profilePictureButton").assertHasClickAction()
     //        composeTestRule.onNodeWithTag("noProfilePic").assertIsDisplayed()
 
     // Perform create account button click

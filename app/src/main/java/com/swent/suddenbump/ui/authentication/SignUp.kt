@@ -24,12 +24,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.navigation.TopLevelDestinations
 import com.swent.suddenbump.ui.utils.PhoneNumberVisualTransformation
 import com.yalantis.ucrop.UCrop
 import java.io.File
@@ -45,7 +44,6 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
   var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
   val coroutineScope = rememberCoroutineScope()
   val context = LocalContext.current
-  val auth = FirebaseAuth.getInstance()
 
   val cropLauncher =
       rememberLauncherForActivityResult(
@@ -140,22 +138,34 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
           Spacer(modifier = Modifier.height(16.dp))
           Button(
               onClick = {
+                val profileBitmap =
+                    if (profilePictureUri != null) {
+                          MediaStore.Images.Media.getBitmap(
+                              context.contentResolver, profilePictureUri)
+                        } else {
+                          val defaultUri =
+                              Uri.parse("android.resource://${context.packageName}/raw/profile")
+                          MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)
+                        }
+                        .asImageBitmap()
                 userViewModel.createUserAccount(
                     User(
-                        uid = auth.currentUser!!.uid,
+                        uid = userViewModel.getNewUid(),
                         firstName = firstName,
                         lastName = lastName,
                         emailAddress = email,
                         phoneNumber = phoneNumber,
-                        profilePicture =
-                            MediaStore.Images.Media.getBitmap(
-                                    context.contentResolver, profilePictureUri)
-                                .asImageBitmap()),
-                    onSuccess = { navigationActions.navigateTo(Screen.OVERVIEW) },
+                        profilePicture = profileBitmap),
+                    onSuccess = { navigationActions.navigateTo(TopLevelDestinations.OVERVIEW) },
                     onFailure = {
                       Toast.makeText(context, "Account creation failed", Toast.LENGTH_SHORT).show()
                     })
               },
+              enabled =
+                  firstName.isNotBlank() &&
+                      lastName.isNotBlank() &&
+                      email.isNotBlank() &&
+                      phoneNumber.isNotBlank(),
               modifier = Modifier.fillMaxWidth().testTag("createAccountButton")) {
                 Text("Create Account")
               }
