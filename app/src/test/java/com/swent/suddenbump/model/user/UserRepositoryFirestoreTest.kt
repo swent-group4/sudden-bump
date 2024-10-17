@@ -1,6 +1,7 @@
-package com.swent.suddenbump.model
+package com.swent.suddenbump.model.user
 
 import android.os.Looper
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
@@ -13,17 +14,18 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.swent.suddenbump.model.location.Location
-import com.swent.suddenbump.model.user.User
-import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import junit.framework.TestCase.fail
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.MockedStatic
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
@@ -52,6 +54,7 @@ class UserRepositoryFirestoreTest {
 
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
 
+  private val helper = UserRepositoryFirestoreHelper()
   private val location = Location(0.0, 0.0)
   private val user =
       User(
@@ -279,5 +282,93 @@ class UserRepositoryFirestoreTest {
     shadowOf(Looper.getMainLooper()).idle()
 
     verify(mockUserDocumentReference).update(anyString(), any())
+  }
+
+
+
+  @Test
+  fun userToMap() {
+    val testUser = User(
+      uid = "1234",
+      firstName = "John",
+      lastName = "Doe",
+      phoneNumber = "+1234567890",
+      profilePicture = null,
+      emailAddress = "john.doe@example.com"
+    )
+
+    val result = helper.userToMapOf(testUser)
+
+    assertEquals("1234", result["uid"])
+    assertEquals("John", result["firstName"])
+    assertEquals("Doe", result["lastName"])
+    assertEquals("+1234567890", result["phoneNumber"])
+    assertEquals("john.doe@example.com", result["emailAddress"])
+
+    assertEquals(setOf("uid", "firstName", "lastName", "phoneNumber", "emailAddress"), result.keys)
+
+    assert(!result.contains("profilePicture"))
+  }
+
+  @Test
+  fun documentSnapshotToUser() {
+    val data = mapOf(
+      "uid" to "1234",
+      "firstName" to "John",
+      "lastName" to "Doe",
+      "phoneNumber" to "+1234567890",
+      "emailAddress" to "john.doe@example.com"
+    )
+    val defaultProfilePicture: ImageBitmap? = null
+
+    `when`(mockUserDocumentSnapshot.data).thenReturn(data)
+    val result = helper.documentSnapshotToUser(mockUserDocumentSnapshot, defaultProfilePicture)
+
+    assertEquals("1234", result.uid)
+    assertEquals("John", result.firstName)
+    assertEquals("Doe", result.lastName)
+    assertEquals("+1234567890", result.phoneNumber)
+    assertEquals("john.doe@example.com", result.emailAddress)
+    assertEquals(defaultProfilePicture, result.profilePicture)
+  }
+
+  @Test
+  fun documentSnapshotToList() {
+    val data = "[uid1, uid2, uid3]"
+
+    var result = helper.documentSnapshotToList(data)
+    assertEquals(listOf("uid1", "uid2", "uid3"), result)
+
+    result = helper.documentSnapshotToList("[uid1]")
+    assertEquals(listOf("uid1"), result)
+
+    result = helper.documentSnapshotToList("[]")
+    assertEquals(emptyList<String>(), result)
+
+    result = helper.documentSnapshotToList("")
+    assertEquals(emptyList<String>(), result)
+  }
+
+  @Test
+  fun uidToProfilePicturePath() {
+    val uid = "user123"
+    var path = "gs:/"
+    val storageReference = mock(StorageReference::class.java)
+    `when`(storageReference.toString()).thenAnswer { path }
+    `when`(storageReference.child(anyString())).thenAnswer { invocation ->
+      val childPath = invocation.getArgument<String>(0)
+      if (path.last() == '/') {
+        path += childPath
+      } else {
+        path += "/$childPath"
+      }
+      storageReference
+    }
+
+    var result = helper.uidToProfilePicturePath(uid, storageReference)
+    assertEquals("gs:/user123.jpeg", result)
+
+    result = helper.uidToProfilePicturePath("user@123", storageReference)
+    assertEquals("gs:/user123.jpeg/user@123.jpeg", result)
   }
 }
