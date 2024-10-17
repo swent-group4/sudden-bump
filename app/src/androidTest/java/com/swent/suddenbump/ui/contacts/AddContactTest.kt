@@ -2,11 +2,9 @@ package com.swent.suddenbump.ui.contacts
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.navigation.compose.rememberNavController
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
-import com.swent.suddenbump.ui.overview.FriendsListScreen
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -63,10 +61,10 @@ class AddContactScreenTest {
         .assertIsDisplayed()
   }
 
-      @Test
-      fun testNavigationBackButton() {
-        composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("backButton").performClick()
-        verify(navigationActions).goBack()
-      }
+  @Test
+  fun testNavigationBackButton() {
+    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("backButton").performClick()
+    verify(navigationActions).goBack()
+  }
 }

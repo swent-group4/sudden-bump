@@ -2,8 +2,6 @@ package com.swent.suddenbump.ui.contacts
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.navigation.compose.rememberNavController
-import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
@@ -57,12 +55,12 @@ class ContactScreenTest {
     verify(navigationActions).goBack()
   }
 
-      @Test
-      fun testSendMessageButtonClick() {
-          // Click the send message button
-          composeTestRule.onNodeWithTag("sendMessageButton").assertIsDisplayed()
-          composeTestRule.onNodeWithTag("sendMessageButton").performClick()
-      }
+  @Test
+  fun testSendMessageButtonClick() {
+    // Click the send message button
+    composeTestRule.onNodeWithTag("sendMessageButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("sendMessageButton").performClick()
+  }
 
   //    @Test
   //    fun testAddToContactsButtonWhenNotFriend() {
