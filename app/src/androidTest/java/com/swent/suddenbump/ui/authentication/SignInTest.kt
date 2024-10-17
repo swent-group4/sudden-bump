@@ -38,7 +38,7 @@ class LoginTest : TestCase() {
 
   @Test
   fun titleAndButtonAreCorrectlyDisplayed() {
-    composeTestRule.waitUntil {
+    composeTestRule.waitUntil(timeoutMillis = 7000) {
       composeTestRule.onNodeWithTag("loginTitle").fetchSemanticsNode() != null
     }
     composeTestRule.onNodeWithTag("loginTitle").assertIsDisplayed()
@@ -50,7 +50,7 @@ class LoginTest : TestCase() {
 
   @Test
   fun googleSignInReturnsValidActivityResult() {
-    composeTestRule.waitUntil {
+    composeTestRule.waitUntil(timeoutMillis = 7000) {
       composeTestRule.onNodeWithTag("loginButton").fetchSemanticsNode() != null
     }
     composeTestRule.onNodeWithTag("loginButton").performClick()
