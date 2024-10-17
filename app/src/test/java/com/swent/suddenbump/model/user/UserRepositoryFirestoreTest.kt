@@ -284,18 +284,16 @@ class UserRepositoryFirestoreTest {
     verify(mockUserDocumentReference).update(anyString(), any())
   }
 
-
-
   @Test
   fun userToMap() {
-    val testUser = User(
-      uid = "1234",
-      firstName = "John",
-      lastName = "Doe",
-      phoneNumber = "+1234567890",
-      profilePicture = null,
-      emailAddress = "john.doe@example.com"
-    )
+    val testUser =
+        User(
+            uid = "1234",
+            firstName = "John",
+            lastName = "Doe",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "john.doe@example.com")
 
     val result = helper.userToMapOf(testUser)
 
@@ -312,13 +310,13 @@ class UserRepositoryFirestoreTest {
 
   @Test
   fun documentSnapshotToUser() {
-    val data = mapOf(
-      "uid" to "1234",
-      "firstName" to "John",
-      "lastName" to "Doe",
-      "phoneNumber" to "+1234567890",
-      "emailAddress" to "john.doe@example.com"
-    )
+    val data =
+        mapOf(
+            "uid" to "1234",
+            "firstName" to "John",
+            "lastName" to "Doe",
+            "phoneNumber" to "+1234567890",
+            "emailAddress" to "john.doe@example.com")
     val defaultProfilePicture: ImageBitmap? = null
 
     `when`(mockUserDocumentSnapshot.data).thenReturn(data)
