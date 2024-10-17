@@ -30,7 +30,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.LocationGetter
-import com.swent.suddenbump.model.image.TestComposableScreen
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
@@ -89,9 +88,7 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              // SuddenBumpApp(newLocation)
-              val userViewModel = UserViewModel(UserRepositoryFirestore(Firebase.firestore))
-              TestComposableScreen(userViewModel)
+               SuddenBumpApp(newLocation)
             }
       }
     }
