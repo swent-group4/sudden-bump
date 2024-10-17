@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model
 
+import android.location.Location
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.tasks.Task
@@ -13,7 +14,6 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
-import com.swent.suddenbump.model.location.Location
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import junit.framework.TestCase.fail
@@ -52,7 +52,11 @@ class UserRepositoryFirestoreTest {
 
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
 
-  private val location = Location(0.0, 0.0)
+  private val location =
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
   private val user =
       User(
           uid = "1",

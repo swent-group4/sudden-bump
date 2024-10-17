@@ -1,10 +1,10 @@
 package com.swent.suddenbump.model.user
 
+import android.location.Location
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.swent.suddenbump.model.location.Location
 
 class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
 
@@ -184,6 +184,42 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         .update("location", location)
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
+  }
+
+  override fun getFriendsLocation(
+      user: User,
+      onSuccess: (Map<User, Location?>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    // First, retrieve the user's friends using the existing getUserFriends method
+    getUserFriends(
+        user,
+        { friendsList ->
+          val friendsLocations = mutableMapOf<User, Location?>()
+
+          // Loop through each friend in the friendsList and fetch their location
+          friendsList.forEach { friend ->
+            db.collection(usersCollectionPath)
+                .document(friend.uid)
+                .get()
+                .addOnFailureListener { onFailure(it) }
+                .addOnSuccessListener { friendSnapshot ->
+                  val location = friendSnapshot.get("location") as? Location
+                  friendsLocations[friend] = location
+
+                  // Once all friends have been processed, call onSuccess
+                  if (friendsLocations.size == friendsList.size) {
+                    onSuccess(friendsLocations)
+                  }
+                }
+          }
+
+          // If no friends, return an empty map
+          if (friendsList.isEmpty()) {
+            onSuccess(emptyMap())
+          }
+        },
+        onFailure)
   }
 
   private fun documentSnapshotToUserList(
