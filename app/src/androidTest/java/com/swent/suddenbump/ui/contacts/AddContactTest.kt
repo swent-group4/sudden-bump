@@ -5,21 +5,29 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Route
+import com.swent.suddenbump.ui.overview.FriendsListScreen
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.mockito.kotlin.verify
 
 class AddContactScreenTest {
-
+  private lateinit var navigationActions: NavigationActions
   @get:Rule val composeTestRule = createComposeRule()
+
+  @Before
+  fun setUp() {
+    navigationActions = mock(NavigationActions::class.java)
+
+    `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
+    composeTestRule.setContent { AddContactScreen(navigationActions) }
+  }
 
   @Test
   fun testInitialScreenState() {
-    composeTestRule.setContent {
-      val navController = rememberNavController()
-      val navigationActions = NavigationActions(navController)
-      AddContactScreen(navigationActions)
-    }
-
     // Verify the top bar title
     composeTestRule.onNodeWithText("Add contact").assertIsDisplayed()
 
@@ -35,11 +43,6 @@ class AddContactScreenTest {
 
   @Test
   fun testSearchFunctionality() {
-    composeTestRule.setContent {
-      val navController = rememberNavController()
-      val navigationActions = NavigationActions(navController)
-      AddContactScreen(navigationActions)
-    }
 
     // Enter a search query
     composeTestRule.onNodeWithTag("searchTextField").performTextInput("John")
@@ -51,12 +54,6 @@ class AddContactScreenTest {
 
   @Test
   fun testNoResultsMessage() {
-    composeTestRule.setContent {
-      val navController = rememberNavController()
-      val navigationActions = NavigationActions(navController)
-      AddContactScreen(navigationActions)
-    }
-
     // Enter a search query that yields no results
     composeTestRule.onNodeWithTag("searchTextField").performTextInput("NonExistentName")
 
@@ -66,15 +63,10 @@ class AddContactScreenTest {
         .assertIsDisplayed()
   }
 
-  //    @Test
-  //    fun testNavigationBackButton() {
-  //        composeTestRule.setContent {
-  //            val navController = rememberNavController()
-  //            val navigationActions = NavigationActions(navController)
-  //            AddContactScreen(navigationActions)
-  //        }
-  //
-  //        // Click the back button
-  //        composeTestRule.onNodeWithTag("backButton").performClick()
-  //    }
+      @Test
+      fun testNavigationBackButton() {
+        composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("backButton").performClick()
+        verify(navigationActions).goBack()
+      }
 }

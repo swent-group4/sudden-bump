@@ -4,21 +4,29 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Route
+import com.swent.suddenbump.ui.navigation.Screen
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.mockito.kotlin.verify
 
 class FriendsListTest {
-
+  private lateinit var navigationActions: NavigationActions
   @get:Rule val composeTestRule = createComposeRule()
+
+  @Before
+  fun setUp() {
+    navigationActions = mock(NavigationActions::class.java)
+
+    `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
+    composeTestRule.setContent { FriendsListScreen(navigationActions) }
+  }
 
   @Test
   fun testInitialScreenState() {
-    composeTestRule.setContent {
-      val navController = rememberNavController()
-      val navigationActions = NavigationActions(navController)
-      FriendsListScreen(navigationActions)
-    }
-
     // Verify the top bar title
     composeTestRule.onNodeWithText("Friends").assertIsDisplayed()
 
@@ -31,12 +39,6 @@ class FriendsListTest {
 
   @Test
   fun testSearchFunctionality() {
-    composeTestRule.setContent {
-      val navController = rememberNavController()
-      val navigationActions = NavigationActions(navController)
-      FriendsListScreen(navigationActions)
-    }
-
     // Enter a search query
     composeTestRule.onNodeWithTag("searchTextField").performTextInput("John")
 
@@ -47,12 +49,6 @@ class FriendsListTest {
 
   @Test
   fun testNoResultsMessage() {
-    composeTestRule.setContent {
-      val navController = rememberNavController()
-      val navigationActions = NavigationActions(navController)
-      FriendsListScreen(navigationActions)
-    }
-
     // Enter a search query that yields no results
     composeTestRule.onNodeWithTag("searchTextField").performTextInput("NonExistentName")
 
@@ -63,17 +59,16 @@ class FriendsListTest {
   }
 
   @Test
-  fun testNavigationActions() {
-    composeTestRule.setContent {
-      val navController = rememberNavController()
-      val navigationActions = NavigationActions(navController)
-      FriendsListScreen(navigationActions)
-    }
+  fun backButtonCallsNavActions() {
+    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("backButton").performClick()
+    verify(navigationActions).goBack()
+  }
 
-    // Test back button navigation
-    //        composeTestRule.onNodeWithTag("backButton").performClick()
-
-    // Test add contact button navigation
-    //        composeTestRule.onNodeWithTag("addContactButton").performClick()
+  @Test
+  fun addContactButtonCallsNavActions() {
+    composeTestRule.onNodeWithTag("addContactButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("addContactButton").performClick()
+    verify(navigationActions).navigateTo(Screen.ADD_CONTACT)
   }
 }
