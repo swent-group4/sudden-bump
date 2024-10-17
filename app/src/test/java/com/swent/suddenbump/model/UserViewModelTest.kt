@@ -1,7 +1,5 @@
-package com.github.se.bootcamp.model.todo
+package com.swent.suddenbump.model
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
 import com.swent.suddenbump.model.location.Location
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
@@ -17,20 +15,14 @@ import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
-class ListToDosViewModelTest {
+class UserViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
 
   private val exception = Exception()
   private val location = Location(0.0, 0.0)
   private val user =
-      User(
-          "1",
-          "Martin",
-          "Vetterli",
-          Icons.Outlined.AccountCircle,
-          "+41 00 000 00 01",
-          "martin.vetterli@epfl.ch")
+      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
   @Before
   fun setUp() {
@@ -41,13 +33,7 @@ class ListToDosViewModelTest {
   @Test
   fun setCurrentUser() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            Icons.Outlined.AccountCircle,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     doAnswer { invocationOnMock ->
           val onSuccess = invocationOnMock.getArgument<(User) -> Unit>(0)
@@ -115,13 +101,7 @@ class ListToDosViewModelTest {
   @Test
   fun getUserFriends() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            Icons.Outlined.AccountCircle,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user.uid))
     assert(!userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
@@ -130,13 +110,7 @@ class ListToDosViewModelTest {
   @Test
   fun setUserFriends() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            Icons.Outlined.AccountCircle,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user.uid))
 
@@ -147,13 +121,7 @@ class ListToDosViewModelTest {
   @Test
   fun getBlockedFriends() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            Icons.Outlined.AccountCircle,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getBlockedFriends().value.map { it.uid }.contains(user.uid))
     assert(!userViewModel.getBlockedFriends().value.map { it.uid }.contains(user2.uid))
@@ -162,13 +130,7 @@ class ListToDosViewModelTest {
   @Test
   fun setBlockedFriends() {
     val user2 =
-        User(
-            "2222",
-            "Martin",
-            "Vetterli",
-            Icons.Outlined.AccountCircle,
-            "+41 00 000 00 01",
-            "martin.vetterli@epfl.ch")
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
     assert(userViewModel.getBlockedFriends().value.map { it.uid }.contains(user.uid))
 
