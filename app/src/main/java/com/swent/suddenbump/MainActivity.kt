@@ -27,23 +27,19 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.LocationGetter
-import com.swent.suddenbump.model.image.TestComposableScreen
-import com.swent.suddenbump.model.user.UserRepositoryFirestore
-import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
+import com.swent.suddenbump.ui.contact.AddContactScreen
+import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.messages.MessagesScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
-import com.swent.suddenbump.ui.overview.AddContactScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
+import com.swent.suddenbump.ui.overview.FriendsListScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
-import com.swent.suddenbump.ui.profile.ContactScreen
 import com.swent.suddenbump.ui.settings.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 
@@ -88,9 +84,7 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              // SuddenBumpApp(newLocation)
-              val userViewModel = UserViewModel(UserRepositoryFirestore(Firebase.firestore))
-              TestComposableScreen(userViewModel)
+              SuddenBumpApp(newLocation)
             }
       }
     }
@@ -142,10 +136,11 @@ class MainActivity : ComponentActivity() {
           route = Route.OVERVIEW,
       ) {
         composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
-        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
+        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
         composable(Screen.CONTACT) { ContactScreen(navigationActions) }
+        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
       }
 
       navigation(
