@@ -9,71 +9,71 @@ import org.junit.Test
 
 class FriendsListTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Test
-    fun testInitialScreenState() {
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val navigationActions = NavigationActions(navController)
-            FriendsListScreen(navigationActions)
-        }
-
-        // Verify the top bar title
-        composeTestRule.onNodeWithText("Friends").assertIsDisplayed()
-
-        // Verify the search field is displayed
-        composeTestRule.onNodeWithTag("searchTextField").assertIsDisplayed()
-
-        // Verify the list of users is displayed
-        composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
+  @Test
+  fun testInitialScreenState() {
+    composeTestRule.setContent {
+      val navController = rememberNavController()
+      val navigationActions = NavigationActions(navController)
+      FriendsListScreen(navigationActions)
     }
 
-    @Test
-    fun testSearchFunctionality() {
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val navigationActions = NavigationActions(navController)
-            FriendsListScreen(navigationActions)
-        }
+    // Verify the top bar title
+    composeTestRule.onNodeWithText("Friends").assertIsDisplayed()
 
-        // Enter a search query
-        composeTestRule.onNodeWithTag("searchTextField").performTextInput("John")
+    // Verify the search field is displayed
+    composeTestRule.onNodeWithTag("searchTextField").assertIsDisplayed()
 
-        // Verify that the list is filtered
-        composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Jane Smith").assertDoesNotExist()
+    // Verify the list of users is displayed
+    composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
+  }
+
+  @Test
+  fun testSearchFunctionality() {
+    composeTestRule.setContent {
+      val navController = rememberNavController()
+      val navigationActions = NavigationActions(navController)
+      FriendsListScreen(navigationActions)
     }
 
-    @Test
-    fun testNoResultsMessage() {
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val navigationActions = NavigationActions(navController)
-            FriendsListScreen(navigationActions)
-        }
+    // Enter a search query
+    composeTestRule.onNodeWithTag("searchTextField").performTextInput("John")
 
-        // Enter a search query that yields no results
-        composeTestRule.onNodeWithTag("searchTextField").performTextInput("NonExistentName")
+    // Verify that the list is filtered
+    composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Jane Smith").assertDoesNotExist()
+  }
 
-        // Verify that the no results message is displayed
-        composeTestRule.onNodeWithText("Looks like no user corresponds to your query").assertIsDisplayed()
+  @Test
+  fun testNoResultsMessage() {
+    composeTestRule.setContent {
+      val navController = rememberNavController()
+      val navigationActions = NavigationActions(navController)
+      FriendsListScreen(navigationActions)
     }
 
-    @Test
-    fun testNavigationActions() {
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val navigationActions = NavigationActions(navController)
-            FriendsListScreen(navigationActions)
-        }
+    // Enter a search query that yields no results
+    composeTestRule.onNodeWithTag("searchTextField").performTextInput("NonExistentName")
 
-        // Test back button navigation
-//        composeTestRule.onNodeWithTag("backButton").performClick()
+    // Verify that the no results message is displayed
+    composeTestRule
+        .onNodeWithText("Looks like no user corresponds to your query")
+        .assertIsDisplayed()
+  }
 
-
-        // Test add contact button navigation
-//        composeTestRule.onNodeWithTag("addContactButton").performClick()
+  @Test
+  fun testNavigationActions() {
+    composeTestRule.setContent {
+      val navController = rememberNavController()
+      val navigationActions = NavigationActions(navController)
+      FriendsListScreen(navigationActions)
     }
+
+    // Test back button navigation
+    //        composeTestRule.onNodeWithTag("backButton").performClick()
+
+    // Test add contact button navigation
+    //        composeTestRule.onNodeWithTag("addContactButton").performClick()
+  }
 }

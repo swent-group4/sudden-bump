@@ -1,6 +1,5 @@
 package com.swent.suddenbump.ui.overview
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -13,21 +12,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -124,75 +117,64 @@ fun generateMockUsers(): List<User> {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsListScreen(navigationActions: NavigationActions) {
-    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-    var mockUsers = generateMockUsers()
+  var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+  var mockUsers = generateMockUsers()
 
-    mockUsers =
-        mockUsers.filter { user ->
-            user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-                    user.lastName.contains(searchQuery.text, ignoreCase = true)
-        }
+  mockUsers =
+      mockUsers.filter { user ->
+        user.firstName.contains(searchQuery.text, ignoreCase = true) ||
+            user.lastName.contains(searchQuery.text, ignoreCase = true)
+      }
 
-    Scaffold(
-        modifier = Modifier.testTag("friendsListScreen"),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Friends",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier = Modifier.testTag("backButton")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
-                        modifier = Modifier.testTag("addContactButton")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AddCircle,
-                            contentDescription = "Add new friends"
-                        )
-                    }
-                },
-            )
-        },
-        content = { pd ->
-            Column(
-                modifier = Modifier.padding(pd).testTag("friendsListContent"),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                TextField(
-                    value = searchQuery,
-                    onValueChange = { newValue -> searchQuery = newValue },
-                    label = { Text("Search") },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp).testTag("searchTextField"),
-                )
-                if (mockUsers.isNotEmpty()) {
-                    LazyColumn(modifier = Modifier.testTag("userList")) {
-                        items(mockUsers) { user ->
-                            UserCard(user = user, navigationActions)
-                        }
-                    }
-                } else {
-                    Text(
-                        text = "Looks like no user corresponds to your query",
-                        modifier = Modifier.testTag("noUsersText")
-                    )
+  Scaffold(
+      modifier = Modifier.testTag("friendsListScreen"),
+      topBar = {
+        CenterAlignedTopAppBar(
+            title = { Text("Friends", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Go back")
+                  }
+            },
+            actions = {
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
+                  modifier = Modifier.testTag("addContactButton")) {
+                    Icon(
+                        imageVector = Icons.Default.AddCircle,
+                        contentDescription = "Add new friends")
+                  }
+            },
+        )
+      },
+      content = { pd ->
+        Column(
+            modifier = Modifier.padding(pd).testTag("friendsListContent"),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+              TextField(
+                  value = searchQuery,
+                  onValueChange = { newValue -> searchQuery = newValue },
+                  label = { Text("Search") },
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 10.dp, vertical = 10.dp)
+                          .testTag("searchTextField"),
+              )
+              if (mockUsers.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.testTag("userList")) {
+                  items(mockUsers) { user -> UserCard(user = user, navigationActions) }
                 }
+              } else {
+                Text(
+                    text = "Looks like no user corresponds to your query",
+                    modifier = Modifier.testTag("noUsersText"))
+              }
             }
-        })
+      })
 }
 
 @Preview(showBackground = true)
@@ -200,5 +182,5 @@ fun FriendsListScreen(navigationActions: NavigationActions) {
 fun PreviewAddContactScreen() {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
-    FriendsListScreen(navigationActions)
+  FriendsListScreen(navigationActions)
 }
