@@ -31,7 +31,7 @@ class OverviewScreenTest {
     composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
     composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
     composeTestRule.onNodeWithTag("settingsFab").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("addContactFab").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("seeFriendsFab").assertIsDisplayed()
     composeTestRule.onNodeWithTag("appName").assertIsDisplayed()
   }
 
@@ -46,9 +46,9 @@ class OverviewScreenTest {
   @Test
   fun addContactButtonCallsNavActions() {
     composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("addContactFab").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("addContactFab").performClick()
-    verify(navigationActions).navigateTo(screen = Screen.ADD_CONTACT)
+    composeTestRule.onNodeWithTag("seeFriendsFab").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
+    verify(navigationActions).navigateTo(screen = Screen.FRIENDS_LIST)
   }
 
   @Test
