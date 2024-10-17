@@ -23,10 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.User
@@ -166,11 +163,11 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
       })
 }
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun SignUpScreenPreview() {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
   SignUpScreen(navigationActions, userViewModel)
-}
+}*/
