@@ -56,10 +56,10 @@ fun OverviewScreen(navigationActions: NavigationActions) {
 
               FloatingActionButton(
                   onClick = { navigationActions.navigateTo(Screen.FRIENDS_LIST) },
-                  modifier = Modifier.testTag("AddContactFab")) {
+                  modifier = Modifier.testTag("seeFriendsFab")) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "Add Contact")
+                        contentDescription = "See Friends")
                   }
             }
       },
