@@ -24,7 +24,6 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 @Composable
 fun SettingsScreen(navigationActions: NavigationActions) {
     var notificationsEnabled by remember { mutableStateOf(true) }
-    var darkModeEnabled by remember { mutableStateOf(false) }
     var username by remember { mutableStateOf("User123") }
     var expandedVisibility by remember { mutableStateOf(false) }
     var selectedVisibility by remember { mutableStateOf("Visible for all") }
@@ -108,20 +107,6 @@ fun SettingsScreen(navigationActions: NavigationActions) {
                     )
                 }
 
-                // Dark mode toggle
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Dark Mode")
-                    Switch(
-                        checked = darkModeEnabled,
-                        onCheckedChange = { darkModeEnabled = it },
-                        modifier = Modifier.testTag("darkModeSwitch")
-                    )
-                }
-
                 // Visibility Drop-down menu
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -129,35 +114,42 @@ fun SettingsScreen(navigationActions: NavigationActions) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Visibility")
-                    Box {
+                    Column {
+                        Text(
+                            text = selectedVisibility,
+                            modifier = Modifier.testTag("selectedVisibilityText")
+                        )
                         Button(onClick = { expandedVisibility = !expandedVisibility }, Modifier.testTag("visibilityButton")) {
                             Text(selectedVisibility)
                         }
-                        DropdownMenu(
-                            expanded = expandedVisibility,
-                            onDismissRequest = { expandedVisibility = false },
-                        ) {
-                            DropdownMenuItem(
-                                onClick = {
-                                    selectedVisibility = "Visible for all"
-                                    expandedVisibility = false
-                                },
-                                text = { Text("Visible for all") }
-                            )
-                            DropdownMenuItem(
-                                onClick = {
-                                    selectedVisibility = "Visible for my contacts"
-                                    expandedVisibility = false
-                                },
-                                text = { Text("Visible for my contacts") }
-                            )
-                            DropdownMenuItem(
-                                onClick = {
-                                    selectedVisibility = "Visible for my friends"
-                                    expandedVisibility = false
-                                },
-                                text = { Text("Visible for my friends") }
-                            )
+                        if (expandedVisibility) {
+                            DropdownMenu(
+                                expanded = expandedVisibility,
+                                onDismissRequest = { expandedVisibility = false },
+                                modifier = Modifier.testTag("visibilityDropdown")
+                            ) {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        selectedVisibility = "Visible for all"
+                                        expandedVisibility = false
+                                    },
+                                    text = { Text("Visible for all", modifier = Modifier.testTag("visibleForAllOption")) }
+                                )
+                                DropdownMenuItem(
+                                    onClick = {
+                                        selectedVisibility = "Visible for my contacts"
+                                        expandedVisibility = false
+                                    },
+                                    text = { Text("Visible for my contacts", modifier = Modifier.testTag("visibleForMyContactsOption")) }
+                                )
+                                DropdownMenuItem(
+                                    onClick = {
+                                        selectedVisibility = "Visible for my friends"
+                                        expandedVisibility = false
+                                    },
+                                    text = { Text("Visible for my friends", modifier = Modifier.testTag("visibleForMyFriendsOption")) }
+                                )
+                            }
                         }
                     }
                 }
@@ -231,7 +223,7 @@ fun SettingsScreen(navigationActions: NavigationActions) {
 
                 // Change Password Button
                 Button(
-                    onClick = { /* Navigate to change password screen */ },
+                    onClick = { /* Show a dialog saying "Feature coming soon" */ },
                     modifier = Modifier.fillMaxWidth().testTag("changePasswordButton")
                 ) {
                     Text("Change Password")
@@ -239,11 +231,35 @@ fun SettingsScreen(navigationActions: NavigationActions) {
 
                 // Logout Button
                 Button(
-                    onClick = { /* Add logout logic */ },
+                    onClick = { /* Show a dialog saying "Logged out successfully" */ },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                     modifier = Modifier.fillMaxWidth().testTag("logoutButton")
                 ) {
                     Text("Logout", color = Color.White)
+                }
+
+                // Help Button
+                Button(
+                    onClick = { /* Show help dialog */ },
+                    modifier = Modifier.fillMaxWidth().testTag("helpButton")
+                ) {
+                    Text("Help")
+                }
+
+                // Invite a Friend Button
+                Button(
+                    onClick = { /* Show invite link dialog */ },
+                    modifier = Modifier.fillMaxWidth().testTag("inviteFriendButton")
+                ) {
+                    Text("Invite a Friend")
+                }
+
+                // Important Messages Button
+                Button(
+                    onClick = { /* Show important messages dialog */ },
+                    modifier = Modifier.fillMaxWidth().testTag("importantMessagesButton")
+                ) {
+                    Text("Important Messages")
                 }
             }
         }
