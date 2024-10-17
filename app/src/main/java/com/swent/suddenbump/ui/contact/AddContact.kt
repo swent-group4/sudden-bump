@@ -34,58 +34,8 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
-
-data class User(
-    val uid: String,
-    val firstName: String,
-    val lastName: String,
-    val profilePictureUrl: String,
-    val birthDate: String,
-    val mail: String,
-    val phoneNumber: String,
-)
-
-fun generateMockUsers(): List<User> {
-  val firstNames =
-      listOf("John", "Jane", "Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Hank")
-  val lastNames =
-      listOf(
-          "Doe",
-          "Smith",
-          "Johnson",
-          "Williams",
-          "Brown",
-          "Jones",
-          "Garcia",
-          "Miller",
-          "Davis",
-          "Rodriguez")
-  val birthDates =
-      listOf(
-          "01 Janvier 2002",
-          "28 Juin 1998",
-          "15 Mars 1995",
-          "22 Avril 1990",
-          "30 Mai 1985",
-          "10 Juillet 1980",
-          "05 Août 1975",
-          "12 Septembre 1970",
-          "18 Octobre 1965",
-          "25 Novembre 1960")
-
-  return (10..15).map { index ->
-    val firstName = firstNames[index % firstNames.size]
-    val lastName = lastNames[index % lastNames.size]
-    User(
-        uid = index.toString(),
-        firstName = firstName,
-        lastName = lastName,
-        profilePictureUrl = "https://api.dicebear.com/9.x/lorelei/png?seed=${firstName}${lastName}",
-        birthDate = birthDates[index % birthDates.size],
-        mail = "${firstName.lowercase()}.${lastName.lowercase()}@example.com",
-        phoneNumber = "123-456-78${index.toString().padStart(2, '0')}")
-  }
-}
+import com.swent.suddenbump.ui.overview.User
+import com.swent.suddenbump.ui.overview.generateMockUsers
 
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions) {
