@@ -21,29 +21,20 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import com.swent.suddenbump.ui.navigation.NavigationActions
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navigationActions: NavigationActions) {
   var notificationsEnabled by remember { mutableStateOf(true) }
-  var darkModeEnabled by remember { mutableStateOf(false) }
   var username by remember { mutableStateOf("User123") }
-  var expanded by remember { mutableStateOf(false) }
+  var expandedVisibility by remember { mutableStateOf(false) }
   var selectedVisibility by remember { mutableStateOf("Visible for all") }
+  var expandedLanguage by remember { mutableStateOf(false) }
+  var selectedLanguage by remember { mutableStateOf("English") }
+  var accountPrivate by remember { mutableStateOf(false) }
+  var dataUsageLimit by remember { mutableStateOf(50f) }
 
   Scaffold(
       modifier = Modifier.testTag("settingsScreen"),
-      topBar = {
-        TopAppBar(
-            title = { Text("Settings", Modifier.testTag("settingsTitle")) },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() }, Modifier.testTag("goBackButton")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                        contentDescription = "Back")
-                  }
-            })
-      },
+      topBar = { CustomTopBar(title = "Settings", onBackClick = { navigationActions.goBack() }) },
       content = { pd ->
         Column(
             modifier = Modifier.padding(pd).fillMaxSize().padding(16.dp),
@@ -98,57 +89,178 @@ fun SettingsScreen(navigationActions: NavigationActions) {
                         modifier = Modifier.testTag("notificationsSwitch"))
                   }
 
-              // Dark mode toggle
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically) {
-                    Text("Dark Mode")
-                    Switch(
-                        checked = darkModeEnabled,
-                        onCheckedChange = { darkModeEnabled = it },
-                        modifier = Modifier.testTag("darkModeSwitch"))
-                  }
-
               // Visibility Drop-down menu
               Row(
                   modifier = Modifier.fillMaxWidth(),
                   horizontalArrangement = Arrangement.SpaceBetween,
                   verticalAlignment = Alignment.CenterVertically) {
                     Text("Visibility")
-                    Box {
+                    Column {
+                      Text(
+                          text = selectedVisibility,
+                          modifier = Modifier.testTag("selectedVisibilityText"))
                       Button(
-                          onClick = { expanded = !expanded },
+                          onClick = { expandedVisibility = !expandedVisibility },
                           Modifier.testTag("visibilityButton")) {
                             Text(selectedVisibility)
                           }
-                      DropdownMenu(
-                          expanded = expanded,
-                          onDismissRequest = { expanded = false },
-                      ) {
-                        DropdownMenuItem(
-                            onClick = {
-                              selectedVisibility = "Visible for all"
-                              expanded = false
-                            },
-                            text = { Text("Visible for all") })
-                        DropdownMenuItem(
-                            onClick = {
-                              selectedVisibility = "Visible for my contacts"
-                              expanded = false
-                            },
-                            text = { Text("Visible for my contacts") })
-                        DropdownMenuItem(
-                            onClick = {
-                              selectedVisibility = "Visible for my friends"
-                              expanded = false
-                            },
-                            text = { Text("Visible for my friends") })
+                      if (expandedVisibility) {
+                        DropdownMenu(
+                            expanded = expandedVisibility,
+                            onDismissRequest = { expandedVisibility = false },
+                            modifier = Modifier.testTag("visibilityDropdown")) {
+                              DropdownMenuItem(
+                                  onClick = {
+                                    selectedVisibility = "Visible for all"
+                                    expandedVisibility = false
+                                  },
+                                  text = {
+                                    Text(
+                                        "Visible for all",
+                                        modifier = Modifier.testTag("visibleForAllOption"))
+                                  })
+                              DropdownMenuItem(
+                                  onClick = {
+                                    selectedVisibility = "Visible for my contacts"
+                                    expandedVisibility = false
+                                  },
+                                  text = {
+                                    Text(
+                                        "Visible for my contacts",
+                                        modifier = Modifier.testTag("visibleForMyContactsOption"))
+                                  })
+                              DropdownMenuItem(
+                                  onClick = {
+                                    selectedVisibility = "Visible for my friends"
+                                    expandedVisibility = false
+                                  },
+                                  text = {
+                                    Text(
+                                        "Visible for my friends",
+                                        modifier = Modifier.testTag("visibleForMyFriendsOption"))
+                                  })
+                            }
                       }
                     }
                   }
+
+              // Language Selection
+              Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceBetween,
+                  verticalAlignment = Alignment.CenterVertically) {
+                    Text("Language")
+                    Box {
+                      Button(
+                          onClick = { expandedLanguage = !expandedLanguage },
+                          Modifier.testTag("languageButton")) {
+                            Text(selectedLanguage)
+                          }
+                      DropdownMenu(
+                          expanded = expandedLanguage,
+                          onDismissRequest = { expandedLanguage = false },
+                      ) {
+                        DropdownMenuItem(
+                            onClick = {
+                              selectedLanguage = "English"
+                              expandedLanguage = false
+                            },
+                            text = { Text("English") })
+                        DropdownMenuItem(
+                            onClick = {
+                              selectedLanguage = "Spanish"
+                              expandedLanguage = false
+                            },
+                            text = { Text("Spanish") })
+                        DropdownMenuItem(
+                            onClick = {
+                              selectedLanguage = "French"
+                              expandedLanguage = false
+                            },
+                            text = { Text("French") })
+                      }
+                    }
+                  }
+
+              // Account Privacy toggle
+              Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceBetween,
+                  verticalAlignment = Alignment.CenterVertically) {
+                    Text("Account Private")
+                    Switch(
+                        checked = accountPrivate,
+                        onCheckedChange = { accountPrivate = it },
+                        modifier = Modifier.testTag("accountPrivacySwitch"))
+                  }
+
+              // Data Usage Limit Slider
+              Column(modifier = Modifier.fillMaxWidth()) {
+                Text("Data Usage Limit: ${dataUsageLimit.toInt()}MB")
+                Slider(
+                    value = dataUsageLimit,
+                    onValueChange = { dataUsageLimit = it },
+                    valueRange = 0f..100f,
+                    modifier = Modifier.testTag("dataUsageSlider"))
+              }
+
+              // Change Password Button
+              Button(
+                  onClick = { /* Show a dialog saying "Feature coming soon" */},
+                  modifier = Modifier.fillMaxWidth().testTag("changePasswordButton")) {
+                    Text("Change Password")
+                  }
+
+              // Logout Button
+              Button(
+                  onClick = { /* Show a dialog saying "Logged out successfully" */},
+                  colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                  modifier = Modifier.fillMaxWidth().testTag("logoutButton")) {
+                    Text("Logout", color = Color.White)
+                  }
+
+              // Help Button
+              Button(
+                  onClick = { /* Show help dialog */},
+                  modifier = Modifier.fillMaxWidth().testTag("helpButton")) {
+                    Text("Help")
+                  }
+
+              // Invite a Friend Button
+              Button(
+                  onClick = { /* Show invite link dialog */},
+                  modifier = Modifier.fillMaxWidth().testTag("inviteFriendButton")) {
+                    Text("Invite a Friend")
+                  }
+
+              // Important Messages Button
+              Button(
+                  onClick = { /* Show important messages dialog */},
+                  modifier = Modifier.fillMaxWidth().testTag("importantMessagesButton")) {
+                    Text("Important Messages")
+                  }
             }
       })
+}
+
+@Composable
+fun CustomTopBar(title: String, onBackClick: () -> Unit) {
+  Box(
+      modifier =
+          Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary).padding(16.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()) {
+              IconButton(onClick = onBackClick, modifier = Modifier.testTag("customGoBackButton")) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White)
+              }
+              Text(text = title, color = Color.White, style = MaterialTheme.typography.titleLarge)
+            }
+      }
 }
 
 @Preview(showBackground = true)

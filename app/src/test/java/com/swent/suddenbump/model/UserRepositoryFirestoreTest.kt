@@ -1,8 +1,6 @@
 package com.swent.suddenbump.model
 
 import android.os.Looper
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
@@ -60,8 +58,8 @@ class UserRepositoryFirestoreTest {
           uid = "1",
           firstName = "Alexandre",
           lastName = "Carel",
-          profilePicture = Icons.Outlined.AccountCircle,
           phoneNumber = "+33 6 59 20 70 02",
+          null,
           emailAddress = "alexandre.carel@epfl.ch")
 
   @Before
@@ -96,7 +94,6 @@ class UserRepositoryFirestoreTest {
                 "uid" to "1",
                 "firstName" to "Alexandre",
                 "lastName" to "Carel",
-                "profilePicture" to Icons.Outlined.AccountCircle,
                 "phoneNumber" to "+33 6 59 20 70 02",
                 "emailAddress" to "alexandre.carel@epfl.ch"))
 

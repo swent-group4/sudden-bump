@@ -5,14 +5,14 @@ import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowApplication
@@ -29,16 +29,7 @@ class LocationGetterTest {
   @Before
   fun setUp() {
     context = ApplicationProvider.getApplicationContext()
-    listener =
-        object : LocationGetter.LocationListener {
-          override fun onLocationResult(location: Location?) {
-            // You can add assertions in the implementation
-          }
-
-          override fun onLocationFailure(message: String) {
-            // You can add assertions in the implementation
-          }
-        }
+    listener = mock(LocationGetter.LocationListener::class.java)
     fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
     locationGetter = LocationGetter(context, listener)
   }
@@ -54,55 +45,52 @@ class LocationGetterTest {
   }
 
   @Test
-  fun requestLocationUpdates_permissionDenied_callsOnLocationFailure() {
-    ShadowApplication.getInstance()
-        .denyPermissions(android.Manifest.permission.ACCESS_FINE_LOCATION)
+  fun onLocationResult_locationAvailable_callsOnLocationResult() {
+    // Create a mock location with sample latitude and longitude
+    val location =
+        Location("mock_provider").apply {
+          latitude = 37.7749
+          longitude = -122.4194
+        }
 
+    // Create a mock LocationResult containing the mock location
+    val locationResult = LocationResult.create(listOf(location))
+
+    // Simulate the LocationCallback receiving a location result
     locationGetter.requestLocationUpdates()
 
-    // Ensure that the failure message is handled correctly (you can mock listener if needed)
-    // Replace with assertions to ensure correctness
-  }
+    // Access the private locationCallback field indirectly through the LocationGetter class
+    // behavior
+    val locationCallbackField = locationGetter.javaClass.getDeclaredField("locationCallback")
+    locationCallbackField.isAccessible = true
+    val locationCallback = locationCallbackField.get(locationGetter) as LocationCallback
 
-  @Test
-  fun onLocationResult_locationAvailable_callsOnLocationResult() {
-    val location = Location("mock_provider")
-    location.latitude = 37.7749
-    location.longitude = -122.4194
+    // Trigger the location callback with the mock LocationResult
+    locationCallback.onLocationResult(locationResult)
 
-    fusedLocationClient.requestLocationUpdates(
-        LocationRequest.create(),
-        object : LocationCallback() {
-          override fun onLocationResult(result: LocationResult) {
-            locationGetter.requestLocationUpdates()
-            listener.onLocationResult(location)
-          }
-        },
-        null)
-
-    // Simulate location available
-    listener.onLocationResult(location)
-
-    assertEquals(37.7749, location.latitude, 0.0001)
-    assertEquals(-122.4194, location.longitude, 0.0001)
+    // Verify that the listener was called with the correct location
+    verify(listener).onLocationResult(location)
   }
 
   @Test
   fun onLocationResult_locationNotAvailable_callsOnLocationFailure() {
-    fusedLocationClient.requestLocationUpdates(
-        LocationRequest.create(),
-        object : LocationCallback() {
-          override fun onLocationResult(result: LocationResult) {
-            locationGetter.requestLocationUpdates()
-            listener.onLocationFailure("Location not available")
-          }
-        },
-        null)
+    // Create an empty LocationResult (no locations available)
+    val locationResult = LocationResult.create(emptyList())
 
-    // Simulate no location available
-    listener.onLocationFailure("Location not available")
+    // Simulate the LocationCallback receiving an empty location result
+    locationGetter.requestLocationUpdates()
 
-    // Add your assertions here for the failure case
+    // Access the private locationCallback field indirectly through the LocationGetter class
+    // behavior
+    val locationCallbackField = locationGetter.javaClass.getDeclaredField("locationCallback")
+    locationCallbackField.isAccessible = true
+    val locationCallback = locationCallbackField.get(locationGetter) as LocationCallback
+
+    // Trigger the location callback with the empty LocationResult
+    locationCallback.onLocationResult(locationResult)
+
+    // Verify that the listener was called with the failure message
+    verify(listener).onLocationFailure("Location not available") // Verify interaction with the mock
   }
 
   @Test
