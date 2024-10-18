@@ -21,19 +21,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.LocationGetter
-import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
+import com.swent.suddenbump.ui.authentication.SignUpScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.map.MapScreen
@@ -89,6 +88,9 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
               SuddenBumpApp(newLocation)
+              //              val userViewModel =
+              // UserViewModel(UserRepositoryFirestore(Firebase.firestore))
+              //              TestComposableScreen(userViewModel)
             }
       }
     }
@@ -126,14 +128,15 @@ class MainActivity : ComponentActivity() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
-    val userViewModel: UserViewModel = UserViewModel(UserRepositoryFirestore(Firebase.firestore))
+    val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(
           startDestination = Screen.AUTH,
           route = Route.AUTH,
       ) {
-        composable(Screen.AUTH) { SignInScreen(navigationActions) }
+        composable(Screen.AUTH) { SignInScreen(navigationActions, userViewModel) }
+        composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
       }
       navigation(
           startDestination = Screen.OVERVIEW,
@@ -141,10 +144,10 @@ class MainActivity : ComponentActivity() {
       ) {
         composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
         composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
+        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
         composable(Screen.CONTACT) { ContactScreen(navigationActions) }
-        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
       }
 
       navigation(
