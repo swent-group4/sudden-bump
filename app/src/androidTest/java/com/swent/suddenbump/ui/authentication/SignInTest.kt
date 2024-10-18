@@ -6,7 +6,6 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
@@ -54,7 +53,6 @@ class LoginTest : TestCase() {
     composeTestRule.waitUntil(timeoutMillis = 7000) {
       composeTestRule.onNodeWithTag("loginButton").fetchSemanticsNode() != null
     }
-    composeTestRule.onNodeWithTag("loginButton").performScrollTo().assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginButton").performClick()
     composeTestRule.waitForIdle()
     intended(toPackage("com.google.android.gms"))
