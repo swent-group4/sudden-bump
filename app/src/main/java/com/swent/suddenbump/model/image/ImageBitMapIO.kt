@@ -37,7 +37,7 @@ class ImageBitMapIO {
     val bitmap = imageBitmap.asAndroidBitmap()
     try {
       fileOutputStream = FileOutputStream(File(context.filesDir, path))
-      bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
+      bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream)
       onSuccess()
     } catch (e: Exception) {
       onFailure(e)
