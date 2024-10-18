@@ -38,10 +38,10 @@ import com.swent.suddenbump.ui.messages.MessagesScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
-import com.swent.suddenbump.ui.overview.AddContactScreen
+import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
-import com.swent.suddenbump.ui.profile.ContactScreen
+import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.settings.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 
