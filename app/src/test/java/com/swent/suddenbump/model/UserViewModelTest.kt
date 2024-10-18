@@ -1,6 +1,6 @@
 package com.swent.suddenbump.model
 
-import com.swent.suddenbump.model.location.Location
+import android.location.Location
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
@@ -8,6 +8,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
@@ -20,7 +21,11 @@ class UserViewModelTest {
   private lateinit var userViewModel: UserViewModel
 
   private val exception = Exception()
-  private val location = Location(0.0, 0.0)
+  private val location =
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
   private val user =
       User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
@@ -141,7 +146,11 @@ class UserViewModelTest {
 
   @Test
   fun getLocation() {
-    val location = Location(0.0, 0.0)
+    val location =
+        Location("mock_provider").apply {
+          latitude = 0.0
+          longitude = 0.0
+        }
 
     assertThat(userViewModel.getLocation().value.latitude, `is`(0.0))
     assertThat(userViewModel.getLocation().value.longitude, `is`(0.0))
@@ -149,9 +158,13 @@ class UserViewModelTest {
 
   @Test
   fun updateLocation() {
-    val location = Location(1.0, 1.0)
+    val mockLocation = Mockito.mock(Location::class.java)
 
-    userViewModel.updateLocation(location = location, onSuccess = {}, onFailure = {})
+    // Set up the mock to return specific values
+    Mockito.`when`(mockLocation.latitude).thenReturn(1.0)
+    Mockito.`when`(mockLocation.longitude).thenReturn(1.0)
+
+    userViewModel.updateLocation(location = mockLocation, onSuccess = {}, onFailure = {})
     verify(userRepository).updateLocation(any(), any(), any(), any())
     assertThat(userViewModel.getLocation().value.latitude, `is`(1.0))
     assertThat(userViewModel.getLocation().value.longitude, `is`(1.0))
@@ -161,5 +174,116 @@ class UserViewModelTest {
   fun getNewUid() {
     `when`(userRepository.getNewUid()).thenReturn("uid")
     assertThat(userViewModel.getNewUid(), `is`("uid"))
+  }
+
+  @Test
+  fun loadFriendsLocations_success() {
+    // Arrange
+    val friendLocation =
+        Location("mock_provider").apply {
+          latitude = 1.0
+          longitude = 1.0
+        }
+    val friendsMap =
+        mapOf(
+            User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com") to
+                friendLocation)
+
+    // Mock repository method for loading friend locations
+    whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
+      val onSuccess = it.getArgument<(Map<User, Location?>) -> Unit>(1)
+      onSuccess(friendsMap)
+    }
+
+    // Act
+    userViewModel.loadFriendsLocations()
+
+    // Assert
+    assertThat(userViewModel.friendsLocations.value, `is`(friendsMap))
+    verify(userRepository).getFriendsLocation(any(), any(), any())
+  }
+
+  @Test
+  fun loadFriendsLocations_failure() {
+    // Arrange
+    val errorMessage = "Failed to fetch friends' locations"
+    val exception = Exception(errorMessage)
+    val userRepository: UserRepository = mock() // Mock the UserRepository
+    userViewModel = UserViewModel(userRepository) // Instantiate the ViewModel
+
+    // Mock repository method to simulate a failure
+    whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
+      val onFailure = it.getArgument<(Exception) -> Unit>(2)
+      onFailure(exception)
+    }
+
+    // Act
+    userViewModel.loadFriendsLocations()
+
+    // Assert
+    verify(userRepository).getFriendsLocation(any(), any(), any())
+    // You can check if the error message is stored or if any state is updated here
+    // For example, you might want to check a state variable that tracks loading status or error
+    // state.
+  }
+
+  @Test
+  fun getRelativeDistance_knownFriendLocation() {
+    // Arrange
+    val friendLocation =
+        Location("mock_provider").apply {
+          latitude = 1.0
+          longitude = 1.0
+        }
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+    val friendsMap = mapOf(friend to friendLocation)
+
+    // Mock repository method for loading friend locations
+    whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
+      val onSuccess = it.getArgument<(Map<User, Location?>) -> Unit>(1)
+      onSuccess(friendsMap)
+    }
+
+    // Update the user location
+    userViewModel.updateLocation(friend, friendLocation, onSuccess = {}, onFailure = {})
+
+    // Act
+    val distance = userViewModel.getRelativeDistance(friend)
+
+    // Assert
+    assertThat(distance, `is`(location.distanceTo(friendLocation)))
+  }
+
+  @Test
+  fun getRelativeDistance_unknownFriendLocation() {
+    // Arrange
+    userViewModel.updateLocation(location = location, onSuccess = {}, onFailure = {})
+
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+
+    // Act
+    val distance = userViewModel.getRelativeDistance(friend)
+
+    // Assert
+    assertThat(distance, `is`(Float.MAX_VALUE))
+  }
+
+  @Test
+  fun getRelativeDistance_noUserLocation() {
+    // Arrange
+    val friendLocation =
+        Location("mock_provider").apply {
+          latitude = 1.0
+          longitude = 1.0
+        }
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+
+    userViewModel.updateLocation(friend, friendLocation, onSuccess = {}, onFailure = {})
+
+    // Act
+    val distance = userViewModel.getRelativeDistance(friend)
+
+    // Assert
+    assertThat(distance, `is`(Float.MAX_VALUE))
   }
 }

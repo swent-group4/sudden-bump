@@ -1,8 +1,9 @@
 package com.swent.suddenbump.model.user
 
+import android.location.Location
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import com.swent.suddenbump.model.image.ImageBitMapIO
-import com.swent.suddenbump.model.location.Location
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,13 +12,19 @@ class UserViewModel(private val repository: UserRepository) {
 
   private val logTag = "UserViewModel"
   private val profilePicture = ImageBitMapIO()
+  val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
   private val _user: MutableStateFlow<User> =
       MutableStateFlow(
           User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch"))
   private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
-  private val _userLocation: MutableStateFlow<Location> = MutableStateFlow(Location(0.0, 0.0))
+  private val _userLocation: MutableStateFlow<Location> =
+      MutableStateFlow(
+          Location("mock_provider").apply {
+            latitude = 0.0
+            longitude = 0.0
+          })
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
   init {
@@ -97,6 +104,30 @@ class UserViewModel(private val repository: UserRepository) {
   ) {
     _userLocation.value = location
     repository.updateLocation(user, location, onSuccess, onFailure)
+  }
+
+  fun loadFriendsLocations() {
+    repository.getFriendsLocation(
+        _user.value,
+        onSuccess = { friendsLoc ->
+          // Update the state with the locations of friends
+          friendsLocations.value = friendsLoc
+        },
+        onFailure = { error ->
+          // Handle the error, e.g., log or show error message
+          Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
+        })
+  }
+
+  fun getRelativeDistance(friend: User): Float {
+    loadFriendsLocations()
+    val userLocation = _userLocation.value
+    val friendLocation = friendsLocations.value.get(friend)
+    return if (friendLocation != null) {
+      userLocation.distanceTo(friendLocation)
+    } else {
+      Float.MAX_VALUE
+    }
   }
 
   fun getNewUid(): String {

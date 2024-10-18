@@ -24,11 +24,13 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.MockedStatic
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
@@ -51,6 +53,9 @@ class UserRepositoryFirestoreTest {
   @Mock private lateinit var mockTaskVoid: Task<Void>
 
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
+
+  val snapshot1: DocumentSnapshot = mock(DocumentSnapshot::class.java)
+  val snapshot2: DocumentSnapshot = mock(DocumentSnapshot::class.java)
 
   private val location =
       Location("mock_provider").apply {
@@ -283,5 +288,44 @@ class UserRepositoryFirestoreTest {
     shadowOf(Looper.getMainLooper()).idle()
 
     verify(mockUserDocumentReference).update(anyString(), any())
+  }
+
+  @Test
+  fun getFriendsLocationSuccessWithFriendsAndLocations() {
+    // Given
+    val friend1 = User("uid1", "Friend1", "Test", "000", null, "friend1@example.com")
+    val friend2 = User("uid2", "Friend2", "Test", "000", null, "friend2@example.com")
+
+    // Mock the snapshot locations
+    whenever(snapshot1.get("location")).thenReturn(mock(Location::class.java))
+    whenever(snapshot2.get("location")).thenReturn(null)
+
+    // Define the expected map
+    val expectedMap = mapOf(friend1 to snapshot1.get("location") as Location?, friend2 to null)
+
+    // When
+    userRepositoryFirestore.getFriendsLocation(
+        user,
+        { friendsLoc ->
+          // Then
+          assert(friendsLoc == expectedMap)
+        },
+        { fail("Failure callback should not be called") })
+  }
+
+  @Test
+  fun getFriendsLocationSuccessWithNoFriends() {
+    // Mock the snapshot locations
+    whenever(snapshot1.get("location")).thenReturn(mock(Location::class.java))
+    whenever(snapshot2.get("location")).thenReturn(null)
+
+    // When
+    userRepositoryFirestore.getFriendsLocation(
+        user,
+        { friendsLoc ->
+          // Then
+          assert(friendsLoc == emptyMap<User, Location>())
+        },
+        { fail("Failure callback should not be called") })
   }
 }

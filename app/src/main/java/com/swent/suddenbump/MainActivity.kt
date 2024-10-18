@@ -27,12 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.LocationGetter
-import com.swent.suddenbump.model.image.TestComposableScreen
-import com.swent.suddenbump.model.user.UserRepositoryFirestore
-import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.map.MapScreen
@@ -88,9 +83,9 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              // SuddenBumpApp(newLocation)
-              val userViewModel = UserViewModel(UserRepositoryFirestore(Firebase.firestore))
-              TestComposableScreen(userViewModel)
+              // val userViewModel = UserViewModel(UserRepositoryFirestore(Firebase.firestore))
+              SuddenBumpApp(newLocation)
+              // TestComposableScreen(userViewModel)
             }
       }
     }
