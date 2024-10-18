@@ -7,7 +7,6 @@ on:
       - main
       - add-map
       - clean-up
-      - show-users-on-overview
 
   pull_request:
     types:

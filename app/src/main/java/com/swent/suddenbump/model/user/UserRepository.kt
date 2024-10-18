@@ -1,7 +1,7 @@
 package com.swent.suddenbump.model.user
 
+import android.location.Location
 import com.swent.suddenbump.model.image.ImageRepository
-import com.swent.suddenbump.model.location.Location
 
 interface UserRepository {
 
@@ -49,6 +49,12 @@ interface UserRepository {
       user: User,
       location: Location,
       onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun getFriendsLocation(
+      user: User,
+      onSuccess: (Map<User, Location?>) -> Unit,
       onFailure: (Exception) -> Unit
   )
 }
