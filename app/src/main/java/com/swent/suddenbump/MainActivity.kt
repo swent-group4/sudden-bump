@@ -42,6 +42,7 @@ import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
+import com.swent.suddenbump.ui.overview.FriendsListScreen
 import com.swent.suddenbump.ui.settings.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 
@@ -142,6 +143,7 @@ class MainActivity : ComponentActivity() {
           route = Route.OVERVIEW,
       ) {
         composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
+        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
