@@ -1,4 +1,4 @@
-package com.swent.suddenbump.model
+package com.swent.suddenbump.model.user
 
 import android.location.Location
 import com.swent.suddenbump.model.user.User
@@ -83,6 +83,66 @@ class UserViewModelTest {
   }
 
   @Test
+  fun setCurrentUserUid() {
+    val user2 =
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+
+    doAnswer { invocationOnMock ->
+          val uid = invocationOnMock.getArgument<String>(0)
+          val onSuccess = invocationOnMock.getArgument<(User) -> Unit>(1)
+          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
+          uid
+          onSuccess(user2)
+          onFailure(exception)
+        }
+        .whenever(userRepository)
+        .getUserAccount(any(), any(), any())
+
+    doAnswer { invocationOnMock ->
+          val user = invocationOnMock.getArgument<User>(0)
+          val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
+          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
+          user
+          onSuccess(listOf(user2))
+          onFailure(exception)
+        }
+        .whenever(userRepository)
+        .getUserFriends(any(), any(), any())
+
+    doAnswer { invocationOnMock ->
+          val user = invocationOnMock.getArgument<User>(0)
+          val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
+          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
+          user
+          onSuccess(listOf(user2))
+          onFailure(exception)
+        }
+        .whenever(userRepository)
+        .getBlockedFriends(any(), any(), any())
+
+    userViewModel.setCurrentUser("2222", {}, {})
+
+    verify(userRepository).getUserAccount(any(), any(), any())
+    verify(userRepository).getUserFriends(any(), any(), any())
+    verify(userRepository).getBlockedFriends(any(), any(), any())
+
+    assertThat(userViewModel.getCurrentUser().value.uid, `is`(user2.uid))
+    assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
+    assert(userViewModel.getBlockedFriends().value.map { it.uid }.contains(user2.uid))
+  }
+
+  @Test
+  fun setUser() {
+    val user2 =
+        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+
+    userViewModel.setUser(user2, {}, {})
+
+    verify(userRepository).updateUserAccount(any(), any(), any())
+    assertThat(userViewModel.getCurrentUser().value, `is`(user2))
+  }
+
+  @Test
   fun verifyNoAccountExists() {
     userViewModel.verifyNoAccountExists(user.emailAddress, {}, {})
     verify(userRepository).verifyNoAccountExists(any(), any(), any())
@@ -104,19 +164,11 @@ class UserViewModelTest {
   }
 
   @Test
-  fun getUserFriends() {
-    val user2 =
-        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
-
-    assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user.uid))
-    assert(!userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
-  }
-
-  @Test
   fun setUserFriends() {
     val user2 =
         User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
+    userViewModel.setUserFriends(friendsList = listOf(user), onSuccess = {}, onFailure = {})
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user.uid))
 
     userViewModel.setUserFriends(friendsList = listOf(user2), onSuccess = {}, onFailure = {})
@@ -124,19 +176,12 @@ class UserViewModelTest {
   }
 
   @Test
-  fun getBlockedFriends() {
-    val user2 =
-        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
-
-    assert(userViewModel.getBlockedFriends().value.map { it.uid }.contains(user.uid))
-    assert(!userViewModel.getBlockedFriends().value.map { it.uid }.contains(user2.uid))
-  }
-
-  @Test
   fun setBlockedFriends() {
     val user2 =
         User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
+    userViewModel.setBlockedFriends(
+        blockedFriendsList = listOf(user), onSuccess = {}, onFailure = {})
     assert(userViewModel.getBlockedFriends().value.map { it.uid }.contains(user.uid))
 
     userViewModel.setBlockedFriends(

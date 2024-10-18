@@ -4,11 +4,15 @@ import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import com.swent.suddenbump.model.image.ImageBitMapIO
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class UserViewModel(private val repository: UserRepository) {
+class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
   private val logTag = "UserViewModel"
   private val profilePicture = ImageBitMapIO()
@@ -31,23 +35,66 @@ class UserViewModel(private val repository: UserRepository) {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
   }
 
+  companion object {
+    val Factory: ViewModelProvider.Factory =
+        object : ViewModelProvider.Factory {
+          @Suppress("UNCHECKED_CAST")
+          override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return UserViewModel(UserRepositoryFirestore(Firebase.firestore)) as T
+          }
+        }
+  }
+
   fun setCurrentUser() {
     repository.getUserAccount(
-        onSuccess = { _user.value = it }, onFailure = { Log.e(logTag, it.toString()) })
-    repository.getUserFriends(
-        user = _user.value,
-        onSuccess = { _userFriends.value = it },
-        onFailure = { Log.e(logTag, it.toString()) })
-    repository.getBlockedFriends(
-        user = _user.value,
-        onSuccess = { _blockedFriends.value = it },
-        onFailure = { Log.e(logTag, it.toString()) })
+        onSuccess = {
+          _user.value = it
+          repository.getUserFriends(
+              user = _user.value,
+              onSuccess = { friendsList ->
+                Log.i(logTag, friendsList.toString())
+                _userFriends.value = friendsList
+                repository.getBlockedFriends(
+                    user = _user.value,
+                    onSuccess = { blockedFriendsList ->
+                      _blockedFriends.value = blockedFriendsList
+                    },
+                    onFailure = { e -> Log.e(logTag, e.toString()) })
+              },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
+        },
+        onFailure = { e -> Log.e(logTag, e.toString()) })
   }
 
-  fun setUser(user: User) {
+  fun setCurrentUser(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    repository.getUserAccount(
+        uid,
+        onSuccess = {
+          _user.value = it
+          repository.getUserFriends(
+              user = _user.value,
+              onSuccess = { friendsList ->
+                Log.i(logTag, friendsList.toString())
+                _userFriends.value = friendsList
+                repository.getBlockedFriends(
+                    user = _user.value,
+                    onSuccess = { blockedFriendsList ->
+                      _blockedFriends.value = blockedFriendsList
+                      onSuccess()
+                    },
+                    onFailure = { e -> Log.e(logTag, e.toString()) })
+              },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
+        },
+        onFailure)
+  }
+
+  fun setUser(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     _user.value = user
+    repository.updateUserAccount(user, onSuccess, onFailure)
   }
 
+  /** onSuccess returns TRUE if no account exists */
   fun verifyNoAccountExists(
       emailAddress: String,
       onSuccess: (Boolean) -> Unit,
@@ -57,6 +104,7 @@ class UserViewModel(private val repository: UserRepository) {
   }
 
   fun createUserAccount(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    _user.value = user
     repository.createUserAccount(user, onSuccess, onFailure)
   }
 
