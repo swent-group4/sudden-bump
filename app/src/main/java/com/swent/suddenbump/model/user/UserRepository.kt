@@ -1,8 +1,11 @@
 package com.swent.suddenbump.model.user
 
+import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.location.Location
 
 interface UserRepository {
+
+  val imageRepository: ImageRepository
 
   fun init(onSuccess: () -> Unit)
 
@@ -17,6 +20,8 @@ interface UserRepository {
   fun createUserAccount(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit)
+
+  fun getUserAccount(uid: String, onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit)
 
   fun updateUserAccount(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
