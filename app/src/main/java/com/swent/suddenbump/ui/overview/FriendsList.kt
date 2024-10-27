@@ -32,19 +32,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.swent.suddenbump.model.user.User
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 
-data class User(
-    val uid: String,
-    val firstName: String,
-    val lastName: String,
-    val profilePictureUrl: String,
-    val birthDate: String,
-    val mail: String,
-    val phoneNumber: String,
-    val relativeDist: Int,
-)
+
 
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions) {
@@ -57,74 +50,31 @@ fun UserCard(user: User, navigationActions: NavigationActions) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
       AsyncImage(
-          model = user.profilePictureUrl,
+          model = user.profilePicture,
           contentDescription = null,
           modifier = Modifier.width(100.dp).height(100.dp).padding(8.dp))
       Column(modifier = Modifier.padding(16.dp)) {
         Text(text = "${user.firstName} ${user.lastName}")
-        Text(text = "Email: ${user.mail}")
+        Text(text = "Email: ${user.emailAddress}")
         Text(text = "Phone: ${user.phoneNumber}")
+          Text(text = "latitude: ${user.lastKnownLocation.latitude}, longitude: ${user.lastKnownLocation.longitude}")
       }
     }
   }
 }
 
-fun generateMockUsers(): List<User> {
-  val relativeDistances = listOf(5, 5, 5, 5, 10, 10, 10, 15, 15, 15)
-  val firstNames =
-      listOf("John", "Jane", "Alice", "Bob", "Charlie", "David", "Eve", "Frank", "Grace", "Hank")
-  val lastNames =
-      listOf(
-          "Doe",
-          "Smith",
-          "Johnson",
-          "Williams",
-          "Brown",
-          "Jones",
-          "Garcia",
-          "Miller",
-          "Davis",
-          "Rodriguez")
-  val birthDates =
-      listOf(
-          "01 Janvier 2002",
-          "28 Juin 1998",
-          "15 Mars 1995",
-          "22 Avril 1990",
-          "30 Mai 1985",
-          "10 Juillet 1980",
-          "05 Août 1975",
-          "12 Septembre 1970",
-          "18 Octobre 1965",
-          "25 Novembre 1960")
 
-  return (1..10).map { index ->
-    val relativeDist = relativeDistances[index % relativeDistances.size]
-    val firstName = firstNames[index % firstNames.size]
-    val lastName = lastNames[index % lastNames.size]
-    User(
-        uid = index.toString(),
-        firstName = firstName,
-        lastName = lastName,
-        profilePictureUrl = "https://api.dicebear.com/9.x/lorelei/png?seed=${firstName}${lastName}",
-        birthDate = birthDates[index % birthDates.size],
-        mail = "${firstName.lowercase()}.${lastName.lowercase()}@example.com",
-        phoneNumber = "123-456-78${index.toString().padStart(2, '0')}",
-        relativeDist = relativeDist)
-  }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsListScreen(navigationActions: NavigationActions) {
-  var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-  var mockUsers = generateMockUsers()
+fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+    val friends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
 
-  mockUsers =
-      mockUsers.filter { user ->
+    val filteredFriends = friends.filter { user ->
         user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-            user.lastName.contains(searchQuery.text, ignoreCase = true)
-      }
+                user.lastName.contains(searchQuery.text, ignoreCase = true)
+    }
 
   Scaffold(
       modifier = Modifier.testTag("friendsListScreen"),
@@ -164,9 +114,9 @@ fun FriendsListScreen(navigationActions: NavigationActions) {
                           .padding(horizontal = 10.dp, vertical = 10.dp)
                           .testTag("searchTextField"),
               )
-              if (mockUsers.isNotEmpty()) {
+              if (filteredFriends.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
-                  items(mockUsers) { user -> UserCard(user = user, navigationActions) }
+                  items(filteredFriends) { user -> UserCard(user = user, navigationActions) }
                 }
               } else {
                 Text(
@@ -177,10 +127,10 @@ fun FriendsListScreen(navigationActions: NavigationActions) {
       })
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewAddContactScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  FriendsListScreen(navigationActions)
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PreviewAddContactScreen() {
+//  val navController = rememberNavController()
+//  val navigationActions = NavigationActions(navController)
+//  FriendsListScreen(navigationActions,)
+//}

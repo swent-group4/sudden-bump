@@ -143,7 +143,7 @@ class MainActivity : ComponentActivity() {
           route = Route.OVERVIEW,
       ) {
         composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
-        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
+        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }

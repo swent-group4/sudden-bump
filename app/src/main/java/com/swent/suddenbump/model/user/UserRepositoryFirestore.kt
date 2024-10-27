@@ -3,6 +3,7 @@ package com.swent.suddenbump.model.user
 import android.location.Location
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -11,6 +12,7 @@ import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
+import com.swent.suddenbump.model.location.GeoLocation
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
@@ -178,35 +180,59 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         .addOnFailureListener { e -> onFailure(e) }
   }
 
-  override fun getUserFriends(
-      user: User,
-      onSuccess: (List<User>) -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    db.collection(usersCollectionPath)
-        .document(user.uid)
-        .get()
-        .addOnFailureListener { e -> onFailure(e) }
-        .addOnSuccessListener { result ->
-          result.data?.let {
-            onSuccess(
-                documentSnapshotToUserList(result.data?.get("friendsList").toString(), onFailure))
-          } ?: run { onSuccess(emptyList()) }
-        }
-  }
+    override fun getUserFriends(
+        user: User,
+        onSuccess: (List<User>) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection(usersCollectionPath)
+            .document(user.uid)
+            .get()
+            .addOnFailureListener { e -> onFailure(e) }
+            .addOnSuccessListener { result ->
+                val friendsUidList = result.data?.get("friendsList") as? List<String> ?: emptyList()
+                if (friendsUidList.isEmpty()) {
+                    onSuccess(emptyList())
+                    return@addOnSuccessListener
+                }
 
-  override fun setUserFriends(
-      user: User,
-      friendsList: List<User>,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    db.collection(usersCollectionPath)
-        .document(user.uid)
-        .update("friendsList", friendsList.map { it.uid })
-        .addOnFailureListener { onFailure(it) }
-        .addOnSuccessListener { onSuccess() }
-  }
+                val tasks = friendsUidList.map { uid ->
+                    db.collection(usersCollectionPath).document(uid).get()
+                }
+
+                Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
+                    .addOnSuccessListener { documents ->
+                        val friendsList = documents.mapNotNull { document ->
+                            val geoPoint = document.getGeoPoint("lastKnownLocation")
+                            val location = geoPoint?.let { GeoLocation(it.latitude, it.longitude) } ?: GeoLocation(0.0, 0.0)
+                            User(
+                                uid = document.data?.get("uid").toString(),
+                                firstName = document.data?.get("firstName").toString(),
+                                lastName = document.data?.get("lastName").toString(),
+                                phoneNumber = document.data?.get("phoneNumber").toString(),
+                                emailAddress = document.data?.get("emailAddress").toString(),
+                                lastKnownLocation = location
+                            )
+                        }
+                        onSuccess(friendsList)
+                    }
+                    .addOnFailureListener { e -> onFailure(e) }
+            }
+    }
+
+    override fun setUserFriends(
+        user: User,
+        friendsList: List<User>,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val friendsUidList = friendsList.map { it.uid }
+        db.collection(usersCollectionPath)
+            .document(user.uid)
+            .update("friendsList", friendsUidList)
+            .addOnFailureListener { onFailure(it) }
+            .addOnSuccessListener { onSuccess() }
+    }
 
   override fun getBlockedFriends(
       user: User,
