@@ -40,9 +40,11 @@ import com.swent.suddenbump.ui.navigation.Screen
 
 
 @Composable
-fun UserCard(user: User, navigationActions: NavigationActions) {
+fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
   Card(
-      onClick = { navigationActions.navigateTo(Screen.CONTACT) },
+      onClick = {
+          userViewModel.setSelectedContact(user)
+          navigationActions.navigateTo(Screen.CONTACT) },
       modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
   ) {
     Row(
@@ -116,7 +118,7 @@ fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserV
               )
               if (filteredFriends.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
-                  items(filteredFriends) { user -> UserCard(user = user, navigationActions) }
+                  items(filteredFriends) { user -> UserCard(user = user, navigationActions, userViewModel) }
                 }
               } else {
                 Text(

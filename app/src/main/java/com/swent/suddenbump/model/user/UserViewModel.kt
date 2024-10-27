@@ -30,6 +30,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             longitude = 0.0
           })
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
 
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
@@ -166,6 +167,14 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
           Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
         })
   }
+
+    fun getSelectedContact(): StateFlow<User> {
+        return _selectedContact.asStateFlow()
+    }
+
+    fun setSelectedContact(user: User) {
+        _selectedContact.value = user
+    }
 
   fun getRelativeDistance(friend: User): Float {
     loadFriendsLocations()

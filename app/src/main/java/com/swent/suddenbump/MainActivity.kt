@@ -147,7 +147,7 @@ class MainActivity : ComponentActivity() {
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
-        composable(Screen.CONTACT) { ContactScreen(navigationActions) }
+        composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
       }
 
       navigation(
