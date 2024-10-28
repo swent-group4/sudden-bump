@@ -23,130 +23,118 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-
-data class MockUser(
-    val uid: String,
-    val firstName: String,
-    val lastName: String,
-    val birthDate: String,
-    val profilePictureUrl: String,
-    val phoneNumber: String,
-    val email: String,
-    val isFriend: Boolean = false,
-)
+import com.swent.suddenbump.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ContactScreen(navigationActions: NavigationActions) {
-  val user =
-      MockUser(
-          uid = "123",
-          firstName = "Jane",
-          lastName = "Smith",
-          profilePictureUrl = "https://api.dicebear.com/9.x/lorelei/png?seed=JaneSmith",
-          phoneNumber = "+3345676543",
-          email = "jane.smith@gmail.com",
-          birthDate = "28 February 1998",
-          isFriend = true,
-      )
+fun ContactScreen(userViewModel: UserViewModel= viewModel(factory = UserViewModel.Factory), navigationActions: NavigationActions) {
+    val user = userViewModel.user ?: return
 
-  Scaffold(
-      modifier = Modifier.fillMaxSize().testTag("contactScreen"),
-      topBar = {
-        TopAppBar(
-            title = { Text("Contact") },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("backButton")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                        contentDescription = "Back")
-                  }
-            })
-      },
-      content = { padding ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding).testTag("contactContent"),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-          Column(
-              horizontalAlignment = Alignment.CenterHorizontally,
-              verticalArrangement = Arrangement.Top,
-          ) {
-            AsyncImage(
-                model = user.profilePictureUrl,
-                contentDescription = null,
-                modifier =
-                    Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
+    Scaffold(
+        modifier = Modifier.fillMaxSize().testTag("contactScreen"),
+        topBar = {
+            TopAppBar(
+                title = { Text("Contact") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = { navigationActions.goBack() },
+                        modifier = Modifier.testTag("backButton")) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = "Back")
+                    }
+                })
+        },
+        content = { padding ->
             Column(
-                Modifier.fillMaxWidth().padding(top = 10.dp),
+                modifier = Modifier.fillMaxSize().padding(padding).testTag("contactContent"),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween,
             ) {
-              Text(
-                  user.firstName + " " + user.lastName,
-                  style =
-                      androidx.compose.ui.text.TextStyle(
-                          fontSize = 20.sp, // Adjust the size as needed
-                          fontWeight = FontWeight.Bold),
-                  modifier = Modifier.testTag("userName"))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top,
+                ) {
+                    AsyncImage(
+                        model = user.profilePictureUrl,
+                        contentDescription = null,
+                        placeholder = painterResource(com.swent.suddenbump.R.drawable.profile), // Add your drawable here
+                        error = painterResource(com.swent.suddenbump.R.drawable.profile), //
+                        modifier =
+                        Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
+                    Column(
+                        Modifier.fillMaxWidth().padding(top = 10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            user.firstName + " " + user.lastName,
+                            style =
+                            androidx.compose.ui.text.TextStyle(
+                                fontSize = 20.sp, // Adjust the size as needed
+                                fontWeight = FontWeight.Bold),
+                            modifier = Modifier.testTag("userName"))
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Card(
+                        modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 50.dp, vertical = 10.dp)
+                            .testTag("birthdayCard")) {
+                        Text(
+                            modifier = Modifier.padding(10.dp).testTag("birthdayText"),
+                            text = "Birthday: " + user.birthDate)
+                    }
+
+                    Card(
+                        modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 50.dp, vertical = 10.dp)
+                            .testTag("phoneCard")) {
+                        Text(modifier = Modifier.padding(10.dp), text = "Phone: " + user.phoneNumber)
+                    }
+
+                    Card(
+                        modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 50.dp, vertical = 10.dp)
+                            .testTag("emailCard")) {
+                        Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.emailAddress)
+                    }
+                }
+
+                if (user.isFriend) {
+                    Button(
+                        modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 50.dp, vertical = 30.dp)
+                            .testTag("sendMessageButton"),
+                        onClick = {
+                            userViewModel.user = user
+                            navigationActions.navigateTo(Screen.CHAT)
+                        }) {
+                        Text("Send a message")
+                    }
+                } else {
+                    Button(
+                        modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 50.dp, vertical = 30.dp)
+                            .testTag("addToContactsButton"),
+                        onClick = { println("Button click !") }) {
+                        Text("Add to contacts")
+                    }
+                }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 10.dp)
-                        .testTag("birthdayCard")) {
-                  Text(
-                      modifier = Modifier.padding(10.dp).testTag("birthdayText"),
-                      text = "Birthday: " + user.birthDate)
-                }
-
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 10.dp)
-                        .testTag("phoneCard")) {
-                  Text(modifier = Modifier.padding(10.dp), text = "Phone: " + user.phoneNumber)
-                }
-
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 10.dp)
-                        .testTag("emailCard")) {
-                  Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.email)
-                }
-          }
-
-          if (user.isFriend) {
-            Button(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 30.dp)
-                        .testTag("sendMessageButton"),
-                onClick = { println("Button click !") }) {
-                  Text("Send a message")
-                }
-          } else {
-            Button(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 30.dp)
-                        .testTag("addToContactsButton"),
-                onClick = { println("Button click !") }) {
-                  Text("Add to contacts")
-                }
-          }
-        }
-      })
+        })
 }

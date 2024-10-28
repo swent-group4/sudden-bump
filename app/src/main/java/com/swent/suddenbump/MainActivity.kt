@@ -33,6 +33,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.authentication.SignUpScreen
+import com.swent.suddenbump.ui.chat.ChatScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.map.MapScreen
@@ -59,66 +60,66 @@ class MainActivity : ComponentActivity() {
     var newLocation by mutableStateOf<Location?>(null)
 
     locationGetter =
-        LocationGetter(
-            this,
-            object : LocationGetter.LocationListener {
-              override fun onLocationResult(location: Location?) {
-                // Handle location update
-                newLocation = location
-              }
+      LocationGetter(
+        this,
+        object : LocationGetter.LocationListener {
+          override fun onLocationResult(location: Location?) {
+            // Handle location update
+            newLocation = location
+          }
 
-              override fun onLocationFailure(message: String) {
-                Log.e("MainActivity", "Location Error: $message")
-              }
-            })
+          override fun onLocationFailure(message: String) {
+            Log.e("MainActivity", "Location Error: $message")
+          }
+        })
 
     FirebaseApp.initializeApp(this)
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
-    auth.currentUser?.let {
-      // Sign out the user if they are already signed in
-      // This is useful for testing purposes
-      auth.signOut()
-    }
+//    auth.currentUser?.let {
+//      // Sign out the user if they are already signed in
+//      // This is useful for testing purposes
+//      auth.signOut()
+//    }
 
     setContent {
       SampleAppTheme {
         // A surface container using the 'background' color from the theme
         Surface(
-            modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
-            color = MaterialTheme.colorScheme.background) {
-              SuddenBumpApp(newLocation)
-              //              val userViewModel =
-              // UserViewModel(UserRepositoryFirestore(Firebase.firestore))
-              //              TestComposableScreen(userViewModel)
-            }
+          modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
+          color = MaterialTheme.colorScheme.background) {
+          SuddenBumpApp(newLocation)
+          //              val userViewModel =
+          // UserViewModel(UserRepositoryFirestore(Firebase.firestore))
+          //              TestComposableScreen(userViewModel)
+        }
       }
     }
 
     // Initialize permission launcher
     requestMultiplePermissionsLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            permissions ->
-          handlePermissionResults(permissions)
-        }
+      registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+          permissions ->
+        handlePermissionResults(permissions)
+      }
   }
 
   private fun checkLocationPermissions() {
     val fineLocationGranted =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
+      ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+              PackageManager.PERMISSION_GRANTED
 
     val coarseLocationGranted =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
+      ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+              PackageManager.PERMISSION_GRANTED
 
     if (fineLocationGranted || coarseLocationGranted) {
       locationGetter.requestLocationUpdates()
     } else {
       // Request permissions
       requestMultiplePermissionsLauncher.launch(
-          arrayOf(
-              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        arrayOf(
+          Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
     }
   }
 
@@ -132,27 +133,28 @@ class MainActivity : ComponentActivity() {
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(
-          startDestination = Screen.AUTH,
-          route = Route.AUTH,
+        startDestination = Screen.AUTH,
+        route = Route.AUTH,
       ) {
         composable(Screen.AUTH) { SignInScreen(navigationActions, userViewModel) }
         composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
       }
       navigation(
-          startDestination = Screen.OVERVIEW,
-          route = Route.OVERVIEW,
+        startDestination = Screen.OVERVIEW,
+        route = Route.OVERVIEW,
       ) {
-        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
-        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
-        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
+        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions, userViewModel) }
+        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
+        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
-        composable(Screen.CONTACT) { ContactScreen(navigationActions) }
+        composable(Screen.CONTACT) { ContactScreen(userViewModel, navigationActions) }
+        composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
       }
 
       navigation(
-          startDestination = Screen.MAP,
-          route = Route.MAP,
+        startDestination = Screen.MAP,
+        route = Route.MAP,
       ) {
         composable(Screen.MAP) {
           MapScreen(navigationActions, location)
@@ -160,10 +162,10 @@ class MainActivity : ComponentActivity() {
         }
       }
       navigation(
-          startDestination = Screen.MESS,
-          route = Route.MESS,
+        startDestination = Screen.MESS,
+        route = Route.MESS,
       ) {
-        composable(Screen.MESS) { MessagesScreen(navigationActions) }
+        composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions) }
       }
     }
   }

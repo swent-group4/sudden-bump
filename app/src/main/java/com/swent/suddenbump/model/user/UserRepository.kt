@@ -57,4 +57,6 @@ interface UserRepository {
       onSuccess: (Map<User, Location?>) -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+    suspend fun getAllUsers(): Result<List<User>>  //Ask
 }
