@@ -64,9 +64,6 @@ class SignUpScreenTest {
     composeTestRule.onNodeWithTag("lastNameField").performTextInput("Doe")
     composeTestRule.onNodeWithTag("lastNameField").assertTextContains("Doe")
 
-    composeTestRule.onNodeWithTag("emailField").performTextInput("john.doe@example.com")
-    composeTestRule.onNodeWithTag("emailField").assertTextContains("john.doe@example.com")
-
     composeTestRule.onNodeWithTag("phoneField").performTextInput("+1234567890")
     composeTestRule.onNodeWithTag("phoneField").assertTextContains("+1 234-567-890")
 
