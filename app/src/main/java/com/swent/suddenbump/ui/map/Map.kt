@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.location.Location
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -23,16 +24,19 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.swent.suddenbump.model.user.User
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MapScreen(
     navigationActions: NavigationActions,
     location: Location?,
-    // userViewModel: UserViewModel
+    userViewModel: UserViewModel
 ) {
   Scaffold(
       bottomBar = {
@@ -41,11 +45,11 @@ fun MapScreen(
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { pd -> SimpleMap(location) })
+      content = { pd -> SimpleMap(location, userViewModel) })
 }
 
 @Composable
-fun SimpleMap(location: Location?) {
+fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
   val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) } // Track if the zoom has been performed
@@ -54,13 +58,30 @@ fun SimpleMap(location: Location?) {
     location?.let {
       val latLng = LatLng(it.latitude, it.longitude)
       markerState.position = LatLng(it.latitude, it.longitude)
+
       if (!zoomDone) {
         // Perform zoom only the first time the location is set
         cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 13f))
+        fetchLocationToServer(location, userViewModel)
         zoomDone = true // Mark zoom as done
       }
     }
   }
+
+  val currentLocation by rememberUpdatedState(location)
+
+  LaunchedEffect(Unit) {
+    while (isActive) {
+      Log.d("CoroutineStatus", "Coroutine is running")
+
+      currentLocation?.let { fetchLocationToServer(currentLocation!!, userViewModel) }
+          ?: Log.d("LocationUpdate", "Location is null")
+
+      // Delay for 5 minutes (300,000 milliseconds)
+      delay(300_000) // Adjusted back to 5 minutes
+    }
+  }
+
   Box(modifier = Modifier.fillMaxSize().testTag("mapView")) {
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
@@ -171,4 +192,12 @@ fun getLocationMarkerBitmap(): Bitmap {
   canvas.drawCircle(markerSize / 2f, markerSize / 2f, markerSize / 4f, innerPaint)
 
   return bitmap
+}
+
+fun fetchLocationToServer(location: Location, userViewModel: UserViewModel) {
+  userViewModel.updateLocation(
+      userViewModel.getCurrentUser().value,
+      location,
+      onSuccess = { Log.d("FireStoreLocation", "Successfully updated location") },
+      onFailure = { Log.d("FireStoreLocation", "Failure to reach Firestore") })
 }
