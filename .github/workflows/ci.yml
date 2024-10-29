@@ -7,6 +7,7 @@ on:
       - main
       - add-map
       - clean-up
+      - 100-dont-let-users-change-email
 
   pull_request:
     types:
