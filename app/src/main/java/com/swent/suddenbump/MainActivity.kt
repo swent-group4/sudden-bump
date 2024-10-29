@@ -155,7 +155,7 @@ class MainActivity : ComponentActivity() {
           route = Route.MAP,
       ) {
         composable(Screen.MAP) {
-          MapScreen(navigationActions, location)
+          MapScreen(navigationActions, location, userViewModel)
           checkLocationPermissions()
         }
       }
