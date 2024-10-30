@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.location.Location
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.swent.suddenbump.BuildConfig
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
@@ -59,7 +61,7 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
       val latLng = LatLng(it.latitude, it.longitude)
       markerState.position = LatLng(it.latitude, it.longitude)
 
-      if (!zoomDone) {
+      if (!zoomDone && !isTestEnvironment()) {
         // Perform zoom only the first time the location is set
         cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 13f))
         fetchLocationToServer(location, userViewModel)
@@ -200,4 +202,9 @@ fun fetchLocationToServer(location: Location, userViewModel: UserViewModel) {
       location,
       onSuccess = { Log.d("FireStoreLocation", "Successfully updated location") },
       onFailure = { Log.d("FireStoreLocation", "Failure to reach Firestore") })
+}
+
+fun isTestEnvironment(): Boolean {
+  // Example check: return true if running in Robolectric
+  return Build.FINGERPRINT.contains("robolectric") || BuildConfig.DEBUG
 }

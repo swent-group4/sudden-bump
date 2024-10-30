@@ -5,9 +5,13 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.swent.suddenbump.model.user.User
+import com.swent.suddenbump.model.user.UserRepository
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.TopLevelDestinations
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,6 +23,23 @@ import org.mockito.Mockito.verify
 class MapScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
+  private lateinit var userRepository: UserRepository
+  private lateinit var userViewModel: UserViewModel
+
+  private val exception = Exception()
+  private val location =
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
+  private val user =
+      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+
+  @Before
+  fun setUp() {
+    userRepository = mock(UserRepository::class.java)
+    userViewModel = UserViewModel(userRepository)
+  }
 
   @Test
   fun mapScreen_displaysMapAndBottomNavigation() {
@@ -33,7 +54,10 @@ class MapScreenTest {
       val mockLocation = mock(Location::class.java)
 
       // Set the content for testing
-      MapScreen(navigationActions = navigationActions, location = mockLocation)
+      MapScreen(
+          navigationActions = navigationActions,
+          location = mockLocation,
+          userViewModel = userViewModel)
     }
 
     // Verify that the bottom navigation is displayed
@@ -68,7 +92,10 @@ class MapScreenTest {
 
     // Set the content for testing
     composeTestRule.setContent {
-      MapScreen(navigationActions = mockNavigationActions, location = mockLocation)
+      MapScreen(
+          navigationActions = mockNavigationActions,
+          location = mockLocation,
+          userViewModel = userViewModel)
     }
 
     // Simulate a click on the "Map" tab (or any other tab based on your setup)
