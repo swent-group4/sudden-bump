@@ -170,12 +170,24 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
   fun getRelativeDistance(friend: User): Float {
     loadFriendsLocations()
     val userLocation = _userLocation.value
-    val friendLocation = friendsLocations.value.get(friend)
+    val friendLocation = friendsLocations.value[friend]
     return if (friendLocation != null) {
       userLocation.distanceTo(friendLocation)
     } else {
       Float.MAX_VALUE
     }
+  }
+
+  fun isFriendsInRadius(radius: Int): Boolean {
+    loadFriendsLocations()
+    friendsLocations.value.values.forEach { friendLocation ->
+      if (friendLocation != null) {
+        if (_userLocation.value.distanceTo(friendLocation) <= radius) {
+          return true
+        }
+      }
+    }
+    return false
   }
 
   fun getNewUid(): String {

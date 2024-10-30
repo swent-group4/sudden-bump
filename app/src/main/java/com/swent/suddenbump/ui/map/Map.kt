@@ -1,6 +1,11 @@
 package com.swent.suddenbump.ui.map
 
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -15,6 +20,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.testTag
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
@@ -25,6 +32,7 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.swent.suddenbump.BuildConfig
+import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
@@ -78,6 +86,9 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
 
       currentLocation?.let { fetchLocationToServer(currentLocation!!, userViewModel) }
           ?: Log.d("LocationUpdate", "Location is null")
+
+      if (userViewModel.isFriendsInRadius(3000)) // Check if friends are within 3km
+       showFriendNearbyNotification(context = MainActivity()) // Show notification
 
       // Delay for 5 minutes (300,000 milliseconds)
       delay(300_000) // Adjusted back to 5 minutes
@@ -202,6 +213,41 @@ fun fetchLocationToServer(location: Location, userViewModel: UserViewModel) {
       location,
       onSuccess = { Log.d("FireStoreLocation", "Successfully updated location") },
       onFailure = { Log.d("FireStoreLocation", "Failure to reach Firestore") })
+}
+
+fun showFriendNearbyNotification(context: Context) {
+  val channelId = "friend_nearby_channel"
+  val channelName = "Friend Nearby Notifications"
+  val notificationId = 1
+
+  val notificationChannel =
+      NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+  val notificationManager = context.getSystemService(NotificationManager::class.java)
+  notificationManager.createNotificationChannel(notificationChannel)
+
+  val intent =
+      Intent(context, MainActivity::class.java).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+      }
+  val pendingIntent: PendingIntent =
+      PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+  val notificationBuilder =
+      NotificationCompat.Builder(context, channelId)
+          .setSmallIcon(android.R.drawable.ic_dialog_info) // Default Android icon
+          .setContentTitle("Friend Nearby")
+          .setContentText("A friend is within your radius!")
+          .setPriority(NotificationCompat.PRIORITY_HIGH)
+          .setContentIntent(pendingIntent)
+          .setAutoCancel(true)
+
+  try {
+    with(NotificationManagerCompat.from(context)) {
+      notify(notificationId, notificationBuilder.build())
+    }
+  } catch (e: SecurityException) {
+    Log.e("NotificationError", "Notification permission not granted", e)
+  }
 }
 
 fun isTestEnvironment(): Boolean {
