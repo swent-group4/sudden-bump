@@ -8,6 +8,7 @@ on:
       - add-map
       - clean-up
       - 100-dont-let-users-change-email
+      - link-location-to-users
 
   pull_request:
     types:
