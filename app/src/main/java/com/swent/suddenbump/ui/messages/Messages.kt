@@ -1,10 +1,10 @@
 package com.swent.suddenbump.ui.messages
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,12 +40,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.user.UserViewModel
@@ -54,7 +54,8 @@ import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
-import com.swent.suddenbump.ui.theme.violetColor
+import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.theme.Purple80
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,28 +63,13 @@ fun MessagesScreen(
     viewModel: UserViewModel = viewModel(factory = UserViewModel.Factory),
     navigationActions: NavigationActions
 ) {
-    val messages by viewModel.getChatSummaries().collectAsState(emptyList())
-    val currentUser = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-    messages.forEach { chatSummary ->
-        chatSummary.participants
-            .firstOrNull { it != currentUser }
-            ?.let {
-                viewModel.getUserAccount(it, onSuccess = { user ->
-                    chatSummary.otherUserName =
-                        "${user?.firstName?.replaceFirstChar { it.uppercase() }} ${user?.lastName?.replaceFirstChar { it.uppercase() }}"
+    val messages by viewModel.chatSummaries.collectAsStateWithLifecycle(emptyList())
+    var search by remember { mutableStateOf("") }
 
-                }, onFailure = {
-                    Log.e("MessageItem", "Error getting user account: ${it.message}")
-                })
-            }
+    var list by remember { mutableStateOf(messages) }
+    list = messages.filter { summary ->
+        summary.date != "" && summary.sender.contains(search, true)
     }
-    var search by remember {
-        mutableStateOf("")
-    }
-    var list by remember {
-        mutableStateOf<List<ChatSummary>>(messages)
-    }
-    list = messages.filter { it.date != "" }
 
     Scaffold(
         topBar = {
@@ -93,17 +79,6 @@ fun MessagesScreen(
                         value = search,
                         onValueChange = {
                             search = it
-                            if (search.isEmpty())
-                                list = messages.filter { it.date != "" }
-                            else {
-                                list = messages.filter {
-                                    it.otherUserName.contains(search) || it.otherUserName.startsWith(
-                                        search
-                                    ) || it.lastMessage.contains(search) || it.lastMessage.startsWith(
-                                        search
-                                    )
-                                }
-                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -111,8 +86,10 @@ fun MessagesScreen(
                             .padding(12.dp),
                         textStyle = LocalTextStyle.current.copy(
                             color = Color.Black,
-                            fontSize = 16.sp
-                        )
+                            fontSize = 16.sp,
+
+                            ),
+                        singleLine = true
                     )
                 },
                 navigationIcon = {
@@ -172,20 +149,6 @@ fun MessageItem(
     viewModel: UserViewModel,
     navigationActions: NavigationActions
 ) {
-    val currentUser = viewModel.getCurrentUser()
-    var name by remember {
-        mutableStateOf(message.sender)
-    }
-    message.participants
-        .firstOrNull { it != currentUser.value.uid }
-        ?.let {
-            viewModel.getUserAccount(it, onSuccess = { user ->
-                name =
-                    "${user?.firstName?.replaceFirstChar { it.uppercase() }} ${user?.lastName?.replaceFirstChar { it.uppercase() }}"
-            }, onFailure = {
-                Log.e("MessageItem", "Error getting user account: ${it.message}")
-            })
-        }
     Row(
         modifier =
         Modifier
@@ -193,16 +156,8 @@ fun MessageItem(
             .padding(vertical = 8.dp)
             .testTag("message_item_${message.sender}")
             .clickable {
-                message.participants
-                    .firstOrNull { it != currentUser.value.uid }
-                    ?.let {
-                        viewModel.getUserAccount(it, onSuccess = {
-                            viewModel.user = it
-                            navigationActions.navigateTo(Screen.CHAT)
-                        }, onFailure = {
-                            Log.e("MessageItem", "Error getting user account: ${it.message}")
-                        })
-                    }
+                viewModel.user = message.otherUser
+                navigationActions.navigateTo(Screen.CHAT)
             }
     ) {
         Image(
@@ -225,14 +180,14 @@ fun MessageItem(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = name,
+                    text = message.sender,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
                 Text(
                     text = message.date,
-                    color = Color.Gray,
+                    color = Purple80,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 5.dp)
                 )
@@ -247,32 +202,41 @@ fun MessageItem(
                     text = "You: ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
+                    maxLines = 1,                          // Limit text to one line
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.testTag("message_content")
                 )
+
+                // Notification Badge
                 if (message.unreadCount > 0) {
-
-                    Card(
-                        shape = RoundedCornerShape(100),
-                        colors = CardDefaults.cardColors(
-                            containerColor = violetColor
-                        ),
-                        modifier = Modifier.padding(5.dp)
+                    Box(
+                        modifier = Modifier
+                            .padding(end = 8.dp) // Adjust position to align with the message content
+                            .size(24.dp) // Badge size
                     ) {
-                        Text(
-                            text = "${message.unreadCount}", // Display unread count
-                            color = Color.Black,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
-                        )
-
+                        Card(
+                            shape = RoundedCornerShape(100),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Purple40
+                            ),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                        ) {
+                            Text(
+                                text = "${message.unreadCount}", // Display unread count
+                                color = Color.Black,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                     }
                 }
             }
-
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

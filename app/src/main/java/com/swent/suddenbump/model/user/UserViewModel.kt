@@ -6,26 +6,37 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
+    private val chatRepository = ChatRepository()
     private val logTag = "UserViewModel"
     private val profilePicture = ImageBitMapIO()
     val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
+    private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
+    val chatSummaries: Flow<List<ChatSummary>> = _chatSummaries.asStateFlow()
+
     private val _user: MutableStateFlow<User> = MutableStateFlow(User())
+    private val _otherUsers: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
     private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
-    private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+    private val _blockedFriends: MutableStateFlow<List<User>> =
+        MutableStateFlow(listOf(_user.value))
     private val _userLocation: MutableStateFlow<Location> =
         MutableStateFlow(
             Location("mock_provider").apply {
@@ -53,21 +64,54 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         repository.getUserAccount(
             onSuccess = {
                 _user.value = it
-                repository.getUserFriends(
-                    user = _user.value,
-                    onSuccess = { friendsList ->
-                        Log.i(logTag, friendsList.toString())
-                        _userFriends.value = friendsList
-                        repository.getBlockedFriends(
-                            user = _user.value,
-                            onSuccess = { blockedFriendsList ->
-                                _blockedFriends.value = blockedFriendsList
-                            },
-                            onFailure = { e -> Log.e(logTag, e.toString()) })
-                    },
-                    onFailure = { e -> Log.e(logTag, e.toString()) })
+                viewModelScope.launch(Dispatchers.IO) {
+                    launch {
+                        chatRepository.getChatSummaries().collectLatest {
+                            val summaries = it.mapNotNull {
+                                FirebaseAuth.getInstance().currentUser?.uid?.let { currentUserId ->
+                                    val otherUser = it.participants
+                                        .firstOrNull { it != currentUserId }
+                                        ?.let {
+                                            chatRepository.getUserAccount(it)
+                                        }
+
+                                    // Retrieve unread count asynchronously in a coroutine
+                                    val unreadCount = chatRepository.getUnreadMessagesCount(it.id, currentUserId)
+                                    it.copy(
+                                        otherUser = otherUser,
+                                        unreadCount = unreadCount
+                                    )
+                                }
+                            }
+                            _chatSummaries.emit(summaries)
+                        }
+                    }
+                    launch {
+                        setUserFriends()
+                    }
+                    launch {
+                        repository.getAllOtherUsers(_user.value).collectLatest {
+                            _otherUsers.value = it
+                        }
+                    }
+                }
             },
             onFailure = { e -> Log.e(logTag, e.toString()) })
+    }
+
+    private suspend fun setUserFriends(){
+        repository.getUserFriends(
+            user = _user.value,
+            onSuccess = { friendsList ->
+                Log.i(logTag, friendsList.toString())
+                _userFriends.value = friendsList
+                repository.getBlockedFriends(
+                    user = _user.value,
+                    onSuccess = { blockedFriendsList ->
+                        _blockedFriends.value = blockedFriendsList
+                    },
+                    onFailure = { e -> Log.e(logTag, e.toString()) })
+            })
     }
 
     fun setCurrentUser(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
@@ -75,22 +119,25 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             uid,
             onSuccess = {
                 _user.value = it
-                repository.getUserFriends(
-                    user = _user.value,
-                    onSuccess = { friendsList ->
-                        Log.i(logTag, friendsList.toString())
-                        _userFriends.value = friendsList
-                        repository.getBlockedFriends(
-                            user = _user.value,
-                            onSuccess = { blockedFriendsList ->
-                                _blockedFriends.value = blockedFriendsList
-                                onSuccess()
-                            },
-                            onFailure = { e -> Log.e(logTag, e.toString()) })
-                    },
-                    onFailure = { e -> Log.e(logTag, e.toString()) })
+                viewModelScope.launch {
+                    repository.getUserFriends(
+                        user = _user.value,
+                        onSuccess = { friendsList ->
+                            Log.i(logTag, friendsList.toString())
+                            _userFriends.value = friendsList
+                            repository.getBlockedFriends(
+                                user = _user.value,
+                                onSuccess = { blockedFriendsList ->
+                                    _blockedFriends.value = blockedFriendsList
+                                    onSuccess()
+                                },
+                                onFailure = { e -> Log.e(logTag, e.toString()) })
+                        },
+                    )
+                }
             },
-            onFailure)
+            onFailure
+        )
     }
 
     fun setUser(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
@@ -116,7 +163,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         return _user.asStateFlow()
     }
 
-    fun getUserAccount(uid: String, onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit){
+    fun getUserAccount(uid: String, onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit) {
         repository.getUserAccount(uid, onSuccess, onFailure)
     }
 
@@ -137,7 +184,12 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         _userFriends.value = friendsList.map {
             it.copy(isFriend = true)
         }.distinct()
-        repository.setUserFriends(user, friendsList.distinct(), onSuccess, onFailure)
+        repository.setUserFriends(user, friendsList.distinct(), onSuccess = {
+            viewModelScope.launch {
+                setUserFriends()
+            }
+            onSuccess.invoke()
+        }, onFailure)
     }
 
     fun getBlockedFriends(): StateFlow<List<User>> {
@@ -169,16 +221,18 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     }
 
     fun loadFriendsLocations() {
-        repository.getFriendsLocation(
-            _user.value,
-            onSuccess = { friendsLoc ->
-                // Update the state with the locations of friends
-                friendsLocations.value = friendsLoc
-            },
-            onFailure = { error ->
-                // Handle the error, e.g., log or show error message
-                Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
-            })
+        viewModelScope.launch {
+            repository.getFriendsLocation(
+                _user.value,
+                onSuccess = { friendsLoc ->
+                    // Update the state with the locations of friends
+                    friendsLocations.value = friendsLoc
+                },
+                onFailure = { error ->
+                    // Handle the error, e.g., log or show error message
+                    Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
+                })
+        }
     }
 
     fun getRelativeDistance(friend: User): Float {
@@ -197,39 +251,40 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     }
 
     fun getAllUsers(): StateFlow<List<User>> {
-        viewModelScope.launch {
-            _users.value = repository.getAllUsers().getOrNull() ?: emptyList()
-        }
-        return _users.asStateFlow()
+        return _otherUsers
     }
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: Flow<List<Message>> = _messages
 
-    private val chatRepository = ChatRepository()
     private var chatId: String? = null
     var user: User? = null
     private val userId: String?
         get() = user?.uid
 
-    fun getChatSummaries() = chatRepository.getChatSummaries()
+//    fun getChatSummaries() = chatRepository.getChatSummaries()
 
+    private var isGettingChatId = false
     fun getOrCreateChat() = viewModelScope.launch {
-        chatId = chatRepository.getOrCreateChat(userId ?: "")
-        chatRepository.getMessages(chatId!!).collect { messages ->
-            _messages.value = messages
+        if (!isGettingChatId){
+            isGettingChatId = true
+            chatId = chatRepository.getOrCreateChat(userId ?: "")
+            isGettingChatId = false
+            chatRepository.getMessages(chatId!!).collect { messages ->
+                _messages.value = messages
+            }
         }
     }
 
     // Send a new message and add it to Firestore
-    fun sendMessage(messageContent: String,username : String) {
+    fun sendMessage(messageContent: String, username: String) {
         viewModelScope.launch {
             if (chatId != null)
-                chatRepository.sendMessage(chatId!!, messageContent,username)
+                chatRepository.sendMessage(chatId!!, messageContent, username)
         }
     }
 
-    fun markMessagesAsRead() = viewModelScope.launch{
+    fun markMessagesAsRead() = viewModelScope.launch {
         if (chatId != null)
             chatRepository.markMessagesAsRead(chatId!!)
     }

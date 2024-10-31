@@ -13,4 +13,5 @@ data class User(
     val birthDate: String = "",
     val relativeDist: Int = 0,
     val isFriend: Boolean = false,
+    val friendsList: List<String> = emptyList(),
 )

@@ -1,23 +1,24 @@
 package com.swent.suddenbump.model.chat
 
-import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
+import com.swent.suddenbump.model.user.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
 
-class ChatRepository {
+class ChatRepository{
 
     private val firestore = FirebaseFirestore.getInstance()
     private val messagesCollection = firestore.collection("messages")
@@ -62,11 +63,13 @@ class ChatRepository {
             // If no chat exists, create a new one
             if (chatId.isEmpty()) {
                 val newChatRef = firestore.collection("chats").document()
-                newChatRef.set(mapOf(
-                    "participants" to listOf(userId, userId2),
-                    "lastMessage" to "",
-                    "lastMessageTimestamp" to null
-                ))
+                newChatRef.set(
+                    mapOf(
+                        "participants" to listOf(userId, userId2),
+                        "lastMessage" to "",
+                        "lastMessageTimestamp" to null
+                    )
+                )
                 chatId = newChatRef.id
             }
         } catch (e: Exception) {
@@ -129,12 +132,14 @@ class ChatRepository {
             // Update the last message and timestamp in the chat document
             firestore.collection("chats")
                 .document(chatId)
-                .update(mapOf(
-                    "lastMessage" to messageContent,
-                    "lastMessageTimestamp" to FieldValue.serverTimestamp(),
-                    "lastMessageSender" to senderName,
-                    "otherUserName"  to username
-                ))
+                .update(
+                    mapOf(
+                        "lastMessage" to messageContent,
+                        "lastMessageTimestamp" to FieldValue.serverTimestamp(),
+                        "lastMessageSender" to senderName,
+                        "otherUserName" to username
+                    )
+                )
                 .await()
 
         } catch (e: Exception) {
@@ -199,46 +204,35 @@ class ChatRepository {
 
     fun getChatSummaries(): Flow<List<ChatSummary>> = callbackFlow {
         val firestore = FirebaseFirestore.getInstance()
-        var registration: ListenerRegistration? = null
-        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return@callbackFlow
-
-        try {
-            registration = firestore.collection("chats")
-                .whereArrayContains("participants", currentUserId)
-                .addSnapshotListener { chatsSnapshot, error ->
-                    if (error != null) {
-                        close(error)
-                        return@addSnapshotListener
-                    }
-
-                    if (chatsSnapshot != null && !chatsSnapshot.isEmpty) {
-                        val chatSummaries = mutableListOf<ChatSummary>()
-
-                        // Use a coroutine scope to retrieve unread counts
-                        runBlocking {
-                            for (chatDoc in chatsSnapshot.documents) {
-                                val lastMessage = chatDoc.getString("lastMessage") ?: ""
-                                val lastMessageSender = chatDoc.getString("lastMessageSender") ?: ""
-                                val lastMessageTimestamp = chatDoc.getTimestamp("lastMessageTimestamp")
-                                val unreadCount = withContext(Dispatchers.IO) {
-                                    getUnreadMessagesCount(chatDoc.id, currentUserId)
-                                }
-                                val participants = chatDoc.get("participants") as? List<String> ?: emptyList()
-                                val usernmame = chatDoc.getString("otherUserName")?:""
-
-                                chatSummaries.add(ChatSummary(lastMessage, lastMessageSender, lastMessageTimestamp, unreadCount, participants,usernmame))
-                            }
-                        }
-
-                        trySend(chatSummaries).isSuccess
-                    } else {
-                        trySend(emptyList()).isSuccess // Emit an empty list if no chats found
-                    }
-                }
-        } catch (e: Exception) {
-            close(e)
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: run {
+            close(IllegalStateException("User not logged in"))
+            return@callbackFlow
         }
+        val registration = firestore.collection("chats")
+            .whereArrayContains("participants", currentUserId)
+            .addSnapshotListener { chatsSnapshot, error ->
+                if (error != null || chatsSnapshot == null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(chatsSnapshot.documents.mapNotNull { it.toObject(ChatSummary::class.java) }.sortedByDescending {
+                    it.lastMessageTimestamp?.toDate()?.time ?: 0
+                })
+            }
+        awaitClose { registration.remove() }
+    }
 
-        awaitClose { registration?.remove() }
+    suspend fun getUserAccount(uid: String): User? {
+        return suspendCancellableCoroutine { continuation ->
+            firestore.collection("Users")
+                .document(uid)
+                .get()
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        continuation.resume(it.result.toObject(User::class.java))
+                    } else
+                        continuation.resume(null)
+                }
+        }
     }
 }

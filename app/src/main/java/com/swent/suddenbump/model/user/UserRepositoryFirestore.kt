@@ -6,15 +6,23 @@ import androidx.compose.ui.graphics.ImageBitmap
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
 
 class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
 
@@ -110,14 +118,17 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
             }*/
         db.collection(usersCollectionPath)
             .document(FirebaseAuth.getInstance().currentUser!!.uid)
-            .get()
-            .addOnFailureListener { onFailure(it) }
-            .addOnCompleteListener { resultUser ->
-                if (resultUser.isSuccessful) {
-                    resultUser.result.toObject(User::class.java)?.let(onSuccess)
-                } else {
-                    resultUser.exception?.let { onFailure(it) }
+            .addSnapshotListener { value, error ->
+                if (error != null || value == null) {
+                    Log.e(logTag, error.toString())
+                    onFailure(Exception(error))
+                    return@addSnapshotListener
                 }
+                val user = value.toObject(User::class.java)
+                if (user != null)
+                    onSuccess(user)
+                else
+                    onFailure(Exception("User is null"))
             }
     }
 
@@ -144,6 +155,20 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
                     resultUser.exception?.let { onFailure(it) }
                 }
             }
+    }
+
+    override suspend fun getUserAccount(uid: String): User? {
+        return suspendCancellableCoroutine { continuation ->
+            db.collection(usersCollectionPath)
+                .document(uid)
+                .get()
+                .addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        continuation.resume(it.result.toObject(User::class.java))
+                    } else
+                        continuation.resume(null)
+                }
+        }
     }
 
     override fun updateUserAccount(
@@ -185,21 +210,11 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
             .addOnFailureListener { e -> onFailure(e) }
     }
 
-    override fun getUserFriends(
-        user: User,
-        onSuccess: (List<User>) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(user.uid)
-            .get()
-            .addOnFailureListener { e -> onFailure(e) }
-            .addOnSuccessListener { result ->
-                result.data?.let {
-                    onSuccess(
-                        documentSnapshotToUserList(result.data?.get("friendsList").toString(), onFailure, true))
-                } ?: run { onSuccess(emptyList()) }
-            }
+    override suspend fun getUserFriends(user: User, onSuccess: (users: List<User>) -> Unit) {
+        val liveUser = db.collection(usersCollectionPath).document(user.uid).get().await().toObject(User::class.java)?: user
+        onSuccess.invoke(liveUser.friendsList.mapNotNull {
+            getUserAccount(it)?.copy(isFriend = true)
+        })
     }
 
     override fun setUserFriends(
@@ -210,7 +225,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
     ) {
         db.collection(usersCollectionPath)
             .document(FirebaseAuth.getInstance().uid.toString())
-            .update("friendsList", friendsList.map { it.uid })
+            .update("friendsList", friendsList.map { it.uid }.distinct())
             .addOnFailureListener { onFailure(it) }
             .addOnSuccessListener { onSuccess() }
     }
@@ -229,7 +244,11 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
                     emptyList<User>()
                 } else {
                     onSuccess(
-                        documentSnapshotToUserList(result.data?.get("blockedList").toString(), onFailure))
+                        documentSnapshotToUserList(
+                            result.data?.get("blockedList").toString(),
+                            onFailure
+                        )
+                    )
                 }
             }
     }
@@ -260,40 +279,38 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
             .addOnSuccessListener { onSuccess() }
     }
 
-    override fun getFriendsLocation(
+    override suspend fun getFriendsLocation(
         user: User,
         onSuccess: (Map<User, Location?>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         // First, retrieve the user's friends using the existing getUserFriends method
-        getUserFriends(
-            user,
-            { friendsList ->
-                val friendsLocations = mutableMapOf<User, Location?>()
+        getUserFriends(user, { friendsList ->
+            val friendsLocations = mutableMapOf<User, Location?>()
 
-                // Loop through each friend in the friendsList and fetch their location
-                friendsList.forEach { friend ->
-                    db.collection(usersCollectionPath)
-                        .document(friend.uid)
-                        .get()
-                        .addOnFailureListener { onFailure(it) }
-                        .addOnSuccessListener { friendSnapshot ->
-                            val location = friendSnapshot.get("location") as? Location
-                            friendsLocations[friend] = location
+            // Loop through each friend in the friendsList and fetch their location
+            friendsList.forEach { friend ->
+                db.collection(usersCollectionPath)
+                    .document(friend.uid)
+                    .get()
+                    .addOnFailureListener { onFailure(it) }
+                    .addOnSuccessListener { friendSnapshot ->
+                        val location = friendSnapshot.get("location") as? Location
+                        friendsLocations[friend] = location
 
-                            // Once all friends have been processed, call onSuccess
-                            if (friendsLocations.size == friendsList.size) {
-                                onSuccess(friendsLocations)
-                            }
+                        // Once all friends have been processed, call onSuccess
+                        if (friendsLocations.size == friendsList.size) {
+                            onSuccess(friendsLocations)
                         }
-                }
+                    }
+            }
 
-                // If no friends, return an empty map
-                if (friendsList.isEmpty()) {
-                    onSuccess(emptyMap())
-                }
-            },
-            onFailure)
+            // If no friends, return an empty map
+            if (friendsList.isEmpty()) {
+                onSuccess(emptyMap())
+            }
+        }
+        )
     }
 
     override suspend fun getAllUsers(): Result<List<User>> = withContext(Dispatchers.IO) {
@@ -314,6 +331,19 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         }
     }
 
+    override fun getAllOtherUsers(user: User): Flow<List<User>> = callbackFlow {
+        val listener = db.collection(usersCollectionPath)
+            .addSnapshotListener { value, error ->
+                if (error != null || value == null) {
+                    Log.e(logTag, error.toString())
+                    return@addSnapshotListener
+                }
+                trySend(value.documents.mapNotNull { it.toObject(User::class.java) }
+                    .filter { it.uid != user.uid })
+            }
+        awaitClose { listener.remove() }
+    }
+
     private fun documentSnapshotToUserList(
         uidJsonList: String,
         onFailure: (Exception) -> Unit,
@@ -325,16 +355,24 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         for (uid in uidList) {
             runBlocking {
                 try {
-                    val documentSnapshot = db.collection(usersCollectionPath).document(uid).get().await()
+                    val documentSnapshot =
+                        db.collection(usersCollectionPath).document(uid).get().await()
 
                     if (documentSnapshot.exists()) {
                         val path = helper.uidToProfilePicturePath(uid, profilePicturesRef)
                         var profilePicture: ImageBitmap? = null
                         imageRepository.downloadImage(
-                            path, onSuccess = { pp -> profilePicture = pp }, onFailure = { e -> onFailure(e) })
-                        val user = helper.documentSnapshotToUser(documentSnapshot, profilePicture, isFriend)
+                            path,
+                            onSuccess = { pp -> profilePicture = pp },
+                            onFailure = { e -> onFailure(e) })
+                        val user = helper.documentSnapshotToUser(
+                            documentSnapshot,
+                            profilePicture,
+                            isFriend
+                        )
                         userList += user
-                    } else {}
+                    } else {
+                    }
                 } catch (e: Exception) {
                     Log.e(logTag, e.toString())
                 }
@@ -351,10 +389,15 @@ internal class UserRepositoryFirestoreHelper() {
             "firstName" to user.firstName,
             "lastName" to user.lastName,
             "phoneNumber" to user.phoneNumber,
-            "emailAddress" to user.emailAddress)
+            "emailAddress" to user.emailAddress
+        )
     }
 
-    fun documentSnapshotToUser(document: DocumentSnapshot, profilePicture: ImageBitmap?, isFriend: Boolean = false): User {
+    fun documentSnapshotToUser(
+        document: DocumentSnapshot,
+        profilePicture: ImageBitmap?,
+        isFriend: Boolean = false
+    ): User {
         return User(
             uid = document.data!!.get("uid").toString(),
             firstName = document.data!!.get("firstName").toString(),
@@ -362,7 +405,8 @@ internal class UserRepositoryFirestoreHelper() {
             phoneNumber = document.data!!.get("phoneNumber").toString(),
             profilePicture = profilePicture,
             emailAddress = document.data!!.get("emailAddress").toString(),
-            isFriend = isFriend)
+            isFriend = isFriend
+        )
     }
 
     fun documentSnapshotToList(uidJsonList: String): List<String> {
