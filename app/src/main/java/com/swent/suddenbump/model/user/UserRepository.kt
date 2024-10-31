@@ -2,6 +2,7 @@ package com.swent.suddenbump.model.user
 
 import android.location.Location
 import com.swent.suddenbump.model.image.ImageRepository
+import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
 
@@ -99,4 +100,10 @@ interface UserRepository {
       onSuccess: (Map<User, Location?>) -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  suspend fun getAllUsers(): Result<List<User>>
+
+  suspend fun getUserAccount(uid: String): User?
+
+  fun getAllOtherUsers(user: User): Flow<List<User>>
 }

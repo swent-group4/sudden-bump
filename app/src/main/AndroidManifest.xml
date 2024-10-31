@@ -31,7 +31,8 @@
             android:name="com.swent.suddenbump.MainActivity"
             android:exported="true"
             android:label="@string/title_activity_main"
-            android:theme="@style/Theme.SampleApp">
+            android:theme="@style/Theme.SampleApp"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
