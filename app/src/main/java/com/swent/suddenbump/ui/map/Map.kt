@@ -56,6 +56,8 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) } // Track if the zoom has been performed
 
+    Log.i("SimpleMap", userViewModel.getUserFriends().value.toString())
+
   LaunchedEffect(location) {
     location?.let {
       val latLng = LatLng(it.latitude, it.longitude)
@@ -117,7 +119,7 @@ fun FriendsMarkers(userViewModel: UserViewModel) {
             userViewModel.loadFriendsLocations()
             friendsLocations.value = userViewModel.friendsLocations.value
             // Log the friendsLocations
-            //Log.d("FriendsMarkers", "Friends Locations: ${friendsLocations}")
+            Log.d("FriendsMarkers", "Friends Locations: ${friendsLocations}")
         }
     }
 
