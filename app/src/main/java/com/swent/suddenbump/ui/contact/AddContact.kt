@@ -127,14 +127,13 @@ fun AddContactScreen(
                         job?.cancel()
                         if (searchQuery.text.isNotBlank()) {
                             if (isTesting) {
-                                Log.i("AddContact", "TEST OK!")
                                 userViewModel.searchQueryAddContact(
                                     searchQuery.text,
                                     onSuccess = {
                                         usersQueryResponse = it
+                                        Log.i("AddContact", it.toString())
                                     },
                                     onFailure = {})
-                                Log.i("AddContact", usersQueryResponse.toString())
                             } else {
                                 job = CoroutineScope(Dispatchers.IO).launch {
                                     delay(timeJob)
