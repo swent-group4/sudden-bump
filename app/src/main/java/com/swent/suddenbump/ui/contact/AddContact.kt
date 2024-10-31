@@ -42,96 +42,107 @@ import kotlinx.coroutines.flow.map
 
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
-    // generate random integer between 0 and 10
-    val randomInt = (0..10).random()
-    val context = LocalContext.current
-    Card(
-        onClick = { userViewModel.addUserFriend(user, onSuccess = {
-            Toast.makeText(context, "Friend added", Toast.LENGTH_SHORT).show()
-        }, onFailure = {
-            Toast.makeText(context, "Friend added", Toast.LENGTH_SHORT).show()
-        }) },
-        modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
+  // generate random integer between 0 and 10
+  val randomInt = (0..10).random()
+  val context = LocalContext.current
+  Card(
+      onClick = {
+        userViewModel.addUserFriend(
+            user,
+            onSuccess = { Toast.makeText(context, "Friend added", Toast.LENGTH_SHORT).show() },
+            onFailure = { Toast.makeText(context, "Friend added", Toast.LENGTH_SHORT).show() })
+      },
+      modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
+  ) {
+    Row(
+        modifier = Modifier.fillMaxHeight(),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxHeight(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AsyncImage(
-                model = user.profilePictureUrl,
-                contentDescription = null,
-                placeholder = painterResource(com.swent.suddenbump.R.drawable.profile), // Add your drawable here
-                error = painterResource(com.swent.suddenbump.R.drawable.profile), //
-                modifier = Modifier.width(100.dp).height(100.dp).padding(8.dp))
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = "${user.firstName} ${user.lastName}")
-//        Text(text = "${randomInt} friends in common")
-            }
-        }
+      AsyncImage(
+          model = user.profilePictureUrl,
+          contentDescription = null,
+          placeholder =
+              painterResource(com.swent.suddenbump.R.drawable.profile), // Add your drawable here
+          error = painterResource(com.swent.suddenbump.R.drawable.profile), //
+          modifier = Modifier.width(100.dp).height(100.dp).padding(8.dp))
+      Column(modifier = Modifier.padding(16.dp)) {
+        Text(text = "${user.firstName} ${user.lastName}")
+        //        Text(text = "${randomInt} friends in common")
+      }
     }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)) {
-    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-    val mockUsers by userViewModel.getAllUsers().map {
-        it.filter { user ->
-            user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-                    user.lastName.contains(searchQuery.text, ignoreCase = true)
-        }
-    }.collectAsState(emptyList())
+fun AddContactScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+) {
+  var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+  val mockUsers by
+      userViewModel
+          .getAllUsers()
+          .map {
+            it.filter { user ->
+              user.firstName.contains(searchQuery.text, ignoreCase = true) ||
+                  user.lastName.contains(searchQuery.text, ignoreCase = true)
+            }
+          }
+          .collectAsState(emptyList())
 
-    Scaffold(
-        modifier = Modifier.testTag("addContactScreen"),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Add contact", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier = Modifier.testTag("backButton")) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go back")
-                    }
-                },
-            )
-        },
-        content = { pd ->
-            Column(
-                modifier = Modifier.padding(pd).testTag("addContactContent"),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                TextField(
-                    value = searchQuery,
-                    onValueChange = { newValue -> searchQuery = newValue },
-                    label = { Text("Search") },
-                    modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 10.dp)
-                        .testTag("searchTextField"),
-                )
-                Row(
-                    modifier =
-                    Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("recommendedRow"),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center) {
+  Scaffold(
+      modifier = Modifier.testTag("addContactScreen"),
+      topBar = {
+        CenterAlignedTopAppBar(
+            title = { Text("Add contact", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Go back")
+                  }
+            },
+        )
+      },
+      content = { pd ->
+        Column(
+            modifier = Modifier.padding(pd).testTag("addContactContent"),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+              TextField(
+                  value = searchQuery,
+                  onValueChange = { newValue -> searchQuery = newValue },
+                  label = { Text("Search") },
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 10.dp, vertical = 10.dp)
+                          .testTag("searchTextField"),
+              )
+              Row(
+                  modifier =
+                      Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("recommendedRow"),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.Center) {
                     HorizontalDivider(modifier = Modifier.weight(1f))
                     Text(
                         text = "Recommended",
                         modifier = Modifier.padding(horizontal = 8.dp),
                         style = MaterialTheme.typography.bodyLarge)
                     HorizontalDivider(modifier = Modifier.weight(1f))
+                  }
+              if (mockUsers.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.testTag("userList")) {
+                  items(mockUsers) { user ->
+                    UserCard(user = user, navigationActions, userViewModel)
+                  }
                 }
-                if (mockUsers.isNotEmpty()) {
-                    LazyColumn(modifier = Modifier.testTag("userList")) {
-                        items(mockUsers) { user -> UserCard(user = user, navigationActions, userViewModel) }
-                    }
-                } else {
-                    Text(
-                        text = "Looks like no user corresponds to your query",
-                        modifier = Modifier.testTag("noUsersText"))
-                }
+              } else {
+                Text(
+                    text = "Looks like no user corresponds to your query",
+                    modifier = Modifier.testTag("noUsersText"))
+              }
             }
-        })
+      })
 }

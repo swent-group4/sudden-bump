@@ -63,84 +63,64 @@ fun MessagesScreen(
     viewModel: UserViewModel = viewModel(factory = UserViewModel.Factory),
     navigationActions: NavigationActions
 ) {
-    val messages by viewModel.chatSummaries.collectAsStateWithLifecycle(emptyList())
-    var search by remember { mutableStateOf("") }
+  val messages by viewModel.chatSummaries.collectAsStateWithLifecycle(emptyList())
+  var search by remember { mutableStateOf("") }
 
-    var list by remember { mutableStateOf(messages) }
-    list = messages.filter { summary ->
-        summary.date != "" && summary.sender.contains(search, true)
-    }
+  var list by remember { mutableStateOf(messages) }
+  list = messages.filter { summary -> summary.date != "" && summary.sender.contains(search, true) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    BasicTextField(
-                        value = search,
-                        onValueChange = {
-                            search = it
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White, shape = MaterialTheme.shapes.small)
-                            .padding(12.dp),
-                        textStyle = LocalTextStyle.current.copy(
-                            color = Color.Black,
-                            fontSize = 16.sp,
-
-                            ),
-                        singleLine = true
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier =
-                        Modifier.testTag("back_button") // Ajout du testTag pour le bouton de retour
-                    ) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors =
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = {
+              BasicTextField(
+                  value = search,
+                  onValueChange = { search = it },
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .background(Color.White, shape = MaterialTheme.shapes.small)
+                          .padding(12.dp),
+                  textStyle =
+                      LocalTextStyle.current.copy(
+                          color = Color.Black,
+                          fontSize = 16.sp,
+                      ),
+                  singleLine = true)
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier =
+                      Modifier.testTag("back_button") // Ajout du testTag pour le bouton de retour
+                  ) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                  }
+            },
+            colors =
                 TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Black,
                     titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
-        bottomBar = {
-            BottomNavigationMenu(
-                onTabSelect = { route -> navigationActions.navigateTo(route) },
-                tabList = LIST_TOP_LEVEL_DESTINATION,
-                selectedItem = navigationActions.currentRoute()
-            )
-        }) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(Color.Black)
-        ) {
-            LazyColumn(
-                modifier = Modifier
-                    .background(Color.Black)
-                    .testTag("messages_list")
-            ) {
-                itemsIndexed(list) { index, message ->
-                    MessageItem(message, viewModel, navigationActions)
-                    if (index < messages.size - 1) {
-                        // Ajouter un Divider seulement si ce n'est pas le dernier message
-                        Divider(
-                            color = Color.Gray,
-                            thickness = 1.dp,
-                            modifier = Modifier.testTag("divider")
-                        )
-                    }
-                }
+                    navigationIconContentColor = Color.White))
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            onTabSelect = { route -> navigationActions.navigateTo(route) },
+            tabList = LIST_TOP_LEVEL_DESTINATION,
+            selectedItem = navigationActions.currentRoute())
+      }) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding).background(Color.Black)) {
+          LazyColumn(modifier = Modifier.background(Color.Black).testTag("messages_list")) {
+            itemsIndexed(list) { index, message ->
+              MessageItem(message, viewModel, navigationActions)
+              if (index < messages.size - 1) {
+                // Ajouter un Divider seulement si ce n'est pas le dernier message
+                Divider(
+                    color = Color.Gray, thickness = 1.dp, modifier = Modifier.testTag("divider"))
+              }
             }
+          }
         }
-    }
+      }
 }
 
 @Composable
@@ -149,100 +129,79 @@ fun MessageItem(
     viewModel: UserViewModel,
     navigationActions: NavigationActions
 ) {
-    Row(
-        modifier =
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .testTag("message_item_${message.sender}")
-            .clickable {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = 8.dp)
+              .testTag("message_item_${message.sender}")
+              .clickable {
                 viewModel.user = message.otherUser
                 navigationActions.navigateTo(Screen.CHAT)
-            }
-    ) {
+              }) {
         Image(
             painter = painterResource(R.drawable.profile),
             contentDescription = "Profile Avatar",
-            modifier = Modifier
-                .size(40.dp)
-                .padding(start = 8.dp)
-        )
+            modifier = Modifier.size(40.dp).padding(start = 8.dp))
 
-        Column(
-            modifier = Modifier
-                .padding(start = 16.dp)
-                .fillMaxWidth()
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
+        Column(modifier = Modifier.padding(start = 16.dp).fillMaxWidth()) {
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween,
+              modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = message.sender,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                    fontSize = 16.sp)
                 Text(
                     text = message.date,
                     color = Purple80,
                     fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 5.dp)
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
+                    modifier = Modifier.padding(horizontal = 5.dp))
+              }
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween,
+              modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "You: ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
-                    maxLines = 1,                          // Limit text to one line
+                    maxLines = 1, // Limit text to one line
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.testTag("message_content")
-                )
+                    modifier = Modifier.testTag("message_content"))
 
                 // Notification Badge
                 if (message.unreadCount > 0) {
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 8.dp) // Adjust position to align with the message content
-                            .size(24.dp) // Badge size
-                    ) {
+                  Box(
+                      modifier =
+                          Modifier.padding(
+                                  end = 8.dp) // Adjust position to align with the message content
+                              .size(24.dp) // Badge size
+                      ) {
                         Card(
                             shape = RoundedCornerShape(100),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Purple40
-                            ),
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                        ) {
-                            Text(
-                                text = "${message.unreadCount}", // Display unread count
-                                color = Color.Black,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
+                            colors = CardDefaults.cardColors(containerColor = Purple40),
+                            modifier = Modifier.align(Alignment.Center)) {
+                              Text(
+                                  text = "${message.unreadCount}", // Display unread count
+                                  color = Color.Black,
+                                  fontSize = 10.sp,
+                                  fontWeight = FontWeight.Bold,
+                                  modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                            }
+                      }
                 }
-            }
+              }
         }
-    }
+      }
 }
-
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewMessagesScreen() {
-    val navController = rememberNavController()
-    val navigationActions = NavigationActions(navController)
-    val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
-    MessagesScreen(userViewModel, navigationActions)
+  val navController = rememberNavController()
+  val navigationActions = NavigationActions(navController)
+  val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+  MessagesScreen(userViewModel, navigationActions)
 }

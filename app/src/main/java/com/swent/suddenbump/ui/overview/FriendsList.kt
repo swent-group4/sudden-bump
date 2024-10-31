@@ -39,114 +39,117 @@ import com.swent.suddenbump.ui.navigation.Screen
 
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
-    Card(
-        onClick = {
-            userViewModel.user = user
-            navigationActions.navigateTo(Screen.CONTACT) },
-        modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
+  Card(
+      onClick = {
+        userViewModel.user = user
+        navigationActions.navigateTo(Screen.CONTACT)
+      },
+      modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
+  ) {
+    Row(
+        modifier = Modifier.fillMaxHeight(),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxHeight(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AsyncImage(
-                model = user.profilePictureUrl,
-                contentDescription = null,
-                placeholder = painterResource(com.swent.suddenbump.R.drawable.profile), // Add your drawable here
-                error = painterResource(com.swent.suddenbump.R.drawable.profile), //
-                modifier = Modifier.width(100.dp).height(100.dp).padding(8.dp))
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(text =  "${user?.firstName?.replaceFirstChar { it.uppercase() }} ${user?.lastName?.replaceFirstChar { it.uppercase() }}")
-                Text(text = "Email: ${user.emailAddress}")
-                Text(text = "Phone: ${user.phoneNumber}")
-            }
-        }
+      AsyncImage(
+          model = user.profilePictureUrl,
+          contentDescription = null,
+          placeholder =
+              painterResource(com.swent.suddenbump.R.drawable.profile), // Add your drawable here
+          error = painterResource(com.swent.suddenbump.R.drawable.profile), //
+          modifier = Modifier.width(100.dp).height(100.dp).padding(8.dp))
+      Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text =
+                "${user?.firstName?.replaceFirstChar { it.uppercase() }} ${user?.lastName?.replaceFirstChar { it.uppercase() }}")
+        Text(text = "Email: ${user.emailAddress}")
+        Text(text = "Phone: ${user.phoneNumber}")
+      }
     }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserViewModel =  viewModel(factory = UserViewModel.Factory)) {
-    var searchQuery by remember { mutableStateOf("") }
+fun FriendsListScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+) {
+  var searchQuery by remember { mutableStateOf("") }
 
-    // Fetch the full list of users and store it
-    val allUsers by userViewModel.getUserFriends().collectAsState(initial = emptyList())
+  // Fetch the full list of users and store it
+  val allUsers by userViewModel.getUserFriends().collectAsState(initial = emptyList())
 
-    // Filtered list based on the search query
-    val filteredUsers = remember(searchQuery, allUsers) {
+  // Filtered list based on the search query
+  val filteredUsers =
+      remember(searchQuery, allUsers) {
         allUsers.filter { user ->
-            user.firstName.contains(searchQuery, ignoreCase = true) ||
-                    user.lastName.contains(searchQuery, ignoreCase = true)
+          user.firstName.contains(searchQuery, ignoreCase = true) ||
+              user.lastName.contains(searchQuery, ignoreCase = true)
         }
-    }
+      }
 
-    Scaffold(
-        modifier = Modifier.testTag("friendsListScreen"),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Friends", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier = Modifier.testTag("backButton")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
-                        modifier = Modifier.testTag("addContactButton")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AddCircle,
-                            contentDescription = "Add new friends")
-                    }
-                },
-            )
-        },
-        content = { padding ->
-            Column(
-                modifier = Modifier.padding(padding).testTag("friendsListContent"),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                TextField(
-                    value = searchQuery,
-                    onValueChange = { newValue -> searchQuery = newValue },
-                    label = { Text("Search") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 10.dp)
-                        .testTag("searchTextField"),
-                )
+  Scaffold(
+      modifier = Modifier.testTag("friendsListScreen"),
+      topBar = {
+        CenterAlignedTopAppBar(
+            title = { Text("Friends", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Go back")
+                  }
+            },
+            actions = {
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
+                  modifier = Modifier.testTag("addContactButton")) {
+                    Icon(
+                        imageVector = Icons.Default.AddCircle,
+                        contentDescription = "Add new friends")
+                  }
+            },
+        )
+      },
+      content = { padding ->
+        Column(
+            modifier = Modifier.padding(padding).testTag("friendsListContent"),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+              TextField(
+                  value = searchQuery,
+                  onValueChange = { newValue -> searchQuery = newValue },
+                  label = { Text("Search") },
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 10.dp, vertical = 10.dp)
+                          .testTag("searchTextField"),
+              )
 
-                if (filteredUsers.isNotEmpty()) {
-                    LazyColumn(modifier = Modifier.testTag("userList")) {
-                        items(filteredUsers) { user ->
-                            UserCard(user = user, navigationActions = navigationActions, userViewModel = userViewModel)
-                        }
-                    }
-                } else {
-                    Text(
-                        text = "Looks like no user corresponds to your query",
-                        modifier = Modifier.testTag("noUsersText")
-                    )
+              if (filteredUsers.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.testTag("userList")) {
+                  items(filteredUsers) { user ->
+                    UserCard(
+                        user = user,
+                        navigationActions = navigationActions,
+                        userViewModel = userViewModel)
+                  }
                 }
+              } else {
+                Text(
+                    text = "Looks like no user corresponds to your query",
+                    modifier = Modifier.testTag("noUsersText"))
+              }
             }
-        }
-    )
+      })
 }
-
-
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewAddContactScreen() {
-    val navController = rememberNavController()
-    val navigationActions = NavigationActions(navController)
-    val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
-    FriendsListScreen(navigationActions, userViewModel)
+  val navController = rememberNavController()
+  val navigationActions = NavigationActions(navController)
+  val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+  FriendsListScreen(navigationActions, userViewModel)
 }

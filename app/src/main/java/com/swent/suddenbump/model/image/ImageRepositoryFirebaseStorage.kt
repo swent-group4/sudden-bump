@@ -7,10 +7,10 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.Dispatchers
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -24,9 +24,9 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
   }
 
   override fun downloadImage(
-    path: String,
-    onSuccess: (ImageBitmap) -> Unit,
-    onFailure: (Exception) -> Unit
+      path: String,
+      onSuccess: (ImageBitmap) -> Unit,
+      onFailure: (Exception) -> Unit
   ) {
     val imageRef = storage.reference.child(path)
     val localFile = File.createTempFile("sudden-bump-", path.substringAfterLast('/'))
@@ -47,28 +47,29 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
     }
   }
 
-  override suspend fun downloadImage(path: String): ImageBitmap? = withContext(Dispatchers.IO) {
-    val imageRef = storage.reference.child(path)
-    val localFile = File.createTempFile("sudden-bump-", path.substringAfterLast('/'))
+  override suspend fun downloadImage(path: String): ImageBitmap? =
+      withContext(Dispatchers.IO) {
+        val imageRef = storage.reference.child(path)
+        val localFile = File.createTempFile("sudden-bump-", path.substringAfterLast('/'))
 
-    return@withContext try {
-      imageRef.getFile(localFile).await() // Waits asynchronously for the file to download
-      val fileInputStream = FileInputStream(localFile)
-      val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-      bitmap?.asImageBitmap()
-    } catch (e: Exception) {
-      Log.e("SuddenBump", "Failed to download image: $e")
-      null
-    } finally {
-      localFile.delete() // Clean up the temporary file
-    }
-  }
+        return@withContext try {
+          imageRef.getFile(localFile).await() // Waits asynchronously for the file to download
+          val fileInputStream = FileInputStream(localFile)
+          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+          bitmap?.asImageBitmap()
+        } catch (e: Exception) {
+          Log.e("SuddenBump", "Failed to download image: $e")
+          null
+        } finally {
+          localFile.delete() // Clean up the temporary file
+        }
+      }
 
   override fun uploadImage(
-    imageBitmap: ImageBitmap,
-    path: String,
-    onSuccess: () -> Unit,
-    onFailure: (Exception) -> Unit
+      imageBitmap: ImageBitmap,
+      path: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
   ) {
     val baos = ByteArrayOutputStream()
     imageBitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 100, baos)
