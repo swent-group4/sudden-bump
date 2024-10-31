@@ -2,8 +2,11 @@ package com.swent.suddenbump
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -20,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -57,6 +61,19 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     var newLocation by mutableStateOf<Location?>(null)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      val REQUEST_CODE = 1001
+      ActivityCompat.requestPermissions(
+          this, // `this` should be your activity context
+          arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+          REQUEST_CODE)
+    }
+
+    val notificationChannel =
+        NotificationChannel("1", "FriendsNear", NotificationManager.IMPORTANCE_HIGH)
+    val notificationManager = getSystemService(NotificationManager::class.java)
+    notificationManager?.createNotificationChannel(notificationChannel)
 
     locationGetter =
         LocationGetter(

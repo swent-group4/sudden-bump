@@ -11,7 +11,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.location.Location
-import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,11 +18,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
@@ -31,7 +31,6 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import com.swent.suddenbump.BuildConfig
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
@@ -63,15 +62,17 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
   val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) } // Track if the zoom has been performed
+  val context = LocalContext.current
 
   LaunchedEffect(location) {
     location?.let {
       val latLng = LatLng(it.latitude, it.longitude)
       markerState.position = LatLng(it.latitude, it.longitude)
 
-      if (!zoomDone && !isTestEnvironment()) {
+      if (!zoomDone) {
         // Perform zoom only the first time the location is set
-        cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 13f))
+        cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
+
         fetchLocationToServer(location, userViewModel)
         zoomDone = true // Mark zoom as done
       }
@@ -88,7 +89,7 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
           ?: Log.d("LocationUpdate", "Location is null")
 
       if (userViewModel.isFriendsInRadius(3000)) // Check if friends are within 3km
-       showFriendNearbyNotification(context = MainActivity()) // Show notification
+       showFriendNearbyNotification(context) // Show notification
 
       // Delay for 5 minutes (300,000 milliseconds)
       delay(300_000) // Adjusted back to 5 minutes
@@ -220,21 +221,25 @@ fun showFriendNearbyNotification(context: Context) {
   val channelName = "Friend Nearby Notifications"
   val notificationId = 1
 
-  val notificationChannel =
-      NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
-  val notificationManager = context.getSystemService(NotificationManager::class.java)
-  notificationManager.createNotificationChannel(notificationChannel)
+  // Create the NotificationChannel only if the API level is 26 or higher
+  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+    val notificationChannel =
+        NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+    val notificationManager = context.getSystemService(NotificationManager::class.java)
+    notificationManager?.createNotificationChannel(notificationChannel)
+  }
 
   val intent =
       Intent(context, MainActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
       }
   val pendingIntent: PendingIntent =
-      PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+      PendingIntent.getActivity(
+          context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
   val notificationBuilder =
       NotificationCompat.Builder(context, channelId)
-          .setSmallIcon(android.R.drawable.ic_dialog_info) // Default Android icon
+          .setSmallIcon(android.R.drawable.ic_dialog_info)
           .setContentTitle("Friend Nearby")
           .setContentText("A friend is within your radius!")
           .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -248,9 +253,4 @@ fun showFriendNearbyNotification(context: Context) {
   } catch (e: SecurityException) {
     Log.e("NotificationError", "Notification permission not granted", e)
   }
-}
-
-fun isTestEnvironment(): Boolean {
-  // Example check: return true if running in Robolectric
-  return Build.FINGERPRINT.contains("robolectric") || BuildConfig.DEBUG
 }
