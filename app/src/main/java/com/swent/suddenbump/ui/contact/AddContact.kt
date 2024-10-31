@@ -38,7 +38,6 @@ import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import kotlinx.coroutines.flow.map
 
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
@@ -80,16 +79,7 @@ fun AddContactScreen(
     userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
 ) {
   var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-  val mockUsers by
-      userViewModel
-          .getAllUsers()
-          .map {
-            it.filter { user ->
-              user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-                  user.lastName.contains(searchQuery.text, ignoreCase = true)
-            }
-          }
-          .collectAsState(emptyList())
+  val mockUsers by userViewModel.getAllUsers().collectAsState(emptyList())
 
   Scaffold(
       modifier = Modifier.testTag("addContactScreen"),
