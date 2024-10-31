@@ -17,6 +17,7 @@ import com.google.firebase.storage.ktx.storage
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
@@ -26,7 +27,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.util.concurrent.TimeUnit
 
 class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
 
@@ -283,32 +283,30 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
       onFailure: (Exception) -> Unit
   ) {
     // First, retrieve the user's friends using the existing getUserFriends method
-    getUserFriends(
-        user
-    ) { friendsList ->
-        val friendsLocations = mutableMapOf<User, Location?>()
+    getUserFriends(user) { friendsList ->
+      val friendsLocations = mutableMapOf<User, Location?>()
 
-        // Loop through each friend in the friendsList and fetch their location
-        friendsList.forEach { friend ->
-            db.collection(usersCollectionPath)
-                .document(friend.uid)
-                .get()
-                .addOnFailureListener { onFailure(it) }
-                .addOnSuccessListener { friendSnapshot ->
-                    val location = friendSnapshot.get("location") as? Location
-                    friendsLocations[friend] = location
+      // Loop through each friend in the friendsList and fetch their location
+      friendsList.forEach { friend ->
+        db.collection(usersCollectionPath)
+            .document(friend.uid)
+            .get()
+            .addOnFailureListener { onFailure(it) }
+            .addOnSuccessListener { friendSnapshot ->
+              val location = friendSnapshot.get("location") as? Location
+              friendsLocations[friend] = location
 
-                    // Once all friends have been processed, call onSuccess
-                    if (friendsLocations.size == friendsList.size) {
-                        onSuccess(friendsLocations)
-                    }
-                }
-        }
+              // Once all friends have been processed, call onSuccess
+              if (friendsLocations.size == friendsList.size) {
+                onSuccess(friendsLocations)
+              }
+            }
+      }
 
-        // If no friends, return an empty map
-        if (friendsList.isEmpty()) {
-            onSuccess(emptyMap())
-        }
+      // If no friends, return an empty map
+      if (friendsList.isEmpty()) {
+        onSuccess(emptyMap())
+      }
     }
   }
 
@@ -347,55 +345,58 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
     awaitClose { listener.remove() }
   }
 
-    override fun sendVerificationCode(
-        phoneNumber: String,
-        onSuccess: (String) -> Unit,  // Change to accept verification ID
-        onFailure: (Exception) -> Unit
-    ) {
-        val options = PhoneAuthOptions.newBuilder(FirebaseAuth.getInstance())
-            .setPhoneNumber(phoneNumber)       // Phone number to verify
+  override fun sendVerificationCode(
+      phoneNumber: String,
+      onSuccess: (String) -> Unit, // Change to accept verification ID
+      onFailure: (Exception) -> Unit
+  ) {
+    val options =
+        PhoneAuthOptions.newBuilder(FirebaseAuth.getInstance())
+            .setPhoneNumber(phoneNumber) // Phone number to verify
             .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
-            .setActivity(MainActivity())        // Activity for callback binding
-            .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+            .setActivity(MainActivity()) // Activity for callback binding
+            .setCallbacks(
+                object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                  override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                     // Auto-retrieval or instant verification succeeded
                     onSuccess(credential.smsCode ?: "Auto-verified") // Return SMS code if available
-                }
+                  }
 
-                override fun onVerificationFailed(e: FirebaseException) {
-                    Log.e("PhoneAuth", "Verification failed: ${e.localizedMessage}, Cause: ${e.cause}")
+                  override fun onVerificationFailed(e: FirebaseException) {
+                    Log.e(
+                        "PhoneAuth",
+                        "Verification failed: ${e.localizedMessage}, Cause: ${e.cause}")
                     onFailure(e)
-                }
+                  }
 
-                override fun onCodeSent(
-                    verificationId: String,
-                    token: PhoneAuthProvider.ForceResendingToken
-                ) {
+                  override fun onCodeSent(
+                      verificationId: String,
+                      token: PhoneAuthProvider.ForceResendingToken
+                  ) {
                     // Save verification ID and resending token so we can use them later
                     this@UserRepositoryFirestore.verificationId = verificationId
                     onSuccess(verificationId) // Return verification ID
-                }
-            })
+                  }
+                })
             .build()
-        PhoneAuthProvider.verifyPhoneNumber(options)
-    }
+    PhoneAuthProvider.verifyPhoneNumber(options)
+  }
 
-    override fun verifyCode(
-        verificationId: String,
-        code: String,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        val credential = PhoneAuthProvider.getCredential(verificationId, code)
-        FirebaseAuth.getInstance().signInWithCredential(credential)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    onSuccess()
-                } else {
-                    task.exception?.let { onFailure(it) }
-                }
-            }
+  override fun verifyCode(
+      verificationId: String,
+      code: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    val credential = PhoneAuthProvider.getCredential(verificationId, code)
+    FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { task ->
+      if (task.isSuccessful) {
+        onSuccess()
+      } else {
+        task.exception?.let { onFailure(it) }
+      }
     }
+  }
 
   private fun documentSnapshotToUserList(
       uidJsonList: String,

@@ -46,17 +46,17 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _users: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
 
-    // LiveData for verification status
-    private val _verificationStatus = MutableLiveData<String>()
-    val verificationStatus: LiveData<String> = _verificationStatus
+  // LiveData for verification status
+  private val _verificationStatus = MutableLiveData<String>()
+  val verificationStatus: LiveData<String> = _verificationStatus
 
-    // LiveData for phone number
-    private val _phoneNumber = MutableLiveData<String>()
-    val phoneNumber: LiveData<String> = _phoneNumber
+  // LiveData for phone number
+  private val _phoneNumber = MutableLiveData<String>()
+  val phoneNumber: LiveData<String> = _phoneNumber
 
-    // LiveData for verification ID
-    private val _verificationId = MutableLiveData<String>()
-    val verificationId: LiveData<String> = _verificationId
+  // LiveData for verification ID
+  private val _verificationId = MutableLiveData<String>()
+  val verificationId: LiveData<String> = _verificationId
 
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
@@ -289,24 +289,27 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
   fun markMessagesAsRead() =
       viewModelScope.launch { if (chatId != null) chatRepository.markMessagesAsRead(chatId!!) }
 
-    fun sendVerificationCode(phoneNumber: String) {
-        _phoneNumber.value = phoneNumber
-        repository.sendVerificationCode(phoneNumber,
-            onSuccess = { verificationId ->
-                _verificationId.postValue(verificationId)  // Store the verification ID
-                _verificationStatus.postValue("Code Sent")
-            },
-            onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })
-    }
+  fun sendVerificationCode(phoneNumber: String) {
+    _phoneNumber.value = phoneNumber
+    repository.sendVerificationCode(
+        phoneNumber,
+        onSuccess = { verificationId ->
+          _verificationId.postValue(verificationId) // Store the verification ID
+          _verificationStatus.postValue("Code Sent")
+        },
+        onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })
+  }
 
-    fun verifyCode(code: String) {
-        val verificationIdValue = _verificationId.value
-        if (verificationIdValue != null) {
-            repository.verifyCode(verificationIdValue, code,
-                onSuccess = { _verificationStatus.postValue("Phone Verified") },
-                onFailure = { _verificationStatus.postValue("Verification failed: ${it.message}") })
-        } else {
-            _verificationStatus.postValue("Verification ID is missing.")
-        }
+  fun verifyCode(code: String) {
+    val verificationIdValue = _verificationId.value
+    if (verificationIdValue != null) {
+      repository.verifyCode(
+          verificationIdValue,
+          code,
+          onSuccess = { _verificationStatus.postValue("Phone Verified") },
+          onFailure = { _verificationStatus.postValue("Verification failed: ${it.message}") })
+    } else {
+      _verificationStatus.postValue("Verification ID is missing.")
     }
+  }
 }

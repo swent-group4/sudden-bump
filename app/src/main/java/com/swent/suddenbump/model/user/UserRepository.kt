@@ -69,7 +69,7 @@ interface UserRepository {
       phoneNumber: String,
       onSuccess: (String) -> Unit,
       onFailure: (Exception) -> Unit
-    )
+  )
 
   fun verifyCode(
       verificationId: String,
