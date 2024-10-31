@@ -20,14 +20,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -36,11 +35,15 @@ import com.swent.suddenbump.ui.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ContactScreen(
-    userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory),
-    navigationActions: NavigationActions
-) {
-  val user = userViewModel.user ?: return
+fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+  val user = userViewModel.getSelectedContact().collectAsState().value
+
+  var isFriend =
+      userViewModel.getUserFriends().collectAsState().value.map { it.uid }.contains(user.uid)
+  var isFriendRequest =
+      userViewModel.getUserFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
+  var isFriendRequestSent =
+      userViewModel.getSentFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
 
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag("contactScreen"),
@@ -68,12 +71,8 @@ fun ContactScreen(
               verticalArrangement = Arrangement.Top,
           ) {
             AsyncImage(
-                model = user.profilePictureUrl,
+                model = user.profilePicture,
                 contentDescription = null,
-                placeholder =
-                    painterResource(
-                        com.swent.suddenbump.R.drawable.profile), // Add your drawable here
-                error = painterResource(com.swent.suddenbump.R.drawable.profile), //
                 modifier =
                     Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
             Column(
@@ -95,16 +94,6 @@ fun ContactScreen(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 10.dp)
-                        .testTag("birthdayCard")) {
-                  Text(
-                      modifier = Modifier.padding(10.dp).testTag("birthdayText"),
-                      text = "Birthday: " + user.birthDate)
-                }
-
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 10.dp)
                         .testTag("phoneCard")) {
                   Text(modifier = Modifier.padding(10.dp), text = "Phone: " + user.phoneNumber)
                 }
@@ -118,26 +107,49 @@ fun ContactScreen(
                 }
           }
 
-          if (user.isFriend) {
+          if (isFriend) {
+            Button(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = 50.dp, vertical = 30.dp)
+                        .testTag("sendMessageButton"),
+                onClick = { navigationActions.navigateTo(Screen.CHAT) }) {
+                  Text("Send a message")
+                }
+          } else if (isFriendRequest) {
             Button(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("sendMessageButton"),
                 onClick = {
-                  userViewModel.user = user
-                  navigationActions.navigateTo(Screen.CHAT)
+                  userViewModel.acceptFriendRequest(
+                      userViewModel.getCurrentUser().value,
+                      friend = user,
+                      onSuccess = {
+                        isFriend = true
+                        isFriendRequest = false
+                      },
+                      onFailure = { println("Error accepting friend request") })
                 }) {
-                  Text("Send a message")
+                  Text("Accept friend request")
                 }
+          } else if (isFriendRequestSent) {
+            Text("Friend request sent")
           } else {
             Button(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("addToContactsButton"),
-                onClick = { println("Button click !") }) {
-                  Text("Add to contacts")
+                onClick = {
+                  userViewModel.sendFriendRequest(
+                      userViewModel.getCurrentUser().value,
+                      friend = user,
+                      onSuccess = { isFriendRequestSent = true },
+                      onFailure = { println("Error sending friend request") })
+                }) {
+                  Text("SendFriendRequest")
                 }
           }
         }
