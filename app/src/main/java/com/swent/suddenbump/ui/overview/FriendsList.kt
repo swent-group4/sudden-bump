@@ -18,6 +18,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -78,6 +79,8 @@ fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserV
                 user.lastName.contains(searchQuery.text, ignoreCase = true)
     }
 
+    val friendRequests = userViewModel.getUserFriendRequests().collectAsState().value
+
   Scaffold(
       modifier = Modifier.testTag("friendsListScreen"),
       topBar = {
@@ -116,6 +119,19 @@ fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserV
                           .padding(horizontal = 10.dp, vertical = 10.dp)
                           .testTag("searchTextField"),
               )
+            if(friendRequests.isNotEmpty() || searchQuery.text.isEmpty()) {
+                Text(
+                    text = "Friend Requests",
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    style = MaterialTheme.typography.headlineSmall)
+                LazyColumn(modifier = Modifier.testTag("friendRequestsList")) {
+                    items(friendRequests) { user -> UserCard(user = user, navigationActions, userViewModel) }
+                }
+                Text(
+                    text = "Friends",
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    style = MaterialTheme.typography.headlineSmall)
+            }
               if (filteredFriends.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
                   items(filteredFriends) { user -> UserCard(user = user, navigationActions, userViewModel) }

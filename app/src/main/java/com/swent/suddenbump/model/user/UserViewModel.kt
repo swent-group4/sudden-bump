@@ -21,7 +21,10 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
   private val _user: MutableStateFlow<User> =
       MutableStateFlow(
           User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch"))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+  private val _userFriendRequests: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+    private val _sentFriendRequests: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+    private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+    private val _recommendedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
   private val _userLocation: MutableStateFlow<Location> =
       MutableStateFlow(
@@ -63,6 +66,25 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                     onFailure = { e -> Log.e(logTag, e.toString()) })
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
+            repository.getSentFriendRequests(
+                user = _user.value,
+                onSuccess = { sentRequestsList ->
+                    _sentFriendRequests.value = sentRequestsList
+                },
+                onFailure = { e -> Log.e(logTag, e.toString()) })
+            repository.getUserFriendRequests(
+                user = _user.value,
+                onSuccess = { friendRequestsList ->
+                    _userFriendRequests.value = friendRequestsList
+                },
+                onFailure = { e -> Log.e(logTag, e.toString()) })
+            repository.getRecommendedFriends(
+                user = _user.value,
+                friendsList = _userFriends.value,
+                onSuccess = { recommendedFriendsList ->
+                    _recommendedFriends.value = recommendedFriendsList
+                },
+                onFailure = { e -> Log.e(logTag, e.toString()) })
         },
         onFailure = { e -> Log.e(logTag, e.toString()) })
   }
@@ -86,6 +108,25 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                     onFailure = { e -> Log.e(logTag, e.toString()) })
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
+            repository.getSentFriendRequests(
+                user = _user.value,
+                onSuccess = { sentRequestsList ->
+                    _sentFriendRequests.value = sentRequestsList
+                },
+                onFailure = { e -> Log.e(logTag, e.toString()) })
+            repository.getUserFriendRequests(
+                user = _user.value,
+                onSuccess = { friendRequestsList ->
+                    _userFriendRequests.value = friendRequestsList
+                },
+                onFailure = { e -> Log.e(logTag, e.toString()) })
+            repository.getRecommendedFriends(
+                user = _user.value,
+                friendsList = _userFriends.value,
+                onSuccess = { recommendedFriendsList ->
+                    _recommendedFriends.value = recommendedFriendsList
+                },
+                onFailure = { e -> Log.e(logTag, e.toString()) })
         },
         onFailure)
   }
@@ -109,6 +150,28 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     repository.createUserAccount(user, onSuccess, onFailure)
   }
 
+    fun acceptFriendRequest(
+        user: User = _user.value,
+        friend: User,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        repository.createFriend(user, friend, onSuccess, onFailure)
+        repository.createFriend(friend, user, onSuccess, onFailure)
+        _sentFriendRequests.value = _sentFriendRequests.value.minus(friend)
+        _userFriendRequests.value = _userFriendRequests.value.plus(friend)
+    }
+
+    fun sendFriendRequest(
+        user: User = _user.value,
+        friend: User,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        repository.createFriendRequest(user, friend, onSuccess, onFailure)
+        _sentFriendRequests.value = _sentFriendRequests.value.plus(friend)
+    }
+
   fun getCurrentUser(): StateFlow<User> {
     return _user.asStateFlow()
   }
@@ -116,6 +179,20 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
   fun getUserFriends(): StateFlow<List<User>> {
     return _userFriends.asStateFlow()
   }
+
+    fun getUserFriendRequests(): StateFlow<List<User>> {
+        return _userFriendRequests.asStateFlow()
+    }
+
+    fun setUserFriendRequests(
+        user: User = _user.value,
+        friendRequestsList: List<User>,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        _userFriendRequests.value = friendRequestsList
+        repository.setUserFriendRequests(user, friendRequestsList, onSuccess, onFailure)
+    }
 
   fun setUserFriends(
       user: User = _user.value,
@@ -126,6 +203,25 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     _userFriends.value = friendsList
     repository.setUserFriends(user, friendsList, onSuccess, onFailure)
   }
+
+    fun getUserRecommendedFriends(
+    ): StateFlow<List<User>> {
+        return _recommendedFriends.asStateFlow()
+    }
+
+    fun getSentFriendRequests(): StateFlow<List<User>> {
+        return _sentFriendRequests.asStateFlow()
+    }
+
+    fun setSentFriendRequests(
+        user: User = _user.value,
+        sentRequestsList: List<User>,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        _sentFriendRequests.value = sentRequestsList
+        repository.setSentFriendRequests(user, sentRequestsList, onSuccess, onFailure)
+    }
 
   fun getBlockedFriends(): StateFlow<List<User>> {
     return _blockedFriends.asStateFlow()

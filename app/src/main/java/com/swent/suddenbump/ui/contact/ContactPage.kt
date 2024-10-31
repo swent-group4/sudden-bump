@@ -39,7 +39,9 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
     val user = userViewModel.getSelectedContact().collectAsState().value;
 
-    val isFriend = userViewModel.getUserFriends().collectAsState().value.map { it.uid }.contains(user.uid)
+    var isFriend = userViewModel.getUserFriends().collectAsState().value.map { it.uid }.contains(user.uid)
+    var isFriendRequest = userViewModel.getUserFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
+    var isFriendRequestSent = userViewModel.getSentFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
 
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag("contactScreen"),
@@ -109,17 +111,43 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("sendMessageButton"),
-                onClick = { println("Button click !") }) {
+                onClick = {
+                    println("Go to chat")
+                }) {
                   Text("Send a message")
                 }
+          } else if (isFriendRequest) {
+              Button(
+                  modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(horizontal = 50.dp, vertical = 30.dp)
+                      .testTag("sendMessageButton"),
+                  onClick = {
+                      userViewModel.acceptFriendRequest(
+                          userViewModel.getCurrentUser().value,
+                          friend = user,
+                          onSuccess = {
+                                isFriend = true
+                                isFriendRequest = false
+                          },
+                          onFailure = { println("Error accepting friend request") })
+                  }
+              )
+                {
+                    Text("Accept friend request")
+                }
+          } else if (isFriendRequestSent) {
+              Text("Friend request sent")
           } else {
             Button(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("addToContactsButton"),
-                onClick = { println("Button click !") }) {
-                  Text("Add to contacts")
+                onClick = {
+                    userViewModel.sendFriendRequest(userViewModel.getCurrentUser().value, friend = user, onSuccess = { isFriendRequestSent = true }, onFailure = { println("Error sending friend request")})
+                }) {
+                  Text("SendFriendRequest")
                 }
           }
         }

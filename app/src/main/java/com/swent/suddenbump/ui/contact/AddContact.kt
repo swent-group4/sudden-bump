@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,17 +31,18 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.swent.suddenbump.model.user.User
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
-import com.swent.suddenbump.ui.overview.User
-import com.swent.suddenbump.ui.overview.generateMockUsers
 
 @Composable
-fun UserCard(user: User, navigationActions: NavigationActions) {
-  // generate random integer between 0 and 10
-  val randomInt = (0..10).random()
+fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
+
   Card(
-      onClick = { navigationActions.navigateTo(Screen.CONTACT) },
+      onClick = {
+          userViewModel.setSelectedContact(user)
+          navigationActions.navigateTo(Screen.CONTACT) },
       modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
   ) {
     Row(
@@ -50,12 +50,12 @@ fun UserCard(user: User, navigationActions: NavigationActions) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
       AsyncImage(
-          model = user.profilePictureUrl,
+          model = user.profilePicture,
           contentDescription = null,
           modifier = Modifier.width(100.dp).height(100.dp).padding(8.dp))
       Column(modifier = Modifier.padding(16.dp)) {
         Text(text = "${user.firstName} ${user.lastName}")
-        Text(text = "${randomInt} friends in common")
+        Text(text = "8 friends in common")
       }
     }
   }
@@ -63,15 +63,15 @@ fun UserCard(user: User, navigationActions: NavigationActions) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddContactScreen(navigationActions: NavigationActions) {
+fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-  var mockUsers = generateMockUsers()
 
-  mockUsers =
-      mockUsers.filter { user ->
+    val recommendedUsers = userViewModel.getUserRecommendedFriends().collectAsState().value;
+
+    val filteredUsers = recommendedUsers.filter { user ->
         user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-            user.lastName.contains(searchQuery.text, ignoreCase = true)
-      }
+        user.lastName.contains(searchQuery.text, ignoreCase = true)
+    }
 
   Scaffold(
       modifier = Modifier.testTag("addContactScreen"),
@@ -114,9 +114,9 @@ fun AddContactScreen(navigationActions: NavigationActions) {
                         style = MaterialTheme.typography.bodyLarge)
                     HorizontalDivider(modifier = Modifier.weight(1f))
                   }
-              if (mockUsers.isNotEmpty()) {
+              if (filteredUsers.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
-                  items(mockUsers) { user -> UserCard(user = user, navigationActions) }
+                  items(filteredUsers) { user -> UserCard(user = user, navigationActions, userViewModel) }
                 }
               } else {
                 Text(
