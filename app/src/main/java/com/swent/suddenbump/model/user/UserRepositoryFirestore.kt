@@ -2,6 +2,7 @@ package com.swent.suddenbump.model.user
 
 import android.annotation.SuppressLint
 import android.location.Location
+import android.location.LocationManager
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import com.google.firebase.auth.FirebaseAuth
@@ -283,21 +284,20 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         runBlocking {
             try {
                 for (userFriend in userFriendsList) {
-                    db.collection(usersCollectionPath)
+                    val documentSnapshot = db.collection(usersCollectionPath)
                         .document(userFriend.uid)
-                        .get()
-                        .addOnFailureListener { // Log the friendsLocations
-                            Log.d("FriendsMarkers", "Failed Friends Locations")
-                            onFailure(it)
-                        }
-                        .addOnSuccessListener { friendSnapshot ->
-                            val location = friendSnapshot.get("location") as? Location
-                            friendsLocations[userFriend] = location
-                            Log.d(
-                                "FriendsMarkers",
-                                "Succeeded Friends Locations ${userFriend}, ${location}"
-                            )
-                        }
+                        .get().await()
+
+                    if (documentSnapshot.exists()) {
+                        val friendSnapshot = documentSnapshot.data
+                        val location =
+                            helper.locationParser(friendSnapshot!!.get("location").toString())
+                        friendsLocations[userFriend] = location
+                        Log.d(
+                            "FriendsMarkers",
+                            "Succeeded Friends Locations ${userFriend}, ${location}"
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(logTag, e.toString())
@@ -353,6 +353,39 @@ internal class UserRepositoryFirestoreHelper() {
             "phoneNumber" to user.phoneNumber,
             "emailAddress" to user.emailAddress
         )
+    }
+
+    fun locationParser(mapAttributes: String): Location {
+        val locationMap = mapAttributes.removeSurrounding("{", "}")
+            .split(", ")
+            .map { it.split("=") }
+            .associate { it[0].trim() to it.getOrNull(1)?.trim() }
+
+        // Retrieve required attributes with default fallbacks
+        val provider = locationMap["provider"] ?: LocationManager.GPS_PROVIDER
+        val latitude = locationMap["latitude"]!!.toDouble()
+        val longitude = locationMap["longitude"]!!.toDouble()
+
+        // Create the Location object with the mandatory values
+        return Location(provider).apply {
+            this.latitude = latitude
+            this.longitude = longitude
+
+            // Set optional values if present
+            locationMap["altitude"]?.toDoubleOrNull()?.let { this.altitude = it }
+            locationMap["speed"]?.toFloatOrNull()?.let { this.speed = it }
+            locationMap["accuracy"]?.toFloatOrNull()?.let { this.accuracy = it }
+            locationMap["bearing"]?.toFloatOrNull()?.let { this.bearing = it }
+            locationMap["time"]?.toLongOrNull()?.let { this.time = it }
+            locationMap["bearingAccuracyDegrees"]?.toFloatOrNull()
+                ?.let { this.bearingAccuracyDegrees = it }
+            locationMap["verticalAccuracyMeters"]?.toFloatOrNull()
+                ?.let { this.verticalAccuracyMeters = it }
+            locationMap["speedAccuracyMetersPerSecond"]?.toFloatOrNull()
+                ?.let { this.speedAccuracyMetersPerSecond = it }
+            locationMap["elapsedRealtimeMillis"]?.toLongOrNull()
+                ?.let { this.elapsedRealtimeNanos = it * 1_000_000 }
+        }
     }
 
     fun documentSnapshotToUser(document: DocumentSnapshot, profilePicture: ImageBitmap?): User {
