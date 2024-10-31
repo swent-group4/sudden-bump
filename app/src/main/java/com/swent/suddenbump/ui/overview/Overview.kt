@@ -31,13 +31,13 @@ import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
 
 fun computeRelativeDistance(user1: User, user2: User): Int {
-    return 5;
+  return 5
 }
 
 @Composable
 fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
-    val currentUser = userViewModel.getCurrentUser().collectAsState().value;
-  val users = userViewModel.getUserFriends().collectAsState().value;
+  val currentUser = userViewModel.getCurrentUser().collectAsState().value
+  val users = userViewModel.getUserFriends().collectAsState().value
 
   Scaffold(
       topBar = {
@@ -82,7 +82,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                 LazyColumn(modifier = Modifier.testTag("userList")) {
                   var currentDist: Int? = null
                   users.forEach { user ->
-                      val relativeDist = computeRelativeDistance(currentUser, user)
+                    val relativeDist = computeRelativeDistance(currentUser, user)
                     if (currentDist != relativeDist) {
                       currentDist = relativeDist
                       item {
@@ -106,10 +106,10 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
       })
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewOverviewScreen() {
+// @Preview(showBackground = true)
+// @Composable
+// fun PreviewOverviewScreen() {
 //  val navController = rememberNavController()
 //  val navigationActions = NavigationActions(navController)
 //  OverviewScreen(navigationActions)
-//}
+// }

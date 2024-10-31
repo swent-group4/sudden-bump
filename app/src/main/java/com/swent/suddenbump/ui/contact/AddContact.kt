@@ -41,8 +41,9 @@ fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: Us
 
   Card(
       onClick = {
-          userViewModel.setSelectedContact(user)
-          navigationActions.navigateTo(Screen.CONTACT) },
+        userViewModel.setSelectedContact(user)
+        navigationActions.navigateTo(Screen.CONTACT)
+      },
       modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
   ) {
     Row(
@@ -66,12 +67,13 @@ fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: Us
 fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
 
-    val recommendedUsers = userViewModel.getUserRecommendedFriends().collectAsState().value;
+  val recommendedUsers = userViewModel.getUserRecommendedFriends().collectAsState().value
 
-    val filteredUsers = recommendedUsers.filter { user ->
+  val filteredUsers =
+      recommendedUsers.filter { user ->
         user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-        user.lastName.contains(searchQuery.text, ignoreCase = true)
-    }
+            user.lastName.contains(searchQuery.text, ignoreCase = true)
+      }
 
   Scaffold(
       modifier = Modifier.testTag("addContactScreen"),
@@ -116,7 +118,9 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                   }
               if (filteredUsers.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
-                  items(filteredUsers) { user -> UserCard(user = user, navigationActions, userViewModel) }
+                  items(filteredUsers) { user ->
+                    UserCard(user = user, navigationActions, userViewModel)
+                  }
                 }
               } else {
                 Text(

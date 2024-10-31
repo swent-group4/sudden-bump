@@ -29,23 +29,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 
-
-
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
   Card(
       onClick = {
-          userViewModel.setSelectedContact(user)
-          navigationActions.navigateTo(Screen.CONTACT) },
+        userViewModel.setSelectedContact(user)
+        navigationActions.navigateTo(Screen.CONTACT)
+      },
       modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
   ) {
     Row(
@@ -60,26 +57,27 @@ fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: Us
         Text(text = "${user.firstName} ${user.lastName}")
         Text(text = "Email: ${user.emailAddress}")
         Text(text = "Phone: ${user.phoneNumber}")
-          Text(text = "latitude: ${user.lastKnownLocation.latitude}, longitude: ${user.lastKnownLocation.longitude}")
+        Text(
+            text =
+                "latitude: ${user.lastKnownLocation.latitude}, longitude: ${user.lastKnownLocation.longitude}")
       }
     }
   }
 }
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
-    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-    val friends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
+  var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+  val friends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
 
-    val filteredFriends = friends.filter { user ->
+  val filteredFriends =
+      friends.filter { user ->
         user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-                user.lastName.contains(searchQuery.text, ignoreCase = true)
-    }
+            user.lastName.contains(searchQuery.text, ignoreCase = true)
+      }
 
-    val friendRequests = userViewModel.getUserFriendRequests().collectAsState().value
+  val friendRequests = userViewModel.getUserFriendRequests().collectAsState().value
 
   Scaffold(
       modifier = Modifier.testTag("friendsListScreen"),
@@ -119,22 +117,26 @@ fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserV
                           .padding(horizontal = 10.dp, vertical = 10.dp)
                           .testTag("searchTextField"),
               )
-            if(friendRequests.isNotEmpty() || searchQuery.text.isEmpty()) {
+              if (friendRequests.isNotEmpty() || searchQuery.text.isEmpty()) {
                 Text(
                     text = "Friend Requests",
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     style = MaterialTheme.typography.headlineSmall)
                 LazyColumn(modifier = Modifier.testTag("friendRequestsList")) {
-                    items(friendRequests) { user -> UserCard(user = user, navigationActions, userViewModel) }
+                  items(friendRequests) { user ->
+                    UserCard(user = user, navigationActions, userViewModel)
+                  }
                 }
                 Text(
                     text = "Friends",
                     modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     style = MaterialTheme.typography.headlineSmall)
-            }
+              }
               if (filteredFriends.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
-                  items(filteredFriends) { user -> UserCard(user = user, navigationActions, userViewModel) }
+                  items(filteredFriends) { user ->
+                    UserCard(user = user, navigationActions, userViewModel)
+                  }
                 }
               } else {
                 Text(
@@ -145,10 +147,10 @@ fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserV
       })
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewAddContactScreen() {
+// @Preview(showBackground = true)
+// @Composable
+// fun PreviewAddContactScreen() {
 //  val navController = rememberNavController()
 //  val navigationActions = NavigationActions(navController)
 //  FriendsListScreen(navigationActions,)
-//}
+// }

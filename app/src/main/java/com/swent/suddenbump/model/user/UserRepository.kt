@@ -26,12 +26,7 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-  fun createFriend(
-    user: User,
-    friend: User,
-    onSuccess: () -> Unit,
-    onFailure: (Exception) -> Unit
-  )
+  fun createFriend(user: User, friend: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit)
 
@@ -41,7 +36,11 @@ interface UserRepository {
 
   fun deleteUserAccount(id: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
-  fun getSentFriendRequests(user: User, onSuccess: (List<User>) -> Unit, onFailure: (Exception) -> Unit)
+  fun getSentFriendRequests(
+      user: User,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 
   fun setSentFriendRequests(
       user: User,
@@ -50,7 +49,11 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-  fun getUserFriendRequests(user: User, onSuccess: (List<User>) -> Unit, onFailure: (Exception) -> Unit)
+  fun getUserFriendRequests(
+      user: User,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 
   fun setUserFriendRequests(
       user: User,
@@ -68,7 +71,12 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-  fun getRecommendedFriends(user: User, friendsList: List<User>, onSuccess: (List<User>) -> Unit, onFailure: (Exception) -> Unit)
+  fun getRecommendedFriends(
+      user: User,
+      friendsList: List<User>,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 
   fun getBlockedFriends(user: User, onSuccess: (List<User>) -> Unit, onFailure: (Exception) -> Unit)
 

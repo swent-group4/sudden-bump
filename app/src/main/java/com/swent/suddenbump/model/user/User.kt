@@ -12,6 +12,6 @@ data class User(
     val emailAddress: String = "",
     val lastKnownLocation: GeoLocation = GeoLocation(0.0, 0.0),
 ) {
-    // No-argument constructor for Firestore Deserialization
-    constructor() : this("", "", "", "", null, "", GeoLocation(0.0, 0.0))
+  // No-argument constructor for Firestore Deserialization
+  constructor() : this("", "", "", "", null, "", GeoLocation(0.0, 0.0))
 }
