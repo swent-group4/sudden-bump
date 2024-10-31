@@ -1,27 +1,56 @@
 package com.swent.suddenbump.ui.contacts
 
+import android.util.Log
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.swent.suddenbump.model.user.User
+import com.swent.suddenbump.model.user.UserRepository
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
+import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 class AddContactScreenTest {
+
+  private lateinit var userRepository: UserRepository
+  private lateinit var userViewModel: UserViewModel
+  private val exception = Exception()
+
   private lateinit var navigationActions: NavigationActions
   @get:Rule val composeTestRule = createComposeRule()
+
+  private val user =
+    User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
 
+    userRepository = mock(UserRepository::class.java)
+    userViewModel = UserViewModel(userRepository)
+
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
-    composeTestRule.setContent { AddContactScreen(navigationActions) }
+    composeTestRule.setContent { AddContactScreen(navigationActions, userViewModel, true) }
+
+    doAnswer { invocationOnMock ->
+      Log.i("AddContact", "InvocationMocked?")
+      val query = invocationOnMock.getArgument<(String) -> Unit>(0)
+      val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
+      val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
+      query
+      onSuccess(listOf(user))
+      onFailure(exception)
+    }.whenever(userRepository).searchQueryAddContact(anyString(), any(), any())
   }
 
   @Test
@@ -36,17 +65,17 @@ class AddContactScreenTest {
     composeTestRule.onNodeWithTag("recommendedRow").assertIsDisplayed()
 
     // Verify the list of users is displayed
-    composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("noUsersText").assertIsDisplayed()
   }
 
   @Test
   fun testSearchFunctionality() {
 
     // Enter a search query
-    composeTestRule.onNodeWithTag("searchTextField").performTextInput("John")
+    composeTestRule.onNodeWithTag("searchTextField").performTextInput("Martin")
 
     // Verify that the list is filtered
-    composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Martin Vetterli").assertIsDisplayed()
     composeTestRule.onNodeWithText("Jane Smith").assertDoesNotExist()
   }
 

@@ -77,7 +77,11 @@ fun UserCard(user: User, navigationActions: NavigationActions) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+fun AddContactScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel,
+    isTesting: Boolean = false
+) {
 
     val timeJob: Long = 400
 
@@ -118,18 +122,29 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                     onValueChange = { newValue ->
                         searchQuery = newValue
 
-//                        Log.i("AddContact", userViewModel.getUserFriends().value.toString())
+                        Log.i("AddContact", usersQueryResponse.toString())
 
                         job?.cancel()
                         if (searchQuery.text.isNotBlank()) {
-                            job = CoroutineScope(Dispatchers.IO).launch {
-                                delay(timeJob)
+                            if (isTesting) {
+                                Log.i("AddContact", "TEST OK!")
                                 userViewModel.searchQueryAddContact(
                                     searchQuery.text,
                                     onSuccess = {
                                         usersQueryResponse = it
                                     },
                                     onFailure = {})
+                                Log.i("AddContact", usersQueryResponse.toString())
+                            } else {
+                                job = CoroutineScope(Dispatchers.IO).launch {
+                                    delay(timeJob)
+                                    userViewModel.searchQueryAddContact(
+                                        searchQuery.text,
+                                        onSuccess = {
+                                            usersQueryResponse = it
+                                        },
+                                        onFailure = {})
+                                }
                             }
                         } else {
                             usersQueryResponse = emptyList()
