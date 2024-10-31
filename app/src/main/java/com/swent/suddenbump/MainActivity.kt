@@ -26,6 +26,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.LocationGetter
@@ -45,6 +50,8 @@ import com.swent.suddenbump.ui.overview.FriendsListScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.settings.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
+import com.swent.suddenbump.worker.LocationUpdateWorker
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
@@ -101,6 +108,25 @@ class MainActivity : ComponentActivity() {
             permissions ->
           handlePermissionResults(permissions)
         }
+    // Schedule the LocationUpdateWorker
+    scheduleLocationUpdateWorker()
+  }
+
+  private fun scheduleLocationUpdateWorker() {
+    val workRequest = PeriodicWorkRequestBuilder<LocationUpdateWorker>(15, TimeUnit.MINUTES)
+      .setConstraints(
+        Constraints.Builder()
+          .setRequiredNetworkType(NetworkType.CONNECTED)
+          .setRequiresBatteryNotLow(true)
+          .build()
+      )
+      .build()
+
+    WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+      "LocationUpdateWorker",
+      ExistingPeriodicWorkPolicy.REPLACE,
+      workRequest
+    )
   }
 
   private fun checkLocationPermissions() {

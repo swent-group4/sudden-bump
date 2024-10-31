@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.user
 
+import android.annotation.SuppressLint
 import android.location.Location
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
@@ -186,12 +187,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
     db.collection(usersCollectionPath)
         .document(user.uid)
         .get()
-        .addOnFailureListener { e -> onFailure(e) }
+        .addOnFailureListener { e -> onFailure(e)
+            Log.d("FriendsMarkers", "Failure ")}
         .addOnSuccessListener { result ->
           result.data?.let {
             onSuccess(
                 documentSnapshotToUserList(result.data?.get("friendsList").toString(), onFailure))
-          } ?: run { onSuccess(emptyList()) }
+                Log.d("FriendsMarkers", "On success Friends Locations ${result.data?.get("friendsList").toString()}")
+          }
         }
   }
 
@@ -253,29 +256,35 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         .addOnSuccessListener { onSuccess() }
   }
 
+  @SuppressLint("SuspiciousIndentation")
   override fun getFriendsLocation(
       user: User,
       onSuccess: (Map<User, Location?>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
+      Log.d("FriendsMarkers", "Launched")
+
     // First, retrieve the user's friends using the existing getUserFriends method
     getUserFriends(
         user,
         { friendsList ->
           val friendsLocations = mutableMapOf<User, Location?>()
-
+            Log.d("FriendsMarkers", "Friends list ${friendsList}")
           // Loop through each friend in the friendsList and fetch their location
           friendsList.forEach { friend ->
             db.collection(usersCollectionPath)
                 .document(friend.uid)
                 .get()
-                .addOnFailureListener { onFailure(it) }
+                .addOnFailureListener { // Log the friendsLocations
+                    Log.d("FriendsMarkers", "Failed Friends Locations")
+                    onFailure(it) }
                 .addOnSuccessListener { friendSnapshot ->
                   val location = friendSnapshot.get("location") as? Location
                   friendsLocations[friend] = location
-
+                    Log.d("FriendsMarkers", "Succeeded Friends Locations ${friend}, ${location}")
                   // Once all friends have been processed, call onSuccess
                   if (friendsLocations.size == friendsList.size) {
+
                     onSuccess(friendsLocations)
                   }
                 }

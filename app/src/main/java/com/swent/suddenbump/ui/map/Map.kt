@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.location.Location
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.testTag
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
@@ -23,16 +25,20 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import com.swent.suddenbump.model.user.User
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun MapScreen(
     navigationActions: NavigationActions,
     location: Location?,
-    // userViewModel: UserViewModel
+    userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory) // Inject UserViewModel
 ) {
   Scaffold(
       bottomBar = {
@@ -41,11 +47,11 @@ fun MapScreen(
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { pd -> SimpleMap(location) })
+      content = { pd -> SimpleMap(location, userViewModel) })
 }
 
 @Composable
-fun SimpleMap(location: Location?) {
+fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
   val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) } // Track if the zoom has been performed
@@ -61,6 +67,30 @@ fun SimpleMap(location: Location?) {
       }
     }
   }
+    // LaunchedEffect to refresh location every minute
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60000) // Wait for 1 minute
+            // Refresh location logic here
+            location?.let {
+                val latLng = LatLng(it.latitude, it.longitude)
+                markerState.position = LatLng(it.latitude, it.longitude)
+                if (!zoomDone) {
+                    cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(latLng, 13f))
+                    zoomDone = true
+                }
+                // Update location to Firebase
+                userViewModel.updateLocation(location = it, onSuccess = {
+                    // Handle success
+                }, onFailure = { error ->
+                    // Handle failure
+                    Log.e("SimpleMap", "Failed to update location: ${error.message}")
+                })
+            }
+            // Load friends' locations
+            userViewModel.loadFriendsLocations()
+        }
+    }
   Box(modifier = Modifier.fillMaxSize().testTag("mapView")) {
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
@@ -73,21 +103,38 @@ fun SimpleMap(location: Location?) {
               snippet = "DescriptionTest",
               icon = BitmapDescriptorFactory.fromBitmap(markerBitmap))
 
-          FriendsMarkers()
+          FriendsMarkers(userViewModel)
         }
   }
 }
 
 @Composable
-fun FriendsMarkers() {
-  // userViewModel.loadFriendsLocations()
-  // val friendsLocations by userViewModel.friendsLocations
+fun FriendsMarkers(userViewModel: UserViewModel) {
+    val friendsLocations = remember { mutableStateOf<Map<User, Location?>>(emptyMap()) }
 
-  // LaunchedEffect(Unit) {
-  //    userViewModel.loadFriendsLocations() // Load data when composable is first composed
-  // }
+    LaunchedEffect(userViewModel) {
+        launch {
+            userViewModel.loadFriendsLocations()
+            friendsLocations.value = userViewModel.friendsLocations.value
+            // Log the friendsLocations
+            //Log.d("FriendsMarkers", "Friends Locations: ${friendsLocations}")
+        }
+    }
 
-  val mockImageBitmap: ImageBitmap? = null // assuming null for simplicity
+
+    friendsLocations.value.let { locations ->
+        locations.forEach { (friend, location) ->
+            location?.let {
+                Marker(
+                    state = MarkerState(position = LatLng(it.latitude, it.longitude)),
+                    title = friend.firstName,
+                    snippet = friend.uid,
+                )
+            }
+        }
+    }
+
+  /*val mockImageBitmap: ImageBitmap? = null // assuming null for simplicity
 
   // Create mock users
   val user1 =
@@ -146,7 +193,7 @@ fun FriendsMarkers() {
           snippet = friend.uid,
       )
     }
-  }
+  }*/
 }
 
 fun getLocationMarkerBitmap(): Bitmap {

@@ -160,6 +160,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
         onSuccess = { friendsLoc ->
           // Update the state with the locations of friends
           friendsLocations.value = friendsLoc
+            Log.d("FriendsMarkers", "On success load Friends Locations ${friendsLocations.value}")
         },
         onFailure = { error ->
           // Handle the error, e.g., log or show error message
