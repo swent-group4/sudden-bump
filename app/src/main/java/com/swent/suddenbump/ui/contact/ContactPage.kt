@@ -113,9 +113,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("sendMessageButton"),
-                onClick = {
-                    navigationActions.navigateTo(Screen.CHAT)
-                }) {
+                onClick = { navigationActions.navigateTo(Screen.CHAT) }) {
                   Text("Send a message")
                 }
           } else if (isFriendRequest) {

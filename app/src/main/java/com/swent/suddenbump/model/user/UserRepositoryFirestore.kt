@@ -611,9 +611,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
           }
           trySend(
               value.documents
-                  .mapNotNull {
-                      helper.documentSnapshotToUser(it, null)
-                  }
+                  .mapNotNull { helper.documentSnapshotToUser(it, null) }
                   .filter { it.uid != user.uid })
         }
     awaitClose { listener.remove() }

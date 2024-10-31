@@ -1,18 +1,18 @@
-//package com.swent.suddenbump.ui.overview
+// package com.swent.suddenbump.ui.overview
 //
-//import androidx.compose.ui.test.*
-//import androidx.compose.ui.test.junit4.createComposeRule
-//import com.swent.suddenbump.ui.navigation.NavigationActions
-//import com.swent.suddenbump.ui.navigation.Route
-//import com.swent.suddenbump.ui.navigation.Screen
-//import org.junit.Before
-//import org.junit.Rule
-//import org.junit.Test
-//import org.mockito.Mockito.mock
-//import org.mockito.Mockito.`when`
-//import org.mockito.kotlin.verify
+// import androidx.compose.ui.test.*
+// import androidx.compose.ui.test.junit4.createComposeRule
+// import com.swent.suddenbump.ui.navigation.NavigationActions
+// import com.swent.suddenbump.ui.navigation.Route
+// import com.swent.suddenbump.ui.navigation.Screen
+// import org.junit.Before
+// import org.junit.Rule
+// import org.junit.Test
+// import org.mockito.Mockito.mock
+// import org.mockito.Mockito.`when`
+// import org.mockito.kotlin.verify
 //
-//class FriendsListTest {
+// class FriendsListTest {
 //  private lateinit var navigationActions: NavigationActions
 //  @get:Rule val composeTestRule = createComposeRule()
 //
@@ -81,4 +81,4 @@
 //    composeTestRule.onNodeWithTag("addContactButton").performClick()
 //    verify(navigationActions).navigateTo(Screen.ADD_CONTACT)
 //  }
-//}
+// }

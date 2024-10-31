@@ -66,112 +66,116 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
           }
         }
   }
-//    fun setCurrentUser() {
-//        repository.getUserAccount(
-//            onSuccess = {
-//                _user.value = it
-//                repository.getUserFriends(
-//                    user = _user.value,
-//                    onSuccess = { friendsList ->
-//                        Log.i(logTag, friendsList.toString())
-//                        _userFriends.value = friendsList
-//                        repository.getBlockedFriends(
-//                            user = _user.value,
-//                            onSuccess = { blockedFriendsList ->
-//                                _blockedFriends.value = blockedFriendsList
-//                            },
-//                            onFailure = { e -> Log.e(logTag, e.toString()) })
-//                    },
-//                    onFailure = { e -> Log.e(logTag, e.toString()) })
-//                repository.getSentFriendRequests(
-//                    user = _user.value,
-//                    onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
-//                    onFailure = { e -> Log.e(logTag, e.toString()) })
-//                repository.getUserFriendRequests(
-//                    user = _user.value,
-//                    onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
-//                    onFailure = { e -> Log.e(logTag, e.toString()) })
-//                repository.getRecommendedFriends(
-//                    user = _user.value,
-//                    friendsList = _userFriends.value,
-//                    onSuccess = { recommendedFriendsList ->
-//                        _recommendedFriends.value = recommendedFriendsList
-//                    },
-//                    onFailure = { e -> Log.e(logTag, e.toString()) })
-//            },
-//            onFailure = { e -> Log.e(logTag, e.toString()) })
-//    }
-//
-//    fun setCurrentUser(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-//        repository.getUserAccount(
-//            uid,
-//            onSuccess = {
-//                _user.value = it
-//                repository.getUserFriends(
-//                    user = _user.value,
-//                    onSuccess = { friendsList ->
-//                        Log.i(logTag, friendsList.toString())
-//                        _userFriends.value = friendsList
-//                        repository.getBlockedFriends(
-//                            user = _user.value,
-//                            onSuccess = { blockedFriendsList ->
-//                                _blockedFriends.value = blockedFriendsList
-//                                onSuccess()
-//                            },
-//                            onFailure = { e -> Log.e(logTag, e.toString()) })
-//                    },
-//                    onFailure = { e -> Log.e(logTag, e.toString()) })
-//                repository.getSentFriendRequests(
-//                    user = _user.value,
-//                    onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
-//                    onFailure = { e -> Log.e(logTag, e.toString()) })
-//                repository.getUserFriendRequests(
-//                    user = _user.value,
-//                    onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
-//                    onFailure = { e -> Log.e(logTag, e.toString()) })
-//                repository.getRecommendedFriends(
-//                    user = _user.value,
-//                    friendsList = _userFriends.value,
-//                    onSuccess = { recommendedFriendsList ->
-//                        _recommendedFriends.value = recommendedFriendsList
-//                    },
-//                    onFailure = { e -> Log.e(logTag, e.toString()) })
-//            },
-//            onFailure)
-//    }
+  //    fun setCurrentUser() {
+  //        repository.getUserAccount(
+  //            onSuccess = {
+  //                _user.value = it
+  //                repository.getUserFriends(
+  //                    user = _user.value,
+  //                    onSuccess = { friendsList ->
+  //                        Log.i(logTag, friendsList.toString())
+  //                        _userFriends.value = friendsList
+  //                        repository.getBlockedFriends(
+  //                            user = _user.value,
+  //                            onSuccess = { blockedFriendsList ->
+  //                                _blockedFriends.value = blockedFriendsList
+  //                            },
+  //                            onFailure = { e -> Log.e(logTag, e.toString()) })
+  //                    },
+  //                    onFailure = { e -> Log.e(logTag, e.toString()) })
+  //                repository.getSentFriendRequests(
+  //                    user = _user.value,
+  //                    onSuccess = { sentRequestsList -> _sentFriendRequests.value =
+  // sentRequestsList },
+  //                    onFailure = { e -> Log.e(logTag, e.toString()) })
+  //                repository.getUserFriendRequests(
+  //                    user = _user.value,
+  //                    onSuccess = { friendRequestsList -> _userFriendRequests.value =
+  // friendRequestsList },
+  //                    onFailure = { e -> Log.e(logTag, e.toString()) })
+  //                repository.getRecommendedFriends(
+  //                    user = _user.value,
+  //                    friendsList = _userFriends.value,
+  //                    onSuccess = { recommendedFriendsList ->
+  //                        _recommendedFriends.value = recommendedFriendsList
+  //                    },
+  //                    onFailure = { e -> Log.e(logTag, e.toString()) })
+  //            },
+  //            onFailure = { e -> Log.e(logTag, e.toString()) })
+  //    }
+  //
+  //    fun setCurrentUser(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+  //        repository.getUserAccount(
+  //            uid,
+  //            onSuccess = {
+  //                _user.value = it
+  //                repository.getUserFriends(
+  //                    user = _user.value,
+  //                    onSuccess = { friendsList ->
+  //                        Log.i(logTag, friendsList.toString())
+  //                        _userFriends.value = friendsList
+  //                        repository.getBlockedFriends(
+  //                            user = _user.value,
+  //                            onSuccess = { blockedFriendsList ->
+  //                                _blockedFriends.value = blockedFriendsList
+  //                                onSuccess()
+  //                            },
+  //                            onFailure = { e -> Log.e(logTag, e.toString()) })
+  //                    },
+  //                    onFailure = { e -> Log.e(logTag, e.toString()) })
+  //                repository.getSentFriendRequests(
+  //                    user = _user.value,
+  //                    onSuccess = { sentRequestsList -> _sentFriendRequests.value =
+  // sentRequestsList },
+  //                    onFailure = { e -> Log.e(logTag, e.toString()) })
+  //                repository.getUserFriendRequests(
+  //                    user = _user.value,
+  //                    onSuccess = { friendRequestsList -> _userFriendRequests.value =
+  // friendRequestsList },
+  //                    onFailure = { e -> Log.e(logTag, e.toString()) })
+  //                repository.getRecommendedFriends(
+  //                    user = _user.value,
+  //                    friendsList = _userFriends.value,
+  //                    onSuccess = { recommendedFriendsList ->
+  //                        _recommendedFriends.value = recommendedFriendsList
+  //                    },
+  //                    onFailure = { e -> Log.e(logTag, e.toString()) })
+  //            },
+  //            onFailure)
+  //    }
 
   fun setCurrentUser() {
     repository.getUserAccount(
         onSuccess = {
           _user.value = it
-            repository.getUserFriends(
+          repository.getUserFriends(
+              user = _user.value,
+              onSuccess = { friendsList ->
+                Log.i(logTag, friendsList.toString())
+                _userFriends.value = friendsList
+                repository.getBlockedFriends(
                     user = _user.value,
-                    onSuccess = { friendsList ->
-                        Log.i(logTag, friendsList.toString())
-                        _userFriends.value = friendsList
-                        repository.getBlockedFriends(
-                            user = _user.value,
-                            onSuccess = { blockedFriendsList ->
-                                _blockedFriends.value = blockedFriendsList
-                            },
-                            onFailure = { e -> Log.e(logTag, e.toString()) })
+                    onSuccess = { blockedFriendsList ->
+                      _blockedFriends.value = blockedFriendsList
                     },
                     onFailure = { e -> Log.e(logTag, e.toString()) })
-                repository.getSentFriendRequests(
-                    user = _user.value,
-                    onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
-                    onFailure = { e -> Log.e(logTag, e.toString()) })
-                repository.getUserFriendRequests(
-                    user = _user.value,
-                    onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
-                    onFailure = { e -> Log.e(logTag, e.toString()) })
-                repository.getRecommendedFriends(
-                    user = _user.value,
-                    friendsList = _userFriends.value,
-                    onSuccess = { recommendedFriendsList ->
-                        _recommendedFriends.value = recommendedFriendsList
-                    },
-                    onFailure = { e -> Log.e(logTag, e.toString()) })
+              },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
+          repository.getSentFriendRequests(
+              user = _user.value,
+              onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
+          repository.getUserFriendRequests(
+              user = _user.value,
+              onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
+          repository.getRecommendedFriends(
+              user = _user.value,
+              friendsList = _userFriends.value,
+              onSuccess = { recommendedFriendsList ->
+                _recommendedFriends.value = recommendedFriendsList
+              },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
           viewModelScope.launch(Dispatchers.IO) {
             launch {
               chatRepository.getChatSummaries().collectLatest {
@@ -233,8 +237,7 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                       },
                       onFailure = { e -> Log.e(logTag, e.toString()) })
                 },
-                onFailure
-            )
+                onFailure)
           }
         },
         onFailure)

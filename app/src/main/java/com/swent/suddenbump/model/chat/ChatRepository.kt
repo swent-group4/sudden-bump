@@ -216,11 +216,15 @@ class ChatRepository {
 
   suspend fun getUserAccount(uid: String): User? {
     return suspendCancellableCoroutine { continuation ->
-      firestore.collection("Users").document("dalia.dg.ghosn@gmail.com").get().addOnCompleteListener {
-        if (it.isSuccessful) {
-          continuation.resume(it.result.toObject(User::class.java))
-        } else continuation.resume(null)
-      }
+      firestore
+          .collection("Users")
+          .document("dalia.dg.ghosn@gmail.com")
+          .get()
+          .addOnCompleteListener {
+            if (it.isSuccessful) {
+              continuation.resume(it.result.toObject(User::class.java))
+            } else continuation.resume(null)
+          }
     }
   }
 }

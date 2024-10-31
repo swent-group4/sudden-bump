@@ -1,21 +1,21 @@
-//package com.swent.suddenbump.ui.overview
+// package com.swent.suddenbump.ui.overview
 //
-//import androidx.compose.ui.test.assertIsDisplayed
-//import androidx.compose.ui.test.junit4.createComposeRule
-//import androidx.compose.ui.test.onNodeWithTag
-//import androidx.compose.ui.test.performClick
-//import com.swent.suddenbump.model.user.UserViewModel
-//import com.swent.suddenbump.ui.navigation.NavigationActions
-//import com.swent.suddenbump.ui.navigation.Route
-//import com.swent.suddenbump.ui.navigation.Screen
-//import org.junit.Before
-//import org.junit.Rule
-//import org.junit.Test
-//import org.mockito.Mockito.mock
-//import org.mockito.Mockito.`when`
-//import org.mockito.kotlin.verify
+// import androidx.compose.ui.test.assertIsDisplayed
+// import androidx.compose.ui.test.junit4.createComposeRule
+// import androidx.compose.ui.test.onNodeWithTag
+// import androidx.compose.ui.test.performClick
+// import com.swent.suddenbump.model.user.UserViewModel
+// import com.swent.suddenbump.ui.navigation.NavigationActions
+// import com.swent.suddenbump.ui.navigation.Route
+// import com.swent.suddenbump.ui.navigation.Screen
+// import org.junit.Before
+// import org.junit.Rule
+// import org.junit.Test
+// import org.mockito.Mockito.mock
+// import org.mockito.Mockito.`when`
+// import org.mockito.kotlin.verify
 //
-//class OverviewScreenTest {
+// class OverviewScreenTest {
 //  private lateinit var navigationActions: NavigationActions
 //  @get:Rule val composeTestRule = createComposeRule()
 //
@@ -57,4 +57,4 @@
 //    composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
 //    composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
 //  }
-//}
+// }

@@ -1,18 +1,18 @@
-//package com.swent.suddenbump.ui.contacts
+// package com.swent.suddenbump.ui.contacts
 //
-//import androidx.compose.ui.test.*
-//import androidx.compose.ui.test.junit4.createComposeRule
-//import com.swent.suddenbump.ui.contact.ContactScreen
-//import com.swent.suddenbump.ui.navigation.NavigationActions
-//import com.swent.suddenbump.ui.navigation.Route
-//import org.junit.Before
-//import org.junit.Rule
-//import org.junit.Test
-//import org.mockito.Mockito.mock
-//import org.mockito.Mockito.`when`
-//import org.mockito.kotlin.verify
+// import androidx.compose.ui.test.*
+// import androidx.compose.ui.test.junit4.createComposeRule
+// import com.swent.suddenbump.ui.contact.ContactScreen
+// import com.swent.suddenbump.ui.navigation.NavigationActions
+// import com.swent.suddenbump.ui.navigation.Route
+// import org.junit.Before
+// import org.junit.Rule
+// import org.junit.Test
+// import org.mockito.Mockito.mock
+// import org.mockito.Mockito.`when`
+// import org.mockito.kotlin.verify
 //
-//class ContactScreenTest {
+// class ContactScreenTest {
 //  private lateinit var navigationActions: NavigationActions
 //
 //  @get:Rule val composeTestRule = createComposeRule()
@@ -87,4 +87,4 @@
 //  fun testContactNameDisplaysCorrectly() {
 //    composeTestRule.onNodeWithTag("userName").assertTextEquals("Jane Smith")
 //  }
-//}
+// }
