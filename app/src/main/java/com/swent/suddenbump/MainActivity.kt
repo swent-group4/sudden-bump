@@ -113,20 +113,18 @@ class MainActivity : ComponentActivity() {
   }
 
   private fun scheduleLocationUpdateWorker() {
-    val workRequest = PeriodicWorkRequestBuilder<LocationUpdateWorker>(15, TimeUnit.MINUTES)
-      .setConstraints(
-        Constraints.Builder()
-          .setRequiredNetworkType(NetworkType.CONNECTED)
-          .setRequiresBatteryNotLow(true)
-          .build()
-      )
-      .build()
+    val workRequest =
+        PeriodicWorkRequestBuilder<LocationUpdateWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .setRequiresBatteryNotLow(true)
+                    .build())
+            .build()
 
-    WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-      "LocationUpdateWorker",
-      ExistingPeriodicWorkPolicy.REPLACE,
-      workRequest
-    )
+    WorkManager.getInstance(this)
+        .enqueueUniquePeriodicWork(
+            "LocationUpdateWorker", ExistingPeriodicWorkPolicy.REPLACE, workRequest)
   }
 
   private fun checkLocationPermissions() {
