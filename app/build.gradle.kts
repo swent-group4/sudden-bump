@@ -161,6 +161,15 @@ dependencies {
     implementation(libs.firebase.storage.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
+    testImplementation("androidx.work:work-testing:2.10.0")
+    // Mockito for mocking
+    testImplementation("org.mockito:mockito-core:3.11.2")
+    // Coroutines test library
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2")
+    // Other dependencies
+    implementation ("com.google.guava:guava:31.0.1-jre")
+    // Kotlin reflection library
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.31")
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
 
