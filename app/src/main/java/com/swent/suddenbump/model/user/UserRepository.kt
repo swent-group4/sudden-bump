@@ -53,7 +53,7 @@ interface UserRepository {
   )
 
   fun getFriendsLocation(
-      user: User,
+      userFriendsList: List<User>,
       onSuccess: (Map<User, Location?>) -> Unit,
       onFailure: (Exception) -> Unit
   )

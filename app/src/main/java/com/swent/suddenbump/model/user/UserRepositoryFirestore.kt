@@ -185,12 +185,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         onSuccess: (List<User>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        Log.i("FriendsMarkers", "Called")
         db.collection(usersCollectionPath)
             .document(user.uid)
             .get()
             .addOnFailureListener { e ->
                 onFailure(e)
-                Log.d("FriendsMarkers", "Failure ")
+                Log.d("FriendsMarkers", "Failure")
             }
             .addOnSuccessListener { result ->
                 result.data?.let {
@@ -272,23 +273,18 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
     @SuppressLint("SuspiciousIndentation")
     override fun getFriendsLocation(
-        user: User,
+        userFriendsList: List<User>,
         onSuccess: (Map<User, Location?>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         Log.d("FriendsMarkers", "Launched")
 
-        // First, retrieve the user's friends using the existing getUserFriends method
-        getUserFriends(
-            user,
-            { friendsList ->
-                Log.i(logTag, friendsList.toString())
-                val friendsLocations = mutableMapOf<User, Location?>()
-                Log.d("FriendsMarkers", "Friends list ${friendsList}")
-                // Loop through each friend in the friendsList and fetch their location
-                friendsList.forEach { friend ->
+        val friendsLocations = mutableMapOf<User, Location?>()
+        runBlocking {
+            try {
+                for (userFriend in userFriendsList) {
                     db.collection(usersCollectionPath)
-                        .document(friend.uid)
+                        .document(userFriend.uid)
                         .get()
                         .addOnFailureListener { // Log the friendsLocations
                             Log.d("FriendsMarkers", "Failed Friends Locations")
@@ -296,26 +292,19 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
                         }
                         .addOnSuccessListener { friendSnapshot ->
                             val location = friendSnapshot.get("location") as? Location
-                            friendsLocations[friend] = location
+                            friendsLocations[userFriend] = location
                             Log.d(
                                 "FriendsMarkers",
-                                "Succeeded Friends Locations ${friend}, ${location}"
+                                "Succeeded Friends Locations ${userFriend}, ${location}"
                             )
-                            // Once all friends have been processed, call onSuccess
-                            if (friendsLocations.size == friendsList.size) {
-
-                                onSuccess(friendsLocations)
-                            }
                         }
                 }
-
-                // If no friends, return an empty map
-                if (friendsList.isEmpty()) {
-                    onSuccess(emptyMap())
-                }
-            },
-            onFailure
-        )
+            } catch (e: Exception) {
+                Log.e(logTag, e.toString())
+                onFailure(e)
+            }
+        }
+        onSuccess(friendsLocations)
     }
 
     private fun documentSnapshotToUserList(
@@ -325,9 +314,12 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         val uidList = helper.documentSnapshotToList(uidJsonList)
         val userList = emptyList<User>().toMutableList()
 
+        Log.i("FriendsMarkers", "Inside")
+
         for (uid in uidList) {
             runBlocking {
                 try {
+                    Log.i("FriendsMarkers", "Running")
                     val documentSnapshot =
                         db.collection(usersCollectionPath).document(uid).get().await()
 
@@ -347,6 +339,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
                 }
             }
         }
+        Log.i("FriendsMarkers", "Done!!")
         return userList
     }
 }
