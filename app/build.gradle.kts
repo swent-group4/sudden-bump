@@ -127,11 +127,20 @@ sonar {
         property("sonar.organization", "swent-group4")
         property("sonar.host.url", "https://sonarcloud.io")
         // Comma-separated paths to the various directories containing the *.xml JUnit report files. Each path may be absolute or relative to the project base directory.
-        property("sonar.junit.reportPaths", "${project.layout.buildDirectory.get()}/test-results/testDebugunitTest/")
+        property(
+            "sonar.junit.reportPaths",
+            "${project.layout.buildDirectory.get()}/test-results/testDebugunitTest/"
+        )
         // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will have to be changed too.
-        property("sonar.androidLint.reportPaths", "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml")
+        property(
+            "sonar.androidLint.reportPaths",
+            "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml"
+        )
         // Paths to JaCoCo XML coverage report files.
-        property("sonar.coverage.jacoco.xmlReportPaths", "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
+        )
     }
 }
 
@@ -161,6 +170,19 @@ dependencies {
     implementation(libs.firebase.storage.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
+    //testImplementation(libs.androidx.work.testing)
+    //testImplementation(libs.mockito.core.v3112)
+    //testImplementation(libs.jetbrains.kotlinx.coroutines.test)
+    // WorkManager testing library
+    testImplementation("androidx.work:work-testing:2.10.0")
+
+// Mockito for mocking
+    testImplementation("org.mockito:mockito-core:3.11.2")
+
+// Coroutines test library
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2")
+    // Other dependencies
+    implementation("com.google.guava:guava:31.0.1-jre")
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
 
