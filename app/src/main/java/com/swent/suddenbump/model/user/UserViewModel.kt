@@ -5,12 +5,14 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
@@ -155,16 +157,25 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
   }
 
   fun loadFriendsLocations() {
-    repository.getFriendsLocation(
-        _user.value,
-        onSuccess = { friendsLoc ->
-          // Update the state with the locations of friends
-          friendsLocations.value = friendsLoc
-        },
-        onFailure = { error ->
-          // Handle the error, e.g., log or show error message
-          Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
-        })
+    viewModelScope.launch {
+      try {
+        Log.i(logTag, "1: ${_userFriends.value.toString()}")
+        Log.i(logTag, "2: ${getUserFriends().value.toString()}")
+        repository.getFriendsLocation(
+            _userFriends.value,
+            onSuccess = { friendsLoc ->
+              // Update the state with the locations of friends
+              friendsLocations.value = friendsLoc
+              Log.d("FriendsMarkers", "On success load Friends Locations ${friendsLocations.value}")
+            },
+            onFailure = { error ->
+              // Handle the error, e.g., log or show error message
+              Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
+            })
+      } catch (e: Exception) {
+        Log.e("UserViewModel", e.toString())
+      }
+    }
   }
 
   fun getRelativeDistance(friend: User): Float {

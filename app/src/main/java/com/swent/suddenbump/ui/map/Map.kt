@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.core.app.NotificationCompat
@@ -39,6 +38,7 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -54,7 +54,7 @@ fun MapScreen(
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { pd -> SimpleMap(location, userViewModel) })
+      content = { _ -> SimpleMap(location, userViewModel) })
 }
 
 @Composable
@@ -73,6 +73,10 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
         // Perform zoom only the first time the location is set
         cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
 
+        if (userViewModel.isFriendsInRadius(8000)) // Check if friends are within 8km
+         Log.d("FriendsRadius", "isTriggered")
+        showFriendNearbyNotification(context) // Show notification
+
         fetchLocationToServer(location, userViewModel)
         zoomDone = true // Mark zoom as done
       }
@@ -88,7 +92,7 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
       currentLocation?.let { fetchLocationToServer(currentLocation!!, userViewModel) }
           ?: Log.d("LocationUpdate", "Location is null")
 
-      if (userViewModel.isFriendsInRadius(3000)) // Check if friends are within 3km
+      if (userViewModel.isFriendsInRadius(8000)) // Check if friends are within 8km
        showFriendNearbyNotification(context) // Show notification
 
       // Delay for 5 minutes (300,000 milliseconds)
@@ -108,21 +112,37 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
               snippet = "DescriptionTest",
               icon = BitmapDescriptorFactory.fromBitmap(markerBitmap))
 
-          FriendsMarkers()
+          FriendsMarkers(userViewModel)
         }
   }
 }
 
 @Composable
-fun FriendsMarkers() {
-  // userViewModel.loadFriendsLocations()
-  // val friendsLocations by userViewModel.friendsLocations
+fun FriendsMarkers(userViewModel: UserViewModel) {
+  val friendsLocations = remember { mutableStateOf<Map<User, Location?>>(emptyMap()) }
 
-  // LaunchedEffect(Unit) {
-  //    userViewModel.loadFriendsLocations() // Load data when composable is first composed
-  // }
+  LaunchedEffect(userViewModel) {
+    launch {
+      userViewModel.loadFriendsLocations()
+      friendsLocations.value = userViewModel.friendsLocations.value
+      // Log the friendsLocations
+      Log.d("FriendsMarkers", "Friends Locations: ${friendsLocations}")
+    }
+  }
 
-  val mockImageBitmap: ImageBitmap? = null // assuming null for simplicity
+  friendsLocations.value.let { locations ->
+    locations.forEach { (friend, location) ->
+      location?.let {
+        Marker(
+            state = MarkerState(position = LatLng(it.latitude, it.longitude)),
+            title = friend.firstName,
+            snippet = friend.uid,
+        )
+      }
+    }
+  }
+
+  /*val mockImageBitmap: ImageBitmap? = null // assuming null for simplicity
 
   // Create mock users
   val user1 =
@@ -180,8 +200,7 @@ fun FriendsMarkers() {
           title = friend.firstName,
           snippet = friend.uid,
       )
-    }
-  }
+    }*/
 }
 
 fun getLocationMarkerBitmap(): Bitmap {
@@ -221,18 +240,18 @@ fun showFriendNearbyNotification(context: Context) {
   val channelName = "Friend Nearby Notifications"
   val notificationId = 1
 
-  // Create the NotificationChannel only if the API level is 26 or higher
-  if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-    val notificationChannel =
-        NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
-    val notificationManager = context.getSystemService(NotificationManager::class.java)
-    notificationManager?.createNotificationChannel(notificationChannel)
-  }
+  val notificationChannel =
+      NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+  val notificationManager = context.getSystemService(NotificationManager::class.java)
+  notificationManager?.createNotificationChannel(notificationChannel)
 
+  // Modify the intent to navigate to Screen.OVERVIEW
   val intent =
       Intent(context, MainActivity::class.java).apply {
+        putExtra("destination", "Screen.OVERVIEW")
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
       }
+
   val pendingIntent: PendingIntent =
       PendingIntent.getActivity(
           context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
