@@ -144,7 +144,7 @@ class MainActivity : ComponentActivity() {
       ) {
         composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
         composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
-        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
+        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
         composable(Screen.CONTACT) { ContactScreen(navigationActions) }
