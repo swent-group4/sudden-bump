@@ -23,38 +23,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-
-data class MockUser(
-    val uid: String,
-    val firstName: String,
-    val lastName: String,
-    val birthDate: String,
-    val profilePictureUrl: String,
-    val phoneNumber: String,
-    val email: String,
-    val isFriend: Boolean = false,
-)
+import com.swent.suddenbump.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ContactScreen(navigationActions: NavigationActions) {
-  val user =
-      MockUser(
-          uid = "123",
-          firstName = "Jane",
-          lastName = "Smith",
-          profilePictureUrl = "https://api.dicebear.com/9.x/lorelei/png?seed=JaneSmith",
-          phoneNumber = "+3345676543",
-          email = "jane.smith@gmail.com",
-          birthDate = "28 February 1998",
-          isFriend = true,
-      )
+fun ContactScreen(
+    userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory),
+    navigationActions: NavigationActions
+) {
+  val user = userViewModel.user ?: return
 
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag("contactScreen"),
@@ -84,6 +70,10 @@ fun ContactScreen(navigationActions: NavigationActions) {
             AsyncImage(
                 model = user.profilePictureUrl,
                 contentDescription = null,
+                placeholder =
+                    painterResource(
+                        com.swent.suddenbump.R.drawable.profile), // Add your drawable here
+                error = painterResource(com.swent.suddenbump.R.drawable.profile), //
                 modifier =
                     Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
             Column(
@@ -124,7 +114,7 @@ fun ContactScreen(navigationActions: NavigationActions) {
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 10.dp)
                         .testTag("emailCard")) {
-                  Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.email)
+                  Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.emailAddress)
                 }
           }
 
@@ -134,7 +124,10 @@ fun ContactScreen(navigationActions: NavigationActions) {
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("sendMessageButton"),
-                onClick = { println("Button click !") }) {
+                onClick = {
+                  userViewModel.user = user
+                  navigationActions.navigateTo(Screen.CHAT)
+                }) {
                   Text("Send a message")
                 }
           } else {

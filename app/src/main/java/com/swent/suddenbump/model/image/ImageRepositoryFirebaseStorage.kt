@@ -10,8 +10,10 @@ import com.google.firebase.storage.FirebaseStorage
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : ImageRepository {
 
@@ -44,6 +46,24 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
       }
     }
   }
+
+  override suspend fun downloadImage(path: String): ImageBitmap? =
+      withContext(Dispatchers.IO) {
+        val imageRef = storage.reference.child(path)
+        val localFile = File.createTempFile("sudden-bump-", path.substringAfterLast('/'))
+
+        return@withContext try {
+          imageRef.getFile(localFile).await() // Waits asynchronously for the file to download
+          val fileInputStream = FileInputStream(localFile)
+          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+          bitmap?.asImageBitmap()
+        } catch (e: Exception) {
+          Log.e("SuddenBump", "Failed to download image: $e")
+          null
+        } finally {
+          localFile.delete() // Clean up the temporary file
+        }
+      }
 
   override fun uploadImage(
       imageBitmap: ImageBitmap,

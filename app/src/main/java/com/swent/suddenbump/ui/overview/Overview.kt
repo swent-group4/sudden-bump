@@ -23,7 +23,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -31,8 +33,11 @@ import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
 
 @Composable
-fun OverviewScreen(navigationActions: NavigationActions) {
-  val mockUsers = generateMockUsers().sortedBy { it.relativeDist }
+fun OverviewScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+) {
+  val users by userViewModel.getUserFriends().collectAsState(emptyList())
 
   Scaffold(
       topBar = {
@@ -73,10 +78,10 @@ fun OverviewScreen(navigationActions: NavigationActions) {
       content = { pd ->
         Column(
             modifier = Modifier.padding(pd), horizontalAlignment = Alignment.CenterHorizontally) {
-              if (mockUsers.isNotEmpty()) {
+              if (users.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
                   var currentDist: Int? = null
-                  mockUsers.forEach { user ->
+                  users.forEach { user ->
                     if (currentDist != user.relativeDist) {
                       currentDist = user.relativeDist
                       item {
@@ -86,7 +91,7 @@ fun OverviewScreen(navigationActions: NavigationActions) {
                             style = MaterialTheme.typography.headlineSmall)
                       }
                     }
-                    item { UserCard(user = user, navigationActions) }
+                    item { UserCard(user = user, navigationActions, userViewModel) }
                   }
                 }
               } else {
@@ -105,5 +110,6 @@ fun OverviewScreen(navigationActions: NavigationActions) {
 fun PreviewOverviewScreen() {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
-  OverviewScreen(navigationActions)
+  val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+  OverviewScreen(navigationActions, userViewModel)
 }
