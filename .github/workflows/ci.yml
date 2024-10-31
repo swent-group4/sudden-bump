@@ -9,6 +9,7 @@ on:
       - clean-up
       - 100-dont-let-users-change-email
       - link-location-to-users
+      - 93-verify-number-with-sms-code
 
   pull_request:
     types:

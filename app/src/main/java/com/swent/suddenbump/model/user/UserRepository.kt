@@ -64,4 +64,17 @@ interface UserRepository {
   suspend fun getUserAccount(uid: String): User?
 
   fun getAllOtherUsers(user: User): Flow<List<User>>
+
+  fun sendVerificationCode(
+      phoneNumber: String,
+      onSuccess: (String) -> Unit,
+      onFailure: (Exception) -> Unit
+    )
+
+  fun verifyCode(
+      verificationId: String,
+      code: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }
