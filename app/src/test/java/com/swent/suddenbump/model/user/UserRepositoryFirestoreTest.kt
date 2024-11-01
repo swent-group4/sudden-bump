@@ -307,7 +307,7 @@ class UserRepositoryFirestoreTest {
 
     // When
     userRepositoryFirestore.getFriendsLocation(
-        user,
+        listOf(friend1, friend2),
         { friendsLoc ->
           // Then
           assert(friendsLoc == expectedMap)
@@ -323,7 +323,7 @@ class UserRepositoryFirestoreTest {
 
     // When
     userRepositoryFirestore.getFriendsLocation(
-        user,
+        listOf(),
         { friendsLoc ->
           // Then
           assert(friendsLoc == emptyMap<User, Location>())
