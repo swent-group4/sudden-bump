@@ -7,6 +7,7 @@ on:
       - main
       - add-map
       - clean-up
+      - 98-link-users-in-addcontact-search-with-database
 
   pull_request:
     types:
