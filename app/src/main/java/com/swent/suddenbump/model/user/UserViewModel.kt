@@ -193,6 +193,8 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     loadFriendsLocations()
     friendsLocations.value.values.forEach { friendLocation ->
       if (friendLocation != null) {
+        Log.d(
+            "FriendsRadius", "Friends Locations: ${_userLocation.value.distanceTo(friendLocation)}")
         if (_userLocation.value.distanceTo(friendLocation) <= radius) {
           return true
         }

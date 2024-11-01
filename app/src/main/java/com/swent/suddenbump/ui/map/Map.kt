@@ -73,11 +73,13 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
         // Perform zoom only the first time the location is set
         cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
 
-        if (userViewModel.isFriendsInRadius(8000)) // Check if friends are within 8km
-         Log.d("FriendsRadius", "isTriggered")
-        showFriendNearbyNotification(context) // Show notification
-
         fetchLocationToServer(location, userViewModel)
+
+        if (userViewModel.isFriendsInRadius(8000)) {
+          Log.d("FriendsRadius", "isTriggered")
+          showFriendNearbyNotification(context) // Show notification}
+        }
+
         zoomDone = true // Mark zoom as done
       }
     }
@@ -89,11 +91,13 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
     while (isActive) {
       Log.d("CoroutineStatus", "Coroutine is running")
 
-      currentLocation?.let { fetchLocationToServer(currentLocation!!, userViewModel) }
-          ?: Log.d("LocationUpdate", "Location is null")
-
-      if (userViewModel.isFriendsInRadius(8000)) // Check if friends are within 8km
-       showFriendNearbyNotification(context) // Show notification
+      currentLocation?.let {
+        fetchLocationToServer(currentLocation!!, userViewModel)
+        if (userViewModel.isFriendsInRadius(8000)) {
+          Log.d("FriendsRadius", "isTriggered")
+          showFriendNearbyNotification(context) // Show notification}
+        }
+      } ?: Log.d("LocationUpdate", "Location is null")
 
       // Delay for 5 minutes (300,000 milliseconds)
       delay(300_000) // Adjusted back to 5 minutes

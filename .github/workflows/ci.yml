@@ -7,7 +7,7 @@ on:
       - main
       - add-map
       - clean-up
-      - link-location-to-users
+      - distance-triggers-notification
 
   pull_request:
     types:
