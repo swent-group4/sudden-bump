@@ -30,7 +30,7 @@ class AddContactScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   private val user =
-    User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
   @Before
   fun setUp() {
@@ -43,14 +43,16 @@ class AddContactScreenTest {
     composeTestRule.setContent { AddContactScreen(navigationActions, userViewModel, true) }
 
     doAnswer { invocationOnMock ->
-      Log.i("AddContact", "InvocationMocked?")
-      val query = invocationOnMock.getArgument<(String) -> Unit>(0)
-      val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
-      val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
-      query
-      onSuccess(listOf(user))
-      onFailure(exception)
-    }.whenever(userRepository).searchQueryAddContact(anyString(), any(), any())
+          Log.i("AddContact", "InvocationMocked?")
+          val query = invocationOnMock.getArgument<(String) -> Unit>(0)
+          val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
+          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
+          query
+          onSuccess(listOf(user))
+          onFailure(exception)
+        }
+        .whenever(userRepository)
+        .searchQueryAddContact(anyString(), any(), any())
   }
 
   @Test
@@ -68,16 +70,16 @@ class AddContactScreenTest {
     composeTestRule.onNodeWithTag("noUsersText").assertIsDisplayed()
   }
 
-//  @Test
-//  fun testSearchFunctionality() {
-//
-//    // Enter a search query
-//    composeTestRule.onNodeWithTag("searchTextField").performTextInput("Martin")
-//
-//    // Verify that the list is filtered
-//    composeTestRule.onNodeWithText("Martin Vetterli").assertIsDisplayed()
-//    composeTestRule.onNodeWithText("Jane Smith").assertDoesNotExist()
-//  }
+  //  @Test
+  //  fun testSearchFunctionality() {
+  //
+  //    // Enter a search query
+  //    composeTestRule.onNodeWithTag("searchTextField").performTextInput("Martin")
+  //
+  //    // Verify that the list is filtered
+  //    composeTestRule.onNodeWithText("Martin Vetterli").assertIsDisplayed()
+  //    composeTestRule.onNodeWithText("Jane Smith").assertDoesNotExist()
+  //  }
 
   @Test
   fun testNoResultsMessage() {
@@ -90,14 +92,14 @@ class AddContactScreenTest {
         .assertIsDisplayed()
   }
 
-//  @Test
-//  fun testSearchFunctionalityCaseInsensitivity() {
-//    // Enter a search query in uppercase
-//    composeTestRule.onNodeWithTag("searchTextField").performTextInput("JOHN")
-//
-//    // Verify that "John Doe" is displayed
-//    composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
-//  }
+  //  @Test
+  //  fun testSearchFunctionalityCaseInsensitivity() {
+  //    // Enter a search query in uppercase
+  //    composeTestRule.onNodeWithTag("searchTextField").performTextInput("JOHN")
+  //
+  //    // Verify that "John Doe" is displayed
+  //    composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
+  //  }
 
   @Test
   fun testEmptyUserListDisplaysNoUsersMessage() {

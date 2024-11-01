@@ -48,31 +48,24 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions) {
-    Card(
-        onClick = { navigationActions.navigateTo(Screen.CONTACT) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp)
-            .padding(8.dp),
+  Card(
+      onClick = { navigationActions.navigateTo(Screen.CONTACT) },
+      modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
+  ) {
+    Row(
+        modifier = Modifier.fillMaxHeight(),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxHeight(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Image(
-                bitmap = user.profilePicture!!,
-                contentDescription = null,
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(100.dp)
-                    .padding(8.dp)
-            )
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = "${user.firstName} ${user.lastName}")
-//                Text(text = "${randomInt} friends in common")
-            }
-        }
+      Image(
+          bitmap = user.profilePicture!!,
+          contentDescription = null,
+          modifier = Modifier.width(100.dp).height(100.dp).padding(8.dp))
+      Column(modifier = Modifier.padding(16.dp)) {
+        Text(text = "${user.firstName} ${user.lastName}")
+        //                Text(text = "${randomInt} friends in common")
+      }
     }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,111 +76,93 @@ fun AddContactScreen(
     isTesting: Boolean = false
 ) {
 
-    val timeJob: Long = 400
+  val timeJob: Long = 400
 
-    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-    var usersQueryResponse by remember { mutableStateOf(emptyList<User>()) }
+  var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+  var usersQueryResponse by remember { mutableStateOf(emptyList<User>()) }
 
-    var expanded by remember { mutableStateOf(false) }
-    var job: Job? by remember { mutableStateOf(null) }
-    val coroutineScope = rememberCoroutineScope()
+  var expanded by remember { mutableStateOf(false) }
+  var job: Job? by remember { mutableStateOf(null) }
+  val coroutineScope = rememberCoroutineScope()
 
-    Scaffold(
-        modifier = Modifier.testTag("addContactScreen"),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Add contact", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier = Modifier.testTag("backButton")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Go back"
-                        )
-                    }
-                },
-            )
-        },
-        content = { pd ->
-            Column(
-                modifier = Modifier
-                    .padding(pd)
-                    .testTag("addContactContent"),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                TextField(
-                    value = searchQuery,
-                    onValueChange = { newValue ->
-                        searchQuery = newValue
+  Scaffold(
+      modifier = Modifier.testTag("addContactScreen"),
+      topBar = {
+        CenterAlignedTopAppBar(
+            title = { Text("Add contact", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Go back")
+                  }
+            },
+        )
+      },
+      content = { pd ->
+        Column(
+            modifier = Modifier.padding(pd).testTag("addContactContent"),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+              TextField(
+                  value = searchQuery,
+                  onValueChange = { newValue ->
+                    searchQuery = newValue
 
-                        Log.i("AddContact", usersQueryResponse.toString())
+                    Log.i("AddContact", usersQueryResponse.toString())
 
-                        job?.cancel()
-                        if (searchQuery.text.isNotBlank()) {
-                            if (isTesting) {
-                                userViewModel.searchQueryAddContact(
-                                    searchQuery.text,
-                                    onSuccess = {
-                                        usersQueryResponse = it
-                                        Log.i("AddContact", it.toString())
-                                    },
-                                    onFailure = {})
-                            } else {
-                                job = CoroutineScope(Dispatchers.IO).launch {
-                                    delay(timeJob)
-                                    userViewModel.searchQueryAddContact(
-                                        searchQuery.text,
-                                        onSuccess = {
-                                            usersQueryResponse = it
-                                        },
-                                        onFailure = {})
-                                }
+                    job?.cancel()
+                    if (searchQuery.text.isNotBlank()) {
+                      if (isTesting) {
+                        userViewModel.searchQueryAddContact(
+                            searchQuery.text,
+                            onSuccess = {
+                              usersQueryResponse = it
+                              Log.i("AddContact", it.toString())
+                            },
+                            onFailure = {})
+                      } else {
+                        job =
+                            CoroutineScope(Dispatchers.IO).launch {
+                              delay(timeJob)
+                              userViewModel.searchQueryAddContact(
+                                  searchQuery.text,
+                                  onSuccess = { usersQueryResponse = it },
+                                  onFailure = {})
                             }
-                        } else {
-                            usersQueryResponse = emptyList()
-                        }
-                    },
-                    label = { Text("Search") },
-                    modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 10.dp)
-                        .testTag("searchTextField"),
-                )
-                Row(
-                    modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .testTag("recommendedRow"),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
+                      }
+                    } else {
+                      usersQueryResponse = emptyList()
+                    }
+                  },
+                  label = { Text("Search") },
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 10.dp, vertical = 10.dp)
+                          .testTag("searchTextField"),
+              )
+              Row(
+                  modifier =
+                      Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag("recommendedRow"),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.Center) {
                     HorizontalDivider(modifier = Modifier.weight(1f))
                     Text(
                         text = "Recommended",
                         modifier = Modifier.padding(horizontal = 8.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                        style = MaterialTheme.typography.bodyLarge)
                     HorizontalDivider(modifier = Modifier.weight(1f))
+                  }
+              if (usersQueryResponse.isNotEmpty()) {
+                LazyColumn(modifier = Modifier.testTag("userList")) {
+                  items(usersQueryResponse) { user -> UserCard(user = user, navigationActions) }
                 }
-                if (usersQueryResponse.isNotEmpty()) {
-                    LazyColumn(modifier = Modifier.testTag("userList")) {
-                        items(usersQueryResponse) { user ->
-                            UserCard(
-                                user = user,
-                                navigationActions
-                            )
-                        }
-                    }
-                } else {
-                    Text(
-                        text = "Looks like no user corresponds to your query",
-                        modifier = Modifier.testTag("noUsersText")
-                    )
-                }
+              } else {
+                Text(
+                    text = "Looks like no user corresponds to your query",
+                    modifier = Modifier.testTag("noUsersText"))
+              }
             }
-        })
+      })
 }
