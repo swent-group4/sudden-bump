@@ -16,15 +16,15 @@ import org.mockito.kotlin.verify
 
 class AddContactScreenTest {
   private lateinit var navigationActions: NavigationActions
-    private lateinit var userRepository: UserRepository
-    private lateinit var userViewModel: UserViewModel
+  private lateinit var userRepository: UserRepository
+  private lateinit var userViewModel: UserViewModel
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
-      userRepository = mock(UserRepository::class.java)
-      userViewModel = UserViewModel(userRepository)
+    userRepository = mock(UserRepository::class.java)
+    userViewModel = UserViewModel(userRepository)
 
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
     composeTestRule.setContent { AddContactScreen(navigationActions, userViewModel) }

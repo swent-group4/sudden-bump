@@ -76,7 +76,4 @@ class ContactScreenTest {
     // Verify that navigation to the message screen is triggered
     //    verify(navigationActions).navigateTo(Route.MESSAGE)
   }
-
-
-
 }
