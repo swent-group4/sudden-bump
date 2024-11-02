@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.contact
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,23 +27,29 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.navigation.Screen
 
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
-
+  // generate random integer between 0 and 10
+  val randomInt = (0..10).random()
+  val context = LocalContext.current
   Card(
       onClick = {
-        userViewModel.setSelectedContact(user)
-        navigationActions.navigateTo(Screen.CONTACT)
+        userViewModel.addUserFriend(
+            user,
+            onSuccess = { Toast.makeText(context, "Friend added", Toast.LENGTH_SHORT).show() },
+            onFailure = { Toast.makeText(context, "Friend added", Toast.LENGTH_SHORT).show() })
       },
       modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
   ) {
@@ -51,12 +58,15 @@ fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: Us
         verticalAlignment = Alignment.CenterVertically,
     ) {
       AsyncImage(
-          model = user.profilePicture,
+          model = user.profilePictureUrl,
           contentDescription = null,
+          placeholder =
+              painterResource(com.swent.suddenbump.R.drawable.profile), // Add your drawable here
+          error = painterResource(com.swent.suddenbump.R.drawable.profile), //
           modifier = Modifier.width(100.dp).height(100.dp).padding(8.dp))
       Column(modifier = Modifier.padding(16.dp)) {
         Text(text = "${user.firstName} ${user.lastName}")
-        Text(text = "8 friends in common")
+        //        Text(text = "${randomInt} friends in common")
       }
     }
   }
@@ -64,16 +74,12 @@ fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: Us
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+fun AddContactScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+) {
   var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-
-  val recommendedUsers = userViewModel.getUserRecommendedFriends().collectAsState().value
-
-  val filteredUsers =
-      recommendedUsers.filter { user ->
-        user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-            user.lastName.contains(searchQuery.text, ignoreCase = true)
-      }
+  val mockUsers by userViewModel.getAllUsers().collectAsState(emptyList())
 
   Scaffold(
       modifier = Modifier.testTag("addContactScreen"),
@@ -116,9 +122,9 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                         style = MaterialTheme.typography.bodyLarge)
                     HorizontalDivider(modifier = Modifier.weight(1f))
                   }
-              if (filteredUsers.isNotEmpty()) {
+              if (mockUsers.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
-                  items(filteredUsers) { user ->
+                  items(mockUsers) { user ->
                     UserCard(user = user, navigationActions, userViewModel)
                   }
                 }
