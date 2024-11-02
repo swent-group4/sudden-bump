@@ -43,7 +43,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
       userViewModel.getUserFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
   var isFriendRequestSent =
       userViewModel.getSentFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
-
+// a
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag("contactScreen"),
       topBar = {
