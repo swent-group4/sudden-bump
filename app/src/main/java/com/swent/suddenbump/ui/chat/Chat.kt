@@ -64,7 +64,7 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
   viewModel.getOrCreateChat()
   val messages by viewModel.messages.collectAsState(emptyList())
   val user by viewModel.getCurrentUser().collectAsState()
-  val otherUser = viewModel.getSelectedContact().collectAsState().value
+  val otherUser = viewModel.user
   if (messages.isNotEmpty()) viewModel.markMessagesAsRead()
   var list by remember { mutableStateOf<List<ListItem>>(emptyList()) }
   list = generateListItems(messages.reversed()).reversed()
