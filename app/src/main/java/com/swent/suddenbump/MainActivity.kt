@@ -33,7 +33,6 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.authentication.SignUpScreen
-import com.swent.suddenbump.ui.chat.ChatScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.map.MapScreen
@@ -76,11 +75,11 @@ class MainActivity : ComponentActivity() {
     FirebaseApp.initializeApp(this)
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
-    //    auth.currentUser?.let {
-    //      // Sign out the user if they are already signed in
-    //      // This is useful for testing purposes
-    //      auth.signOut()
-    //    }
+    auth.currentUser?.let {
+      // Sign out the user if they are already signed in
+      // This is useful for testing purposes
+      auth.signOut()
+    }
 
     setContent {
       SampleAppTheme {
@@ -143,13 +142,12 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.OVERVIEW,
           route = Route.OVERVIEW,
       ) {
-        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions, userViewModel) }
-        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
-        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
+        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
+        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
+        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
-        composable(Screen.CONTACT) { ContactScreen(userViewModel, navigationActions) }
-        composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
+        composable(Screen.CONTACT) { ContactScreen(navigationActions) }
       }
 
       navigation(
@@ -165,7 +163,7 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.MESS,
           route = Route.MESS,
       ) {
-        composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions) }
+        composable(Screen.MESS) { MessagesScreen(navigationActions) }
       }
     }
   }
