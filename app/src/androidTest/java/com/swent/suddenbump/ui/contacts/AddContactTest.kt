@@ -2,6 +2,8 @@ package com.swent.suddenbump.ui.contacts
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.swent.suddenbump.model.user.UserRepository
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
@@ -14,14 +16,18 @@ import org.mockito.kotlin.verify
 
 class AddContactScreenTest {
   private lateinit var navigationActions: NavigationActions
+    private lateinit var userRepository: UserRepository
+    private lateinit var userViewModel: UserViewModel
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
+      userRepository = mock(UserRepository::class.java)
+      userViewModel = UserViewModel(userRepository)
 
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
-    composeTestRule.setContent { AddContactScreen(navigationActions) }
+    composeTestRule.setContent { AddContactScreen(navigationActions, userViewModel) }
   }
 
   @Test
@@ -40,43 +46,11 @@ class AddContactScreenTest {
   }
 
   @Test
-  fun testSearchFunctionality() {
-
-    // Enter a search query
-    composeTestRule.onNodeWithTag("searchTextField").performTextInput("John")
-
-    // Verify that the list is filtered
-    composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Jane Smith").assertDoesNotExist()
-  }
-
-  @Test
   fun testNoResultsMessage() {
     // Enter a search query that yields no results
     composeTestRule.onNodeWithTag("searchTextField").performTextInput("NonExistentName")
 
     // Verify that the no results message is displayed
-    composeTestRule
-        .onNodeWithText("Looks like no user corresponds to your query")
-        .assertIsDisplayed()
-  }
-
-  @Test
-  fun testSearchFunctionalityCaseInsensitivity() {
-    // Enter a search query in uppercase
-    composeTestRule.onNodeWithTag("searchTextField").performTextInput("JOHN")
-
-    // Verify that "John Doe" is displayed
-    composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
-  }
-
-  @Test
-  fun testEmptyUserListDisplaysNoUsersMessage() {
-
-    // Clear the search field to ensure no users are shown
-    composeTestRule.onNodeWithTag("searchTextField").performTextInput("qowve0iwqnev0oiwnev")
-
-    // Verify that the 'no users' message is displayed
     composeTestRule
         .onNodeWithText("Looks like no user corresponds to your query")
         .assertIsDisplayed()

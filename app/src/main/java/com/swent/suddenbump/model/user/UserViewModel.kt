@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class UserViewModel(private val repository: UserRepository) : ViewModel() {
+open class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
   private val logTag = "UserViewModel"
   private val profilePicture = ImageBitMapIO()

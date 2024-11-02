@@ -83,7 +83,7 @@ fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserV
       modifier = Modifier.testTag("friendsListScreen"),
       topBar = {
         CenterAlignedTopAppBar(
-            title = { Text("Friends", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            title = { Text( "Friends", modifier = Modifier.testTag("title"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() },
