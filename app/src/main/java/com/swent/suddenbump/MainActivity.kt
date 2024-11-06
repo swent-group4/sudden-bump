@@ -33,6 +33,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.authentication.SignUpScreen
+import com.swent.suddenbump.ui.chat.ChatScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.map.MapScreen
@@ -148,6 +149,7 @@ class MainActivity : ComponentActivity() {
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+        composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
       }
 
       navigation(
@@ -163,7 +165,7 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.MESS,
           route = Route.MESS,
       ) {
-        composable(Screen.MESS) { MessagesScreen(navigationActions) }
+        composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions)}
       }
     }
   }
