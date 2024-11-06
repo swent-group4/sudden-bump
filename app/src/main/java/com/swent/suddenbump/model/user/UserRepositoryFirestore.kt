@@ -10,23 +10,15 @@ import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
-import java.util.concurrent.TimeUnit
-import kotlin.coroutines.resume
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 
 class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
 
@@ -104,34 +96,30 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
   }
 
   override fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit) {
-    /*db.collection(usersCollectionPath)
-    .document(FirebaseAuth.getInstance().currentUser!!.uid)
-    .get()
-    .addOnFailureListener { onFailure(it) }
-    .addOnCompleteListener { resultUser ->
-        if (resultUser.isSuccessful) {
-            val path =
-                helper.uidToProfilePicturePath(FirebaseAuth.getInstance().currentUser!!.uid, profilePicturesRef)
-            imageRepository.downloadImage(
-                path,
-                onSuccess = {
-                    onSuccess(helper.documentSnapshotToUser(resultUser.result, it))
-                },
-                onFailure = { onFailure(it) })
-        } else {
-            resultUser.exception?.let { onFailure(it) }
-        }
-    }*/
-    db.collection(usersCollectionPath)
-        .document(FirebaseAuth.getInstance().currentUser!!.uid)
-        .addSnapshotListener { value, error ->
-          if (error != null || value == null) {
-            Log.e(logTag, error.toString())
-            onFailure(Exception(error))
-            return@addSnapshotListener
-          }
-          val user = value.toObject(User::class.java)
-          if (user != null) onSuccess(user) else onFailure(Exception("User is null"))
+    db.collection(emailCollectionPath)
+        .document(FirebaseAuth.getInstance().currentUser!!.email.toString())
+        .get()
+        .addOnFailureListener { onFailure(it) }
+        .addOnSuccessListener { resultEmail ->
+          db.collection(usersCollectionPath)
+              .document(resultEmail.data!!["uid"].toString())
+              .get()
+              .addOnFailureListener { onFailure(it) }
+              .addOnCompleteListener { resultUser ->
+                if (resultUser.isSuccessful) {
+                  val path =
+                      helper.uidToProfilePicturePath(
+                          resultEmail.data!!["uid"].toString(), profilePicturesRef)
+                  imageRepository.downloadImage(
+                      path,
+                      onSuccess = {
+                        onSuccess(helper.documentSnapshotToUser(resultUser.result, it))
+                      },
+                      onFailure = { onFailure(it) })
+                } else {
+                  resultUser.exception?.let { onFailure(it) }
+                }
+              }
         }
   }
 
@@ -146,28 +134,17 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         .addOnFailureListener { onFailure(it) }
         .addOnCompleteListener { resultUser ->
           if (resultUser.isSuccessful) {
-            /*val path = helper.uidToProfilePicturePath(uid, profilePicturesRef)
+            val path = helper.uidToProfilePicturePath(uid, profilePicturesRef)
             imageRepository.downloadImage(
                 path,
                 onSuccess = { image ->
                   onSuccess(helper.documentSnapshotToUser(resultUser.result, image))
                 },
-                onFailure = { onFailure(it) })*/
-            resultUser.result.toObject(User::class.java)?.let(onSuccess)
+                onFailure = { onFailure(it) })
           } else {
             resultUser.exception?.let { onFailure(it) }
           }
         }
-  }
-
-  override suspend fun getUserAccount(uid: String): User? {
-    return suspendCancellableCoroutine { continuation ->
-      db.collection(usersCollectionPath).document(uid).get().addOnCompleteListener {
-        if (it.isSuccessful) {
-          continuation.resume(it.result.toObject(User::class.java))
-        } else continuation.resume(null)
-      }
-    }
   }
 
   override fun updateUserAccount(
@@ -209,14 +186,21 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         .addOnFailureListener { e -> onFailure(e) }
   }
 
-  override suspend fun getUserFriends(user: User, onSuccess: (users: List<User>) -> Unit) {
-    val liveUser =
-        db.collection(usersCollectionPath)
-            .document(user.uid)
-            .get()
-            .await()
-            .toObject(User::class.java) ?: user
-    onSuccess.invoke(liveUser.friendsList.mapNotNull { getUserAccount(it)?.copy(isFriend = true) })
+  override fun getUserFriends(
+      user: User,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(user.uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          result.data?.let {
+            onSuccess(
+                documentSnapshotToUserList(result.data?.get("friendsList").toString(), onFailure))
+          } ?: run { onSuccess(emptyList()) }
+        }
   }
 
   override fun setUserFriends(
@@ -226,8 +210,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(FirebaseAuth.getInstance().uid.toString())
-        .update("friendsList", friendsList.map { it.uid }.distinct())
+        .document(user.uid)
+        .update("friendsList", friendsList.map { it.uid })
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
   }
@@ -277,72 +261,40 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         .addOnSuccessListener { onSuccess() }
   }
 
-  override suspend fun getFriendsLocation(
+  override fun getFriendsLocation(
       user: User,
       onSuccess: (Map<User, Location?>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     // First, retrieve the user's friends using the existing getUserFriends method
-    getUserFriends(user) { friendsList ->
-      val friendsLocations = mutableMapOf<User, Location?>()
+    getUserFriends(
+        user,
+        { friendsList ->
+          val friendsLocations = mutableMapOf<User, Location?>()
 
-      // Loop through each friend in the friendsList and fetch their location
-      friendsList.forEach { friend ->
-        db.collection(usersCollectionPath)
-            .document(friend.uid)
-            .get()
-            .addOnFailureListener { onFailure(it) }
-            .addOnSuccessListener { friendSnapshot ->
-              val location = friendSnapshot.get("location") as? Location
-              friendsLocations[friend] = location
+          // Loop through each friend in the friendsList and fetch their location
+          friendsList.forEach { friend ->
+            db.collection(usersCollectionPath)
+                .document(friend.uid)
+                .get()
+                .addOnFailureListener { onFailure(it) }
+                .addOnSuccessListener { friendSnapshot ->
+                  val location = friendSnapshot.get("location") as? Location
+                  friendsLocations[friend] = location
 
-              // Once all friends have been processed, call onSuccess
-              if (friendsLocations.size == friendsList.size) {
-                onSuccess(friendsLocations)
-              }
-            }
-      }
-
-      // If no friends, return an empty map
-      if (friendsList.isEmpty()) {
-        onSuccess(emptyMap())
-      }
-    }
-  }
-
-  override suspend fun getAllUsers(): Result<List<User>> =
-      withContext(Dispatchers.IO) {
-        try {
-          val querySnapshot = db.collection(usersCollectionPath).get().await()
-          val userList =
-              querySnapshot.mapNotNull { document ->
-                val user = document.toObject(User::class.java)
-                user.let {
-                  val path = helper.uidToProfilePicturePath(it.uid, profilePicturesRef)
-                  val profilePicture = imageRepository.downloadImage(path)
-                  helper.documentSnapshotToUser(document, profilePicture)
+                  // Once all friends have been processed, call onSuccess
+                  if (friendsLocations.size == friendsList.size) {
+                    onSuccess(friendsLocations)
+                  }
                 }
-              }
-          Result.success(userList)
-        } catch (e: Exception) {
-          Log.e(logTag, e.toString())
-          Result.failure(e)
-        }
-      }
-
-  override fun getAllOtherUsers(user: User): Flow<List<User>> = callbackFlow {
-    val listener =
-        db.collection(usersCollectionPath).addSnapshotListener { value, error ->
-          if (error != null || value == null) {
-            Log.e(logTag, error.toString())
-            return@addSnapshotListener
           }
-          trySend(
-              value.documents
-                  .mapNotNull { it.toObject(User::class.java) }
-                  .filter { it.uid != user.uid })
-        }
-    awaitClose { listener.remove() }
+
+          // If no friends, return an empty map
+          if (friendsList.isEmpty()) {
+            onSuccess(emptyMap())
+          }
+        },
+        onFailure)
   }
 
   override fun sendVerificationCode(
@@ -400,8 +352,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   private fun documentSnapshotToUserList(
       uidJsonList: String,
-      onFailure: (Exception) -> Unit,
-      isFriend: Boolean = false
+      onFailure: (Exception) -> Unit
   ): List<User> {
     val uidList = helper.documentSnapshotToList(uidJsonList)
     val userList = emptyList<User>().toMutableList()
@@ -416,7 +367,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
             var profilePicture: ImageBitmap? = null
             imageRepository.downloadImage(
                 path, onSuccess = { pp -> profilePicture = pp }, onFailure = { e -> onFailure(e) })
-            val user = helper.documentSnapshotToUser(documentSnapshot, profilePicture, isFriend)
+            val user = helper.documentSnapshotToUser(documentSnapshot, profilePicture)
             userList += user
           } else {}
         } catch (e: Exception) {
@@ -438,19 +389,14 @@ internal class UserRepositoryFirestoreHelper() {
         "emailAddress" to user.emailAddress)
   }
 
-  fun documentSnapshotToUser(
-      document: DocumentSnapshot,
-      profilePicture: ImageBitmap?,
-      isFriend: Boolean = false
-  ): User {
+  fun documentSnapshotToUser(document: DocumentSnapshot, profilePicture: ImageBitmap?): User {
     return User(
         uid = document.data!!.get("uid").toString(),
         firstName = document.data!!.get("firstName").toString(),
         lastName = document.data!!.get("lastName").toString(),
         phoneNumber = document.data!!.get("phoneNumber").toString(),
         profilePicture = profilePicture,
-        emailAddress = document.data!!.get("emailAddress").toString(),
-        isFriend = isFriend)
+        emailAddress = document.data!!.get("emailAddress").toString())
   }
 
   fun documentSnapshotToList(uidJsonList: String): List<String> {
