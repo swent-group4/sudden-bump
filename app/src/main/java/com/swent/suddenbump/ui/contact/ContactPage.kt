@@ -114,11 +114,11 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("sendMessageButton"),
                 onClick = {
-                    userViewModel.user = user
-                    navigationActions.navigateTo(Screen.CHAT)
+                  userViewModel.user = user
+                  navigationActions.navigateTo(Screen.CHAT)
                 }) {
-                Text("Send a message")
-            }
+                  Text("Send a message")
+                }
           } else if (isFriendRequest) {
             Button(
                 modifier =

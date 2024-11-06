@@ -165,7 +165,7 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.MESS,
           route = Route.MESS,
       ) {
-        composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions)}
+        composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions) }
       }
     }
   }

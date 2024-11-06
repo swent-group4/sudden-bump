@@ -133,8 +133,7 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
         },
-        onFailure
-    )
+        onFailure)
   }
 
   fun setUser(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
@@ -291,32 +290,31 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
   fun getNewUid(): String {
     return repository.getNewUid()
   }
-    private val _messages = MutableStateFlow<List<Message>>(emptyList())
-    val messages: Flow<List<Message>> = _messages
 
-    private var chatId: String? = null
-    var user: User? = null
-    private val userId: String?
-        get() = user?.uid
+  private val _messages = MutableStateFlow<List<Message>>(emptyList())
+  val messages: Flow<List<Message>> = _messages
 
+  private var chatId: String? = null
+  var user: User? = null
+  private val userId: String?
+    get() = user?.uid
 
-    private var isGettingChatId = false
-    fun getOrCreateChat() = viewModelScope.launch {
-        if (!isGettingChatId){
-            isGettingChatId = true
-            chatId = chatRepository.getOrCreateChat(userId ?: "")
-            isGettingChatId = false
-            chatRepository.getMessages(chatId!!).collect { messages ->
-                _messages.value = messages
-            }
+  private var isGettingChatId = false
+
+  fun getOrCreateChat() =
+      viewModelScope.launch {
+        if (!isGettingChatId) {
+          isGettingChatId = true
+          chatId = chatRepository.getOrCreateChat(userId ?: "")
+          isGettingChatId = false
+          chatRepository.getMessages(chatId!!).collect { messages -> _messages.value = messages }
         }
-    }
+      }
 
-    // Send a new message and add it to Firestore
-    fun sendMessage(messageContent: String, username: String) {
-        viewModelScope.launch {
-            if (chatId != null)
-                chatRepository.sendMessage(chatId!!, messageContent, username)
-        }
+  // Send a new message and add it to Firestore
+  fun sendMessage(messageContent: String, username: String) {
+    viewModelScope.launch {
+      if (chatId != null) chatRepository.sendMessage(chatId!!, messageContent, username)
     }
+  }
 }
