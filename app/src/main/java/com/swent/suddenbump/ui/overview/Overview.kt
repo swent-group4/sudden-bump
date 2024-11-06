@@ -20,19 +20,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
+import com.swent.suddenbump.model.user.User
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
 
+fun computeRelativeDistance(user1: User, user2: User): Int {
+  return 5
+}
+
 @Composable
-fun OverviewScreen(navigationActions: NavigationActions) {
-  val mockUsers = generateMockUsers().sortedBy { it.relativeDist }
+fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+  val currentUser = userViewModel.getCurrentUser().collectAsState().value
+  val users = userViewModel.getUserFriends().collectAsState().value
 
   Scaffold(
       topBar = {
@@ -73,20 +78,21 @@ fun OverviewScreen(navigationActions: NavigationActions) {
       content = { pd ->
         Column(
             modifier = Modifier.padding(pd), horizontalAlignment = Alignment.CenterHorizontally) {
-              if (mockUsers.isNotEmpty()) {
+              if (users.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
                   var currentDist: Int? = null
-                  mockUsers.forEach { user ->
-                    if (currentDist != user.relativeDist) {
-                      currentDist = user.relativeDist
+                  users.forEach { user ->
+                    val relativeDist = computeRelativeDistance(currentUser, user)
+                    if (currentDist != relativeDist) {
+                      currentDist = relativeDist
                       item {
                         Text(
-                            text = "Distance: ${user.relativeDist} km",
+                            text = "Distance: ${relativeDist} km",
                             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                             style = MaterialTheme.typography.headlineSmall)
                       }
                     }
-                    item { UserCard(user = user, navigationActions) }
+                    item { UserCard(user = user, navigationActions, userViewModel) }
                   }
                 }
               } else {
@@ -100,10 +106,10 @@ fun OverviewScreen(navigationActions: NavigationActions) {
       })
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewOverviewScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  OverviewScreen(navigationActions)
-}
+// @Preview(showBackground = true)
+// @Composable
+// fun PreviewOverviewScreen() {
+//  val navController = rememberNavController()
+//  val navigationActions = NavigationActions(navController)
+//  OverviewScreen(navigationActions)
+// }
