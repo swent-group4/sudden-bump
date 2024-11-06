@@ -196,27 +196,27 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     return repository.getNewUid()
   }
 
-    fun sendVerificationCode(phoneNumber: String) {
-        _phoneNumber.value = phoneNumber
-        repository.sendVerificationCode(
-            phoneNumber,
-            onSuccess = { verificationId ->
-                _verificationId.postValue(verificationId) // Store the verification ID
-                _verificationStatus.postValue("Code Sent")
-            },
-            onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })
-    }
+  fun sendVerificationCode(phoneNumber: String) {
+    _phoneNumber.value = phoneNumber
+    repository.sendVerificationCode(
+        phoneNumber,
+        onSuccess = { verificationId ->
+          _verificationId.postValue(verificationId) // Store the verification ID
+          _verificationStatus.postValue("Code Sent")
+        },
+        onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })
+  }
 
-    fun verifyCode(code: String) {
-        val verificationIdValue = _verificationId.value
-        if (verificationIdValue != null) {
-            repository.verifyCode(
-                verificationIdValue,
-                code,
-                onSuccess = { _verificationStatus.postValue("Phone Verified") },
-                onFailure = { _verificationStatus.postValue("Verification failed: ${it.message}") })
-        } else {
-            _verificationStatus.postValue("Verification ID is missing.")
-        }
+  fun verifyCode(code: String) {
+    val verificationIdValue = _verificationId.value
+    if (verificationIdValue != null) {
+      repository.verifyCode(
+          verificationIdValue,
+          code,
+          onSuccess = { _verificationStatus.postValue("Phone Verified") },
+          onFailure = { _verificationStatus.postValue("Verification failed: ${it.message}") })
+    } else {
+      _verificationStatus.postValue("Verification ID is missing.")
     }
+  }
 }

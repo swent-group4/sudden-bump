@@ -16,9 +16,9 @@ import com.google.firebase.storage.ktx.storage
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
-import java.util.concurrent.TimeUnit
 
 class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
 
