@@ -4,6 +4,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.swent.suddenbump.model.user.UserRepository
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
@@ -16,14 +18,19 @@ import org.mockito.kotlin.verify
 
 class OverviewScreenTest {
   private lateinit var navigationActions: NavigationActions
+  private lateinit var userRepository: UserRepository
+  private lateinit var userViewModel: UserViewModel
+
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
+    userRepository = mock(UserRepository::class.java)
+    userViewModel = UserViewModel(userRepository)
 
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
-    composeTestRule.setContent { OverviewScreen(navigationActions) }
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
   }
 
   @Test
