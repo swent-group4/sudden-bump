@@ -15,14 +15,14 @@ import com.swent.suddenbump.ui.settings.*
 
 @Composable
 fun NavigationSettingsScreen(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "settings") {
-        composable("settings") { SettingsScreen(NavigationActions(navController)) }
-        composable("UsernameAndPhotoScreen") { UsernameAndPhotoScreen() }
-        composable("AccountScreen") { AccountScreen(NavigationActions(navController)) }
-        composable("ConfidentialityScreen") { ConfidentialityScreen(NavigationActions(navController)) }
-        composable("DiscussionsScreen") { DiscussionScreen(NavigationActions(navController)) }
-        composable("NotificationsScreen") { NotificationScreen(NavigationActions(navController)) }
-        composable("StorageAndDataScreen") { StorageAndDataScreen(NavigationActions(navController)) }
-        composable("HelpScreen") { HelpScreen(NavigationActions(navController)) }
-    }
+  NavHost(navController = navController, startDestination = "settings") {
+    composable("settings") { SettingsScreen(NavigationActions(navController)) }
+    composable("UsernameAndPhotoScreen") { UsernameAndPhotoScreen() }
+    composable("AccountScreen") { AccountScreen(NavigationActions(navController)) }
+    composable("ConfidentialityScreen") { ConfidentialityScreen(NavigationActions(navController)) }
+    composable("DiscussionsScreen") { DiscussionScreen(NavigationActions(navController)) }
+    composable("NotificationsScreen") { NotificationScreen(NavigationActions(navController)) }
+    composable("StorageAndDataScreen") { StorageAndDataScreen(NavigationActions(navController)) }
+    composable("HelpScreen") { HelpScreen(NavigationActions(navController)) }
+  }
 }

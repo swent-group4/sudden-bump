@@ -13,192 +13,161 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfidentialityScreen(navigationActions: NavigationActions) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Confidentiality") },
-                navigationIcon = {
-                    IconButton(onClick = { navigationActions.goBack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        },
-        content = { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Online Presence Section
-                Text("Online presence")
-                Text("Who can see my last time online")
-                OnlinePresenceOptions()
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = { Text("Confidentiality") },
+            navigationIcon = {
+              IconButton(onClick = { navigationActions.goBack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = "Back")
+              }
+            })
+      },
+      content = { paddingValues ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+              // Online Presence Section
+              Text("Online presence")
+              Text("Who can see my last time online")
+              OnlinePresenceOptions()
 
-                Text("Who can see when I am online")
-                OnlineStatusOptions()
+              Text("Who can see when I am online")
+              OnlineStatusOptions()
 
-                Divider()
+              Divider()
 
-                // Profile Photo Section
-                Text("Profile photo")
-                Text("Who can see my profile photo")
-                ProfilePhotoOptions()
+              // Profile Photo Section
+              Text("Profile photo")
+              Text("Who can see my profile photo")
+              ProfilePhotoOptions()
 
-                Divider()
+              Divider()
 
-                // My Info Section
-                Text("My info")
-                Text("Who can see my info")
-                MyInfoOptions()
+              // My Info Section
+              Text("My info")
+              Text("Who can see my info")
+              MyInfoOptions()
 
-                Divider()
+              Divider()
 
-                // Groups Section
-                Text("Groups")
-                Text("Who can add me to groups")
-                GroupsOptions()
+              // Groups Section
+              Text("Groups")
+              Text("Who can add me to groups")
+              GroupsOptions()
 
-                Divider()
+              Divider()
 
-                // Status Section
-                Text("Status")
-                Text("Who can see my status")
-                StatusOptions()
+              // Status Section
+              Text("Status")
+              Text("Who can see my status")
+              StatusOptions()
 
-                Divider()
+              Divider()
 
-                // Blocked Contacts Section
-                Text("Blocked Contacts")
-                Button(onClick = { /* Add logic to add blocked contacts */ }) {
-                    Text("Add to blocked contacts")
-                }
+              // Blocked Contacts Section
+              Text("Blocked Contacts")
+              Button(onClick = { /* Add logic to add blocked contacts */}) {
+                Text("Add to blocked contacts")
+              }
             }
-        }
-    )
+      })
 }
 
 @Composable
 fun OnlinePresenceOptions() {
-    val options = listOf("Everyone", "My contacts", "My contacts except...", "No one")
-    var selectedOption by remember { mutableStateOf(options[0]) }
+  val options = listOf("Everyone", "My contacts", "My contacts except...", "No one")
+  var selectedOption by remember { mutableStateOf(options[0]) }
 
-    options.forEach { option ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(option)
-            RadioButton(
-                selected = (selectedOption == option),
-                onClick = { selectedOption = option }
-            )
+  options.forEach { option ->
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(option)
+          RadioButton(selected = (selectedOption == option), onClick = { selectedOption = option })
         }
-    }
+  }
 }
 
 @Composable
 fun OnlineStatusOptions() {
-    val options = listOf("Everyone", "Same as last time online")
-    var selectedOption by remember { mutableStateOf(options[0]) }
+  val options = listOf("Everyone", "Same as last time online")
+  var selectedOption by remember { mutableStateOf(options[0]) }
 
-    options.forEach { option ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(option)
-            RadioButton(
-                selected = (selectedOption == option),
-                onClick = { selectedOption = option }
-            )
+  options.forEach { option ->
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(option)
+          RadioButton(selected = (selectedOption == option), onClick = { selectedOption = option })
         }
-    }
+  }
 }
 
 @Composable
 fun ProfilePhotoOptions() {
-    val options = listOf("Everyone", "My contacts", "My contacts except...", "No one")
-    var selectedOption by remember { mutableStateOf(options[0]) }
+  val options = listOf("Everyone", "My contacts", "My contacts except...", "No one")
+  var selectedOption by remember { mutableStateOf(options[0]) }
 
-    options.forEach { option ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(option)
-            RadioButton(
-                selected = (selectedOption == option),
-                onClick = { selectedOption = option }
-            )
+  options.forEach { option ->
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(option)
+          RadioButton(selected = (selectedOption == option), onClick = { selectedOption = option })
         }
-    }
+  }
 }
 
 @Composable
 fun MyInfoOptions() {
-    val options = listOf("Everyone", "My contacts", "My contacts except...", "No one")
-    var selectedOption by remember { mutableStateOf(options[0]) }
+  val options = listOf("Everyone", "My contacts", "My contacts except...", "No one")
+  var selectedOption by remember { mutableStateOf(options[0]) }
 
-    options.forEach { option ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(option)
-            RadioButton(
-                selected = (selectedOption == option),
-                onClick = { selectedOption = option }
-            )
+  options.forEach { option ->
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(option)
+          RadioButton(selected = (selectedOption == option), onClick = { selectedOption = option })
         }
-    }
+  }
 }
 
 @Composable
 fun GroupsOptions() {
-    val options = listOf("Everyone", "My contacts", "My contacts except...")
-    var selectedOption by remember { mutableStateOf(options[0]) }
+  val options = listOf("Everyone", "My contacts", "My contacts except...")
+  var selectedOption by remember { mutableStateOf(options[0]) }
 
-    options.forEach { option ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(option)
-            RadioButton(
-                selected = (selectedOption == option),
-                onClick = { selectedOption = option }
-            )
+  options.forEach { option ->
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(option)
+          RadioButton(selected = (selectedOption == option), onClick = { selectedOption = option })
         }
-    }
+  }
 }
 
 @Composable
 fun StatusOptions() {
-    val options = listOf("Everyone", "My contacts", "My contacts except...")
-    var selectedOption by remember { mutableStateOf(options[0]) }
+  val options = listOf("Everyone", "My contacts", "My contacts except...")
+  var selectedOption by remember { mutableStateOf(options[0]) }
 
-    options.forEach { option ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(option)
-            RadioButton(
-                selected = (selectedOption == option),
-                onClick = { selectedOption = option }
-            )
+  options.forEach { option ->
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(option)
+          RadioButton(selected = (selectedOption == option), onClick = { selectedOption = option })
         }
-    }
+  }
 }
