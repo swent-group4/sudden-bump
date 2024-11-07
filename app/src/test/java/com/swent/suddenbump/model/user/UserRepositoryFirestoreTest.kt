@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.user
 
+import android.app.Activity
 import android.location.Location
 import android.os.Looper
 import androidx.compose.ui.graphics.ImageBitmap
@@ -7,8 +8,12 @@ import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
@@ -25,10 +30,13 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.MockedStatic
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.mockStatic
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.timeout
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -415,5 +423,61 @@ class UserRepositoryFirestoreTest {
 
     result = helper.uidToProfilePicturePath("user@123", storageReference)
     assertEquals("gs:/user123.jpeg/user@123.jpeg", result)
+  }
+
+  @Test
+  fun testSendVerificationCode() {
+    val phoneNumber = "+1234567890"
+    val verificationId = "verificationId"
+
+    val callbacks = mock(PhoneAuthProvider.OnVerificationStateChangedCallbacks::class.java)
+    doAnswer {
+          callbacks.onCodeSent(
+              verificationId, mock(PhoneAuthProvider.ForceResendingToken::class.java))
+        }
+        .`when`(callbacks)
+        .onCodeSent(any(), any())
+
+    val mockActivity = mock(Activity::class.java)
+
+    val options =
+        PhoneAuthOptions.newBuilder(mockFirebaseAuth)
+            .setPhoneNumber(phoneNumber)
+            .setTimeout(60L, java.util.concurrent.TimeUnit.SECONDS)
+            .setActivity(mockActivity)
+            .setCallbacks(callbacks)
+            .build()
+
+    PhoneAuthProvider.verifyPhoneNumber(options)
+
+    userRepositoryFirestore.sendVerificationCode(
+        phoneNumber, { id -> assertEquals(verificationId, id) }, { fail("Verification failed") })
+  }
+
+  @Test
+  fun testVerifyCode() {
+    val verificationId = "verificationId"
+    val code = "123456"
+    val credential = mock(PhoneAuthCredential::class.java)
+
+    // Mock the static method PhoneAuthProvider.getCredential
+    val phoneAuthProviderMockStatic = mockStatic(PhoneAuthProvider::class.java)
+    phoneAuthProviderMockStatic
+        .`when`<PhoneAuthCredential> { PhoneAuthProvider.getCredential(verificationId, code) }
+        .thenReturn(credential)
+
+    val authResultTask = Tasks.forResult(mock(AuthResult::class.java))
+    `when`(mockFirebaseAuth.signInWithCredential(eq(credential))).thenReturn(authResultTask)
+
+    userRepositoryFirestore.verifyCode(
+        verificationId,
+        code,
+        {
+          // Success
+        },
+        { fail("Verification failed") })
+
+    // Close the static mock after the test
+    phoneAuthProviderMockStatic.close()
   }
 }

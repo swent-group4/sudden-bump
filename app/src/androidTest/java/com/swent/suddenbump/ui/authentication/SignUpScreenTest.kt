@@ -10,51 +10,37 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.MockedStatic
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 
 class SignUpScreenTest {
 
   private lateinit var userRepository: UserRepository
   private lateinit var navigationActions: NavigationActions
   private lateinit var userViewModel: UserViewModel
-  private lateinit var firebaseAuth: FirebaseAuth
-  private lateinit var firebaseAuthMock: MockedStatic<FirebaseAuth>
-  @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+  private lateinit var mockFirebaseAuth: FirebaseAuth
+  private lateinit var mockFirebaseUser: FirebaseUser
 
-  //  @Mock
-  //  lateinit var mockLauncher: ActivityResultLauncher<Intent> // not used yet - needed to mock
-  // uCrop
+  @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   @Before
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
     navigationActions = mock(NavigationActions::class.java)
     userViewModel = UserViewModel(userRepository)
-    /*firebaseAuth = mock(FirebaseAuth::class.java)
 
-    // Mock the static method getInstance()
-    firebaseAuthMock = mockStatic(FirebaseAuth::class.java)
-    firebaseAuthMock.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }.thenReturn(firebaseAuth)
-
-    doNothing().`when`(firebaseAuth).signOut()
-    `when`(firebaseAuth.currentUser?.email).thenReturn("john.doe@example.com")*/
+    // Mock FirebaseAuth and FirebaseUser
+    /*mockFirebaseAuth = mock(FirebaseAuth::class.java)
+    mockFirebaseUser = mock(FirebaseUser::class.java)
+    `when`(mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser)
+    `when`(mockFirebaseUser.email).thenReturn("test@example.com")*/
   }
-
-  /*@After
-  fun tearDown() {
-    // Check if firebaseAuthMock is initialized before closing it
-    if (::firebaseAuthMock.isInitialized) {
-      firebaseAuthMock.close()
-    }
-  }*/
 
   @Test
   fun testSignUpScreen_initialState() {
@@ -67,9 +53,16 @@ class SignUpScreenTest {
     composeTestRule.onNodeWithTag("emailField").assertIsNotEnabled()
     composeTestRule.onNodeWithTag("phoneField").assertExists()
     composeTestRule.onNodeWithTag("createAccountButton").assertExists()
+    composeTestRule.onNodeWithTag("createAccountButton").assertIsNotEnabled()
 
     // Check that the profile picture button is displayed
     composeTestRule.onNodeWithTag("noProfilePic", useUnmergedTree = true).assertExists()
+
+    // Check that the profile picture button is clickable
+    composeTestRule.onNodeWithTag("profilePictureButton").assertHasClickAction()
+
+    composeTestRule.onNodeWithTag("sendCodeButton").assertExists()
+    composeTestRule.onNodeWithTag("sendCodeButton").assertIsNotEnabled()
   }
 
   @Test
@@ -77,7 +70,7 @@ class SignUpScreenTest {
     // Set the initial content for testing
     composeTestRule.setContent { SignUpScreen(navigationActions, userViewModel) }
 
-    `when`(userViewModel.getNewUid()).thenReturn("UnIntGenre5")
+    //    `when`(userViewModel.getNewUid()).thenReturn("UnIntGenre5")
 
     // Test user input in the text fields
     composeTestRule.onNodeWithTag("firstNameField").performTextInput("John")
@@ -88,10 +81,18 @@ class SignUpScreenTest {
 
     composeTestRule.onNodeWithTag("emailField").assertIsNotEnabled()
 
-    composeTestRule.onNodeWithTag("phoneField").performTextInput("+1234567890")
-    composeTestRule.onNodeWithTag("phoneField").assertTextContains("+1 234-567-890")
+    composeTestRule.onNodeWithTag("phoneField").performTextInput("+33613507628")
+    composeTestRule.onNodeWithTag("phoneField").assertTextContains("+33 6 13 50 76 28")
 
-    composeTestRule.onNodeWithTag("createAccountButton").performClick()
+    composeTestRule.onNodeWithTag("sendCodeButton").assertHasClickAction()
+    composeTestRule.onNodeWithTag("sendCodeButton").performClick()
+
+    composeTestRule.onNodeWithTag("codeField").assertExists()
+    composeTestRule.onNodeWithTag("verifyCodeButton").assertExists()
+    composeTestRule.onNodeWithTag("verifyCodeButton").assertIsNotEnabled()
+    composeTestRule.onNodeWithTag("codeField").performTextInput("123456")
+    composeTestRule.onNodeWithTag("verifyCodeButton").assertHasClickAction()
+    composeTestRule.onNodeWithTag("verifyCodeButton").performClick()
   }
 
   @Test
@@ -110,79 +111,5 @@ class SignUpScreenTest {
 
     // Perform button click
     composeTestRule.onNodeWithTag("profilePictureButton").assertHasClickAction()
-    //        composeTestRule.onNodeWithTag("noProfilePic").assertIsDisplayed()
-
-    // Perform create account button click
-    //    composeTestRule.onNodeWithTag("createAccountButton").performClick()
-    //    verify(navigationActions).navigateTo(Screen.OVERVIEW)
   }
-
-  /*@Test
-  fun testProfilePictureUpload() { // Having difficulty setting up this test and mocking uCrop
-    // Set up the content in the test
-    composeTestRule.setContent {
-      SignUpScreen(navigationActions, userViewModel)
-    }
-
-    // Prepare the Uri for the cropped image
-    val croppedImageUri = Uri.parse("content://path/to/cropped/image.jpg")
-    val resultIntent = Intent().apply {
-      putExtra(UCrop.EXTRA_OUTPUT_URI, croppedImageUri)
-    }
-
-    // Mock the result from UCrop
-    val result = Instrumentation.ActivityResult(Activity.RESULT_OK, resultIntent)
-
-    // Mock the behavior of the UCrop launcher
-    `when`(mockLauncher.launch(any())).then {
-      mockLauncher.launch(resultIntent)  // This is just an illustrative example
-    }
-
-
-    // Trigger the profile picture upload by clicking the button
-    composeTestRule.onNodeWithTag("profilePictureButton").performClick()
-
-    // Here you would simulate the result of the UCrop in the launcher
-    // This assumes your UI reacts to the result being set
-    mockLauncher.launch(resultIntent)
-
-    // Verify that the profile picture was uploaded correctly
-    composeTestRule.onNodeWithTag("profilePicture").assertExists()
-  }
-
-  @Test
-  fun testCreateAccountButton_success() { // Not yet implemented as we need to mock the navigation actions
-    composeTestRule.setContent {
-      SignUpScreen(navigationActions, userViewModel)
-    }
-
-    // Fill the form with valid data
-    composeTestRule.onNodeWithTag("firstNameField").performTextInput("John")
-    composeTestRule.onNodeWithTag("lastNameField").performTextInput("Doe")
-    composeTestRule.onNodeWithTag("emailField").performTextInput("john.doe@example.com")
-    composeTestRule.onNodeWithTag("phoneField").performTextInput("+123456789")
-
-    // Simulate clicking on the "Create Account" button
-    composeTestRule.onNodeWithTag("createAccountButton").performClick()
-
-    // e.g., mockNavigationActions().navigateTo(Screen.OVERVIEW)
-  }
-
-  @Test
-  fun testCreateAccountButton_failure() { // Need to make sure the create account button fails when the form is incomplete
-    composeTestRule.setContent {
-      SignUpScreen(navigationActions, userViewModel)
-    }
-
-    // Fill the form with some invalid data
-    composeTestRule.onNodeWithTag("firstNameField").performTextInput("John")
-    composeTestRule.onNodeWithTag("lastNameField").performTextInput("Doe")
-    composeTestRule.onNodeWithTag("emailField").performTextInput("")
-
-    // Simulate clicking on the "Create Account" button
-    composeTestRule.onNodeWithTag("createAccountButton").performClick()
-
-    // Check for failure Toast
-    composeTestRule.onNodeWithText("Account creation failed").assertExists()
-  }*/
 }

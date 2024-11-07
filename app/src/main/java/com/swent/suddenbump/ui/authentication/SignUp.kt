@@ -1,28 +1,40 @@
 package com.swent.suddenbump.ui.authentication
 
+import android.app.Activity
 import android.net.Uri
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
+import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.TopLevelDestinations
 import com.swent.suddenbump.ui.utils.PhoneNumberVisualTransformation
+import com.yalantis.ucrop.UCrop
+import java.io.File
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,10 +46,34 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
   var verificationCode by remember { mutableStateOf("") }
   var isCodeSent by remember { mutableStateOf(false) }
   var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
+  val coroutineScope = rememberCoroutineScope()
   val context = LocalContext.current
   val verificationStatus by userViewModel.verificationStatus.observeAsState()
 
-  // Image picker and cropping logic...
+  val cropLauncher =
+      rememberLauncherForActivityResult(
+          contract = ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+              result.data?.let { data ->
+                val resultUri = UCrop.getOutput(data)
+                profilePictureUri = resultUri
+              }
+            }
+          }
+
+  val launcher =
+      rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
+        ->
+        uri?.let {
+          val destinationUri = Uri.fromFile(File(context.cacheDir, "cropped_image.jpg"))
+          val uCropIntent =
+              UCrop.of(it, destinationUri)
+                  .withAspectRatio(1f, 1f)
+                  .withMaxResultSize(512, 512)
+                  .getIntent(context)
+          cropLauncher.launch(uCropIntent)
+        }
+      }
 
   Scaffold(
       topBar = {
@@ -51,7 +87,32 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
       },
       content = { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-          // Profile picture logic...
+          Box(
+              modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+              contentAlignment = Alignment.Center) {
+                IconButton(
+                    onClick = { coroutineScope.launch { launcher.launch("image/*") } },
+                    modifier =
+                        Modifier.size(64.dp)
+                            .background(Color.Gray, CircleShape)
+                            .testTag("profilePictureButton")) {
+                      if (profilePictureUri != null) {
+                        val bitmap =
+                            MediaStore.Images.Media.getBitmap(
+                                LocalContext.current.contentResolver, profilePictureUri)
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Profile Picture",
+                            modifier = Modifier.size(64.dp).testTag("profilePicture"))
+                      } else {
+                        Icon(
+                            painter = painterResource(id = R.drawable.outline_add_a_photo_24),
+                            contentDescription = "Import Profile Picture",
+                            tint = Color.White,
+                            modifier = Modifier.testTag("noProfilePic"))
+                      }
+                    }
+              }
 
           OutlinedTextField(
               value = firstName,

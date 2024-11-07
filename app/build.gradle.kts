@@ -221,6 +221,7 @@ dependencies {
     testImplementation(libs.json)
     globalTestImplementation(libs.kaspresso)
     globalTestImplementation(libs.kaspresso.compose)
+    testImplementation(libs.core.testing)
 
     // Networking with OkHttp
     implementation(libs.okhttp)
