@@ -167,9 +167,8 @@ open class UserViewModel(
       onFailure: (Exception) -> Unit
   ) {
     repository.createFriend(user, friend, onSuccess, onFailure)
-    repository.createFriend(friend, user, onSuccess, onFailure)
-    _sentFriendRequests.value = _sentFriendRequests.value.minus(friend)
-    _userFriendRequests.value = _userFriendRequests.value.plus(friend)
+    _userFriendRequests.value = _userFriendRequests.value.minus(friend)
+    _userFriends.value = _userFriends.value.plus(friend)
   }
 
   fun sendFriendRequest(
@@ -194,16 +193,6 @@ open class UserViewModel(
     return _userFriendRequests.asStateFlow()
   }
 
-  fun setUserFriendRequests(
-      user: User = _user.value,
-      friendRequestsList: List<User>,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    _userFriendRequests.value = friendRequestsList
-    repository.setUserFriendRequests(user, friendRequestsList, onSuccess, onFailure)
-  }
-
   fun setUserFriends(
       user: User = _user.value,
       friendsList: List<User>,
@@ -220,16 +209,6 @@ open class UserViewModel(
 
   fun getSentFriendRequests(): StateFlow<List<User>> {
     return _sentFriendRequests.asStateFlow()
-  }
-
-  fun setSentFriendRequests(
-      user: User = _user.value,
-      sentRequestsList: List<User>,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    _sentFriendRequests.value = sentRequestsList
-    repository.setSentFriendRequests(user, sentRequestsList, onSuccess, onFailure)
   }
 
   fun getBlockedFriends(): StateFlow<List<User>> {
