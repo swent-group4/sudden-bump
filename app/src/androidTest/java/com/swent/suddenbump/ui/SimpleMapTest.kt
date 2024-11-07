@@ -2,6 +2,7 @@ package com.swent.suddenbump.ui
 
 import android.location.Location
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
@@ -16,6 +17,7 @@ class SimpleMapTest {
   @get:Rule val composeTestRule = createComposeRule()
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
+  private lateinit var chatRepository: ChatRepository
 
   private val user =
       User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
@@ -23,7 +25,8 @@ class SimpleMapTest {
   @Before
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
-    userViewModel = UserViewModel(userRepository)
+    chatRepository = mock(ChatRepository::class.java)
+    userViewModel = UserViewModel(userRepository, chatRepository)
   }
 
   @Test

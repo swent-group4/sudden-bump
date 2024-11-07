@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.google.firebase.auth.FirebaseAuth
+import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -27,6 +28,7 @@ class SignUpScreenTest {
   private lateinit var userViewModel: UserViewModel
   private lateinit var firebaseAuth: FirebaseAuth
   private lateinit var firebaseAuthMock: MockedStatic<FirebaseAuth>
+  private lateinit var chatRepository: ChatRepository
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   //  @Mock
@@ -37,7 +39,8 @@ class SignUpScreenTest {
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
     navigationActions = mock(NavigationActions::class.java)
-    userViewModel = UserViewModel(userRepository)
+    chatRepository = mock(ChatRepository::class.java)
+    userViewModel = UserViewModel(userRepository, chatRepository)
     /*firebaseAuth = mock(FirebaseAuth::class.java)
 
     // Mock the static method getInstance()
