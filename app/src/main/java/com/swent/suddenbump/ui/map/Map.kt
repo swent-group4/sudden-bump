@@ -145,66 +145,6 @@ fun FriendsMarkers(userViewModel: UserViewModel) {
       }
     }
   }
-
-  /*val mockImageBitmap: ImageBitmap? = null // assuming null for simplicity
-
-  // Create mock users
-  val user1 =
-      User(
-          uid = "1",
-          firstName = "John",
-          lastName = "Doe",
-          phoneNumber = "123456789",
-          profilePicture = mockImageBitmap,
-          emailAddress = "john.doe@example.com")
-
-  val user2 =
-      User(
-          uid = "2",
-          firstName = "Jane",
-          lastName = "Smith",
-          phoneNumber = "987654321",
-          profilePicture = mockImageBitmap,
-          emailAddress = "jane.smith@example.com")
-
-  val user3 =
-      User(
-          uid = "3",
-          firstName = "Alice",
-          lastName = "Johnson",
-          phoneNumber = "555666777",
-          profilePicture = mockImageBitmap,
-          emailAddress = "alice.johnson@example.com")
-
-  // Create mock locations
-  val location1 =
-      Location("mock_provider").apply {
-        latitude = 46.5186664
-        longitude = 6.568274
-      }
-  val location2 =
-      Location("mock_provider").apply {
-        latitude = 46.521083
-        longitude = 6.575470
-      }
-  val location3 =
-      Location("mock_provider").apply {
-        latitude = 46.522836
-        longitude = 6.565142
-      }
-
-  // Create Map<User, Location>
-  val userLocationMap: Map<User, Location> =
-      mapOf(user1 to location1, user2 to location2, user3 to location3)
-
-  userLocationMap.let { locations ->
-    locations.forEach { (friend, location) ->
-      Marker(
-          state = MarkerState(position = LatLng(location.latitude, location.longitude)),
-          title = friend.firstName,
-          snippet = friend.uid,
-      )
-    }*/
 }
 
 fun getLocationMarkerBitmap(): Bitmap {

@@ -1,8 +1,14 @@
 package com.swent.suddenbump.model.user
 
 import android.location.Location
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
@@ -26,10 +32,18 @@ class UserViewModelTest {
   private val user =
       User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
 
+  private val testDispatcher = StandardTestDispatcher()
+
   @Before
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
     userViewModel = UserViewModel(userRepository)
+    Dispatchers.setMain(testDispatcher)
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
   }
 
   @Test
@@ -221,24 +235,22 @@ class UserViewModelTest {
   @Test
   fun loadFriendsLocations_success() {
     // Arrange
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
     val friendLocation =
         Location("mock_provider").apply {
           latitude = 1.0
           longitude = 1.0
         }
-    val friendsMap =
-        mapOf(
-            User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com") to
-                friendLocation)
+    val friendsMap = mapOf(friend to friendLocation)
 
-    // Mock repository method for loading friend locations
+    // Mock the repository method to call the onSuccess callback with the friendsMap
     whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
       val onSuccess = it.getArgument<(Map<User, Location?>) -> Unit>(1)
       onSuccess(friendsMap)
     }
 
     // Act
-    userViewModel.loadFriendsLocations()
+    runBlocking { userViewModel.loadFriendsLocations() }
 
     // Assert
     assertThat(userViewModel.friendsLocations.value, `is`(friendsMap))
@@ -250,8 +262,6 @@ class UserViewModelTest {
     // Arrange
     val errorMessage = "Failed to fetch friends' locations"
     val exception = Exception(errorMessage)
-    val userRepository: UserRepository = mock() // Mock the UserRepository
-    userViewModel = UserViewModel(userRepository) // Instantiate the ViewModel
 
     // Mock repository method to simulate a failure
     whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
@@ -261,12 +271,11 @@ class UserViewModelTest {
 
     // Act
     userViewModel.loadFriendsLocations()
+    testDispatcher.scheduler.advanceUntilIdle() // Ensure coroutines complete
 
     // Assert
     verify(userRepository).getFriendsLocation(any(), any(), any())
-    // You can check if the error message is stored or if any state is updated here
-    // For example, you might want to check a state variable that tracks loading status or error
-    // state.
+    // Additional checks can be added to validate that the error state is handled properly
   }
 
   @Test

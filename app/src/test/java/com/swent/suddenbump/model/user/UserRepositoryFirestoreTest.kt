@@ -2,6 +2,8 @@ package com.swent.suddenbump.model.user
 
 import android.location.Location
 import android.os.Looper
+import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.tasks.Task
@@ -298,21 +300,42 @@ class UserRepositoryFirestoreTest {
     val friend1 = User("uid1", "Friend1", "Test", "000", null, "friend1@example.com")
     val friend2 = User("uid2", "Friend2", "Test", "000", null, "friend2@example.com")
 
+    val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
+
+    val location1 = mock(Location::class.java)
+    val snapshot1 = mock(DocumentSnapshot::class.java)
+    val snapshot2 = mock(DocumentSnapshot::class.java)
+
     // Mock the snapshot locations
-    whenever(snapshot1.get("location")).thenReturn(mock(Location::class.java))
+    whenever(snapshot1.get("location")).thenReturn(location1)
     whenever(snapshot2.get("location")).thenReturn(null)
 
+    // Mock the user repository to return the snapshots
+    val userRepositoryFirestore = mock(UserRepositoryFirestore::class.java)
+    whenever(userRepositoryFirestore.getFriendsLocation(any(), any(), any())).thenAnswer {
+      val onSuccess = it.getArgument<(Map<User, Location?>) -> Unit>(1)
+      val result = mapOf(friend1 to location1, friend2 to null)
+      onSuccess(result)
+    }
+
     // Define the expected map
-    val expectedMap = mapOf(friend1 to snapshot1.get("location") as Location?, friend2 to null)
+    val expectedMap = mapOf(friend1 to location1, friend2 to null)
 
     // When
     userRepositoryFirestore.getFriendsLocation(
         listOf(friend1, friend2),
-        { friendsLoc ->
-          // Then
-          assert(friendsLoc == expectedMap)
+        onSuccess = { friendsLoc ->
+          // Update the state with the locations of friends
+          friendsLocations.value = friendsLoc
+          println("friendsLoc: $friendsLoc")
+          println("expectedMap: $expectedMap")
+          assertEquals(expectedMap, friendsLoc)
         },
-        { fail("Failure callback should not be called") })
+        onFailure = { error ->
+          // Handle the error, e.g., log or show error message
+          Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
+          fail("Expected successful callback but got failure: ${error.message}")
+        })
   }
 
   @Test
