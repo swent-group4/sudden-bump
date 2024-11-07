@@ -5,16 +5,28 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
+import com.swent.suddenbump.model.chat.ChatSummary
+import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-open class UserViewModel(private val repository: UserRepository) : ViewModel() {
+open class UserViewModel(
+    private val repository: UserRepository,
+    private val chatRepository: ChatRepository
+) : ViewModel() {
 
   private val logTag = "UserViewModel"
+  private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
+  val chatSummaries: Flow<List<ChatSummary>> = _chatSummaries.asStateFlow()
   private val profilePicture = ImageBitMapIO()
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
@@ -61,7 +73,10 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
         object : ViewModelProvider.Factory {
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return UserViewModel(UserRepositoryFirestore(Firebase.firestore)) as T
+            return UserViewModel(
+                UserRepositoryFirestore(Firebase.firestore),
+                ChatRepositoryFirestore(Firebase.firestore))
+                as T
           }
         }
   }
@@ -299,5 +314,32 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
   fun getNewUid(): String {
     return repository.getNewUid()
+  }
+
+  private val _messages = MutableStateFlow<List<Message>>(emptyList())
+  val messages: Flow<List<Message>> = _messages
+
+  private var chatId: String? = null
+  var user: User? = null
+  private val userId: String?
+    get() = user?.uid
+
+  private var isGettingChatId = false
+
+  fun getOrCreateChat() =
+      viewModelScope.launch {
+        if (!isGettingChatId) {
+          isGettingChatId = true
+          chatId = chatRepository.getOrCreateChat(userId ?: "")
+          isGettingChatId = false
+          chatRepository.getMessages(chatId!!).collect { messages -> _messages.value = messages }
+        }
+      }
+
+  // Send a new message and add it to Firestore
+  fun sendMessage(messageContent: String, username: String) {
+    viewModelScope.launch {
+      if (chatId != null) chatRepository.sendMessage(chatId!!, messageContent, username)
+    }
   }
 }

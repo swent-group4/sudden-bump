@@ -58,6 +58,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -90,21 +91,10 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
-        //packagingOptions { jniLibs { useLegacyPackaging = true } }
     }
 
-    buildFeatures {
-        compose = true
-        buildConfig = true
-    }
-
-    kotlinOptions { jvmTarget = "11" }
-
-    // Robolectric needs to be run only in debug. But its tests are placed in the shared source set
-    // (test)
-    // The next lines transfers the src/test/* from shared to the testDebug one
-    //
-    // This prevent errors from occurring during unit tests
+    // Robolectric needs to be run only in debug. But its tests are placed in the shared source set (test)
+    // The next lines transfer the src/test/* from shared to the testDebug one
     sourceSets.getByName("testDebug") {
         val test = sourceSets.getByName("test")
 
@@ -135,7 +125,7 @@ sonar {
     }
 }
 
-// When a library is used both by robolectric and connected tests, use this function
+// When a library is used both by Robolectric and connected tests, use this function
 fun DependencyHandlerScope.globalTestImplementation(dep: Any) {
     androidTestImplementation(dep)
     testImplementation(dep)
@@ -148,6 +138,44 @@ buildscript {
 }
 
 dependencies {
+    // Firebase BoM
+    implementation(platform(libs.firebase.bom))
+    testImplementation(platform(libs.firebase.bom))
+    androidTestImplementation(platform(libs.firebase.bom))
+
+    // Firebase dependencies with protobuf-lite excluded
+    implementation(libs.firebase.firestore) {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
+    testImplementation(libs.firebase.firestore) {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
+    androidTestImplementation(libs.firebase.firestore) {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
+
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.ui.auth)
+
+    // Explicitly include protobuf-javalite
+    implementation("com.google.protobuf:protobuf-javalite:3.21.12")
+    testImplementation("com.google.protobuf:protobuf-javalite:3.21.12")
+    androidTestImplementation("com.google.protobuf:protobuf-javalite:3.21.12")
+
+    // Exclude protobuf-lite globally in test configurations
+    configurations {
+        named("testImplementation") {
+            exclude(group = "com.google.protobuf", module = "protobuf-lite")
+        }
+        named("androidTestImplementation") {
+            exclude(group = "com.google.protobuf", module = "protobuf-lite")
+        }
+    }
+
+    // Other dependencies...
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -157,34 +185,27 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.test.core.ktx)
     implementation(libs.androidx.lifecycle.common.jvm)
-    implementation(libs.firebase.storage.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
 
-    // ------------- Jetpack Compose ------------------
+    // Jetpack Compose
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     globalTestImplementation(composeBom)
 
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
-    // Material Design 3
     implementation(libs.compose.material3)
-    // Integration with activities
     implementation(libs.compose.activity)
-    // Integration with ViewModels
     implementation(libs.compose.viewmodel)
-    // Android Studio Preview support
     implementation(libs.compose.preview)
     debugImplementation(libs.compose.tooling)
-    // UI Tests
     globalTestImplementation(libs.compose.test.junit)
     debugImplementation(libs.compose.test.manifest)
 
-
-    // ----------       Robolectric     ------------
+    // Robolectric
     testImplementation(libs.robolectric)
 
     // Navigation
@@ -192,26 +213,23 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-
     // Phone number formatting
     implementation(libs.libphonenumber)
 
     // Image picker
     implementation(libs.ucrop)
 
-    // Google Service and Maps
+    // Google Services and Maps
     implementation(libs.maps.compose)
     implementation(libs.maps.compose.utils)
     implementation(libs.play.services.auth)
 
-    // Firebase
-    implementation(libs.firebase.database.ktx)
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.ui.auth)
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.auth)
-    implementation(platform(libs.firebase.bom))
+    // Networking with OkHttp
+    implementation(libs.okhttp)
 
+    // Image loading with Coil
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     // Testing Unit
     androidTestImplementation(libs.mockk)
@@ -221,14 +239,7 @@ dependencies {
     globalTestImplementation(libs.kaspresso)
     globalTestImplementation(libs.kaspresso.compose)
 
-    // Networking with OkHttp
-    implementation(libs.okhttp)
-
-    // Image from internet with coil
-    implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
-
-    // Test UI
+    // UI Testing
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.espresso.intents)
@@ -246,12 +257,14 @@ dependencies {
 
 configurations.all {
     resolutionStrategy {
+        // Force specific versions to avoid conflicts
+        force("com.google.protobuf:protobuf-javalite:3.21.12")
         force("androidx.test.espresso:espresso-core:3.5.1")
     }
 }
 
 tasks.withType<Test> {
-    // Configure Jacoco for each tests
+    // Configure Jacoco for each test
     configure<JacocoTaskExtension> {
         isIncludeNoLocationClasses = true
         excludes = listOf("jdk.internal.*")
