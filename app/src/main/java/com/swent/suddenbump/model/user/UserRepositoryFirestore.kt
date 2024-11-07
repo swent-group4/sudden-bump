@@ -13,6 +13,7 @@ import com.google.firebase.storage.ktx.storage
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import com.swent.suddenbump.model.location.GeoLocation
+import com.swent.suddenbump.model.meeting.Meeting
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
@@ -36,6 +37,21 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   override fun getNewUid(): String {
     return db.collection(usersCollectionPath).document().id
+  }
+
+  override fun getMeetings(
+      user: User,
+      onSuccess: (List<Meeting>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection("meetings")
+        .whereEqualTo("userId", user.uid)
+        .get()
+        .addOnSuccessListener { snapshot ->
+          val meetings = snapshot.documents.mapNotNull { it.toObject(Meeting::class.java) }
+          onSuccess(meetings)
+        }
+        .addOnFailureListener { exception -> onFailure(exception) }
   }
 
   override fun verifyNoAccountExists(

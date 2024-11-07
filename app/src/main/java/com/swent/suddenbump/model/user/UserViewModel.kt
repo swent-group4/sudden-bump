@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.image.ImageBitMapIO
+import com.swent.suddenbump.model.meeting.Meeting
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,6 +39,12 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
 
+  private val _meetings = MutableStateFlow<List<Meeting>>(emptyList())
+  val meetings: StateFlow<List<Meeting>>
+    get() = _meetings
+
+  private val _error = MutableStateFlow<Exception?>(null)
+
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
   }
@@ -50,6 +57,17 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
             return UserViewModel(UserRepositoryFirestore(Firebase.firestore)) as T
           }
         }
+  }
+
+  fun getMeetings() {
+    repository.getUserAccount(
+        onSuccess = { user ->
+          repository.getMeetings(
+              user,
+              onSuccess = { meetingsList -> _meetings.value = meetingsList },
+              onFailure = { exception -> _error.value = exception })
+        },
+        onFailure = { exception -> _error.value = exception })
   }
 
   fun setCurrentUser() {

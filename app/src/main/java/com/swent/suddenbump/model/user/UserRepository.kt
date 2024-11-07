@@ -2,6 +2,7 @@ package com.swent.suddenbump.model.user
 
 import android.location.Location
 import com.swent.suddenbump.model.image.ImageRepository
+import com.swent.suddenbump.model.meeting.Meeting
 
 interface UserRepository {
 
@@ -10,6 +11,8 @@ interface UserRepository {
   fun init(onSuccess: () -> Unit)
 
   fun getNewUid(): String
+
+  fun getMeetings(user: User, onSuccess: (List<Meeting>) -> Unit, onFailure: (Exception) -> Unit)
 
   fun verifyNoAccountExists(
       emailAddress: String,

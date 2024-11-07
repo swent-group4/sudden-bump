@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.MailOutline
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Place
@@ -13,6 +14,7 @@ object Route {
   const val MAP = "Map"
   const val AUTH = "Auth"
   const val MESS = "Messages"
+  const val CALENDAR = "Calendar"
 }
 
 object Screen {
@@ -26,6 +28,7 @@ object Screen {
   const val SETTINGS = "Settings Screen"
   const val SIGNUP = "Sign Up Screen"
   const val CONTACT = "Contact Page"
+  const val CALENDAR = "Calendar Screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
@@ -34,13 +37,20 @@ object TopLevelDestinations {
   val MESSAGES =
       TopLevelDestination(
           route = Route.MESS, icon = Icons.Outlined.MailOutline, textId = "Messages")
+  val CALENDAR =
+      TopLevelDestination(
+          route = Route.CALENDAR, icon = Icons.Outlined.DateRange, textId = "Calendar")
   val OVERVIEW =
       TopLevelDestination(route = Route.OVERVIEW, icon = Icons.Outlined.Menu, textId = "Overview")
   val MAP = TopLevelDestination(route = Route.MAP, icon = Icons.Outlined.Place, textId = "Map")
 }
 
 val LIST_TOP_LEVEL_DESTINATION =
-    listOf(TopLevelDestinations.MESSAGES, TopLevelDestinations.OVERVIEW, TopLevelDestinations.MAP)
+    listOf(
+        TopLevelDestinations.MESSAGES,
+        TopLevelDestinations.CALENDAR,
+        TopLevelDestinations.OVERVIEW,
+        TopLevelDestinations.MAP)
 
 open class NavigationActions(
     private val navController: NavHostController,
