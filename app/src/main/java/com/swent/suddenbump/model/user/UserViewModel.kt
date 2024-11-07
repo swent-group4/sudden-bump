@@ -17,10 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-open class UserViewModel(private val repository: UserRepository) : ViewModel() {
-
-  private val chatRepository = ChatRepository()
+open class UserViewModel(private val repository: UserRepository,  private val chatRepository : ChatRepository) : ViewModel() {
 
   private val logTag = "UserViewModel"
   private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
@@ -57,7 +56,7 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
         object : ViewModelProvider.Factory {
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return UserViewModel(UserRepositoryFirestore(Firebase.firestore)) as T
+            return UserViewModel(UserRepositoryFirestore(Firebase.firestore), ChatRepository(Firebase.firestore)) as T
           }
         }
   }

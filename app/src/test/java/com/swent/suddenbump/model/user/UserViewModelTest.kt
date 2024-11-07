@@ -1,6 +1,7 @@
 package com.swent.suddenbump.model.user
 
 import android.location.Location
+import com.swent.suddenbump.model.chat.ChatRepository
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
@@ -16,6 +17,7 @@ import org.mockito.kotlin.whenever
 class UserViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
+  private lateinit var chatRepository: ChatRepository
 
   private val exception = Exception()
   private val location =
@@ -29,7 +31,8 @@ class UserViewModelTest {
   @Before
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
-    userViewModel = UserViewModel(userRepository)
+    chatRepository = mock(ChatRepository::class.java)
+    userViewModel = UserViewModel(userRepository, chatRepository)
   }
 
   @Test
@@ -251,7 +254,7 @@ class UserViewModelTest {
     val errorMessage = "Failed to fetch friends' locations"
     val exception = Exception(errorMessage)
     val userRepository: UserRepository = mock() // Mock the UserRepository
-    userViewModel = UserViewModel(userRepository) // Instantiate the ViewModel
+    userViewModel = UserViewModel(userRepository,chatRepository) // Instantiate the ViewModel
 
     // Mock repository method to simulate a failure
     whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {

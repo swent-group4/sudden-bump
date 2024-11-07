@@ -14,9 +14,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 
-class ChatRepository {
+class ChatRepository(private val firestore: FirebaseFirestore){
 
-  private val firestore = FirebaseFirestore.getInstance()
   private val messagesCollection = firestore.collection("messages")
 
   // Fetch messages from Firestore, ordered by timestamp
