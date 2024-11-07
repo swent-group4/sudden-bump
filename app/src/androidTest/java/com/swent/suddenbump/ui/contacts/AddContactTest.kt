@@ -2,6 +2,7 @@ package com.swent.suddenbump.ui.contacts
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.contact.AddContactScreen
@@ -18,13 +19,15 @@ class AddContactScreenTest {
   private lateinit var navigationActions: NavigationActions
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
+  private lateinit var chatRepository: ChatRepository
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
     userRepository = mock(UserRepository::class.java)
-    userViewModel = UserViewModel(userRepository)
+    chatRepository = mock(ChatRepository::class.java)
+    userViewModel = UserViewModel(userRepository, chatRepository)
 
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
     composeTestRule.setContent { AddContactScreen(navigationActions, userViewModel) }
