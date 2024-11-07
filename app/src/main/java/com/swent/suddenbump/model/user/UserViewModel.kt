@@ -60,7 +60,8 @@ open class UserViewModel(
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
             return UserViewModel(
-                UserRepositoryFirestore(Firebase.firestore), ChatRepositoryFirestore(Firebase.firestore))
+                UserRepositoryFirestore(Firebase.firestore),
+                ChatRepositoryFirestore(Firebase.firestore))
                 as T
           }
         }
