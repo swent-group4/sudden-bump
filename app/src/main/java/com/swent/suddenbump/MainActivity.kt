@@ -143,12 +143,12 @@ class MainActivity : ComponentActivity() {
         startDestination = Screen.OVERVIEW,
         route = Route.OVERVIEW,
       ) {
-        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
-        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
-        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
+        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions, userViewModel) }
+        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
+        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
-        composable(Screen.CONTACT) { ContactScreen(navigationActions) }
+        composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
       }
 
       navigation(
@@ -156,7 +156,7 @@ class MainActivity : ComponentActivity() {
         route = Route.MAP,
       ) {
         composable(Screen.MAP) {
-          MapScreen(navigationActions, location)
+          MapScreen(navigationActions, location, userViewModel)
           checkLocationPermissions()
         }
       }

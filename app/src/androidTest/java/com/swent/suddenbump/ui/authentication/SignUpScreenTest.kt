@@ -2,18 +2,21 @@ package com.swent.suddenbump.ui.authentication
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.MockedStatic
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
@@ -22,6 +25,8 @@ class SignUpScreenTest {
   private lateinit var userRepository: UserRepository
   private lateinit var navigationActions: NavigationActions
   private lateinit var userViewModel: UserViewModel
+  private lateinit var firebaseAuth: FirebaseAuth
+  private lateinit var firebaseAuthMock: MockedStatic<FirebaseAuth>
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   //  @Mock
@@ -33,7 +38,23 @@ class SignUpScreenTest {
     userRepository = mock(UserRepository::class.java)
     navigationActions = mock(NavigationActions::class.java)
     userViewModel = UserViewModel(userRepository)
+    /*firebaseAuth = mock(FirebaseAuth::class.java)
+
+    // Mock the static method getInstance()
+    firebaseAuthMock = mockStatic(FirebaseAuth::class.java)
+    firebaseAuthMock.`when`<FirebaseAuth> { FirebaseAuth.getInstance() }.thenReturn(firebaseAuth)
+
+    doNothing().`when`(firebaseAuth).signOut()
+    `when`(firebaseAuth.currentUser?.email).thenReturn("john.doe@example.com")*/
   }
+
+  /*@After
+  fun tearDown() {
+    // Check if firebaseAuthMock is initialized before closing it
+    if (::firebaseAuthMock.isInitialized) {
+      firebaseAuthMock.close()
+    }
+  }*/
 
   @Test
   fun testSignUpScreen_initialState() {
@@ -43,6 +64,7 @@ class SignUpScreenTest {
     composeTestRule.onNodeWithTag("firstNameField").assertExists()
     composeTestRule.onNodeWithTag("lastNameField").assertExists()
     composeTestRule.onNodeWithTag("emailField").assertExists()
+    composeTestRule.onNodeWithTag("emailField").assertIsNotEnabled()
     composeTestRule.onNodeWithTag("phoneField").assertExists()
     composeTestRule.onNodeWithTag("createAccountButton").assertExists()
 
@@ -64,8 +86,7 @@ class SignUpScreenTest {
     composeTestRule.onNodeWithTag("lastNameField").performTextInput("Doe")
     composeTestRule.onNodeWithTag("lastNameField").assertTextContains("Doe")
 
-    composeTestRule.onNodeWithTag("emailField").performTextInput("john.doe@example.com")
-    composeTestRule.onNodeWithTag("emailField").assertTextContains("john.doe@example.com")
+    composeTestRule.onNodeWithTag("emailField").assertIsNotEnabled()
 
     composeTestRule.onNodeWithTag("phoneField").performTextInput("+1234567890")
     composeTestRule.onNodeWithTag("phoneField").assertTextContains("+1 234-567-890")
