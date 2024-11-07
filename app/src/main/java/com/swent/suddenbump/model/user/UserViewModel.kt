@@ -18,9 +18,23 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
   private val profilePicture = ImageBitMapIO()
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
+  val locationDummy =
+      Location("providerName").apply {
+        latitude = 0.0 // Set latitude
+        longitude = 0.0 // Set longitude
+      }
+
   private val _user: MutableStateFlow<User> =
       MutableStateFlow(
-          User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch"))
+          User(
+              "1",
+              "Martin",
+              "Vetterli",
+              "+41 00 000 00 01",
+              null,
+              "martin.vetterli@epfl.ch",
+              locationDummy))
+
   private val _userFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(_user.value))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =

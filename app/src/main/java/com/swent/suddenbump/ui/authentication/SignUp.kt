@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.authentication
 
 import android.app.Activity
+import android.location.Location
 import android.net.Uri
 import android.provider.MediaStore
 import android.widget.Toast
@@ -45,6 +46,11 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
   var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
   val coroutineScope = rememberCoroutineScope()
   val context = LocalContext.current
+  val baseLocation =
+      Location("providerName").apply {
+        latitude = 0.0 // Set latitude
+        longitude = 0.0 // Set longitude
+      }
 
   val cropLauncher =
       rememberLauncherForActivityResult(
@@ -157,7 +163,8 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                         lastName = lastName,
                         emailAddress = email,
                         phoneNumber = phoneNumber,
-                        profilePicture = profileBitmap),
+                        profilePicture = profileBitmap,
+                        lastKnownLocation = baseLocation),
                     onSuccess = { navigationActions.navigateTo(TopLevelDestinations.OVERVIEW) },
                     onFailure = {
                       Toast.makeText(context, "Account creation failed", Toast.LENGTH_SHORT).show()

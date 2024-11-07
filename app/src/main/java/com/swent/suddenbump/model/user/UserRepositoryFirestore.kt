@@ -14,7 +14,6 @@ import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
-import com.swent.suddenbump.model.location.GeoLocation
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
@@ -596,7 +595,21 @@ internal class UserRepositoryFirestoreHelper() {
         "firstName" to user.firstName,
         "lastName" to user.lastName,
         "phoneNumber" to user.phoneNumber,
-        "emailAddress" to user.emailAddress)
+        "emailAddress" to user.emailAddress,
+        "lastKnownLocation" to locationToString(user.lastKnownLocation))
+  }
+
+  private fun locationToString(lastKnownLocation: Location?): String {
+    if (lastKnownLocation != null) {
+      return "{" +
+          "provider=" +
+          lastKnownLocation.provider +
+          ", latitude=" +
+          lastKnownLocation.latitude.toString() +
+          ", longitude=" +
+          lastKnownLocation.longitude.toString() +
+          "}"
+    } else return "{" + "provider= " + "latitude= " + ", " + "longitude= " + "}"
   }
 
   fun locationParser(mapAttributes: String): Location {
@@ -639,8 +652,18 @@ internal class UserRepositoryFirestoreHelper() {
   }
 
   fun documentSnapshotToUser(document: DocumentSnapshot, profilePicture: ImageBitmap?): User {
-    val geoPoint = document.getGeoPoint("lastKnownLocation")
-    val location = geoPoint?.let { GeoLocation(it.latitude, it.longitude) } ?: GeoLocation(0.0, 0.0)
+    val lastKnownLocationString = document.data?.get("lastKnownLocation")?.toString()
+    val lastKnownLocation =
+        if (!lastKnownLocationString.isNullOrEmpty()) {
+          try {
+            locationParser(lastKnownLocationString)
+          } catch (e: Exception) {
+            Log.e("UserRepositoryFirestoreHelper", "Error parsing location: ", e)
+            null
+          }
+        } else {
+          null
+        }
     return User(
         uid = document.data?.get("uid").toString(),
         firstName = document.data?.get("firstName").toString(),
@@ -648,7 +671,7 @@ internal class UserRepositoryFirestoreHelper() {
         phoneNumber = document.data?.get("phoneNumber").toString(),
         emailAddress = document.data?.get("emailAddress").toString(),
         profilePicture = profilePicture,
-        lastKnownLocation = location)
+        lastKnownLocation = lastKnownLocation)
   }
 
   fun documentSnapshotToList(uidJsonList: String): List<String> {

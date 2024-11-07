@@ -31,7 +31,7 @@ class UserViewModelTest {
         longitude = 0.0
       }
   private val user =
-      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch", location)
 
   private val testDispatcher = StandardTestDispatcher()
 
@@ -50,7 +50,14 @@ class UserViewModelTest {
   @Test
   fun setCurrentUser() {
     val user2 =
-        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+        User(
+            "2222",
+            "Martin",
+            "Vetterli",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            location)
 
     doAnswer { invocationOnMock ->
           val onSuccess = invocationOnMock.getArgument<(User) -> Unit>(0)
@@ -100,7 +107,14 @@ class UserViewModelTest {
   @Test
   fun setCurrentUserUid() {
     val user2 =
-        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+        User(
+            "2222",
+            "Martin",
+            "Vetterli",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            location)
 
     doAnswer { invocationOnMock ->
           val uid = invocationOnMock.getArgument<String>(0)
@@ -152,7 +166,14 @@ class UserViewModelTest {
   @Test
   fun setUser() {
     val user2 =
-        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+        User(
+            "2222",
+            "Martin",
+            "Vetterli",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            location)
 
     userViewModel.setUser(user2, {}, {})
 
@@ -184,7 +205,14 @@ class UserViewModelTest {
   @Test
   fun setUserFriends() {
     val user2 =
-        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+        User(
+            "2222",
+            "Martin",
+            "Vetterli",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            location)
 
     userViewModel.setUserFriends(friendsList = listOf(user), onSuccess = {}, onFailure = {})
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user.uid))
@@ -195,8 +223,17 @@ class UserViewModelTest {
 
   @Test
   fun acceptFriendRequest() {
-    val user = User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
-    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+    val user =
+        User(
+            "1",
+            "Martin",
+            "Vetterli",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            location)
+    val friend =
+        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
 
     // Mock the repository methods
     doAnswer { invocation ->
@@ -220,8 +257,17 @@ class UserViewModelTest {
 
   @Test
   fun sendFriendRequest() {
-    val user = User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
-    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+    val user =
+        User(
+            "1",
+            "Martin",
+            "Vetterli",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            location)
+    val friend =
+        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
 
     // Mock the repository methods
     doAnswer { invocation ->
@@ -245,7 +291,14 @@ class UserViewModelTest {
   @Test
   fun setBlockedFriends() {
     val user2 =
-        User("2222", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+        User(
+            "2222",
+            "Martin",
+            "Vetterli",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            location)
 
     userViewModel.setBlockedFriends(
         blockedFriendsList = listOf(user), onSuccess = {}, onFailure = {})
@@ -291,7 +344,8 @@ class UserViewModelTest {
   @Test
   fun loadFriendsLocations_success() {
     // Arrange
-    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+    val friend =
+        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
     val friendLocation =
         Location("mock_provider").apply {
           latitude = 1.0
@@ -342,7 +396,8 @@ class UserViewModelTest {
           latitude = 1.0
           longitude = 1.0
         }
-    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+    val friend =
+        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", friendLocation)
     val friendsMap = mapOf(friend to friendLocation)
 
     // Mock repository method for loading friend locations
@@ -366,7 +421,8 @@ class UserViewModelTest {
     // Arrange
     userViewModel.updateLocation(location = location, onSuccess = {}, onFailure = {})
 
-    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+    val friend =
+        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
 
     // Act
     val distance = userViewModel.getRelativeDistance(friend)
@@ -383,7 +439,8 @@ class UserViewModelTest {
           latitude = 1.0
           longitude = 1.0
         }
-    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+    val friend =
+        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", friendLocation)
 
     userViewModel.updateLocation(friend, friendLocation, onSuccess = {}, onFailure = {})
 

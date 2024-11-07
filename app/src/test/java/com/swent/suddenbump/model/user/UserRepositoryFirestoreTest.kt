@@ -73,7 +73,8 @@ class UserRepositoryFirestoreTest {
           lastName = "Carel",
           phoneNumber = "+33 6 59 20 70 02",
           null,
-          emailAddress = "alexandre.carel@epfl.ch")
+          emailAddress = "alexandre.carel@epfl.ch",
+          lastKnownLocation = location)
 
   @Before
   fun setUp() {
@@ -203,8 +204,24 @@ class UserRepositoryFirestoreTest {
 
   @Test
   fun createFriend_shouldUpdateFriendLists() {
-    val user = User("1", "Alexandre", "Carel", "+33 6 59 20 70 02", null, "alexandre.carel@epfl.ch")
-    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+    val user =
+        User(
+            "1",
+            "Alexandre",
+            "Carel",
+            "+33 6 59 20 70 02",
+            null,
+            "alexandre.carel@epfl.ch",
+            lastKnownLocation = location)
+    val friend =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+41 00 000 00 02",
+            null,
+            "jane.doe@example.com",
+            lastKnownLocation = location)
 
     // Mock the Firestore document snapshots
     val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
@@ -267,8 +284,24 @@ class UserRepositoryFirestoreTest {
 
   @Test
   fun createFriendRequest_shouldAddFriendRequest() {
-    val user = User("1", "Alexandre", "Carel", "+33 6 59 20 70 02", null, "alexandre.carel@epfl.ch")
-    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+    val user =
+        User(
+            "1",
+            "Alexandre",
+            "Carel",
+            "+33 6 59 20 70 02",
+            null,
+            "alexandre.carel@epfl.ch",
+            lastKnownLocation = location)
+    val friend =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+41 00 000 00 02",
+            null,
+            "jane.doe@example.com",
+            lastKnownLocation = location)
 
     // Mock the Firestore document snapshots
     val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
@@ -412,8 +445,24 @@ class UserRepositoryFirestoreTest {
   @Test
   fun getFriendsLocationSuccessWithFriendsAndLocations() {
     // Given
-    val friend1 = User("uid1", "Friend1", "Test", "000", null, "friend1@example.com")
-    val friend2 = User("uid2", "Friend2", "Test", "000", null, "friend2@example.com")
+    val friend1 =
+        User(
+            "uid1",
+            "Friend1",
+            "Test",
+            "000",
+            null,
+            "friend1@example.com",
+            lastKnownLocation = location)
+    val friend2 =
+        User(
+            "uid2",
+            "Friend2",
+            "Test",
+            "000",
+            null,
+            "friend2@example.com",
+            lastKnownLocation = location)
 
     val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
@@ -479,7 +528,7 @@ class UserRepositoryFirestoreTest {
             phoneNumber = "+1234567890",
             profilePicture = null,
             emailAddress = "john.doe@example.com",
-        )
+            lastKnownLocation = location)
 
     val result = helper.userToMapOf(testUser)
 
@@ -488,8 +537,12 @@ class UserRepositoryFirestoreTest {
     assertEquals("Doe", result["lastName"])
     assertEquals("+1234567890", result["phoneNumber"])
     assertEquals("john.doe@example.com", result["emailAddress"])
+    assertEquals(
+        "{provider=mock_provider, latitude=0.0, longitude=0.0}", result["lastKnownLocation"])
 
-    assertEquals(setOf("uid", "firstName", "lastName", "phoneNumber", "emailAddress"), result.keys)
+    assertEquals(
+        setOf("uid", "firstName", "lastName", "phoneNumber", "emailAddress", "lastKnownLocation"),
+        result.keys)
 
     assert(!result.contains("profilePicture"))
   }
@@ -502,7 +555,8 @@ class UserRepositoryFirestoreTest {
             "firstName" to "John",
             "lastName" to "Doe",
             "phoneNumber" to "+1234567890",
-            "emailAddress" to "john.doe@example.com")
+            "emailAddress" to "john.doe@example.com",
+            "lastKnownLocation" to location)
     val defaultProfilePicture: ImageBitmap? = null
 
     `when`(mockUserDocumentSnapshot.data).thenReturn(data)
