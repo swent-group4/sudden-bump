@@ -145,25 +145,25 @@ class MainActivity : ComponentActivity() {
 
         val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
 
-        NavHost(navController = navController, startDestination = Route.AUTH) {
-            navigation(
-                startDestination = Screen.AUTH,
-                route = Route.AUTH,
-            ) {
-                composable(Screen.AUTH) { SignInScreen(navigationActions, userViewModel) }
-                composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
-            }
-            navigation(
-                startDestination = Screen.OVERVIEW,
-                route = Route.OVERVIEW,
-            ) {
-                composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
-                composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
-                composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
-                composable(Screen.CONV) { ConversationScreen(navigationActions) }
-                composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
-                composable(Screen.CONTACT) { ContactScreen(navigationActions) }
-            }
+    NavHost(navController = navController, startDestination = Route.AUTH) {
+      navigation(
+          startDestination = Screen.AUTH,
+          route = Route.AUTH,
+      ) {
+        composable(Screen.AUTH) { SignInScreen(navigationActions, userViewModel) }
+        composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
+      }
+      navigation(
+          startDestination = Screen.OVERVIEW,
+          route = Route.OVERVIEW,
+      ) {
+        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions, userViewModel) }
+        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
+        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
+        composable(Screen.CONV) { ConversationScreen(navigationActions) }
+        composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
+        composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+      }
 
             navigation(
                 startDestination = Screen.MAP,

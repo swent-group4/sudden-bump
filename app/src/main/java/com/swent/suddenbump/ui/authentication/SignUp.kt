@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
@@ -39,7 +40,7 @@ import kotlinx.coroutines.launch
 fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   var firstName by remember { mutableStateOf("") }
   var lastName by remember { mutableStateOf("") }
-  var email by remember { mutableStateOf("") }
+  val email = FirebaseAuth.getInstance().currentUser?.email ?: ""
   var phoneNumber by remember { mutableStateOf("") }
   var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
   val coroutineScope = rememberCoroutineScope()
@@ -122,8 +123,9 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
           Spacer(modifier = Modifier.height(16.dp))
           OutlinedTextField(
               value = email,
-              onValueChange = { email = it },
+              onValueChange = {},
               label = { Text("Email") },
+              enabled = false,
               modifier = Modifier.fillMaxWidth().testTag("emailField"),
           )
           Spacer(modifier = Modifier.height(16.dp))
