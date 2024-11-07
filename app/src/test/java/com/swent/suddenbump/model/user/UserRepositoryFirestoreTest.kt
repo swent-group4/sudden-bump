@@ -201,6 +201,121 @@ class UserRepositoryFirestoreTest {
     verify(mockUserDocumentReference).set(any())
   }
 
+  @Test
+  fun createFriend_shouldUpdateFriendLists() {
+    val user = User("1", "Alexandre", "Carel", "+33 6 59 20 70 02", null, "alexandre.carel@epfl.ch")
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+
+    // Mock the Firestore document snapshots
+    val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val friendDocumentSnapshot = mock(DocumentSnapshot::class.java)
+
+    // Mock the data returned by the document snapshots
+    `when`(userDocumentSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "friendsList" to listOf<String>(),
+                "friendRequests" to listOf(friend.uid),
+                "sentFriendRequests" to listOf<String>()))
+    `when`(friendDocumentSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "friendsList" to listOf<String>(),
+                "friendRequests" to listOf<String>(),
+                "sentFriendRequests" to listOf(user.uid)))
+
+    // Mock the Firestore document references
+    val userDocumentReference = mock(DocumentReference::class.java)
+    val friendDocumentReference = mock(DocumentReference::class.java)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(user.uid)).thenReturn(userDocumentReference)
+    `when`(userCollectionReference.document(friend.uid)).thenReturn(friendDocumentReference)
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock the get() method to return the document snapshots
+    `when`(userDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
+    `when`(friendDocumentReference.get()).thenReturn(Tasks.forResult(friendDocumentSnapshot))
+
+    // Mock the update() method to return a successful task
+    `when`(userDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+    `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore)
+
+    // Call the createFriend method
+    userRepository.createFriend(
+        user,
+        friend,
+        {
+          // Verify the updates to the user document
+          verify(userDocumentReference).update("friendRequests", listOf<String>())
+          verify(userDocumentReference).update("friendsList", listOf(friend.uid))
+
+          // Verify the updates to the friend document
+          verify(friendDocumentReference).update("friendsList", listOf(user.uid))
+          verify(friendDocumentReference).update("friendRequests", listOf<String>())
+          verify(friendDocumentReference).update("sentFriendRequests", listOf<String>())
+        },
+        { fail("onFailure should not be called") })
+  }
+
+  @Test
+  fun createFriendRequest_shouldAddFriendRequest() {
+    val user = User("1", "Alexandre", "Carel", "+33 6 59 20 70 02", null, "alexandre.carel@epfl.ch")
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+
+    // Mock the Firestore document snapshots
+    val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val friendDocumentSnapshot = mock(DocumentSnapshot::class.java)
+
+    // Mock the data returned by the document snapshots
+    `when`(friendDocumentSnapshot.data).thenReturn(mapOf("friendRequests" to listOf<String>()))
+    `when`(userDocumentSnapshot.data).thenReturn(mapOf("sentFriendRequests" to listOf<String>()))
+
+    // Mock the Firestore document references
+    val userDocumentReference = mock(DocumentReference::class.java)
+    val friendDocumentReference = mock(DocumentReference::class.java)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(user.uid)).thenReturn(userDocumentReference)
+    `when`(userCollectionReference.document(friend.uid)).thenReturn(friendDocumentReference)
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock the get() method to return the document snapshots
+    `when`(userDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
+    `when`(friendDocumentReference.get()).thenReturn(Tasks.forResult(friendDocumentSnapshot))
+
+    // Mock the update() method to return a successful task
+    `when`(userDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+    `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore)
+
+    // Call the createFriendRequest method
+    userRepository.createFriendRequest(
+        user,
+        friend,
+        {
+          // Verify the updates to the friend document
+          verify(friendDocumentReference).update("friendRequests", listOf(user.uid))
+
+          // Verify the updates to the user document
+          verify(userDocumentReference).update("sentFriendRequests", listOf(friend.uid))
+        },
+        { fail("onFailure should not be called") })
+  }
+
   /**
    * This check that the correct Firestore method is called when deleting. Does NOT CHECK that the
    * correct data is deleted.
@@ -363,7 +478,8 @@ class UserRepositoryFirestoreTest {
             lastName = "Doe",
             phoneNumber = "+1234567890",
             profilePicture = null,
-            emailAddress = "john.doe@example.com")
+            emailAddress = "john.doe@example.com",
+        )
 
     val result = helper.userToMapOf(testUser)
 

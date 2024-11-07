@@ -7,7 +7,6 @@ on:
       - main
       - add-map
       - clean-up
-      - distance-triggers-notification
 
   pull_request:
     types:

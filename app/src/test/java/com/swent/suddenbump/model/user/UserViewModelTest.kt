@@ -16,6 +16,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -86,7 +87,10 @@ class UserViewModelTest {
 
     verify(userRepository).getUserAccount(any(), any())
     verify(userRepository).getUserFriends(any(), any(), any())
+    verify(userRepository).getUserFriendRequests(any(), any(), any())
+    verify(userRepository).getSentFriendRequests(any(), any(), any())
     verify(userRepository).getBlockedFriends(any(), any(), any())
+    verify(userRepository).getRecommendedFriends(any(), any(), any(), any())
 
     assertThat(userViewModel.getCurrentUser().value.uid, `is`(user2.uid))
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
@@ -136,6 +140,9 @@ class UserViewModelTest {
     verify(userRepository).getUserAccount(any(), any(), any())
     verify(userRepository).getUserFriends(any(), any(), any())
     verify(userRepository).getBlockedFriends(any(), any(), any())
+    verify(userRepository).getUserFriendRequests(any(), any(), any())
+    verify(userRepository).getSentFriendRequests(any(), any(), any())
+    verify(userRepository).getRecommendedFriends(any(), any(), any(), any())
 
     assertThat(userViewModel.getCurrentUser().value.uid, `is`(user2.uid))
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
@@ -184,6 +191,55 @@ class UserViewModelTest {
 
     userViewModel.setUserFriends(friendsList = listOf(user2), onSuccess = {}, onFailure = {})
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
+  }
+
+  @Test
+  fun acceptFriendRequest() {
+    val user = User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+
+    // Mock the repository methods
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .createFriend(any(), any(), any(), any())
+
+    // Call the method
+    userViewModel.acceptFriendRequest(user, friend, {}, {})
+
+    // Verify the repository interactions
+    verify(userRepository).createFriend(eq(user), eq(friend), any(), any())
+
+    // Verify the state updates
+    assert(userViewModel.getUserFriends().value.contains(friend))
+    assert(!userViewModel.getUserFriendRequests().value.contains(friend))
+  }
+
+  @Test
+  fun sendFriendRequest() {
+    val user = User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+
+    // Mock the repository methods
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .createFriendRequest(any(), any(), any(), any())
+
+    // Call the method
+    userViewModel.sendFriendRequest(user, friend, {}, {})
+
+    // Verify the repository interactions
+    verify(userRepository).createFriendRequest(eq(user), eq(friend), any(), any())
+
+    // Verify the state updates
+    assert(userViewModel.getSentFriendRequests().value.contains(friend))
   }
 
   @Test
