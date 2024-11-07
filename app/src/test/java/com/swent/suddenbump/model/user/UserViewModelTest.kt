@@ -254,7 +254,7 @@ class UserViewModelTest {
     val errorMessage = "Failed to fetch friends' locations"
     val exception = Exception(errorMessage)
     val userRepository: UserRepository = mock() // Mock the UserRepository
-    userViewModel = UserViewModel(userRepository,chatRepository) // Instantiate the ViewModel
+    userViewModel = UserViewModel(userRepository, chatRepository) // Instantiate the ViewModel
 
     // Mock repository method to simulate a failure
     whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
