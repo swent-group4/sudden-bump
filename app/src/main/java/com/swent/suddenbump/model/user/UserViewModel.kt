@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
@@ -59,7 +60,7 @@ open class UserViewModel(
           @Suppress("UNCHECKED_CAST")
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
             return UserViewModel(
-                UserRepositoryFirestore(Firebase.firestore), ChatRepository(Firebase.firestore))
+                UserRepositoryFirestore(Firebase.firestore), ChatRepositoryFirestore(Firebase.firestore))
                 as T
           }
         }
