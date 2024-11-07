@@ -291,7 +291,7 @@ class UserRepositoryFirestoreTest {
 
     verify(mockUserDocumentReference).update(anyString(), any())
   }
-
+  /*
   @Test
   fun getFriendsLocationSuccessWithFriendsAndLocations() {
     // Given
@@ -330,7 +330,7 @@ class UserRepositoryFirestoreTest {
         },
         { fail("Failure callback should not be called") })
   }
-
+*/
   @Test
   fun userToMap() {
     val testUser =

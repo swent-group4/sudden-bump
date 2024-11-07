@@ -168,10 +168,16 @@ dependencies {
     implementation(libs.test.core.ktx)
     implementation(libs.androidx.lifecycle.common.jvm)
     implementation(libs.firebase.storage.ktx)
+    implementation("androidx.work:work-runtime-ktx:2.8.1")
+    implementation("androidx.work:work-runtime:2.8.1")
+    implementation("androidx.work:work-testing:2.8.1")
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
+
+    // Kotlin reflection library
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.31")
 
     // ------------- Jetpack Compose ------------------
     val composeBom = platform(libs.compose.bom)

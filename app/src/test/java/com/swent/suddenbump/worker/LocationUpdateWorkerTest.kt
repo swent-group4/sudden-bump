@@ -1,5 +1,5 @@
 package com.swent.suddenbump.worker
-/*
+
 import android.content.Context
 import android.location.Location
 import androidx.compose.ui.graphics.asImageBitmap
@@ -14,7 +14,6 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.tasks.Task
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
-import com.swent.suddenbump.worker.LocationUpdateWorker
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -66,7 +65,7 @@ class LocationUpdateWorkerTest {
         val profilePictureDrawable = context.getDrawable(R.drawable.profile)
         val profilePictureBitmap =  profilePictureDrawable?.toBitmap()?.asImageBitmap()
 
-        // Mock UserViewModel
+        // Mock User
         val mockUser = mock(User::class.java).apply {
             `when`(uid).thenReturn("user123")
             `when`(firstName).thenReturn("Test")
@@ -75,11 +74,19 @@ class LocationUpdateWorkerTest {
             `when`(profilePicture).thenReturn(profilePictureBitmap)
             `when`(emailAddress).thenReturn("testuser@example.com")
         }
+
+        // Mock UserViewModel
+        //val userCaptor = ArgumentCaptor.forClass(User::class.java)
+        //val locationCaptor = ArgumentCaptor.forClass(Location::class.java)
         doNothing().`when`(userViewModel).updateLocation(
             eq(mockUser),
             eq(mockLocation),
-            any(),
-            any()
+            onSuccess = {
+                // Handle success
+            },
+            onFailure = {
+                // Handle failure
+            }
         )
         doNothing().`when`(userViewModel).loadFriendsLocations()
 
@@ -140,4 +147,4 @@ class LocationUpdateWorkerTest {
         property.isAccessible = true
         (property as? KMutableProperty1<Any, Any>)?.set(instance, value)
     }
-}*/
+}

@@ -63,11 +63,14 @@ playServicesLocation = "21.3.0"
 lifecycleCommonJvm = "2.8.6"
 firebaseStorageKtx = "21.0.1"
 workRuntimeKtx = "2.9.1"
+workRuntimeKtxVersion = "2.8.1"
 workTesting = "2.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "workTesting" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+androidx-work-runtime-ktx-v281 = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtxVersion" }
 androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "workTesting" }
 jetbrains-kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
