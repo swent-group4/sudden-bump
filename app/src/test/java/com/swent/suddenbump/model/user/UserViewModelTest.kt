@@ -1,6 +1,7 @@
 package com.swent.suddenbump.model.user
 
 import android.location.Location
+import com.swent.suddenbump.model.chat.ChatRepository
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
