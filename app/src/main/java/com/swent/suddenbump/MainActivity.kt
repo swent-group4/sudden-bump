@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.testTag
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -52,153 +53,171 @@ import com.swent.suddenbump.ui.theme.SampleAppTheme
 
 class MainActivity : ComponentActivity() {
 
-  private lateinit var auth: FirebaseAuth
+    private lateinit var auth: FirebaseAuth
 
-  private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
-  private lateinit var locationGetter: LocationGetter
+    private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var locationGetter: LocationGetter
 
-  @SuppressLint("SuspiciousIndentation")
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    var newLocation by mutableStateOf<Location?>(null)
+    @SuppressLint("SuspiciousIndentation")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        var newLocation by mutableStateOf<Location?>(null)
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      val REQUEST_CODE = 1001
-      ActivityCompat.requestPermissions(
-          this, // `this` should be your activity context
-          arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-          REQUEST_CODE)
-    }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val REQUEST_CODE = 1001
+            ActivityCompat.requestPermissions(
+                this, // this should be your activity context
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                REQUEST_CODE)
+        }
 
-    val notificationChannel =
-        NotificationChannel("1", "FriendsNear", NotificationManager.IMPORTANCE_HIGH)
-    val notificationManager = getSystemService(NotificationManager::class.java)
-    notificationManager?.createNotificationChannel(notificationChannel)
+        val notificationChannel =
+            NotificationChannel("1", "FriendsNear", NotificationManager.IMPORTANCE_HIGH)
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.createNotificationChannel(notificationChannel)
 
-    locationGetter =
-        LocationGetter(
-            this,
-            object : LocationGetter.LocationListener {
-              override fun onLocationResult(location: Location?) {
-                // Handle location update
-                newLocation = location
-              }
+        locationGetter =
+            LocationGetter(
+                this,
+                object : LocationGetter.LocationListener {
+                    override fun onLocationResult(location: Location?) {
+                        // Handle location update
+                        newLocation = location
+                    }
 
-              override fun onLocationFailure(message: String) {
-                Log.e("MainActivity", "Location Error: $message")
-              }
-            })
+                    override fun onLocationFailure(message: String) {
+                        Log.e("MainActivity", "Location Error: $message")
+                    }
+                })
 
-    FirebaseApp.initializeApp(this)
-    // Initialize Firebase Auth
-    auth = FirebaseAuth.getInstance()
-    auth.currentUser?.let {
-      // Sign out the user if they are already signed in
-      // This is useful for testing purposes
-      auth.signOut()
-    }
+        FirebaseApp.initializeApp(this)
+        // Initialize Firebase Auth
+        auth = FirebaseAuth.getInstance()
+        auth.currentUser?.let {
+            // Sign out the user if they are already signed in
+            // This is useful for testing purposes
+            auth.signOut()
+        }
 
-    setContent {
-      SampleAppTheme {
-        // A surface container using the 'background' color from the theme
-        Surface(
-            modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
-            color = MaterialTheme.colorScheme.background) {
-              SuddenBumpApp(newLocation)
-              //              val userViewModel =
-              // UserViewModel(UserRepositoryFirestore(Firebase.firestore))
-              //              TestComposableScreen(userViewModel)
+        setContent {
+            SampleAppTheme {
+                // A surface container using the 'background' color from the theme
+                Surface(
+                    modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
+                    color = MaterialTheme.colorScheme.background) {
+                    SuddenBumpApp(newLocation)
+                }
             }
-      }
-    }
-
-    // Initialize permission launcher
-    requestMultiplePermissionsLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            permissions ->
-          handlePermissionResults(permissions)
         }
-  }
 
-  private fun checkLocationPermissions() {
-    val fineLocationGranted =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
-
-    val coarseLocationGranted =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
-
-    if (fineLocationGranted || coarseLocationGranted) {
-      locationGetter.requestLocationUpdates()
-    } else {
-      // Request permissions
-      requestMultiplePermissionsLauncher.launch(
-          arrayOf(
-              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        // Initialize permission launcher
+        requestMultiplePermissionsLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+                    permissions ->
+                handlePermissionResults(permissions)
+            }
     }
-  }
 
-  @SuppressLint("UnrememberedMutableState")
-  @Composable
-  fun SuddenBumpApp(location: Location?) {
-    val navController = rememberNavController()
-    val navigationActions = NavigationActions(navController)
+    private fun checkLocationPermissions() {
+        val fineLocationGranted =
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED
 
-    val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+        val coarseLocationGranted =
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                    PackageManager.PERMISSION_GRANTED
 
-    NavHost(navController = navController, startDestination = Route.AUTH) {
-      navigation(
-          startDestination = Screen.AUTH,
-          route = Route.AUTH,
-      ) {
-        composable(Screen.AUTH) { SignInScreen(navigationActions, userViewModel) }
-        composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
-      }
-      navigation(
-          startDestination = Screen.OVERVIEW,
-          route = Route.OVERVIEW,
-      ) {
-        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
-        composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
-        composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
-        composable(Screen.CONV) { ConversationScreen(navigationActions) }
-        composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
-        composable(Screen.CONTACT) { ContactScreen(navigationActions) }
-      }
-
-      navigation(
-          startDestination = Screen.MAP,
-          route = Route.MAP,
-      ) {
-        composable(Screen.MAP) {
-          MapScreen(navigationActions, location, userViewModel)
-          checkLocationPermissions()
+        if (fineLocationGranted || coarseLocationGranted) {
+            locationGetter.requestLocationUpdates()
+        } else {
+            // Request permissions
+            requestMultiplePermissionsLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         }
-      }
-      navigation(
-          startDestination = Screen.MESS,
-          route = Route.MESS,
-      ) {
-        composable(Screen.MESS) { MessagesScreen(navigationActions) }
-      }
     }
-  }
 
-  private fun handlePermissionResults(permissions: Map<String, Boolean>) {
-    val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-    val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+    @SuppressLint("UnrememberedMutableState")
+    @Composable
+    fun SuddenBumpApp(location: Location?) {
+        val navController = rememberNavController()
+        val navigationActions = NavigationActions(navController)
 
-    when {
-      fineLocationGranted -> {
-        locationGetter.requestLocationUpdates()
-      }
-      coarseLocationGranted -> {
-        locationGetter.requestLocationUpdates()
-      }
-      else -> {
-        // Toast.makeText(this, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
-      }
+        val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+
+        NavHost(navController = navController, startDestination = Route.AUTH) {
+            navigation(
+                startDestination = Screen.AUTH,
+                route = Route.AUTH,
+            ) {
+                composable(Screen.AUTH) { SignInScreen(navigationActions, userViewModel) }
+                composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
+            }
+            navigation(
+                startDestination = Screen.OVERVIEW,
+                route = Route.OVERVIEW,
+            ) {
+                composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
+                composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
+                composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
+                composable(Screen.CONV) { ConversationScreen(navigationActions) }
+                composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
+                composable(Screen.CONTACT) { ContactScreen(navigationActions) }
+            }
+
+            navigation(
+                startDestination = Screen.MAP,
+                route = Route.MAP,
+            ) {
+                composable(Screen.MAP) {
+                    MapScreen(navigationActions, location, userViewModel)
+                    checkLocationPermissions()
+                }
+            }
+            navigation(
+                startDestination = Screen.MESS,
+                route = Route.MESS,
+            ) {
+                composable(Screen.MESS) { MessagesScreen(navigationActions) }
+            }
+        }
     }
-  }
+
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        Log.d("MainActivity", "onNewIntent called with destination: ${intent.getStringExtra("destination")}")
+        setContent {
+            val navController = rememberNavController()
+            val navigationActions = NavigationActions(navController)
+            HandleIntent(intent,navigationActions)
+        }
+    }
+
+
+    @Composable
+    private fun HandleIntent(intent: android.content.Intent, navAction: NavigationActions) {
+        val destination = intent.getStringExtra("destination")
+        if (destination != null) {
+                navAction.navigateTo(destination)
+            } else {
+                // Handle other destinations or fallback logic if needed
+            }
+        }
+
+
+
+    private fun handlePermissionResults(permissions: Map<String, Boolean>) {
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+
+        when {
+            fineLocationGranted -> {
+                locationGetter.requestLocationUpdates()
+            }
+            coarseLocationGranted -> {
+                locationGetter.requestLocationUpdates()
+            }
+        }
+    }
 }

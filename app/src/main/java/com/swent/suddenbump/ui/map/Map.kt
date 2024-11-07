@@ -145,66 +145,6 @@ fun FriendsMarkers(userViewModel: UserViewModel) {
       }
     }
   }
-
-  /*val mockImageBitmap: ImageBitmap? = null // assuming null for simplicity
-
-  // Create mock users
-  val user1 =
-      User(
-          uid = "1",
-          firstName = "John",
-          lastName = "Doe",
-          phoneNumber = "123456789",
-          profilePicture = mockImageBitmap,
-          emailAddress = "john.doe@example.com")
-
-  val user2 =
-      User(
-          uid = "2",
-          firstName = "Jane",
-          lastName = "Smith",
-          phoneNumber = "987654321",
-          profilePicture = mockImageBitmap,
-          emailAddress = "jane.smith@example.com")
-
-  val user3 =
-      User(
-          uid = "3",
-          firstName = "Alice",
-          lastName = "Johnson",
-          phoneNumber = "555666777",
-          profilePicture = mockImageBitmap,
-          emailAddress = "alice.johnson@example.com")
-
-  // Create mock locations
-  val location1 =
-      Location("mock_provider").apply {
-        latitude = 46.5186664
-        longitude = 6.568274
-      }
-  val location2 =
-      Location("mock_provider").apply {
-        latitude = 46.521083
-        longitude = 6.575470
-      }
-  val location3 =
-      Location("mock_provider").apply {
-        latitude = 46.522836
-        longitude = 6.565142
-      }
-
-  // Create Map<User, Location>
-  val userLocationMap: Map<User, Location> =
-      mapOf(user1 to location1, user2 to location2, user3 to location3)
-
-  userLocationMap.let { locations ->
-    locations.forEach { (friend, location) ->
-      Marker(
-          state = MarkerState(position = LatLng(location.latitude, location.longitude)),
-          title = friend.firstName,
-          snippet = friend.uid,
-      )
-    }*/
 }
 
 fun getLocationMarkerBitmap(): Bitmap {
@@ -240,40 +180,65 @@ fun fetchLocationToServer(location: Location, userViewModel: UserViewModel) {
 }
 
 fun showFriendNearbyNotification(context: Context) {
-  val channelId = "friend_nearby_channel"
-  val channelName = "Friend Nearby Notifications"
-  val notificationId = 1
+    val channelId = "friend_nearby_channel"
+    val channelName = "Friend Nearby Notifications"
+    val notificationId = 1
 
-  val notificationChannel =
-      NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
-  val notificationManager = context.getSystemService(NotificationManager::class.java)
-  notificationManager?.createNotificationChannel(notificationChannel)
+    val notificationChannel =
+        NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+    val notificationManager = context.getSystemService(NotificationManager::class.java)
+    notificationManager?.createNotificationChannel(notificationChannel)
 
-  // Modify the intent to navigate to Screen.OVERVIEW
-  val intent =
-      Intent(context, MainActivity::class.java).apply {
-        putExtra("destination", "Screen.OVERVIEW")
-        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-      }
+    // Modify the intent to navigate to Screen.Map
+    val mapIntent =
+        Intent(context, MainActivity::class.java).apply {
+            putExtra("destination", "Screen.Map")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
 
-  val pendingIntent: PendingIntent =
-      PendingIntent.getActivity(
-          context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    val pendingMapIntent: PendingIntent =
+        PendingIntent.getActivity(
+            context, 0, mapIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
-  val notificationBuilder =
-      NotificationCompat.Builder(context, channelId)
-          .setSmallIcon(android.R.drawable.ic_dialog_info)
-          .setContentTitle("Friend Nearby")
-          .setContentText("A friend is within your radius!")
-          .setPriority(NotificationCompat.PRIORITY_HIGH)
-          .setContentIntent(pendingIntent)
-          .setAutoCancel(true)
-
-  try {
-    with(NotificationManagerCompat.from(context)) {
-      notify(notificationId, notificationBuilder.build())
+    // Create intents for Accept and Refuse actions
+    val acceptIntent = Intent(context, MainActivity::class.java).apply {
+        action = "com.example.ACTION_ACCEPT"
+        putExtra("action_type", "accept")
     }
-  } catch (e: SecurityException) {
-    Log.e("NotificationError", "Notification permission not granted", e)
-  }
+
+    val refuseIntent = Intent(context, MainActivity::class.java).apply {
+        action = "com.example.ACTION_REFUSE"
+        putExtra("action_type", "refuse")
+    }
+
+    val acceptPendingIntent: PendingIntent =
+        PendingIntent.getActivity(
+            context, 1, acceptIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+    val refusePendingIntent: PendingIntent =
+        PendingIntent.getActivity(
+            context, 2, refuseIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+    // Build the notification with actions
+    val notificationBuilder =
+        NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("Friend Nearby")
+            .setContentText("A friend is within your radius!")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingMapIntent)
+            .setAutoCancel(true)
+            .addAction(android.R.drawable.ic_menu_compass, "Accept", acceptPendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Refuse", refusePendingIntent)
+
+    try {
+        with(NotificationManagerCompat.from(context)) {
+            notify(notificationId, notificationBuilder.build())
+        }
+    } catch (e: SecurityException) {
+        Log.e("NotificationError", "Notification permission not granted", e)
+    }
 }
