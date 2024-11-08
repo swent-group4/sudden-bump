@@ -1,6 +1,8 @@
 package com.swent.suddenbump.model.user
 
+import android.annotation.SuppressLint
 import android.location.Location
+import android.location.LocationManager
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import com.google.android.gms.tasks.Tasks
@@ -12,7 +14,6 @@ import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
-import com.swent.suddenbump.model.location.GeoLocation
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
@@ -528,40 +529,34 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         .addOnSuccessListener { onSuccess() }
   }
 
+  @SuppressLint("SuspiciousIndentation")
   override fun getFriendsLocation(
-      user: User,
+      userFriendsList: List<User>,
       onSuccess: (Map<User, Location?>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    // First, retrieve the user's friends using the existing getUserFriends method
-    getUserFriends(
-        user,
-        { friendsList ->
-          val friendsLocations = mutableMapOf<User, Location?>()
+    Log.d("FriendsMarkers", "Launched")
 
-          // Loop through each friend in the friendsList and fetch their location
-          friendsList.forEach { friend ->
-            db.collection(usersCollectionPath)
-                .document(friend.uid)
-                .get()
-                .addOnFailureListener { onFailure(it) }
-                .addOnSuccessListener { friendSnapshot ->
-                  val location = friendSnapshot.get("location") as? Location
-                  friendsLocations[friend] = location
+    val friendsLocations = mutableMapOf<User, Location?>()
+    runBlocking {
+      try {
+        for (userFriend in userFriendsList) {
+          val documentSnapshot =
+              db.collection(usersCollectionPath).document(userFriend.uid).get().await()
 
-                  // Once all friends have been processed, call onSuccess
-                  if (friendsLocations.size == friendsList.size) {
-                    onSuccess(friendsLocations)
-                  }
-                }
+          if (documentSnapshot.exists()) {
+            val friendSnapshot = documentSnapshot.data
+            val location = helper.locationParser(friendSnapshot!!.get("location").toString())
+            friendsLocations[userFriend] = location
+            Log.d("FriendsMarkers", "Succeeded Friends Locations ${userFriend}, ${location}")
           }
-
-          // If no friends, return an empty map
-          if (friendsList.isEmpty()) {
-            onSuccess(emptyMap())
-          }
-        },
-        onFailure)
+        }
+      } catch (e: Exception) {
+        Log.e(logTag, e.toString())
+        onFailure(e)
+      }
+    }
+    onSuccess(friendsLocations)
   }
 
   private fun documentSnapshotToUserList(
@@ -600,12 +595,75 @@ internal class UserRepositoryFirestoreHelper() {
         "firstName" to user.firstName,
         "lastName" to user.lastName,
         "phoneNumber" to user.phoneNumber,
-        "emailAddress" to user.emailAddress)
+        "emailAddress" to user.emailAddress,
+        "lastKnownLocation" to locationToString(user.lastKnownLocation))
+  }
+
+  private fun locationToString(lastKnownLocation: Location?): String {
+    if (lastKnownLocation != null) {
+      return "{" +
+          "provider=" +
+          lastKnownLocation.provider +
+          ", latitude=" +
+          lastKnownLocation.latitude.toString() +
+          ", longitude=" +
+          lastKnownLocation.longitude.toString() +
+          "}"
+    } else return "{" + "provider= " + "latitude= " + ", " + "longitude= " + "}"
+  }
+
+  fun locationParser(mapAttributes: String): Location {
+    val locationMap =
+        mapAttributes
+            .removeSurrounding("{", "}")
+            .split(", ")
+            .map { it.split("=") }
+            .associate { it[0].trim() to it.getOrNull(1)?.trim() }
+
+    // Retrieve required attributes with default fallbacks
+    val provider = locationMap["provider"] ?: LocationManager.GPS_PROVIDER
+    val latitude = locationMap["latitude"]!!.toDouble()
+    val longitude = locationMap["longitude"]!!.toDouble()
+
+    // Create the Location object with the mandatory values
+    return Location(provider).apply {
+      this.latitude = latitude
+      this.longitude = longitude
+
+      // Set optional values if present
+      locationMap["altitude"]?.toDoubleOrNull()?.let { this.altitude = it }
+      locationMap["speed"]?.toFloatOrNull()?.let { this.speed = it }
+      locationMap["accuracy"]?.toFloatOrNull()?.let { this.accuracy = it }
+      locationMap["bearing"]?.toFloatOrNull()?.let { this.bearing = it }
+      locationMap["time"]?.toLongOrNull()?.let { this.time = it }
+      locationMap["bearingAccuracyDegrees"]?.toFloatOrNull()?.let {
+        this.bearingAccuracyDegrees = it
+      }
+      locationMap["verticalAccuracyMeters"]?.toFloatOrNull()?.let {
+        this.verticalAccuracyMeters = it
+      }
+      locationMap["speedAccuracyMetersPerSecond"]?.toFloatOrNull()?.let {
+        this.speedAccuracyMetersPerSecond = it
+      }
+      locationMap["elapsedRealtimeMillis"]?.toLongOrNull()?.let {
+        this.elapsedRealtimeNanos = it * 1_000_000
+      }
+    }
   }
 
   fun documentSnapshotToUser(document: DocumentSnapshot, profilePicture: ImageBitmap?): User {
-    val geoPoint = document.getGeoPoint("lastKnownLocation")
-    val location = geoPoint?.let { GeoLocation(it.latitude, it.longitude) } ?: GeoLocation(0.0, 0.0)
+    val lastKnownLocationString = document.data?.get("lastKnownLocation")?.toString()
+    val lastKnownLocation =
+        if (!lastKnownLocationString.isNullOrEmpty()) {
+          try {
+            locationParser(lastKnownLocationString)
+          } catch (e: Exception) {
+            Log.e("UserRepositoryFirestoreHelper", "Error parsing location: ", e)
+            null
+          }
+        } else {
+          null
+        }
     return User(
         uid = document.data?.get("uid").toString(),
         firstName = document.data?.get("firstName").toString(),
@@ -613,7 +671,7 @@ internal class UserRepositoryFirestoreHelper() {
         phoneNumber = document.data?.get("phoneNumber").toString(),
         emailAddress = document.data?.get("emailAddress").toString(),
         profilePicture = profilePicture,
-        lastKnownLocation = location)
+        lastKnownLocation = lastKnownLocation)
   }
 
   fun documentSnapshotToList(uidJsonList: String): List<String> {

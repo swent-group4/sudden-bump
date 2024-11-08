@@ -59,7 +59,7 @@ fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: Us
         Text(text = "Phone: ${user.phoneNumber}")
         Text(
             text =
-                "latitude: ${user.lastKnownLocation.latitude}, longitude: ${user.lastKnownLocation.longitude}")
+                "latitude: ${user.lastKnownLocation?.latitude}, longitude: ${user.lastKnownLocation?.longitude}")
       }
     }
   }

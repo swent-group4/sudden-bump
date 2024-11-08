@@ -30,9 +30,23 @@ open class UserViewModel(
   private val profilePicture = ImageBitMapIO()
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
+  val locationDummy =
+      Location("providerName").apply {
+        latitude = 0.0 // Set latitude
+        longitude = 0.0 // Set longitude
+      }
+
   private val _user: MutableStateFlow<User> =
       MutableStateFlow(
-          User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch"))
+          User(
+              "1",
+              "Martin",
+              "Vetterli",
+              "+41 00 000 00 01",
+              null,
+              "martin.vetterli@epfl.ch",
+              locationDummy))
+
   private val _userFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(_user.value))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
@@ -240,16 +254,29 @@ open class UserViewModel(
   }
 
   fun loadFriendsLocations() {
-    repository.getFriendsLocation(
-        _user.value,
-        onSuccess = { friendsLoc ->
-          // Update the state with the locations of friends
-          friendsLocations.value = friendsLoc
-        },
-        onFailure = { error ->
-          // Handle the error, e.g., log or show error message
-          Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
-        })
+    try {
+      Log.i(logTag, "1: ${_userFriends.value.toString()}")
+      println("1: ${_userFriends.value.toString()}")
+      Log.i(logTag, "2: ${getUserFriends().value.toString()}")
+      println("2: ${getUserFriends().value.toString()}")
+      repository.getFriendsLocation(
+          _userFriends.value,
+          onSuccess = { friendsLoc ->
+            // Update the state with the locations of friends
+            friendsLocations.value = friendsLoc
+            Log.d("FriendsMarkers", "On success load Friends Locations ${friendsLocations.value}")
+            println("On success load Friends Locations ${friendsLocations.value}")
+          },
+          onFailure = { error ->
+            // Handle the error, e.g., log or show error message
+            Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
+            println("exception1")
+          })
+    } catch (e: Exception) {
+      Log.e("UserViewModel", e.toString())
+      println("exception2")
+    }
+    println("endfunc")
   }
 
   fun getSelectedContact(): StateFlow<User> {
@@ -263,12 +290,26 @@ open class UserViewModel(
   fun getRelativeDistance(friend: User): Float {
     loadFriendsLocations()
     val userLocation = _userLocation.value
-    val friendLocation = friendsLocations.value.get(friend)
+    val friendLocation = friendsLocations.value[friend]
     return if (friendLocation != null) {
       userLocation.distanceTo(friendLocation)
     } else {
       Float.MAX_VALUE
     }
+  }
+
+  fun isFriendsInRadius(radius: Int): Boolean {
+    loadFriendsLocations()
+    friendsLocations.value.values.forEach { friendLocation ->
+      if (friendLocation != null) {
+        Log.d(
+            "FriendsRadius", "Friends Locations: ${_userLocation.value.distanceTo(friendLocation)}")
+        if (_userLocation.value.distanceTo(friendLocation) <= radius) {
+          return true
+        }
+      }
+    }
+    return false
   }
 
   fun getNewUid(): String {

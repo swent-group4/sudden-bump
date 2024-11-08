@@ -1,6 +1,11 @@
 package com.swent.suddenbump.ui.map
 
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -12,8 +17,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -23,6 +30,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
@@ -30,6 +38,7 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -45,7 +54,7 @@ fun MapScreen(
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { pd -> SimpleMap(location, userViewModel) })
+      content = { _ -> SimpleMap(location, userViewModel) })
 }
 
 @Composable
@@ -53,6 +62,7 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
   val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) } // Track if the zoom has been performed
+  val context = LocalContext.current
 
   LaunchedEffect(location) {
     location?.let {
@@ -62,7 +72,14 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
       if (!zoomDone) {
         // Perform zoom only the first time the location is set
         cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
+
         fetchLocationToServer(location, userViewModel)
+
+        if (userViewModel.isFriendsInRadius(8000)) {
+          Log.d("FriendsRadius", "isTriggered")
+          showFriendNearbyNotification(context) // Show notification}
+        }
+
         zoomDone = true // Mark zoom as done
       }
     }
@@ -74,8 +91,13 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
     while (isActive) {
       Log.d("CoroutineStatus", "Coroutine is running")
 
-      currentLocation?.let { fetchLocationToServer(currentLocation!!, userViewModel) }
-          ?: Log.d("LocationUpdate", "Location is null")
+      currentLocation?.let {
+        fetchLocationToServer(currentLocation!!, userViewModel)
+        if (userViewModel.isFriendsInRadius(8000)) {
+          Log.d("FriendsRadius", "isTriggered")
+          showFriendNearbyNotification(context) // Show notification}
+        }
+      } ?: Log.d("LocationUpdate", "Location is null")
 
       // Delay for 5 minutes (300,000 milliseconds)
       delay(300_000) // Adjusted back to 5 minutes
@@ -94,78 +116,33 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
               snippet = "DescriptionTest",
               icon = BitmapDescriptorFactory.fromBitmap(markerBitmap))
 
-          FriendsMarkers()
+          FriendsMarkers(userViewModel)
         }
   }
 }
 
 @Composable
-fun FriendsMarkers() {
-  // userViewModel.loadFriendsLocations()
-  // val friendsLocations by userViewModel.friendsLocations
+fun FriendsMarkers(userViewModel: UserViewModel) {
+  val friendsLocations = remember { mutableStateOf<Map<User, Location?>>(emptyMap()) }
 
-  // LaunchedEffect(Unit) {
-  //    userViewModel.loadFriendsLocations() // Load data when composable is first composed
-  // }
+  LaunchedEffect(userViewModel) {
+    launch {
+      userViewModel.loadFriendsLocations()
+      friendsLocations.value = userViewModel.friendsLocations.value
+      // Log the friendsLocations
+      Log.d("FriendsMarkers", "Friends Locations: ${friendsLocations}")
+    }
+  }
 
-  val mockImageBitmap: ImageBitmap? = null // assuming null for simplicity
-
-  // Create mock users
-  val user1 =
-      User(
-          uid = "1",
-          firstName = "John",
-          lastName = "Doe",
-          phoneNumber = "123456789",
-          profilePicture = mockImageBitmap,
-          emailAddress = "john.doe@example.com")
-
-  val user2 =
-      User(
-          uid = "2",
-          firstName = "Jane",
-          lastName = "Smith",
-          phoneNumber = "987654321",
-          profilePicture = mockImageBitmap,
-          emailAddress = "jane.smith@example.com")
-
-  val user3 =
-      User(
-          uid = "3",
-          firstName = "Alice",
-          lastName = "Johnson",
-          phoneNumber = "555666777",
-          profilePicture = mockImageBitmap,
-          emailAddress = "alice.johnson@example.com")
-
-  // Create mock locations
-  val location1 =
-      Location("mock_provider").apply {
-        latitude = 46.5186664
-        longitude = 6.568274
-      }
-  val location2 =
-      Location("mock_provider").apply {
-        latitude = 46.521083
-        longitude = 6.575470
-      }
-  val location3 =
-      Location("mock_provider").apply {
-        latitude = 46.522836
-        longitude = 6.565142
-      }
-
-  // Create Map<User, Location>
-  val userLocationMap: Map<User, Location> =
-      mapOf(user1 to location1, user2 to location2, user3 to location3)
-
-  userLocationMap.let { locations ->
+  friendsLocations.value.let { locations ->
     locations.forEach { (friend, location) ->
-      Marker(
-          state = MarkerState(position = LatLng(location.latitude, location.longitude)),
-          title = friend.firstName,
-          snippet = friend.uid,
-      )
+      location?.let {
+        Marker(
+            state = MarkerState(position = LatLng(it.latitude, it.longitude)),
+            title = friend.firstName,
+            snippet = friend.uid,
+        )
+      }
     }
   }
 }
@@ -200,4 +177,43 @@ fun fetchLocationToServer(location: Location, userViewModel: UserViewModel) {
       location,
       onSuccess = { Log.d("FireStoreLocation", "Successfully updated location") },
       onFailure = { Log.d("FireStoreLocation", "Failure to reach Firestore") })
+}
+
+fun showFriendNearbyNotification(context: Context) {
+  val channelId = "friend_nearby_channel"
+  val channelName = "Friend Nearby Notifications"
+  val notificationId = 1
+
+  val notificationChannel =
+      NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+  val notificationManager = context.getSystemService(NotificationManager::class.java)
+  notificationManager?.createNotificationChannel(notificationChannel)
+
+  // Modify the intent to navigate to Screen.OVERVIEW
+  val intent =
+      Intent(context, MainActivity::class.java).apply {
+        putExtra("destination", "Screen.OVERVIEW")
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+      }
+
+  val pendingIntent: PendingIntent =
+      PendingIntent.getActivity(
+          context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+  val notificationBuilder =
+      NotificationCompat.Builder(context, channelId)
+          .setSmallIcon(android.R.drawable.ic_dialog_info)
+          .setContentTitle("Friend Nearby")
+          .setContentText("A friend is within your radius!")
+          .setPriority(NotificationCompat.PRIORITY_HIGH)
+          .setContentIntent(pendingIntent)
+          .setAutoCancel(true)
+
+  try {
+    with(NotificationManagerCompat.from(context)) {
+      notify(notificationId, notificationBuilder.build())
+    }
+  } catch (e: SecurityException) {
+    Log.e("NotificationError", "Notification permission not granted", e)
+  }
 }
