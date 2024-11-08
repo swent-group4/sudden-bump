@@ -99,9 +99,6 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
               SuddenBumpApp(newLocation)
-              //              val userViewModel =
-              // UserViewModel(UserRepositoryFirestore(Firebase.firestore))
-              //              TestComposableScreen(userViewModel)
             }
       }
     }
