@@ -58,32 +58,14 @@ class MainActivity : ComponentActivity() {
   private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
   private lateinit var locationGetter: LocationGetter
 
-  private var notificationManager: NotificationManager? = null
-
-  // Method to set notification manager for testing
-  fun setTestNotificationManager(manager: NotificationManager) {
-    this.notificationManager = manager
-  }
-
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     var newLocation by mutableStateOf<Location?>(null)
 
-    if (notificationManager == null) {
-      notificationManager = getSystemService(NotificationManager::class.java)
-    }
-
-    if ((notificationManager != null) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      val REQUEST_CODE = 1001
-      ActivityCompat.requestPermissions(
-          this, // `this` should be your activity context
-          arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-          REQUEST_CODE)
-    }
-
     val notificationChannel =
         NotificationChannel("1", "FriendsNear", NotificationManager.IMPORTANCE_HIGH)
+    val notificationManager = getSystemService(NotificationManager::class.java)
     notificationManager?.createNotificationChannel(notificationChannel)
 
     locationGetter =
@@ -150,6 +132,16 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  private fun checkNotificationPermission() {
+    val notificationPermissionGranted =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+
+    if (!notificationPermissionGranted) {
+      ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+    }
+  }
+
   @SuppressLint("UnrememberedMutableState")
   @Composable
   fun SuddenBumpApp(location: Location?) {
@@ -170,7 +162,12 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.OVERVIEW,
           route = Route.OVERVIEW,
       ) {
-        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions, userViewModel) }
+        composable(Screen.OVERVIEW) {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            checkNotificationPermission()
+          }
+          OverviewScreen(navigationActions, userViewModel)
+        }
         composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
