@@ -58,12 +58,23 @@ class MainActivity : ComponentActivity() {
   private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
   private lateinit var locationGetter: LocationGetter
 
+  private var notificationManager: NotificationManager? = null
+
+  // Method to set notification manager for testing
+  fun setTestNotificationManager(manager: NotificationManager) {
+    this.notificationManager = manager
+  }
+
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     var newLocation by mutableStateOf<Location?>(null)
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    if (notificationManager == null) {
+      notificationManager = getSystemService(NotificationManager::class.java)
+    }
+
+    if ((notificationManager != null) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       val REQUEST_CODE = 1001
       ActivityCompat.requestPermissions(
           this, // `this` should be your activity context
@@ -73,7 +84,6 @@ class MainActivity : ComponentActivity() {
 
     val notificationChannel =
         NotificationChannel("1", "FriendsNear", NotificationManager.IMPORTANCE_HIGH)
-    val notificationManager = getSystemService(NotificationManager::class.java)
     notificationManager?.createNotificationChannel(notificationChannel)
 
     locationGetter =
