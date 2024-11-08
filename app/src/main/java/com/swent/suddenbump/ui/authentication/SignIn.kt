@@ -115,17 +115,17 @@ fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
               onSignInClick = {
                 if (isRunningTest() && !isGoogleSignInEnabledForTesting) {
                   Log.e("SignInScreen", "Running tests: ${isRunningTest()}")
-                  userViewModel.setCurrentUser()
+                  // userViewModel.setCurrentUser()
                   navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
+                } else {
+                  val gso =
+                      GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                          .requestIdToken(token)
+                          .requestEmail()
+                          .build()
+                  val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                  launcher.launch(googleSignInClient.signInIntent)
                 }
-
-                val gso =
-                    GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestIdToken(token)
-                        .requestEmail()
-                        .build()
-                val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                launcher.launch(googleSignInClient.signInIntent)
               })
         }
       })
