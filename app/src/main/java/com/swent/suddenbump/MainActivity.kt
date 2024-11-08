@@ -50,6 +50,7 @@ import com.swent.suddenbump.ui.overview.FriendsListScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.settings.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
+import com.swent.suddenbump.ui.utils.isRunningTest
 
 class MainActivity : ComponentActivity() {
 
@@ -124,7 +125,7 @@ class MainActivity : ComponentActivity() {
 
     if (fineLocationGranted || coarseLocationGranted) {
       locationGetter.requestLocationUpdates()
-    } else {
+    } else if (!isRunningTest()) {
       // Request permissions
       requestMultiplePermissionsLauncher.launch(
           arrayOf(
@@ -137,7 +138,7 @@ class MainActivity : ComponentActivity() {
         ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
 
-    if (!notificationPermissionGranted) {
+    if (!notificationPermissionGranted && !isRunningTest()) {
       ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
     }
   }

@@ -42,8 +42,11 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.navigation.TopLevelDestinations
 import com.swent.suddenbump.ui.theme.violetColor
+import com.swent.suddenbump.ui.utils.isRunningTest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+
+public var isGoogleSignInEnabledForTesting = false
 
 @Composable
 fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
@@ -110,6 +113,12 @@ fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
           // Authenticate With Google Button
           GoogleSignInButton(
               onSignInClick = {
+                if (isRunningTest() && !isGoogleSignInEnabledForTesting) {
+                  Log.e("SignInScreen", "Running tests: ${isRunningTest()}")
+                  userViewModel.setCurrentUser()
+                  navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
+                }
+
                 val gso =
                     GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestIdToken(token)

@@ -12,6 +12,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.MainActivity
+import com.swent.suddenbump.ui.utils.isRunningTest
 import junit.framework.TestCase
 import org.junit.After
 import org.junit.Before
@@ -38,6 +39,9 @@ class LoginTest : TestCase() {
 
   @Test
   fun titleAndButtonAreCorrectlyDisplayed() {
+
+    assertEquals(true, isRunningTest())
+
     composeTestRule.waitUntil(timeoutMillis = 7000) {
       composeTestRule.onNodeWithTag("loginTitle").fetchSemanticsNode() != null
     }
@@ -50,6 +54,9 @@ class LoginTest : TestCase() {
 
   @Test
   fun googleSignInReturnsValidActivityResult() {
+
+    isGoogleSignInEnabledForTesting = true
+
     composeTestRule.waitUntil(timeoutMillis = 7000) {
       composeTestRule.onNodeWithTag("loginButton").fetchSemanticsNode() != null
     }
