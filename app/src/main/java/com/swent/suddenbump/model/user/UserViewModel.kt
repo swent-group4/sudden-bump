@@ -39,10 +39,6 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
 
-  private val _meetings = MutableStateFlow<List<Meeting>>(emptyList())
-  val meetings: StateFlow<List<Meeting>>
-    get() = _meetings
-
   private val _error = MutableStateFlow<Exception?>(null)
 
   init {
@@ -57,24 +53,6 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
             return UserViewModel(UserRepositoryFirestore(Firebase.firestore)) as T
           }
         }
-  }
-
-  fun getMeetings() {
-    repository.getUserAccount(
-        onSuccess = { user ->
-          repository.getMeetings(
-              user,
-              onSuccess = { meetingsList ->
-                  Log.i("MeetingsUserViewModel", "Meetings retrieved successfully: ${meetingsList.size} meetings found")
-                  meetingsList.forEach { meeting ->
-                      Log.i("MeetingsUserViewModel", "Meeting details - ID: ${meeting.userId}, Friend ID: ${meeting.friendId}, Location: ${meeting.location}, Date: ${meeting.date}")
-                  }
-                  _meetings.value = meetingsList },
-              onFailure = { exception ->
-                  Log.e("MeetingsUserViewModel", "Failed to retrieve meetings: ${exception.message}")
-                   _error.value = exception })
-        },
-        onFailure = { exception -> _error.value = exception })
   }
 
   fun setCurrentUser() {

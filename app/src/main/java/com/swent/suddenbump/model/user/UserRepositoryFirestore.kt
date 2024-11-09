@@ -4,7 +4,6 @@ import android.location.Location
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import com.google.android.gms.tasks.Tasks
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -14,7 +13,6 @@ import com.google.firebase.storage.ktx.storage
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import com.swent.suddenbump.model.location.GeoLocation
-import com.swent.suddenbump.model.meeting.Meeting
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
@@ -25,7 +23,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   private val usersCollectionPath = "Users"
   private val emailCollectionPath = "Emails"
-    private val meetingsCollectionPath = "Meetings"
 
   private val storage = Firebase.storage("gs://sudden-bump-swent.appspot.com")
   private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
@@ -39,33 +36,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   override fun getNewUid(): String {
     return db.collection(usersCollectionPath).document().id
-  }
-
-  override fun getMeetings(
-      user: User,
-      onSuccess: (List<Meeting>) -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-      db.collection(meetingsCollectionPath)
-          .document(user.uid)
-          .get()
-          .addOnFailureListener { onFailure(it) }
-          .addOnSuccessListener { result ->
-              val meetingsList = result.data?.let { data ->
-                  data.mapNotNull { entry ->
-                      val meetingData = entry.value as? Map<*, *>
-                      meetingData?.let {
-                          Meeting(
-                              userId = it["userId"] as? String ?: "",
-                              location = it["location"] as? String ?: "",
-                              date = it["date"] as? Timestamp ?: Timestamp.now(),
-                              friendId = it["friendId"] as? String ?: ""
-                          )
-                      }
-                  }
-              } ?: emptyList()
-              onSuccess(meetingsList)
-          }
   }
 
   override fun verifyNoAccountExists(

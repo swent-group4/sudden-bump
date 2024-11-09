@@ -12,8 +12,6 @@ interface UserRepository {
 
   fun getNewUid(): String
 
-  fun getMeetings(user: User, onSuccess: (List<Meeting>) -> Unit, onFailure: (Exception) -> Unit)
-
   fun verifyNoAccountExists(
       emailAddress: String,
       onSuccess: (Boolean) -> Unit,
