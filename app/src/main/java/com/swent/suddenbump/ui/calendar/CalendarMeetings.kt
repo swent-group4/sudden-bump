@@ -38,13 +38,13 @@ fun CalendarMeetingsScreen(navigationActions: NavigationActions, userViewModel: 
       },
       content = { padding ->
         Column(modifier = Modifier.padding(padding)) {
-          ScrollableInfiniteTimeline(meetings = meetings, navigationActions)
+          ScrollableInfiniteTimeline(meetings = meetings)
         }
       })
 }
 
 @Composable
-fun ScrollableInfiniteTimeline(meetings: List<Meeting>, navigationActions: NavigationActions) {
+fun ScrollableInfiniteTimeline(meetings: List<Meeting>) {
   val currentDate = Calendar.getInstance()
   val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
@@ -53,7 +53,9 @@ fun ScrollableInfiniteTimeline(meetings: List<Meeting>, navigationActions: Navig
     mutableStateOf(Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 30) })
   }
 
-  val meetingsByDay = meetings.groupBy { formatter.format(it.date) }
+  val meetingsByDay = meetings.groupBy { meeting ->
+      val date = meeting.date as? Date ?: Date() // Ensure date is a Date object
+      formatter.format(date) }
 
   val dayList = remember {
     mutableStateListOf<Calendar>().apply {
@@ -118,8 +120,9 @@ fun DayRow(
           Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
             meetings.forEach { meeting ->
               Card(modifier = Modifier.fillMaxWidth().background(Color(0xFFF5F5F5)).padding(8.dp)) {
+                  val formattedDate = formatDate(meeting.date?.toDate())
                 Text(
-                    text = "${meeting.friendName} at ${meeting.location}",
+                    text = "${meeting.friendId} at ${meeting.location} on $formattedDate",
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.fillMaxWidth().padding(12.dp))
               }
@@ -156,6 +159,15 @@ fun generateDayList(startDate: Calendar, endDate: Calendar): List<Calendar> {
 fun getMonthYearString(date: Date): String {
   val formatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
   return formatter.format(date)
+}
+
+fun formatDate(date: Date?): String {
+    return if (date != null) {
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        formatter.format(date)
+    } else {
+        "Invalid Date"
+    }
 }
 
 @Preview(showBackground = true)

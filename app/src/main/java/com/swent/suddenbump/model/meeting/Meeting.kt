@@ -1,3 +1,10 @@
 package com.swent.suddenbump.model.meeting
 
-data class Meeting(val location: String = "", val date: String = "", val friendName: String = "")
+import com.google.firebase.Timestamp
+
+data class Meeting(
+    val userId: String = "",
+    val location: String = "",
+    val date: Timestamp = Timestamp.now(),
+    val friendId: String = ""
+)

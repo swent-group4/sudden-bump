@@ -4,6 +4,7 @@ import android.location.Location
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import com.google.android.gms.tasks.Tasks
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -24,6 +25,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   private val usersCollectionPath = "Users"
   private val emailCollectionPath = "Emails"
+    private val meetingsCollectionPath = "Meetings"
 
   private val storage = Firebase.storage("gs://sudden-bump-swent.appspot.com")
   private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
@@ -44,14 +46,26 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
       onSuccess: (List<Meeting>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    db.collection("meetings")
-        .whereEqualTo("userId", user.uid)
-        .get()
-        .addOnSuccessListener { snapshot ->
-          val meetings = snapshot.documents.mapNotNull { it.toObject(Meeting::class.java) }
-          onSuccess(meetings)
-        }
-        .addOnFailureListener { exception -> onFailure(exception) }
+      db.collection(meetingsCollectionPath)
+          .document(user.uid)
+          .get()
+          .addOnFailureListener { onFailure(it) }
+          .addOnSuccessListener { result ->
+              val meetingsList = result.data?.let { data ->
+                  data.mapNotNull { entry ->
+                      val meetingData = entry.value as? Map<*, *>
+                      meetingData?.let {
+                          Meeting(
+                              userId = it["userId"] as? String ?: "",
+                              location = it["location"] as? String ?: "",
+                              date = it["date"] as? Timestamp ?: Timestamp.now(),
+                              friendId = it["friendId"] as? String ?: ""
+                          )
+                      }
+                  }
+              } ?: emptyList()
+              onSuccess(meetingsList)
+          }
   }
 
   override fun verifyNoAccountExists(

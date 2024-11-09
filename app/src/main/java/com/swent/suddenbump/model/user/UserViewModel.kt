@@ -64,8 +64,15 @@ open class UserViewModel(private val repository: UserRepository) : ViewModel() {
         onSuccess = { user ->
           repository.getMeetings(
               user,
-              onSuccess = { meetingsList -> _meetings.value = meetingsList },
-              onFailure = { exception -> _error.value = exception })
+              onSuccess = { meetingsList ->
+                  Log.i("MeetingsUserViewModel", "Meetings retrieved successfully: ${meetingsList.size} meetings found")
+                  meetingsList.forEach { meeting ->
+                      Log.i("MeetingsUserViewModel", "Meeting details - ID: ${meeting.userId}, Friend ID: ${meeting.friendId}, Location: ${meeting.location}, Date: ${meeting.date}")
+                  }
+                  _meetings.value = meetingsList },
+              onFailure = { exception ->
+                  Log.e("MeetingsUserViewModel", "Failed to retrieve meetings: ${exception.message}")
+                   _error.value = exception })
         },
         onFailure = { exception -> _error.value = exception })
   }
