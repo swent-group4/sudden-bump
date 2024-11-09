@@ -177,6 +177,7 @@ dependencies {
 
     // Other dependencies...
     implementation(libs.androidx.core.ktx)
+    testImplementation(libs.androidx.arch.core.testing)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)

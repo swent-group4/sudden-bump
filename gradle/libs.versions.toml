@@ -55,6 +55,7 @@ appcompat = "1.7.0"
 coreKtx = "1.13.1"
 lifecycleRuntimeKtx = "2.8.6"
 androidxCoreKtx = "1.6.1"
+androidx-arch-core = "2.1.0"
 composeActivity = "1.9.3"
 composeViewModel = "2.8.6"
 sonar = "5.1.0.4882"
@@ -65,6 +66,7 @@ runtimeLivedata = "1.7.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-arch-core-testing = { module = "androidx.arch.core:core-testing", version = "2.1.0" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

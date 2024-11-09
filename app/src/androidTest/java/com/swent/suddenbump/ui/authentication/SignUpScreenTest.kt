@@ -9,8 +9,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
