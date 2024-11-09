@@ -5,6 +5,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
@@ -25,6 +26,7 @@ class MapScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
+  private lateinit var chatRepository: ChatRepository
 
   private val exception = Exception()
   private val location =
@@ -33,12 +35,13 @@ class MapScreenTest {
         longitude = 0.0
       }
   private val user =
-      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch", location)
 
   @Before
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
-    userViewModel = UserViewModel(userRepository)
+    chatRepository = mock(ChatRepository::class.java)
+    userViewModel = UserViewModel(userRepository, chatRepository)
   }
 
   @Test

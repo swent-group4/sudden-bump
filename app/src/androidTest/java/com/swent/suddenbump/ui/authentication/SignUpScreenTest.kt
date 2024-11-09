@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -24,8 +25,7 @@ class SignUpScreenTest {
   private lateinit var userRepository: UserRepository
   private lateinit var navigationActions: NavigationActions
   private lateinit var userViewModel: UserViewModel
-  private lateinit var mockFirebaseAuth: FirebaseAuth
-  private lateinit var mockFirebaseUser: FirebaseUser
+  private lateinit var chatRepository: ChatRepository
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -33,13 +33,8 @@ class SignUpScreenTest {
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
     navigationActions = mock(NavigationActions::class.java)
-    userViewModel = UserViewModel(userRepository)
-
-    // Mock FirebaseAuth and FirebaseUser
-    /*mockFirebaseAuth = mock(FirebaseAuth::class.java)
-    mockFirebaseUser = mock(FirebaseUser::class.java)
-    `when`(mockFirebaseAuth.currentUser).thenReturn(mockFirebaseUser)
-    `when`(mockFirebaseUser.email).thenReturn("test@example.com")*/
+    chatRepository = mock(ChatRepository::class.java)
+    userViewModel = UserViewModel(userRepository, chatRepository)
   }
 
   @Test
@@ -69,8 +64,6 @@ class SignUpScreenTest {
   fun testInputFields_interaction() {
     // Set the initial content for testing
     composeTestRule.setContent { SignUpScreen(navigationActions, userViewModel) }
-
-    //    `when`(userViewModel.getNewUid()).thenReturn("UnIntGenre5")
 
     // Test user input in the text fields
     composeTestRule.onNodeWithTag("firstNameField").performTextInput("John")

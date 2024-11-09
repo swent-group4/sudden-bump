@@ -3,6 +3,9 @@ package com.swent.suddenbump.ui.contacts
 /*
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.user.UserRepository
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
@@ -15,16 +18,22 @@ import org.mockito.kotlin.verify
 
 class ContactScreenTest {
   private lateinit var navigationActions: NavigationActions
+  private lateinit var userRepository: UserRepository
+  private lateinit var userViewModel: UserViewModel
+  private lateinit var chatRepository: ChatRepository
 
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
+    userRepository = mock(UserRepository::class.java)
+    chatRepository = mock(ChatRepository::class.java)
+    userViewModel = UserViewModel(userRepository, chatRepository)
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
 
     // Initialize the content once before all tests
-    composeTestRule.setContent { ContactScreen(navigationActions) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
   }
 
   @Test
@@ -37,9 +46,6 @@ class ContactScreenTest {
 
     // Verify the user's name is displayed
     composeTestRule.onNodeWithTag("userName").assertIsDisplayed()
-
-    // Verify the birthday card is displayed
-    composeTestRule.onNodeWithTag("birthdayCard").assertIsDisplayed()
 
     // Verify the phone card is displayed
     composeTestRule.onNodeWithTag("phoneCard").assertIsDisplayed()
@@ -73,20 +79,6 @@ class ContactScreenTest {
 
     // Verify that navigation to the message screen is triggered
     //    verify(navigationActions).navigateTo(Route.MESSAGE)
-  }
-
-  @Test
-  fun testBirthdayCardDisplaysCorrectInfo() {
-    // Verify the birthday card is displayed
-    composeTestRule.onNodeWithTag("birthdayCard").assertIsDisplayed()
-
-    // Verify the birthday text is correct
-    composeTestRule.onNodeWithTag("birthdayText").assertTextEquals("Birthday: 28 February 1998")
-  }
-
-  @Test
-  fun testContactNameDisplaysCorrectly() {
-    composeTestRule.onNodeWithTag("userName").assertTextEquals("Jane Smith")
   }
 }
 */
