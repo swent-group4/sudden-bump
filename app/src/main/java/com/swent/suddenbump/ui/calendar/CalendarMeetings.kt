@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingViewModel
@@ -21,6 +22,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Route
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -35,14 +37,15 @@ fun CalendarMeetingsScreen(navigationActions: NavigationActions, meetingViewMode
             BottomNavigationMenu(
                 onTabSelect = { route -> navigationActions.navigateTo(route) },
                 tabList = LIST_TOP_LEVEL_DESTINATION,
-                selectedItem = navigationActions.currentRoute()
+                selectedItem = navigationActions.currentRoute(),
             )
         },
         content = { padding ->
             Column(modifier = Modifier
                 .padding(padding)
                 .background(Color.Black)
-                .fillMaxSize()) {
+                .fillMaxSize()
+                .testTag("calendarMeetingsScreen")) {
                 ScrollableInfiniteTimeline(meetings = meetings, userFriends = userFriends)
             }
         }
@@ -114,6 +117,7 @@ fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>) {
             .padding(8.dp)
             .background(com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium)
             .padding(8.dp)
+            .testTag("dayRow")
     ) {
         Text(
             text = dayFormat.format(day),
@@ -135,10 +139,10 @@ fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>) {
                         val friendName = friend?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown Friend"
                         val formattedDate = formatDate(meeting.date.toDate())
                         Text(
-                            text = "Meet $friendName at ${meeting.location} on $formattedDate",
+                            text = "Meet $friendName at ${meeting.location}",
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.White,
-                            modifier = Modifier.fillMaxWidth().padding(12.dp)
+                            modifier = Modifier.fillMaxWidth().padding(12.dp).testTag("meetText")
                         )
                     }
                 }
@@ -160,7 +164,7 @@ fun MonthYearHeader(monthYear: String) {
         text = monthYear,
         style = MaterialTheme.typography.headlineSmall,
         color = Color.White,
-        modifier = Modifier.fillMaxWidth().padding(16.dp)
+        modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("monthYearHeader")
     )
 }
 

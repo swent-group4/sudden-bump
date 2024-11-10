@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : ViewModel() {
+open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : ViewModel() {
 
     private val _meetings = MutableStateFlow<List<Meeting>>(emptyList())
     val meetings: StateFlow<List<Meeting>> = _meetings.asStateFlow()
