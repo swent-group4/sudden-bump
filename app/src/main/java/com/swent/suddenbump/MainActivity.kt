@@ -2,8 +2,11 @@ package com.swent.suddenbump
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -20,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -35,6 +39,7 @@ import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.authentication.SignUpScreen
 import com.swent.suddenbump.ui.calendar.CalendarMeetingsScreen
+import com.swent.suddenbump.ui.chat.ChatScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.map.MapScreen
@@ -59,6 +64,11 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     var newLocation by mutableStateOf<Location?>(null)
+
+    val notificationChannel =
+        NotificationChannel("1", "FriendsNear", NotificationManager.IMPORTANCE_HIGH)
+    val notificationManager = getSystemService(NotificationManager::class.java)
+    notificationManager?.createNotificationChannel(notificationChannel)
 
     locationGetter =
         LocationGetter(
@@ -124,6 +134,16 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  private fun checkNotificationPermission() {
+    val notificationPermissionGranted =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+
+    if (!notificationPermissionGranted) {
+      ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001)
+    }
+  }
+
   @SuppressLint("UnrememberedMutableState")
   @Composable
   fun SuddenBumpApp(location: Location?) {
@@ -145,12 +165,18 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.OVERVIEW,
           route = Route.OVERVIEW,
       ) {
-        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions, userViewModel) }
+        composable(Screen.OVERVIEW) {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            checkNotificationPermission()
+          }
+          OverviewScreen(navigationActions, userViewModel)
+        }
         composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+        composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
       }
       navigation(
           startDestination = Screen.CALENDAR,
@@ -174,7 +200,7 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.MESS,
           route = Route.MESS,
       ) {
-        composable(Screen.MESS) { MessagesScreen(navigationActions) }
+        composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions) }
       }
     }
   }
