@@ -1,14 +1,17 @@
 package com.swent.suddenbump.model.meeting
 
 import android.util.Log
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.DocumentSnapshot
-import com.swent.suddenbump.model.user.User
 
 class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRepository {
 
     private val meetingsCollectionPath = "Meetings"
+
+    override fun getNewMeetingId(): String {
+        return db.collection(meetingsCollectionPath).document().id
+    }
+
 
     override fun init(onSuccess: () -> Unit) {
         db.collection(meetingsCollectionPath).get().addOnCompleteListener { result ->
@@ -23,29 +26,15 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
     }
 
     override fun getMeetings(
-        user: User,
         onSuccess: (List<Meeting>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
         db.collection(meetingsCollectionPath)
-            .document(user.uid)
             .get()
             .addOnFailureListener { onFailure(it) }
             .addOnSuccessListener { result ->
-                val meetingsList = result.data?.let { data ->
-                    data.mapNotNull { entry ->
-                        val meetingData = entry.value as? Map<*, *>
-                        meetingData?.let {
-                            Meeting(
-                                userId = it["userId"] as? String ?: "",
-                                location = it["location"] as? String ?: "",
-                                date = it["date"] as? Timestamp ?: Timestamp.now(),
-                                friendId = it["friendId"] as? String ?: ""
-                            )
-                        }
-                    }
-                } ?: emptyList()
-                onSuccess(meetingsList)
+                val meetings = result.documents.mapNotNull { it.toMeeting() }
+                onSuccess(meetings)
             }
     }
 
@@ -54,7 +43,7 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        db.collection(meetingsCollectionPath).document(meeting.userId).set(meeting.toMap()).addOnCompleteListener { result ->
+        db.collection(meetingsCollectionPath).document(meeting.meetingId).set(meeting.toMap()).addOnCompleteListener { result ->
             if (result.isSuccessful) {
                 onSuccess()
             } else {
@@ -71,7 +60,7 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        db.collection(meetingsCollectionPath).document(meeting.userId).set(meeting.toMap()).addOnCompleteListener { result ->
+        db.collection(meetingsCollectionPath).document(meeting.meetingId).set(meeting.toMap()).addOnCompleteListener { result ->
             if (result.isSuccessful) {
                 onSuccess()
             } else {
@@ -111,7 +100,7 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
 
     private fun Meeting.toMap(): Map<String, Any> {
         return mapOf(
-            "userId" to userId,
+            "meetingId" to meetingId,
             "location" to location,
             "date" to date,
             "friendId" to friendId

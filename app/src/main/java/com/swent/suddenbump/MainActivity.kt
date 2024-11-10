@@ -29,6 +29,7 @@ import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.LocationGetter
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
@@ -130,6 +131,7 @@ class MainActivity : ComponentActivity() {
     val navigationActions = NavigationActions(navController)
 
     val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+    val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(
@@ -154,7 +156,7 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.CALENDAR,
           route = Route.CALENDAR,
       ) {
-        composable(Screen.CALENDAR) { CalendarMeetingsScreen(navigationActions, userViewModel) }
+        composable(Screen.CALENDAR) { CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel) }
       }
 
       navigation(

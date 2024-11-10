@@ -1,11 +1,12 @@
 package com.swent.suddenbump.model.meeting
 
-import com.swent.suddenbump.model.user.User
-
 interface MeetingRepository {
+
+    fun getNewMeetingId(): String
+
     fun init(onSuccess: () -> Unit)
 
-    fun getMeetings(user: User, onSuccess: (List<Meeting>) -> Unit, onFailure: (Exception) -> Unit)
+    fun getMeetings(onSuccess: (List<Meeting>) -> Unit, onFailure: (Exception) -> Unit)
 
     fun addMeeting(meeting: Meeting, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
