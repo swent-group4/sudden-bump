@@ -5,8 +5,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import com.swent.suddenbump.model.location.GeoLocation
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
@@ -27,34 +27,32 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 
-
 class CalendarMeetingsTest {
-    private lateinit var navigationActions: NavigationActions
+  private lateinit var navigationActions: NavigationActions
 
+  private lateinit var meetingViewModel: MeetingViewModel
+  private lateinit var userRepository: UserRepository
+  private lateinit var meetingRepository: MeetingRepository
 
-    private lateinit var meetingViewModel: MeetingViewModel
-    private lateinit var userRepository: UserRepository
-    private lateinit var meetingRepository: MeetingRepository
+  private lateinit var userFriendsFlow: StateFlow<List<User>>
 
-    private lateinit var userFriendsFlow: StateFlow<List<User>>
+  @Mock private lateinit var userViewModel: UserViewModel
 
-    @Mock
-    private lateinit var userViewModel: UserViewModel
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @get:Rule val composeTestRule = createComposeRule()
+  @Before
+  fun setUp() {
+    MockitoAnnotations.openMocks(this)
+    navigationActions = mock(NavigationActions::class.java)
+    userRepository = mock(UserRepository::class.java)
+    userViewModel = spy(UserViewModel(userRepository))
+    `when`(navigationActions.currentRoute()).thenReturn(Route.CALENDAR)
 
-    @Before
-    fun setUp() {
-        MockitoAnnotations.openMocks(this)
-        navigationActions = mock(NavigationActions::class.java)
-        userRepository = mock(UserRepository::class.java)
-        userViewModel = spy(UserViewModel(userRepository))
-        `when`(navigationActions.currentRoute()).thenReturn(Route.CALENDAR)
+    meetingRepository = TestMeetingRepository()
+    meetingViewModel = MeetingViewModel(meetingRepository)
 
-        meetingRepository = TestMeetingRepository()
-        meetingViewModel = MeetingViewModel(meetingRepository)
-
-        userFriendsFlow = MutableStateFlow(
+    userFriendsFlow =
+        MutableStateFlow(
             listOf(
                 User(
                     uid = "1",
@@ -63,8 +61,7 @@ class CalendarMeetingsTest {
                     phoneNumber = "1234567890",
                     profilePicture = null,
                     emailAddress = "john.doe@example.com",
-                    lastKnownLocation = GeoLocation(0.0, 0.0)
-                ),
+                    lastKnownLocation = GeoLocation(0.0, 0.0)),
                 User(
                     uid = "2",
                     firstName = "Jane",
@@ -72,39 +69,37 @@ class CalendarMeetingsTest {
                     phoneNumber = "0987654321",
                     profilePicture = null,
                     emailAddress = "jane.smith@example.com",
-                    lastKnownLocation = GeoLocation(0.0, 0.0)
-                )
-            )
-        )
+                    lastKnownLocation = GeoLocation(0.0, 0.0))))
 
-        //doReturn(userFriendsFlow).`when`(userViewModel).getUserFriends()
+    // doReturn(userFriendsFlow).`when`(userViewModel).getUserFriends()
 
-        composeTestRule.setContent {
-            CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
-        }
+    composeTestRule.setContent {
+      CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
     }
+  }
 
-    @Test
-    fun hasRequiredComponents() {
-        composeTestRule.onNodeWithTag("calendarMeetingsScreen").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("monthYearHeader").assertIsDisplayed()
-        composeTestRule.onAllNodesWithTag("dayRow")[0].assertIsDisplayed()
-        composeTestRule.onAllNodesWithTag("dayRow")[1].assertIsDisplayed()
-        composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
-    }
+  @Test
+  fun hasRequiredComponents() {
+    composeTestRule.onNodeWithTag("calendarMeetingsScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("monthYearHeader").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("dayRow")[0].assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("dayRow")[1].assertIsDisplayed()
+    composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
+  }
 
-    @Test
-    fun dayRowDisplaysMeetings() {
-        composeTestRule.onAllNodesWithTag("dayRow")[0].assertIsDisplayed()
+  @Test
+  fun dayRowDisplaysMeetings() {
+    composeTestRule.onAllNodesWithTag("dayRow")[0].assertIsDisplayed()
 
-        composeTestRule.onAllNodesWithTag("meetText")[0].assertIsDisplayed()
-        composeTestRule.onAllNodesWithTag("meetText")[1].assertIsDisplayed()
-    }
+    composeTestRule.onAllNodesWithTag("meetText")[0].assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("meetText")[1].assertIsDisplayed()
+  }
 
-    @Test
-    fun dayRowDisplaysNoMeetingsMessage() {
-        composeTestRule.onAllNodesWithTag("dayRow")[1].assertIsDisplayed()
-        composeTestRule.onAllNodesWithText("No meetings for this day").assertAny(hasText("No meetings for this day"))
-    }
-
+  @Test
+  fun dayRowDisplaysNoMeetingsMessage() {
+    composeTestRule.onAllNodesWithTag("dayRow")[1].assertIsDisplayed()
+    composeTestRule
+        .onAllNodesWithText("No meetings for this day")
+        .assertAny(hasText("No meetings for this day"))
+  }
 }

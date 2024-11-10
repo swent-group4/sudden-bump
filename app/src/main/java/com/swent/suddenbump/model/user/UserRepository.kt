@@ -2,7 +2,6 @@ package com.swent.suddenbump.model.user
 
 import android.location.Location
 import com.swent.suddenbump.model.image.ImageRepository
-import com.swent.suddenbump.model.meeting.Meeting
 
 interface UserRepository {
 

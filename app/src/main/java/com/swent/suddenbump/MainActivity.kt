@@ -156,7 +156,9 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.CALENDAR,
           route = Route.CALENDAR,
       ) {
-        composable(Screen.CALENDAR) { CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel) }
+        composable(Screen.CALENDAR) {
+          CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+        }
       }
 
       navigation(
