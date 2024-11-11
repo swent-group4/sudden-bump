@@ -28,7 +28,7 @@ class LoginTest : TestCase() {
   @get:Rule val activityScenarioRule = ActivityScenarioRule(MainActivity::class.java)
 
   @Before
-  public fun setup() {
+  fun setup() {
     Intents.init() // Initialize intents
   }
 
@@ -42,9 +42,6 @@ class LoginTest : TestCase() {
 
     assertEquals(true, isRunningTest())
 
-    composeTestRule.waitUntil(timeoutMillis = 7000) {
-      composeTestRule.onNodeWithTag("loginTitle").fetchSemanticsNode() != null
-    }
     composeTestRule.onNodeWithTag("loginTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginTitle").assertTextEquals("SuddenBump!")
 
@@ -57,9 +54,6 @@ class LoginTest : TestCase() {
 
     isGoogleSignInEnabledForTesting = true
 
-    composeTestRule.waitUntil(timeoutMillis = 7000) {
-      composeTestRule.onNodeWithTag("loginButton").fetchSemanticsNode() != null
-    }
     composeTestRule.onNodeWithTag("loginButton").performClick()
     composeTestRule.waitForIdle()
     intended(toPackage("com.google.android.gms"))
