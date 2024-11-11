@@ -7,6 +7,7 @@ on:
       - main
       - add-map
       - clean-up
+      - 124-connect-google-calendar-to-the-app-to-add-the-meeting-with-your-friends
 
   pull_request:
     types:

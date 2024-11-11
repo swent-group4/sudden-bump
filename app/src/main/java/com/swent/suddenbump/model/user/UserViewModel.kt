@@ -64,6 +64,8 @@ open class UserViewModel(
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
 
+  private val _error = MutableStateFlow<Exception?>(null)
+
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
   }
