@@ -170,13 +170,14 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                 onValueChange = { verificationCode = it },
                 label = { Text("Verification Code") },
                 modifier = Modifier.fillMaxWidth().testTag("codeField"),
+                placeholder = { Text("6-digit code received by SMS") },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number))
 
             // Button to verify code
             Button(
                 onClick = { userViewModel.verifyCode(verificationCode) },
                 modifier = Modifier.fillMaxWidth().testTag("verifyCodeButton"),
-                enabled = verificationCode.isNotBlank()) {
+                enabled = verificationCode.length == 6) {
                   Text("Verify Code")
                 }
 
