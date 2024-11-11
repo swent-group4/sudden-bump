@@ -40,10 +40,18 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
-  var firstName by remember { mutableStateOf("") }
-  var lastName by remember { mutableStateOf("") }
+  var firstName by remember {
+    mutableStateOf(
+        FirebaseAuth.getInstance().currentUser?.displayName?.split(" ")?.firstOrNull() ?: "")
+  }
+  var lastName by remember {
+    mutableStateOf(
+        FirebaseAuth.getInstance().currentUser?.displayName?.split(" ")?.lastOrNull() ?: "")
+  }
   val email = FirebaseAuth.getInstance().currentUser?.email ?: ""
-  var phoneNumber by remember { mutableStateOf("") }
+  var phoneNumber by remember {
+    mutableStateOf(FirebaseAuth.getInstance().currentUser?.phoneNumber ?: "")
+  } // will be filled only if user's phone number is public on Google Account
   var verificationCode by remember { mutableStateOf("") }
   var isCodeSent by remember { mutableStateOf(false) }
   var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
