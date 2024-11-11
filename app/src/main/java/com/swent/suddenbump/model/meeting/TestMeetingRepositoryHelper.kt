@@ -2,7 +2,7 @@ package com.swent.suddenbump.model.meeting
 
 import com.google.firebase.Timestamp
 
-class TestMeetingRepository : MeetingRepository {
+class TestMeetingRepositoryHelper : MeetingRepository {
   private val meetings =
       mutableListOf(
           Meeting(meetingId = "1", location = "Cafe", date = Timestamp.now(), friendId = "1"),

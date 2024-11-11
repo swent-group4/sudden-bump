@@ -10,7 +10,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
-import com.swent.suddenbump.model.meeting.TestMeetingRepository
+import com.swent.suddenbump.model.meeting.TestMeetingRepositoryHelper
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
@@ -49,7 +49,7 @@ class CalendarMeetingsTest {
     userViewModel = spy(UserViewModel(userRepository, chatRepository))
     `when`(navigationActions.currentRoute()).thenReturn(Route.CALENDAR)
 
-    meetingRepository = TestMeetingRepository()
+    meetingRepository = TestMeetingRepositoryHelper()
     meetingViewModel = MeetingViewModel(meetingRepository)
 
     /*userFriendsFlow =
