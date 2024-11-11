@@ -7,6 +7,9 @@ on:
       - main
       - add-map
       - clean-up
+      - 100-dont-let-users-change-email
+      - link-location-to-users
+      - 93-verify-number-with-sms-code
       - 124-connect-google-calendar-to-the-app-to-add-the-meeting-with-your-friends
 
   pull_request:

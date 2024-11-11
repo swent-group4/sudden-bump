@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,6 +44,8 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
   var lastName by remember { mutableStateOf("") }
   val email = FirebaseAuth.getInstance().currentUser?.email ?: ""
   var phoneNumber by remember { mutableStateOf("") }
+  var verificationCode by remember { mutableStateOf("") }
+  var isCodeSent by remember { mutableStateOf(false) }
   var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
   val coroutineScope = rememberCoroutineScope()
   val context = LocalContext.current
@@ -51,6 +54,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
         latitude = 0.0 // Set latitude
         longitude = 0.0 // Set longitude
       }
+  val verificationStatus by userViewModel.verificationStatus.observeAsState()
 
   val cropLauncher =
       rememberLauncherForActivityResult(
@@ -115,6 +119,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                       }
                     }
               }
+
           OutlinedTextField(
               value = firstName,
               onValueChange = { firstName = it },
@@ -135,6 +140,8 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
               modifier = Modifier.fillMaxWidth().testTag("emailField"),
           )
           Spacer(modifier = Modifier.height(16.dp))
+
+          // Phone number input
           OutlinedTextField(
               value = phoneNumber,
               onValueChange = { phoneNumber = it },
@@ -143,7 +150,49 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
               visualTransformation = PhoneNumberVisualTransformation(),
               placeholder = { Text("Use international prefix with +") },
               keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone))
+
+          // Button to send verification code
+          Button(
+              onClick = {
+                userViewModel.sendVerificationCode(phoneNumber)
+                isCodeSent = true
+              },
+              modifier = Modifier.fillMaxWidth().testTag("sendCodeButton"),
+              enabled = phoneNumber.isNotBlank()) {
+                Text("Send Verification Code")
+              }
+
+          // Verification code input if code has been sent
+          if (isCodeSent) {
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = verificationCode,
+                onValueChange = { verificationCode = it },
+                label = { Text("Verification Code") },
+                modifier = Modifier.fillMaxWidth().testTag("codeField"),
+                placeholder = { Text("6-digit code received by SMS") },
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number))
+
+            // Button to verify code
+            Button(
+                onClick = { userViewModel.verifyCode(verificationCode) },
+                modifier = Modifier.fillMaxWidth().testTag("verifyCodeButton"),
+                enabled = verificationCode.length == 6) {
+                  Text("Verify Code")
+                }
+
+            // Display verification status
+            verificationStatus?.let {
+              Text(
+                  text = it,
+                  modifier = Modifier.fillMaxWidth().padding(16.dp),
+                  color = if (it.contains("failed", true)) Color.Red else Color.Green)
+            }
+          }
+
           Spacer(modifier = Modifier.height(16.dp))
+
+          // Create account button
           Button(
               onClick = {
                 val profileBitmap =
@@ -156,6 +205,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                           MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)
                         }
                         .asImageBitmap()
+
                 userViewModel.createUserAccount(
                     User(
                         uid = userViewModel.getNewUid(),
@@ -174,7 +224,8 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                   firstName.isNotBlank() &&
                       lastName.isNotBlank() &&
                       email.isNotBlank() &&
-                      phoneNumber.isNotBlank(),
+                      phoneNumber.isNotBlank() &&
+                      verificationStatus == "Phone Verified",
               modifier = Modifier.fillMaxWidth().testTag("createAccountButton")) {
                 Text("Create Account")
               }

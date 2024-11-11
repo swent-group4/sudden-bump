@@ -99,4 +99,17 @@ interface UserRepository {
       onSuccess: (Map<User, Location?>) -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  fun sendVerificationCode(
+      phoneNumber: String,
+      onSuccess: (String) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun verifyCode(
+      verificationId: String,
+      code: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }
