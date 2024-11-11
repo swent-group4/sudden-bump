@@ -3,11 +3,16 @@ package com.swent.suddenbump.worker
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.model.user.UserViewModel
 import kotlin.coroutines.resume
@@ -28,25 +33,57 @@ class LocationUpdateWorker(
         try {
           // Get the current location (you need to implement this method)
           val location: Location = getCurrentLocation()
+            // Initialize UserRepository
+            val repository = UserRepositoryFirestore(Firebase.firestore)
 
-          // Initialize UserRepository
-          val repository = UserRepositoryFirestore(FirebaseFirestore.getInstance())
+            val uid = inputData.getString("uid")
+
+            Log.d("WorkerSuddenBump", "UserID ${uid} ")
+
+                uid?.let {
+                repository.getUserAccount(uid = it, onSuccess = { user ->
+                    val timestamp = Timestamp.now()
+
+                    // Update location to Firebase
+                    repository.updateLocation(
+                        user = user,
+                        location = location,
+                        onSuccess = {
+                            // Handle success
+                        },
+                        onFailure = { error ->
+                            // Handle failure
+                        })
+
+                    repository.updateTimestamp(
+                        user,
+                        timestamp = timestamp,
+                        onSuccess = {
+                            // Handle success
+                        },
+                        onFailure = { error ->
+                            // Handle failure
+                        })
+                    Log.d("WorkerSuddenBump", "User ${user} ")
+                }, onFailure = { error ->
+                    Log.d("WorkerSuddenBump", "Error ${error} ")
+                })
+            }
+
+
+            Log.d("WorkerSuddenBump", "LocationUpdateWorker location ${location} ")
+
 
           // Initialize UserViewModel with the repository
-          val userViewModel = UserViewModel(repository)
+          //val userViewModel = UserViewModel(repository)
 
-          // Update location to Firebase
-          userViewModel.updateLocation(
-              location = location,
-              onSuccess = {
-                // Handle success
-              },
-              onFailure = { error ->
-                // Handle failure
-              })
+           // Log.d("WorkerSuddenBump", "UserViewModel ${userViewModel.getCurrentUser().value} ")
+
+            // Get the current timestamp
+
 
           // Load friends' locations
-          userViewModel.loadFriendsLocations()
+          //userViewModel.loadFriendsLocations()
 
           Result.success()
         } catch (e: Exception) {

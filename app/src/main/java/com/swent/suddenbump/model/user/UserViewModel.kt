@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.image.ImageBitMapIO
@@ -155,6 +156,15 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     _userLocation.value = location
     repository.updateLocation(user, location, onSuccess, onFailure)
   }
+
+    fun updateTimestamp(
+        user: User = _user.value,
+        timestamp: Timestamp,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        repository.updateTimestamp(user, timestamp, onSuccess, onFailure)
+    }
 
   fun loadFriendsLocations() {
     viewModelScope.launch {

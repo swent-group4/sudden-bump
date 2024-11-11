@@ -5,6 +5,7 @@ import android.location.Location
 import android.location.LocationManager
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -261,6 +262,21 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
   }
+
+    override fun updateTimestamp(
+        user: User,
+        timestamp: Timestamp,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection(usersCollectionPath)
+            .document(user.uid)
+            .update("timestamp", timestamp)
+            .addOnFailureListener { onFailure(it) }
+            .addOnSuccessListener { onSuccess() }
+    }
+
+
 
   @SuppressLint("SuspiciousIndentation")
   override fun getFriendsLocation(

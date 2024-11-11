@@ -16,6 +16,9 @@
     <!-- Include only if your app benefits from precise location access. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+    <!-- Add background location permission for "always-on" location access -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
 
     <application
         android:allowBackup="true"
@@ -27,6 +30,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SampleApp"
         tools:targetApi="34">
+
         <activity
             android:name="com.swent.suddenbump.MainActivity"
             android:exported="true"

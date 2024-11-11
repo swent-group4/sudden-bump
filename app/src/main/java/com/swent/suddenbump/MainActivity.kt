@@ -31,6 +31,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.LocationGetter
@@ -108,24 +109,8 @@ class MainActivity : ComponentActivity() {
             permissions ->
           handlePermissionResults(permissions)
         }
-    // Schedule the LocationUpdateWorker
-    scheduleLocationUpdateWorker()
   }
 
-  private fun scheduleLocationUpdateWorker() {
-    val workRequest =
-        PeriodicWorkRequestBuilder<LocationUpdateWorker>(15, TimeUnit.MINUTES)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .setRequiresBatteryNotLow(true)
-                    .build())
-            .build()
-
-    WorkManager.getInstance(this)
-        .enqueueUniquePeriodicWork(
-            "LocationUpdateWorker", ExistingPeriodicWorkPolicy.REPLACE, workRequest)
-  }
 
   private fun checkLocationPermissions() {
     val fineLocationGranted =
@@ -146,13 +131,14 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  @SuppressLint("UnrememberedMutableState")
+  @SuppressLint("UnrememberedMutableState", "StateFlowValueCalledInComposition")
   @Composable
   fun SuddenBumpApp(location: Location?) {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
     val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+      // Schedule the LocationUpdateWorker
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(
@@ -166,7 +152,9 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.OVERVIEW,
           route = Route.OVERVIEW,
       ) {
-        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
+        composable(Screen.OVERVIEW) {
+            scheduleLocationUpdateWorker(userViewModel.getCurrentUser().value.uid)
+            OverviewScreen(navigationActions) }
         composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
@@ -192,10 +180,32 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+    private fun scheduleLocationUpdateWorker(uid : String) {
+        Log.d("WorkerSuddenBump", "Uid ${uid} ")
+        val inputData = workDataOf("uid" to uid)
+        val workRequest =
+            PeriodicWorkRequestBuilder<LocationUpdateWorker>(15, TimeUnit.MINUTES)
+                .setInputData(inputData)
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .setRequiresBatteryNotLow(true)
+                        .build())
+                .build()
+
+        WorkManager.getInstance(this)
+            .enqueueUniquePeriodicWork(
+                "LocationUpdateWorker", ExistingPeriodicWorkPolicy.REPLACE, workRequest)
+
+
+        Log.d("WorkerSuddenBump", "LocationUpdateWorker scheduled")
+
+    }
+
   private fun handlePermissionResults(permissions: Map<String, Boolean>) {
     val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
     val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-
+      val backgroundLocationGranted = permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
     when {
       fineLocationGranted -> {
         locationGetter.requestLocationUpdates()
@@ -203,6 +213,9 @@ class MainActivity : ComponentActivity() {
       coarseLocationGranted -> {
         locationGetter.requestLocationUpdates()
       }
+        backgroundLocationGranted -> {
+            locationGetter.requestLocationUpdates()
+        }
       else -> {
         // Toast.makeText(this, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
       }
