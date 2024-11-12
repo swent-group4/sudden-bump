@@ -139,6 +139,7 @@ class MainActivity : ComponentActivity() {
 
     val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
       // Schedule the LocationUpdateWorker
+      scheduleLocationUpdateWorker(userViewModel.getCurrentUser().value.uid)
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(
@@ -152,9 +153,7 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.OVERVIEW,
           route = Route.OVERVIEW,
       ) {
-        composable(Screen.OVERVIEW) {
-            scheduleLocationUpdateWorker(userViewModel.getCurrentUser().value.uid)
-            OverviewScreen(navigationActions) }
+        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions) }
         composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions) }
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
