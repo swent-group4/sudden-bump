@@ -8,6 +8,12 @@ interface MeetingRepository {
 
   fun getMeetings(onSuccess: (List<Meeting>) -> Unit, onFailure: (Exception) -> Unit)
 
+  /*fun getMeetingById(
+    id: String,
+    onSuccess: (Meeting?) -> Unit,
+    onFailure: (Exception) -> Unit
+  )*/
+
   fun addMeeting(meeting: Meeting, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun updateMeeting(meeting: Meeting, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)

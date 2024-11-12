@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -53,7 +54,9 @@ import com.swent.suddenbump.model.chat.generateListItems
 import com.swent.suddenbump.model.chat.toOnlyTimeFormat
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
+import com.swent.suddenbump.ui.calendar.AddMeetingScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.purple
 import com.swent.suddenbump.ui.theme.violetColor
 
@@ -97,7 +100,7 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
         },
         bottomBar = {
           // Input Box at the Bottom
-          ChatInputBox(viewModel, otherUser)
+          ChatInputBox(viewModel, otherUser, navigationActions)
         },
     ) { padding ->
       Column(modifier = Modifier.fillMaxSize().padding(padding).background(Color.Black)) {
@@ -180,7 +183,7 @@ fun MessageBubble(data: ListItem.Messages) {
 }
 
 @Composable
-fun ChatInputBox(viewModel: UserViewModel, otherUser: User?) {
+fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: NavigationActions) {
   var inputText by remember { mutableStateOf(TextFieldValue()) }
 
   Row(
@@ -198,6 +201,21 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?) {
 
         Spacer(modifier = Modifier.width(8.dp))
 
+      // Add Meeting Icon
+      IconButton(
+          onClick = { navigationActions.navigateTo(Screen.ADD_MEETING) }
+      ) {
+          Icon(
+              imageVector = Icons.Default.DateRange, // Replace with your desired icon
+              contentDescription = "Add Meeting",
+              tint = Color.White,
+              modifier = Modifier.size(28.dp)
+          )
+      }
+
+      Spacer(modifier = Modifier.width(8.dp))
+
+      // Send Message Icon
         IconButton(
             onClick = {
               if (inputText.text.isNotEmpty()) {

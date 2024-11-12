@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.calendar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -22,6 +23,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Screen
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -50,13 +52,13 @@ fun CalendarMeetingsScreen(
                     .background(Color.Black)
                     .fillMaxSize()
                     .testTag("calendarMeetingsScreen")) {
-              ScrollableInfiniteTimeline(meetings = meetings, userFriends = userFriends)
+              ScrollableInfiniteTimeline(meetings = meetings, userFriends = userFriends, navigationActions, meetingViewModel)
             }
       })
 }
 
 @Composable
-fun ScrollableInfiniteTimeline(meetings: List<Meeting>, userFriends: List<User>) {
+fun ScrollableInfiniteTimeline(meetings: List<Meeting>, userFriends: List<User>, navigationActions: NavigationActions, meetingViewModel: MeetingViewModel) {
   val currentDate = Calendar.getInstance()
   val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
@@ -106,13 +108,13 @@ fun ScrollableInfiniteTimeline(meetings: List<Meeting>, userFriends: List<User>)
           val dayKey = formatter.format(day.time)
           val meetingsForDay = meetingsByDay[dayKey] ?: emptyList()
 
-          DayRow(day = day.time, meetings = meetingsForDay, userFriends = userFriends)
+          DayRow(day = day.time, meetings = meetingsForDay, userFriends = userFriends, navigationActions = navigationActions, meetingViewModel = meetingViewModel)
         }
       }
 }
 
 @Composable
-fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>) {
+fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>, navigationActions: NavigationActions, meetingViewModel: MeetingViewModel) {
   val dayFormat = SimpleDateFormat("EEE, d", Locale.getDefault())
 
   Column(
@@ -133,8 +135,12 @@ fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>) {
             meetings.forEach { meeting ->
               Card(
                   modifier =
-                      Modifier.fillMaxWidth()
+                      Modifier
+                          .fillMaxWidth()
                           .padding(8.dp)
+                          .clickable {
+                              meetingViewModel.selectMeeting(meeting)
+                              navigationActions.navigateTo(Screen.EDIT_MEETING)}
                           .background(
                               com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium),
                   colors =

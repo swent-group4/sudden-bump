@@ -89,4 +89,18 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
   fun selectMeeting(meeting: Meeting) {
     selectedMeeting.value = meeting
   }
+
+    /*fun getMeeting(meetingId: String) {
+        viewModelScope.launch {
+            repositoryMeeting.getMeetingById(
+                id = meetingId,
+                onSuccess = { meeting ->
+                    selectedMeeting.value = meeting
+                },
+                onFailure = { exception ->
+                    Log.e("MeetingViewModel", "Error getting meeting", exception)
+                }
+            )
+        }
+    }*/
 }
