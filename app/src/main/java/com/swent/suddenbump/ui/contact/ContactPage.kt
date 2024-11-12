@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.contact
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,10 +21,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,9 +50,10 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
       userViewModel.getSentFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
   // a
   Scaffold(
-      modifier = Modifier.fillMaxSize().testTag("contactScreen"),
+      modifier = Modifier.fillMaxSize().background(Color.Black).testTag("contactScreen"),
       topBar = {
         TopAppBar(
+            modifier = Modifier.background(Color.Black),
             title = { Text("Contact") },
             navigationIcon = {
               IconButton(
@@ -58,11 +63,20 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = "Back")
                   }
-            })
+            },
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Black,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White))
       },
       content = { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).testTag("contactContent"),
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(Color.Black)
+                    .padding(padding)
+                    .testTag("contactContent"),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -71,7 +85,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
               verticalArrangement = Arrangement.Top,
           ) {
             AsyncImage(
-                model = user.profilePicture,
+                model = "https://avatar.iran.liara.run/public/42",
                 contentDescription = null,
                 modifier =
                     Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
@@ -85,6 +99,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                       androidx.compose.ui.text.TextStyle(
                           fontSize = 20.sp, // Adjust the size as needed
                           fontWeight = FontWeight.Bold),
+                  color = Color.White,
                   modifier = Modifier.testTag("userName"))
             }
 
@@ -113,38 +128,68 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("sendMessageButton"),
+                colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                 onClick = {
                   userViewModel.user = user
                   navigationActions.navigateTo(Screen.CHAT)
                 }) {
-                  Text("Send a message")
+                  Text("Send a message", color = Color.White)
                 }
           } else if (isFriendRequest) {
-            Button(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 30.dp)
-                        .testTag("sendMessageButton"),
-                onClick = {
-                  userViewModel.acceptFriendRequest(
-                      userViewModel.getCurrentUser().value,
-                      friend = user,
-                      onSuccess = {
-                        isFriend = true
-                        isFriendRequest = false
-                      },
-                      onFailure = { println("Error accepting friend request") })
-                }) {
-                  Text("Accept friend request")
-                }
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp)) {
+              Button(
+                  modifier =
+                      Modifier.fillMaxWidth().padding(vertical = 5.dp).testTag("sendMessageButton"),
+                  colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
+                  onClick = {
+                    userViewModel.acceptFriendRequest(
+                        userViewModel.getCurrentUser().value,
+                        friend = user,
+                        onSuccess = {
+                          isFriend = true
+                          isFriendRequest = false
+                        },
+                        onFailure = { println("Error accepting friend request") })
+                  }) {
+                    Text(
+                        "Accept friend request",
+                        color = Color.White,
+                    )
+                  }
+              Button(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(vertical = 10.dp)
+                          .testTag("sendMessageButton"),
+                  colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
+                  onClick = {
+                    userViewModel.declineFriendRequest(
+                        userViewModel.getCurrentUser().value,
+                        friend = user,
+                        onSuccess = {
+                          isFriend = false
+                          isFriendRequest = false
+                        },
+                        onFailure = { println("Error declining friend request") })
+                  }) {
+                    Text(
+                        "Decline friend request",
+                        color = Color.White,
+                    )
+                  }
+            }
           } else if (isFriendRequestSent) {
-            Text("Friend request sent")
+            Text(
+                "Friend request sent",
+                color = Color.White,
+            )
           } else {
             Button(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("addToContactsButton"),
+                colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                 onClick = {
                   userViewModel.sendFriendRequest(
                       userViewModel.getCurrentUser().value,
@@ -152,7 +197,10 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                       onSuccess = { isFriendRequestSent = true },
                       onFailure = { println("Error sending friend request") })
                 }) {
-                  Text("SendFriendRequest")
+                  Text(
+                      "SendFriendRequest",
+                      color = Color.White,
+                  )
                 }
           }
         }
