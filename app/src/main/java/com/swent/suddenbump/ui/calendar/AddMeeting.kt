@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingViewModel
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import java.text.SimpleDateFormat
 import java.util.*
@@ -24,11 +25,12 @@ import java.util.*
 @Composable
 fun AddMeetingScreen(
     navigationActions: NavigationActions,
-    meetingViewModel: MeetingViewModel = viewModel()
+    viewModel: UserViewModel,
+    meetingViewModel: MeetingViewModel
 ) {
     var location by remember { mutableStateOf("") }
     var date by remember { mutableStateOf("") }
-    val friendId = "lhJTmKIABxg6jzHCje9x"
+    val friendId = viewModel.user?.uid ?: ""
     val context = LocalContext.current
 
     Scaffold(

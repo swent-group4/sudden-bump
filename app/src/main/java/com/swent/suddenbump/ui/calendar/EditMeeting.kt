@@ -24,7 +24,7 @@ import java.util.*
 @Composable
 fun EditMeetingScreen(
     navigationActions: NavigationActions,
-    meetingViewModel: MeetingViewModel = viewModel()
+    meetingViewModel: MeetingViewModel
 ) {
     val meeting = meetingViewModel.selectedMeeting.collectAsState().value ?: return
 
