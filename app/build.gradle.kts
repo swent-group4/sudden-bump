@@ -190,6 +190,7 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
+    testImplementation ("androidx.arch.core:core-testing:2.1.0")
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
 

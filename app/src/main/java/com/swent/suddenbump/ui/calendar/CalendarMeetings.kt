@@ -153,7 +153,7 @@ fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>, navigati
                   colors =
                       CardDefaults.cardColors(
                           containerColor = com.swent.suddenbump.ui.theme.Pink40)) {
-                    val friend = userFriends.find { it.uid == meeting.friendId }
+                    val friend = userFriends.find { it.uid == meeting.friendId || it.uid == meeting.creatorId }
                     val friendName =
                         friend?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown Friend"
                     val formattedDate = formatDate(meeting.date.toDate())

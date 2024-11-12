@@ -11,8 +11,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -35,10 +35,10 @@ fun EditMeetingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit Meeting", color = Color.White) },
+                title = { Text("Edit Meeting", color = Color.White, modifier = Modifier.testTag("Edit Meeting")) },
                 navigationIcon = {
                     IconButton(onClick = { navigationActions.goBack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.testTag("Back"))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
@@ -58,14 +58,14 @@ fun EditMeetingScreen(
                     onValueChange = { location = it },
                     label = { Text("Location") },
                     textStyle = LocalTextStyle.current.copy(color = Color.White),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("Location")
                 )
                 OutlinedTextField(
                     value = date,
                     onValueChange = { date = it },
                     label = { Text("Date (dd/MM/yyyy)") },
                     textStyle = LocalTextStyle.current.copy(color = Color.White),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("Date")
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
@@ -96,7 +96,7 @@ fun EditMeetingScreen(
                             Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("Save Changes")
                 ) {
                     Text("Save Changes")
                 }
@@ -109,7 +109,7 @@ fun EditMeetingScreen(
                             navigationActions.goBack()
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("Delete Meeting"),
                     colors = ButtonDefaults.buttonColors(containerColor = Pink40)
                 ) {
                     Text("Delete Meeting")

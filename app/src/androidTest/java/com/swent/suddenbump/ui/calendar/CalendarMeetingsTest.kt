@@ -93,7 +93,6 @@ class CalendarMeetingsTest {
   @Test
   fun dayRowDisplaysMeetings() {
     composeTestRule.onAllNodesWithTag("dayRow")[0].assertIsDisplayed()
-
     composeTestRule.onAllNodesWithTag("meetText")[0].assertIsDisplayed()
     composeTestRule.onAllNodesWithTag("meetText")[1].assertIsDisplayed()
   }

@@ -5,8 +5,8 @@ import com.google.firebase.Timestamp
 class TestMeetingRepositoryHelper : MeetingRepository {
   private val meetings =
       mutableListOf(
-          Meeting(meetingId = "1", location = "Cafe", date = Timestamp.now(), friendId = "1", creatorId = "1"),
-          Meeting(meetingId = "2", location = "Office", date = Timestamp.now(), friendId = "2", creatorId = "2"))
+          Meeting(meetingId = "1", location = "Cafe", date = Timestamp.now(), friendId = "2", creatorId = "1"),
+          Meeting(meetingId = "2", location = "Office", date = Timestamp.now(), friendId = "3", creatorId = "1"))
 
   override fun getNewMeetingId(): String {
     return (meetings.size + 1).toString()
