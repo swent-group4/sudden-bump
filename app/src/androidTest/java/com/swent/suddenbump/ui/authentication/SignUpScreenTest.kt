@@ -9,6 +9,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
@@ -17,6 +19,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 class SignUpScreenTest {
 
@@ -24,6 +27,8 @@ class SignUpScreenTest {
   private lateinit var navigationActions: NavigationActions
   private lateinit var userViewModel: UserViewModel
   private lateinit var chatRepository: ChatRepository
+  private lateinit var firebaseAuth: FirebaseAuth
+  private lateinit var firebaseUser: FirebaseUser
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
@@ -33,6 +38,12 @@ class SignUpScreenTest {
     navigationActions = mock(NavigationActions::class.java)
     chatRepository = mock(ChatRepository::class.java)
     userViewModel = UserViewModel(userRepository, chatRepository)
+
+    // Mock FirebaseAuth and FirebaseUser
+    firebaseAuth = mock(FirebaseAuth::class.java)
+    firebaseUser = mock(FirebaseUser::class.java)
+    `when`(firebaseAuth.currentUser).thenReturn(firebaseUser)
+    `when`(firebaseUser.email).thenReturn("test@example.com")
   }
 
   @Test
@@ -71,6 +82,8 @@ class SignUpScreenTest {
     composeTestRule.onNodeWithTag("lastNameField").assertTextContains("Doe")
 
     composeTestRule.onNodeWithTag("emailField").assertIsNotEnabled()
+    composeTestRule.onNodeWithTag("sendCodeButton").assertIsNotEnabled()
+    composeTestRule.onNodeWithTag("createAccountButton").assertIsNotEnabled()
 
     composeTestRule.onNodeWithTag("phoneField").performTextInput("+33613507628")
     composeTestRule.onNodeWithTag("phoneField").assertTextContains("+33 6 13 50 76 28")
@@ -84,6 +97,9 @@ class SignUpScreenTest {
     composeTestRule.onNodeWithTag("codeField").performTextInput("123456")
     composeTestRule.onNodeWithTag("verifyCodeButton").assertHasClickAction()
     composeTestRule.onNodeWithTag("verifyCodeButton").performClick()
+
+    composeTestRule.onNodeWithTag("createAccountButton").assertHasClickAction()
+    composeTestRule.onNodeWithTag("createAccountButton").performClick()
   }
 
   @Test
