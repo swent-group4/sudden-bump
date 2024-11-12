@@ -232,6 +232,7 @@ dependencies {
     implementation(libs.coil.network.okhttp)
 
     // Testing Unit
+    testImplementation(libs.mockk)
     androidTestImplementation(libs.mockk)
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
