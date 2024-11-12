@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.calendar
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -36,6 +37,10 @@ fun CalendarMeetingsScreen(
   LaunchedEffect(Unit) { meetingViewModel.getMeetings() }
   val meetings by meetingViewModel.meetings.collectAsState()
   val userFriends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
+    val currentUserId = userViewModel.getCurrentUser().value?.uid ?: ""
+
+    // Log the current user ID
+    Log.d("CalendarMeetingsScreen", "Current User ID: $currentUserId")
 
   Scaffold(
       bottomBar = {
@@ -52,13 +57,13 @@ fun CalendarMeetingsScreen(
                     .background(Color.Black)
                     .fillMaxSize()
                     .testTag("calendarMeetingsScreen")) {
-              ScrollableInfiniteTimeline(meetings = meetings, userFriends = userFriends, navigationActions, meetingViewModel)
+              ScrollableInfiniteTimeline(meetings = meetings, userFriends = userFriends, navigationActions, meetingViewModel, currentUserId = currentUserId)
             }
       })
 }
 
 @Composable
-fun ScrollableInfiniteTimeline(meetings: List<Meeting>, userFriends: List<User>, navigationActions: NavigationActions, meetingViewModel: MeetingViewModel) {
+fun ScrollableInfiniteTimeline(meetings: List<Meeting>, userFriends: List<User>, navigationActions: NavigationActions, meetingViewModel: MeetingViewModel, currentUserId: String) {
   val currentDate = Calendar.getInstance()
   val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
@@ -108,13 +113,13 @@ fun ScrollableInfiniteTimeline(meetings: List<Meeting>, userFriends: List<User>,
           val dayKey = formatter.format(day.time)
           val meetingsForDay = meetingsByDay[dayKey] ?: emptyList()
 
-          DayRow(day = day.time, meetings = meetingsForDay, userFriends = userFriends, navigationActions = navigationActions, meetingViewModel = meetingViewModel)
+          DayRow(day = day.time, meetings = meetingsForDay, userFriends = userFriends, navigationActions = navigationActions, meetingViewModel = meetingViewModel, currentUserId = currentUserId)
         }
       }
 }
 
 @Composable
-fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>, navigationActions: NavigationActions, meetingViewModel: MeetingViewModel) {
+fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>, navigationActions: NavigationActions, meetingViewModel: MeetingViewModel, currentUserId: String) {
   val dayFormat = SimpleDateFormat("EEE, d", Locale.getDefault())
 
   Column(
@@ -130,9 +135,11 @@ fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>, navigati
             color = Color.White,
             modifier = Modifier.padding(bottom = 8.dp))
 
-        if (meetings.isNotEmpty()) {
+      val filteredMeetings = meetings.filter { it.creatorId == currentUserId || it.friendId == currentUserId }
+
+        if (filteredMeetings.isNotEmpty()) {
           Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-            meetings.forEach { meeting ->
+            filteredMeetings.forEach { meeting ->
               Card(
                   modifier =
                       Modifier

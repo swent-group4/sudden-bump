@@ -58,12 +58,14 @@ fun AddMeetingScreen(
                     value = location,
                     onValueChange = { location = it },
                     label = { Text("Location") },
+                    textStyle = LocalTextStyle.current.copy(color = Color.White),
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = date,
                     onValueChange = { date = it },
                     label = { Text("Date (dd/MM/yyyy)") },
+                    textStyle = LocalTextStyle.current.copy(color = Color.White),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -85,7 +87,8 @@ fun AddMeetingScreen(
                                 meetingId = meetingViewModel.getNewMeetingid(),
                                 friendId = friendId,
                                 location = location,
-                                date = meetingDate
+                                date = meetingDate,
+                                creatorId = viewModel.getCurrentUser().value?.uid ?: ""
                             )
                             meetingViewModel.addMeeting(newMeeting)
                             Toast.makeText(context, "Meeting created successfully", Toast.LENGTH_SHORT).show()
