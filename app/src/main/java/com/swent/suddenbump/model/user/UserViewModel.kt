@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.chat.ChatRepository
@@ -89,7 +90,7 @@ open class UserViewModel(
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
             return UserViewModel(
                 UserRepositoryFirestore(Firebase.firestore),
-                ChatRepositoryFirestore(Firebase.firestore))
+                ChatRepositoryFirestore(Firebase.firestore, FirebaseAuth.getInstance()))
                 as T
           }
         }
