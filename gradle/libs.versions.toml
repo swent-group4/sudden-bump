@@ -9,6 +9,7 @@ ktfmt = "0.17.0"
 # UI Compose
 libphonenumber = "8.13.47"
 mockitoAndroid = "5.14.1"
+mockitoInlineVersion = "4.0.0"
 ucrop = "2.2.9"
 ui = "1.7.3"
 uiTestJunit4 = "1.7.4"
@@ -88,6 +89,7 @@ compose-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifes
 kaspresso = { group = "com.kaspersky.android-components", name = "kaspresso", version.ref = "kaspresso" }
 kaspresso-compose = { group = "com.kaspersky.android-components", name = "kaspresso-compose-support", version.ref = "kaspresso" }
 
+mockito-inline-v400 = { module = "org.mockito:mockito-inline", version.ref = "mockitoInlineVersion" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 
@@ -127,7 +129,6 @@ coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version
 ucrop = { module = "com.github.yalantis:ucrop", name = "ucrop", version.ref = "ucrop" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "core-testing" }
 
 
 [plugins]

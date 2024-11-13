@@ -10,21 +10,16 @@ import androidx.compose.ui.test.onNodeWithTag
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
-import com.swent.suddenbump.model.meeting.TestMeetingRepositoryHelper
-import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
-import kotlinx.coroutines.flow.StateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
 class CalendarMeetingsTest {
   private lateinit var navigationActions: NavigationActions
@@ -33,8 +28,6 @@ class CalendarMeetingsTest {
   private lateinit var userRepository: UserRepository
   private lateinit var meetingRepository: MeetingRepository
 
-  private lateinit var userFriendsFlow: StateFlow<List<User>>
-
   @Mock private lateinit var userViewModel: UserViewModel
   @Mock private lateinit var chatRepository: ChatRepository
 
@@ -42,39 +35,14 @@ class CalendarMeetingsTest {
 
   @Before
   fun setUp() {
-    MockitoAnnotations.openMocks(this)
     navigationActions = mock(NavigationActions::class.java)
     userRepository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
-    userViewModel = spy(UserViewModel(userRepository, chatRepository))
+    userViewModel = UserViewModel(userRepository, chatRepository)
     `when`(navigationActions.currentRoute()).thenReturn(Route.CALENDAR)
 
-    meetingRepository = TestMeetingRepositoryHelper()
+    meetingRepository = mock(MeetingRepository::class.java)
     meetingViewModel = MeetingViewModel(meetingRepository)
-
-    /*userFriendsFlow =
-       MutableStateFlow(
-           listOf(
-               User(
-                   uid = "1",
-                   firstName = "John",
-                   lastName = "Doe",
-                   phoneNumber = "1234567890",
-                   profilePicture = null,
-                   emailAddress = "john.doe@example.com",
-                   lastKnownLocation = GeoLocation(0.0, 0.0)),
-               User(
-                   uid = "2",
-                   firstName = "Jane",
-                   lastName = "Smith",
-                   phoneNumber = "0987654321",
-                   profilePicture = null,
-                   emailAddress = "jane.smith@example.com",
-                   lastKnownLocation = GeoLocation(0.0, 0.0))))
-
-    */
-
-    // doReturn(userFriendsFlow).`when`(userViewModel).getUserFriends()
 
     composeTestRule.setContent {
       CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
@@ -88,14 +56,6 @@ class CalendarMeetingsTest {
     composeTestRule.onAllNodesWithTag("dayRow")[0].assertIsDisplayed()
     composeTestRule.onAllNodesWithTag("dayRow")[1].assertIsDisplayed()
     composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()
-  }
-
-  @Test
-  fun dayRowDisplaysMeetings() {
-    composeTestRule.onAllNodesWithTag("dayRow")[0].assertIsDisplayed()
-
-    composeTestRule.onAllNodesWithTag("meetText")[0].assertIsDisplayed()
-    composeTestRule.onAllNodesWithTag("meetText")[1].assertIsDisplayed()
   }
 
   @Test

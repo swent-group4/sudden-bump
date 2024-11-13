@@ -11,6 +11,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel for managing meetings.
+ *
+ * @param repositoryMeeting The repository for accessing meeting data.
+ */
 open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : ViewModel() {
 
   private val _meetings = MutableStateFlow<List<Meeting>>(emptyList())
@@ -19,6 +24,7 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
   val selectedMeeting = MutableStateFlow<Meeting?>(null)
 
   companion object {
+    /** Factory for creating instances of MeetingViewModel. */
     val Factory: ViewModelProvider.Factory =
         object : ViewModelProvider.Factory {
           @Suppress("UNCHECKED_CAST")
@@ -27,7 +33,11 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
           }
         }
   }
-
+  /**
+   * Generates a new unique meeting ID.
+   *
+   * @return A new unique meeting ID as a String.
+   */
   fun getNewMeetingid(): String {
     return repositoryMeeting.getNewMeetingId()
   }
@@ -37,14 +47,19 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
     fetchMeetings()
   }
 
+  /** Fetches the list of meetings from the repository. */
   private fun fetchMeetings() {
     viewModelScope.launch { getMeetings() }
   }
-
+  /**
+   * Adds a new meeting to the repository.
+   *
+   * @param meeting The meeting to be added.
+   */
   fun addMeeting(meeting: Meeting) {
     repositoryMeeting.addMeeting(meeting, onSuccess = { fetchMeetings() }, onFailure = {})
   }
-
+  /** Retrieves the list of meetings from the repository. */
   fun getMeetings() {
     repositoryMeeting.getMeetings(
         onSuccess = { meetingsList ->
@@ -63,7 +78,11 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
           _error.value = exception
         })
   }
-
+  /**
+   * Updates an existing meeting in the repository.
+   *
+   * @param meeting The meeting to be updated.
+   */
   fun updateMeeting(meeting: Meeting) {
     viewModelScope.launch {
       repositoryMeeting.updateMeeting(
@@ -74,7 +93,11 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
           })
     }
   }
-
+  /**
+   * Deletes a meeting from the repository by its ID.
+   *
+   * @param id The ID of the meeting to be deleted.
+   */
   fun deleteMeeting(id: String) {
     viewModelScope.launch {
       repositoryMeeting.deleteMeetingById(
@@ -85,7 +108,11 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
           })
     }
   }
-
+  /**
+   * Selects a meeting to be the currently active meeting.
+   *
+   * @param meeting The meeting to be selected.
+   */
   fun selectMeeting(meeting: Meeting) {
     selectedMeeting.value = meeting
   }

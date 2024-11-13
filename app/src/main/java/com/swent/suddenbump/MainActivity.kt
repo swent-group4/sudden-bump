@@ -38,7 +38,9 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.authentication.SignUpScreen
+import com.swent.suddenbump.ui.calendar.AddMeetingScreen
 import com.swent.suddenbump.ui.calendar.CalendarMeetingsScreen
+import com.swent.suddenbump.ui.calendar.EditMeetingScreen
 import com.swent.suddenbump.ui.chat.ChatScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
@@ -177,6 +179,9 @@ class MainActivity : ComponentActivity() {
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
+        composable(Screen.ADD_MEETING) {
+          AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
+        }
       }
       navigation(
           startDestination = Screen.CALENDAR,
@@ -185,6 +190,7 @@ class MainActivity : ComponentActivity() {
         composable(Screen.CALENDAR) {
           CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
         }
+        composable(Screen.EDIT_MEETING) { EditMeetingScreen(navigationActions, meetingViewModel) }
       }
 
       navigation(
