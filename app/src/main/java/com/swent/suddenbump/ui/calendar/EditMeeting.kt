@@ -22,100 +22,94 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditMeetingScreen(
-    navigationActions: NavigationActions,
-    meetingViewModel: MeetingViewModel
-) {
-    val meeting = meetingViewModel.selectedMeeting.collectAsState().value ?: return
+fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: MeetingViewModel) {
+  val meeting = meetingViewModel.selectedMeeting.collectAsState().value ?: return
 
-    var location by remember { mutableStateOf(meeting.location) }
-    var date by remember { mutableStateOf(meeting.date.toDate()?.let { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it) } ?: "") }
-    val context = LocalContext.current
+  var location by remember { mutableStateOf(meeting.location) }
+  var date by remember {
+    mutableStateOf(
+        meeting.date.toDate()?.let {
+          SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it)
+        } ?: "")
+  }
+  val context = LocalContext.current
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Edit Meeting", color = Color.White, modifier = Modifier.testTag("Edit Meeting")) },
-                navigationIcon = {
-                    IconButton(onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("Back")) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = {
+              Text("Edit Meeting", color = Color.White, modifier = Modifier.testTag("Edit Meeting"))
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("Back")) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                  }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black))
+      },
+      content = { padding ->
+        Column(
+            modifier =
+                Modifier.padding(padding).fillMaxSize().background(Color.Black).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+              OutlinedTextField(
+                  value = location,
+                  onValueChange = { location = it },
+                  label = { Text("Location") },
+                  textStyle = LocalTextStyle.current.copy(color = Color.White),
+                  modifier = Modifier.fillMaxWidth().testTag("Location"))
+              OutlinedTextField(
+                  value = date,
+                  onValueChange = { date = it },
+                  label = { Text("Date (dd/MM/yyyy)") },
+                  textStyle = LocalTextStyle.current.copy(color = Color.White),
+                  modifier = Modifier.fillMaxWidth().testTag("Date"))
+              Spacer(modifier = Modifier.height(16.dp))
+              Button(
+                  onClick = {
+                    try {
+                      val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                      val parsedDate = dateFormat.parse(date)
+                      val calendar =
+                          GregorianCalendar().apply {
+                            time = parsedDate
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                          }
+                      val meetingDate = Timestamp(calendar.time)
+
+                      val updatedMeeting = meeting?.copy(location = location, date = meetingDate)
+                      if (updatedMeeting != null) {
+                        meetingViewModel.updateMeeting(updatedMeeting)
+                        Toast.makeText(context, "Meeting updated successfully", Toast.LENGTH_SHORT)
+                            .show()
+                        navigationActions.goBack()
+                      }
+                    } catch (e: Exception) {
+                      Log.e("EditMeetingScreen", "Error parsing date", e)
+                      Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
-            )
-        },
-        content = { padding ->
-            Column(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize()
-                    .background(Color.Black)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = location,
-                    onValueChange = { location = it },
-                    label = { Text("Location") },
-                    textStyle = LocalTextStyle.current.copy(color = Color.White),
-                    modifier = Modifier.fillMaxWidth().testTag("Location")
-                )
-                OutlinedTextField(
-                    value = date,
-                    onValueChange = { date = it },
-                    label = { Text("Date (dd/MM/yyyy)") },
-                    textStyle = LocalTextStyle.current.copy(color = Color.White),
-                    modifier = Modifier.fillMaxWidth().testTag("Date")
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        try {
-                            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                            val parsedDate = dateFormat.parse(date)
-                            val calendar = GregorianCalendar().apply {
-                                time = parsedDate
-                                set(Calendar.HOUR_OF_DAY, 0)
-                                set(Calendar.MINUTE, 0)
-                                set(Calendar.SECOND, 0)
-                                set(Calendar.MILLISECOND, 0)
-                            }
-                            val meetingDate = Timestamp(calendar.time)
-
-                            val updatedMeeting = meeting?.copy(
-                                location = location,
-                                date = meetingDate
-                            )
-                            if (updatedMeeting != null) {
-                                meetingViewModel.updateMeeting(updatedMeeting)
-                                Toast.makeText(context, "Meeting updated successfully", Toast.LENGTH_SHORT).show()
-                                navigationActions.goBack()
-                            }
-                        } catch (e: Exception) {
-                            Log.e("EditMeetingScreen", "Error parsing date", e)
-                            Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().testTag("Save Changes")
-                ) {
+                  },
+                  modifier = Modifier.fillMaxWidth().testTag("Save Changes")) {
                     Text("Save Changes")
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        meeting?.let {
-                            meetingViewModel.deleteMeeting(it.meetingId)
-                            Toast.makeText(context, "Meeting deleted successfully", Toast.LENGTH_SHORT).show()
-                            navigationActions.goBack()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().testTag("Delete Meeting"),
-                    colors = ButtonDefaults.buttonColors(containerColor = Pink40)
-                ) {
+                  }
+              Spacer(modifier = Modifier.height(16.dp))
+              Button(
+                  onClick = {
+                    meeting?.let {
+                      meetingViewModel.deleteMeeting(it.meetingId)
+                      Toast.makeText(context, "Meeting deleted successfully", Toast.LENGTH_SHORT)
+                          .show()
+                      navigationActions.goBack()
+                    }
+                  },
+                  modifier = Modifier.fillMaxWidth().testTag("Delete Meeting"),
+                  colors = ButtonDefaults.buttonColors(containerColor = Pink40)) {
                     Text("Delete Meeting")
-                }
+                  }
             }
-        }
-    )
+      })
 }
-

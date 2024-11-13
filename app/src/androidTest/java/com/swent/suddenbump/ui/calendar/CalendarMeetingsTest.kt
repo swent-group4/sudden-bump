@@ -10,20 +10,16 @@ import androidx.compose.ui.test.onNodeWithTag
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
-import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
-import kotlinx.coroutines.flow.StateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
 class CalendarMeetingsTest {
   private lateinit var navigationActions: NavigationActions

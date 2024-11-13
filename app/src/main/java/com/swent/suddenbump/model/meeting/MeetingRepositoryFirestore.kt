@@ -50,23 +50,23 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
         }
   }
 
-    /*override fun getMeetingById(
-        id: String,
-        onSuccess: (Meeting?) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(meetingsCollectionPath).document(id).get().addOnCompleteListener { result ->
-            if (result.isSuccessful) {
-                val meeting = result.result?.toMeeting()
-                onSuccess(meeting)
-            } else {
-                result.exception?.let {
-                    Log.e("MeetingRepositoryFirestore", "Error getting document", it)
-                    onFailure(it)
-                }
-            }
-        }
-    }*/
+  /*override fun getMeetingById(
+      id: String,
+      onSuccess: (Meeting?) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+      db.collection(meetingsCollectionPath).document(id).get().addOnCompleteListener { result ->
+          if (result.isSuccessful) {
+              val meeting = result.result?.toMeeting()
+              onSuccess(meeting)
+          } else {
+              result.exception?.let {
+                  Log.e("MeetingRepositoryFirestore", "Error getting document", it)
+                  onFailure(it)
+              }
+          }
+      }
+  }*/
 
   override fun updateMeeting(
       meeting: Meeting,
@@ -116,6 +116,10 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
 
   private fun Meeting.toMap(): Map<String, Any> {
     return mapOf(
-        "meetingId" to meetingId, "location" to location, "date" to date, "friendId" to friendId, "creatorId" to creatorId)
+        "meetingId" to meetingId,
+        "location" to location,
+        "date" to date,
+        "friendId" to friendId,
+        "creatorId" to creatorId)
   }
 }

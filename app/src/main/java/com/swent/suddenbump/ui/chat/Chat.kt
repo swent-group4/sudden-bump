@@ -54,7 +54,6 @@ import com.swent.suddenbump.model.chat.generateListItems
 import com.swent.suddenbump.model.chat.toOnlyTimeFormat
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
-import com.swent.suddenbump.ui.calendar.AddMeetingScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.purple
@@ -201,21 +200,18 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: 
 
         Spacer(modifier = Modifier.width(8.dp))
 
-      // Add Meeting Icon
-      IconButton(
-          onClick = { navigationActions.navigateTo(Screen.ADD_MEETING) }
-      ) {
+        // Add Meeting Icon
+        IconButton(onClick = { navigationActions.navigateTo(Screen.ADD_MEETING) }) {
           Icon(
               imageVector = Icons.Default.DateRange, // Replace with your desired icon
               contentDescription = "Add Meeting",
               tint = Color.White,
-              modifier = Modifier.size(28.dp)
-          )
-      }
+              modifier = Modifier.size(28.dp))
+        }
 
-      Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
-      // Send Message Icon
+        // Send Message Icon
         IconButton(
             onClick = {
               if (inputText.text.isNotEmpty()) {

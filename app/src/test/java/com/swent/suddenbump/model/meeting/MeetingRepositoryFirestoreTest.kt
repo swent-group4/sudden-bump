@@ -26,78 +26,78 @@ import org.robolectric.Shadows.shadowOf
 @RunWith(RobolectricTestRunner::class)
 class MeetingRepositoryFirestoreTest {
 
-    @Mock private lateinit var mockFirestore: FirebaseFirestore
-    @Mock private lateinit var mockDocumentReference: DocumentReference
-    @Mock private lateinit var mockCollectionReference: CollectionReference
-    @Mock private lateinit var mockDocumentSnapshot: DocumentSnapshot
-    @Mock private lateinit var mockMeetingQuerySnapshot: QuerySnapshot
+  @Mock private lateinit var mockFirestore: FirebaseFirestore
+  @Mock private lateinit var mockDocumentReference: DocumentReference
+  @Mock private lateinit var mockCollectionReference: CollectionReference
+  @Mock private lateinit var mockDocumentSnapshot: DocumentSnapshot
+  @Mock private lateinit var mockMeetingQuerySnapshot: QuerySnapshot
 
-    private lateinit var meetingRepositoryFirestore: MeetingRepositoryFirestore
+  private lateinit var meetingRepositoryFirestore: MeetingRepositoryFirestore
 
-    private val meeting =
-        Meeting(
-            meetingId = "1",
-            location = "Cafe",
-            date = Timestamp.now(),
-            friendId = "friendId",
-            creatorId = "creatorId")
+  private val meeting =
+      Meeting(
+          meetingId = "1",
+          location = "Cafe",
+          date = Timestamp.now(),
+          friendId = "friendId",
+          creatorId = "creatorId")
 
-    @Before
-    fun setUp() {
-        MockitoAnnotations.openMocks(this)
+  @Before
+  fun setUp() {
+    MockitoAnnotations.openMocks(this)
 
-        // Initialize Firebase if necessary
-        if (FirebaseApp.getApps(ApplicationProvider.getApplicationContext()).isEmpty()) {
-            FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
-        }
-
-        meetingRepositoryFirestore = MeetingRepositoryFirestore(mockFirestore)
-
-        `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
-        `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
-        `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
+    // Initialize Firebase if necessary
+    if (FirebaseApp.getApps(ApplicationProvider.getApplicationContext()).isEmpty()) {
+      FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
 
-    @Test
-    fun getNewMeetingId() {
-        `when`(mockDocumentReference.id).thenReturn("1")
-        val meetingId = meetingRepositoryFirestore.getNewMeetingId()
-        assert(meetingId == "1")
-    }
+    meetingRepositoryFirestore = MeetingRepositoryFirestore(mockFirestore)
 
-    @Test
-    fun getMeetings_callsDocuments() {
-        `when`(mockCollectionReference.get()).thenReturn(Tasks.forResult(mockMeetingQuerySnapshot))
-        `when`(mockMeetingQuerySnapshot.documents).thenReturn(listOf())
+    `when`(mockFirestore.collection(any())).thenReturn(mockCollectionReference)
+    `when`(mockCollectionReference.document(any())).thenReturn(mockDocumentReference)
+    `when`(mockCollectionReference.document()).thenReturn(mockDocumentReference)
+  }
 
-        meetingRepositoryFirestore.getMeetings(
-            onSuccess = {
-                // Do nothing; we just want to verify that the 'documents' field was accessed
-            },
-            onFailure = { fail("Failure callback should not be called") })
+  @Test
+  fun getNewMeetingId() {
+    `when`(mockDocumentReference.id).thenReturn("1")
+    val meetingId = meetingRepositoryFirestore.getNewMeetingId()
+    assert(meetingId == "1")
+  }
 
-        verify(timeout(100)) { (mockMeetingQuerySnapshot).documents }
-    }
+  @Test
+  fun getMeetings_callsDocuments() {
+    `when`(mockCollectionReference.get()).thenReturn(Tasks.forResult(mockMeetingQuerySnapshot))
+    `when`(mockMeetingQuerySnapshot.documents).thenReturn(listOf())
 
-    @Test
-    fun addMeeting_shouldCallFirestoreCollection() {
-        `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forResult(null)) // Simulate success
+    meetingRepositoryFirestore.getMeetings(
+        onSuccess = {
+          // Do nothing; we just want to verify that the 'documents' field was accessed
+        },
+        onFailure = { fail("Failure callback should not be called") })
 
-        meetingRepositoryFirestore.addMeeting(meeting, onSuccess = {}, onFailure = {})
+    verify(timeout(100)) { (mockMeetingQuerySnapshot).documents }
+  }
 
-        shadowOf(Looper.getMainLooper()).idle()
+  @Test
+  fun addMeeting_shouldCallFirestoreCollection() {
+    `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forResult(null)) // Simulate success
 
-        verify(mockDocumentReference).set(any())
-    }
+    meetingRepositoryFirestore.addMeeting(meeting, onSuccess = {}, onFailure = {})
 
-    @Test
-    fun deleteMeetingById_shouldCallDocumentReferenceDelete() {
-        `when`(mockDocumentReference.delete()).thenReturn(Tasks.forResult(null))
+    shadowOf(Looper.getMainLooper()).idle()
 
-        meetingRepositoryFirestore.deleteMeetingById("1", onSuccess = {}, onFailure = {})
+    verify(mockDocumentReference).set(any())
+  }
 
-        shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
+  @Test
+  fun deleteMeetingById_shouldCallDocumentReferenceDelete() {
+    `when`(mockDocumentReference.delete()).thenReturn(Tasks.forResult(null))
 
-        verify(mockDocumentReference).delete()
-    }
+    meetingRepositoryFirestore.deleteMeetingById("1", onSuccess = {}, onFailure = {})
+
+    shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
+
+    verify(mockDocumentReference).delete()
+  }
 }

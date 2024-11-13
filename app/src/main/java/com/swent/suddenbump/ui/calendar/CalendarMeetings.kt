@@ -37,10 +37,10 @@ fun CalendarMeetingsScreen(
   LaunchedEffect(Unit) { meetingViewModel.getMeetings() }
   val meetings by meetingViewModel.meetings.collectAsState()
   val userFriends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
-    val currentUserId = userViewModel.getCurrentUser().value?.uid ?: ""
+  val currentUserId = userViewModel.getCurrentUser().value?.uid ?: ""
 
-    // Log the current user ID
-    Log.d("CalendarMeetingsScreen", "Current User ID: $currentUserId")
+  // Log the current user ID
+  Log.d("CalendarMeetingsScreen", "Current User ID: $currentUserId")
 
   Scaffold(
       bottomBar = {
@@ -57,13 +57,24 @@ fun CalendarMeetingsScreen(
                     .background(Color.Black)
                     .fillMaxSize()
                     .testTag("calendarMeetingsScreen")) {
-              ScrollableInfiniteTimeline(meetings = meetings, userFriends = userFriends, navigationActions, meetingViewModel, currentUserId = currentUserId)
+              ScrollableInfiniteTimeline(
+                  meetings = meetings,
+                  userFriends = userFriends,
+                  navigationActions,
+                  meetingViewModel,
+                  currentUserId = currentUserId)
             }
       })
 }
 
 @Composable
-fun ScrollableInfiniteTimeline(meetings: List<Meeting>, userFriends: List<User>, navigationActions: NavigationActions, meetingViewModel: MeetingViewModel, currentUserId: String) {
+fun ScrollableInfiniteTimeline(
+    meetings: List<Meeting>,
+    userFriends: List<User>,
+    navigationActions: NavigationActions,
+    meetingViewModel: MeetingViewModel,
+    currentUserId: String
+) {
   val currentDate = Calendar.getInstance()
   val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
@@ -113,13 +124,26 @@ fun ScrollableInfiniteTimeline(meetings: List<Meeting>, userFriends: List<User>,
           val dayKey = formatter.format(day.time)
           val meetingsForDay = meetingsByDay[dayKey] ?: emptyList()
 
-          DayRow(day = day.time, meetings = meetingsForDay, userFriends = userFriends, navigationActions = navigationActions, meetingViewModel = meetingViewModel, currentUserId = currentUserId)
+          DayRow(
+              day = day.time,
+              meetings = meetingsForDay,
+              userFriends = userFriends,
+              navigationActions = navigationActions,
+              meetingViewModel = meetingViewModel,
+              currentUserId = currentUserId)
         }
       }
 }
 
 @Composable
-fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>, navigationActions: NavigationActions, meetingViewModel: MeetingViewModel, currentUserId: String) {
+fun DayRow(
+    day: Date,
+    meetings: List<Meeting>,
+    userFriends: List<User>,
+    navigationActions: NavigationActions,
+    meetingViewModel: MeetingViewModel,
+    currentUserId: String
+) {
   val dayFormat = SimpleDateFormat("EEE, d", Locale.getDefault())
 
   Column(
@@ -135,25 +159,29 @@ fun DayRow(day: Date, meetings: List<Meeting>, userFriends: List<User>, navigati
             color = Color.White,
             modifier = Modifier.padding(bottom = 8.dp))
 
-      val filteredMeetings = meetings.filter { it.creatorId == currentUserId || it.friendId == currentUserId }
+        val filteredMeetings =
+            meetings.filter { it.creatorId == currentUserId || it.friendId == currentUserId }
 
         if (filteredMeetings.isNotEmpty()) {
           Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
             filteredMeetings.forEach { meeting ->
               Card(
                   modifier =
-                      Modifier
-                          .fillMaxWidth()
+                      Modifier.fillMaxWidth()
                           .padding(8.dp)
                           .clickable {
-                              meetingViewModel.selectMeeting(meeting)
-                              navigationActions.navigateTo(Screen.EDIT_MEETING)}
+                            meetingViewModel.selectMeeting(meeting)
+                            navigationActions.navigateTo(Screen.EDIT_MEETING)
+                          }
                           .background(
                               com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium),
                   colors =
                       CardDefaults.cardColors(
                           containerColor = com.swent.suddenbump.ui.theme.Pink40)) {
-                    val friend = userFriends.find { it.uid == meeting.friendId || it.uid == meeting.creatorId }
+                    val friend =
+                        userFriends.find {
+                          it.uid == meeting.friendId || it.uid == meeting.creatorId
+                        }
                     val friendName =
                         friend?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown Friend"
                     val formattedDate = formatDate(meeting.date.toDate())
