@@ -38,6 +38,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.authentication.SignUpScreen
+import com.swent.suddenbump.ui.chat.ChatScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
 import com.swent.suddenbump.ui.map.MapScreen
@@ -53,15 +54,15 @@ import com.swent.suddenbump.ui.theme.SampleAppTheme
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var auth: FirebaseAuth
+  private lateinit var auth: FirebaseAuth
 
-    private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
-    private lateinit var locationGetter: LocationGetter
+  private lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
+  private lateinit var locationGetter: LocationGetter
 
-    @SuppressLint("SuspiciousIndentation")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        var newLocation by mutableStateOf<Location?>(null)
+  @SuppressLint("SuspiciousIndentation")
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    var newLocation by mutableStateOf<Location?>(null)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val REQUEST_CODE = 1001
@@ -85,19 +86,19 @@ class MainActivity : ComponentActivity() {
                         newLocation = location
                     }
 
-                    override fun onLocationFailure(message: String) {
-                        Log.e("MainActivity", "Location Error: $message")
-                    }
-                })
+              override fun onLocationFailure(message: String) {
+                Log.e("MainActivity", "Location Error: $message")
+              }
+            })
 
-        FirebaseApp.initializeApp(this)
-        // Initialize Firebase Auth
-        auth = FirebaseAuth.getInstance()
-        auth.currentUser?.let {
-            // Sign out the user if they are already signed in
-            // This is useful for testing purposes
-            auth.signOut()
-        }
+    FirebaseApp.initializeApp(this)
+    // Initialize Firebase Auth
+    auth = FirebaseAuth.getInstance()
+    auth.currentUser?.let {
+      // Sign out the user if they are already signed in
+      // This is useful for testing purposes
+      auth.signOut()
+    }
 
         setContent {
             SampleAppTheme {
@@ -137,13 +138,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @SuppressLint("UnrememberedMutableState")
-    @Composable
-    fun SuddenBumpApp(location: Location?) {
-        val navController = rememberNavController()
-        val navigationActions = NavigationActions(navController)
+  @SuppressLint("UnrememberedMutableState")
+  @Composable
+  fun SuddenBumpApp(location: Location?) {
+    val navController = rememberNavController()
+    val navigationActions = NavigationActions(navController)
 
-        val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+    val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(
@@ -163,25 +164,26 @@ class MainActivity : ComponentActivity() {
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+        composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
       }
 
-            navigation(
-                startDestination = Screen.MAP,
-                route = Route.MAP,
-            ) {
-                composable(Screen.MAP) {
-                    MapScreen(navigationActions, location, userViewModel)
-                    checkLocationPermissions()
-                }
-            }
-            navigation(
-                startDestination = Screen.MESS,
-                route = Route.MESS,
-            ) {
-                composable(Screen.MESS) { MessagesScreen(navigationActions) }
-            }
+      navigation(
+          startDestination = Screen.MAP,
+          route = Route.MAP,
+      ) {
+        composable(Screen.MAP) {
+          MapScreen(navigationActions, location, userViewModel)
+          checkLocationPermissions()
         }
+      }
+      navigation(
+          startDestination = Screen.MESS,
+          route = Route.MESS,
+      ) {
+        composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions) }
+      }
     }
+  }
 
 
     override fun onNewIntent(intent: android.content.Intent) {
@@ -220,4 +222,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
+  }

@@ -1,21 +1,29 @@
 package com.swent.suddenbump.model.user
 
 import android.location.Location
+import com.google.firebase.Timestamp
+import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.chat.Message
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.*
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Before
-import org.junit.Test
+import org.junit.*
 import org.mockito.Mockito
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class UserViewModelTest {
+
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
+  private lateinit var chatRepository: ChatRepository
 
   private val exception = Exception()
   private val location =
@@ -28,8 +36,15 @@ class UserViewModelTest {
 
   @Before
   fun setUp() {
+    Dispatchers.setMain(UnconfinedTestDispatcher())
     userRepository = mock(UserRepository::class.java)
-    userViewModel = UserViewModel(userRepository)
+    chatRepository = mock(ChatRepository::class.java)
+    userViewModel = UserViewModel(userRepository, chatRepository)
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
   }
 
   @Test
@@ -72,7 +87,10 @@ class UserViewModelTest {
 
     verify(userRepository).getUserAccount(any(), any())
     verify(userRepository).getUserFriends(any(), any(), any())
+    verify(userRepository).getUserFriendRequests(any(), any(), any())
+    verify(userRepository).getSentFriendRequests(any(), any(), any())
     verify(userRepository).getBlockedFriends(any(), any(), any())
+    verify(userRepository).getRecommendedFriends(any(), any(), any(), any())
 
     assertThat(userViewModel.getCurrentUser().value.uid, `is`(user2.uid))
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
@@ -122,6 +140,9 @@ class UserViewModelTest {
     verify(userRepository).getUserAccount(any(), any(), any())
     verify(userRepository).getUserFriends(any(), any(), any())
     verify(userRepository).getBlockedFriends(any(), any(), any())
+    verify(userRepository).getUserFriendRequests(any(), any(), any())
+    verify(userRepository).getSentFriendRequests(any(), any(), any())
+    verify(userRepository).getRecommendedFriends(any(), any(), any(), any())
 
     assertThat(userViewModel.getCurrentUser().value.uid, `is`(user2.uid))
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
@@ -170,6 +191,55 @@ class UserViewModelTest {
 
     userViewModel.setUserFriends(friendsList = listOf(user2), onSuccess = {}, onFailure = {})
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
+  }
+
+  @Test
+  fun acceptFriendRequest() {
+    val user = User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+
+    // Mock the repository methods
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .createFriend(any(), any(), any(), any())
+
+    // Call the method
+    userViewModel.acceptFriendRequest(user, friend, {}, {})
+
+    // Verify the repository interactions
+    verify(userRepository).createFriend(eq(user), eq(friend), any(), any())
+
+    // Verify the state updates
+    assert(userViewModel.getUserFriends().value.contains(friend))
+    assert(!userViewModel.getUserFriendRequests().value.contains(friend))
+  }
+
+  @Test
+  fun sendFriendRequest() {
+    val user = User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+    val friend = User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com")
+
+    // Mock the repository methods
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .createFriendRequest(any(), any(), any(), any())
+
+    // Call the method
+    userViewModel.sendFriendRequest(user, friend, {}, {})
+
+    // Verify the repository interactions
+    verify(userRepository).createFriendRequest(eq(user), eq(friend), any(), any())
+
+    // Verify the state updates
+    assert(userViewModel.getSentFriendRequests().value.contains(friend))
   }
 
   @Test
@@ -251,7 +321,7 @@ class UserViewModelTest {
     val errorMessage = "Failed to fetch friends' locations"
     val exception = Exception(errorMessage)
     val userRepository: UserRepository = mock() // Mock the UserRepository
-    userViewModel = UserViewModel(userRepository) // Instantiate the ViewModel
+    userViewModel = UserViewModel(userRepository, chatRepository) // Instantiate the ViewModel
 
     // Mock repository method to simulate a failure
     whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
@@ -327,5 +397,94 @@ class UserViewModelTest {
 
     // Assert
     assertThat(distance, `is`(Float.MAX_VALUE))
+  }
+
+  @Test
+  fun test_getOrCreateChat_success() = runTest {
+    // Arrange
+    val userId = "user123"
+    val chatId = "chat456"
+    val messages =
+        listOf(
+            Message("msg1", "user123", "Hello", Timestamp.now(), listOf("user123")),
+            Message("msg2", "user456", "Hi", Timestamp.now(), listOf("user456")))
+
+    // Set the user in the viewModel
+    userViewModel.user =
+        User(
+            uid = userId,
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "",
+            profilePicture = null,
+            emailAddress = "")
+
+    // Mock chatRepository.getOrCreateChat to return chatId
+    whenever(chatRepository.getOrCreateChat(userId)).thenReturn(chatId)
+
+    // Mock chatRepository.getMessages to return Flow<List<Message>> of messages
+    val messagesFlow = MutableSharedFlow<List<Message>>()
+    whenever(chatRepository.getMessages(chatId)).thenReturn(messagesFlow)
+
+    // Act
+    userViewModel.getOrCreateChat()
+    advanceUntilIdle()
+
+    // Send messages through the flow
+    messagesFlow.emit(messages)
+    advanceUntilIdle()
+
+    // Collect the messages from userViewModel.messages
+    val collectedMessages = mutableListOf<List<Message>>()
+    val job = launch { userViewModel.messages.collect { collectedMessages.add(it) } }
+
+    // Allow time for messages to be collected
+    advanceUntilIdle()
+
+    // Assert
+    assertThat(collectedMessages.last(), `is`(messages))
+    verify(chatRepository).getOrCreateChat(userId)
+    verify(chatRepository).getMessages(chatId)
+
+    // Clean up
+    job.cancel()
+  }
+
+  @Test
+  fun test_sendMessage_success() = runTest {
+    // Arrange
+    val userId = "user123"
+    val chatId = "chat456"
+    val messageContent = "Hello"
+    val username = "Test User"
+
+    // Set the user in the viewModel
+    userViewModel.user =
+        User(
+            uid = userId,
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "",
+            profilePicture = null,
+            emailAddress = "")
+
+    // Mock chatRepository.getOrCreateChat to return chatId
+    whenever(chatRepository.getOrCreateChat(userId)).thenReturn(chatId)
+
+    // Mock chatRepository.getMessages to return Flow<List<Message>>
+    whenever(chatRepository.getMessages(chatId)).thenReturn(MutableSharedFlow())
+
+    // Mock chatRepository.sendMessage to do nothing
+    whenever(chatRepository.sendMessage(chatId, messageContent, username)).thenReturn(Unit)
+
+    // Act
+    userViewModel.getOrCreateChat()
+    advanceUntilIdle()
+
+    userViewModel.sendMessage(messageContent, username)
+    advanceUntilIdle()
+
+    // Assert
+    verify(chatRepository).sendMessage(chatId, messageContent, username)
   }
 }

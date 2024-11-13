@@ -36,23 +36,35 @@ class LoginTest : TestCase() {
     Intents.release() // Release intents
   }
 
+  fun waitForNodeWithTag(tag: String, timeoutMillis: Long = 10000) {
+    composeTestRule.waitUntil(timeoutMillis) {
+      try {
+        composeTestRule.onNodeWithTag(tag).fetchSemanticsNode()
+        true
+      } catch (e: Exception) {
+        false
+      }
+    }
+  }
+
+
   @Test
   fun titleAndButtonAreCorrectlyDisplayed() {
-    composeTestRule.waitUntil(timeoutMillis = 7000) {
-      composeTestRule.onNodeWithTag("loginTitle").fetchSemanticsNode() != null
-    }
+    waitForNodeWithTag("loginTitle")
+    composeTestRule.onNodeWithTag("loginTitle").fetchSemanticsNode() != null
+
     composeTestRule.onNodeWithTag("loginTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginTitle").assertTextEquals("SuddenBump!")
 
+    waitForNodeWithTag("loginButton")
     composeTestRule.onNodeWithTag("loginButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginButton").assertHasClickAction()
   }
 
   @Test
   fun googleSignInReturnsValidActivityResult() {
-    composeTestRule.waitUntil(timeoutMillis = 7000) {
+    waitForNodeWithTag("loginButton")
       composeTestRule.onNodeWithTag("loginButton").fetchSemanticsNode() != null
-    }
     composeTestRule.onNodeWithTag("loginButton").performClick()
     composeTestRule.waitForIdle()
     intended(toPackage("com.google.android.gms"))
