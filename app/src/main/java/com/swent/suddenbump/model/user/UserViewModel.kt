@@ -3,6 +3,8 @@ package com.swent.suddenbump.model.user
 import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -30,9 +32,23 @@ open class UserViewModel(
   private val profilePicture = ImageBitMapIO()
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
+  val locationDummy =
+      Location("providerName").apply {
+        latitude = 0.0 // Set latitude
+        longitude = 0.0 // Set longitude
+      }
+
   private val _user: MutableStateFlow<User> =
       MutableStateFlow(
-          User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch"))
+          User(
+              "1",
+              "Martin",
+              "Vetterli",
+              "+41 00 000 00 01",
+              null,
+              "martin.vetterli@epfl.ch",
+              locationDummy))
+
   private val _userFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(_user.value))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
@@ -49,6 +65,18 @@ open class UserViewModel(
           })
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
+
+  // LiveData for verification status
+  private val _verificationStatus = MutableLiveData<String>()
+  val verificationStatus: LiveData<String> = _verificationStatus
+
+  // LiveData for phone number
+  private val _phoneNumber = MutableLiveData<String>()
+  val phoneNumber: LiveData<String> = _phoneNumber
+
+  // LiveData for verification ID
+  private val _verificationId = MutableLiveData<String>()
+  val verificationId: LiveData<String> = _verificationId
 
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
@@ -240,25 +268,29 @@ open class UserViewModel(
   }
 
   fun loadFriendsLocations() {
-    viewModelScope.launch {
-      try {
-        Log.i(logTag, "1: ${_userFriends.value.toString()}")
-        Log.i(logTag, "2: ${getUserFriends().value.toString()}")
-        repository.getFriendsLocation(
-            _userFriends.value,
-            onSuccess = { friendsLoc ->
-              // Update the state with the locations of friends
-              friendsLocations.value = friendsLoc
-              Log.d("FriendsMarkers", "On success load Friends Locations ${friendsLocations.value}")
-            },
-            onFailure = { error ->
-              // Handle the error, e.g., log or show error message
-              Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
-            })
-      } catch (e: Exception) {
-        Log.e("UserViewModel", e.toString())
-      }
+    try {
+      Log.i(logTag, "1: ${_userFriends.value.toString()}")
+      println("1: ${_userFriends.value.toString()}")
+      Log.i(logTag, "2: ${getUserFriends().value.toString()}")
+      println("2: ${getUserFriends().value.toString()}")
+      repository.getFriendsLocation(
+          _userFriends.value,
+          onSuccess = { friendsLoc ->
+            // Update the state with the locations of friends
+            friendsLocations.value = friendsLoc
+            Log.d("FriendsMarkers", "On success load Friends Locations ${friendsLocations.value}")
+            println("On success load Friends Locations ${friendsLocations.value}")
+          },
+          onFailure = { error ->
+            // Handle the error, e.g., log or show error message
+            Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
+            println("exception1")
+          })
+    } catch (e: Exception) {
+      Log.e("UserViewModel", e.toString())
+      println("exception2")
     }
+    println("endfunc")
   }
 
   fun getSelectedContact(): StateFlow<User> {
@@ -322,6 +354,30 @@ open class UserViewModel(
   fun sendMessage(messageContent: String, username: String) {
     viewModelScope.launch {
       if (chatId != null) chatRepository.sendMessage(chatId!!, messageContent, username)
+    }
+  }
+
+  fun sendVerificationCode(phoneNumber: String) {
+    _phoneNumber.value = phoneNumber
+    repository.sendVerificationCode(
+        phoneNumber,
+        onSuccess = { verificationId ->
+          _verificationId.postValue(verificationId) // Store the verification ID
+          _verificationStatus.postValue("Code Sent")
+        },
+        onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })
+  }
+
+  fun verifyCode(code: String) {
+    val verificationIdValue = _verificationId.value
+    if (verificationIdValue != null) {
+      repository.verifyCode(
+          verificationIdValue,
+          code,
+          onSuccess = { _verificationStatus.postValue("Phone Verified") },
+          onFailure = { _verificationStatus.postValue("Verification failed: ${it.message}") })
+    } else {
+      _verificationStatus.postValue("Verification ID is missing.")
     }
   }
 }
