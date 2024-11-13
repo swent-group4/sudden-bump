@@ -98,10 +98,10 @@ class ChatRepositoryFirestoreTest {
 
     // Mock Firestore query
     `when`(mockMessagesCollection.orderBy("timestamp", Query.Direction.ASCENDING))
-      .thenReturn(mockQuery)
+        .thenReturn(mockQuery)
     `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
     `when`(mockQuerySnapshot.documents)
-      .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
+        .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
     `when`(mockDocumentSnapshot1.toObject(Message::class.java)).thenReturn(message1)
     `when`(mockDocumentSnapshot2.toObject(Message::class.java)).thenReturn(message2)
 
@@ -119,7 +119,7 @@ class ChatRepositoryFirestoreTest {
     // Arrange
     val exception = Exception("Firestore error")
     `when`(mockMessagesCollection.orderBy("timestamp", Query.Direction.ASCENDING))
-      .thenReturn(mockQuery)
+        .thenReturn(mockQuery)
     `when`(mockQuery.get()).thenReturn(Tasks.forException(exception))
 
     // Act
@@ -217,18 +217,18 @@ class ChatRepositoryFirestoreTest {
     `when`(mockChatsCollection.document(chatId)).thenReturn(mockChatDocument)
     `when`(mockChatDocument.collection("messages")).thenReturn(mockMessagesSubCollection)
     `when`(mockMessagesSubCollection.orderBy("timestamp", Query.Direction.DESCENDING))
-      .thenReturn(mockQuery)
+        .thenReturn(mockQuery)
 
     doAnswer { invocation ->
-      val listener = invocation.getArgument<EventListener<QuerySnapshot>>(0)
-      listener.onEvent(mockQuerySnapshot, null)
-      mockListenerRegistration
-    }
-      .`when`(mockQuery)
-      .addSnapshotListener(any<EventListener<QuerySnapshot>>())
+          val listener = invocation.getArgument<EventListener<QuerySnapshot>>(0)
+          listener.onEvent(mockQuerySnapshot, null)
+          mockListenerRegistration
+        }
+        .`when`(mockQuery)
+        .addSnapshotListener(any<EventListener<QuerySnapshot>>())
 
     `when`(mockQuerySnapshot.documents)
-      .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
+        .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
     `when`(mockDocumentSnapshot1.toObject(Message::class.java)).thenReturn(message1)
     `when`(mockDocumentSnapshot2.toObject(Message::class.java)).thenReturn(message2)
 
@@ -261,15 +261,15 @@ class ChatRepositoryFirestoreTest {
       `when`(mockChatsCollection.document(chatId)).thenReturn(mockChatDocument)
       `when`(mockChatDocument.collection("messages")).thenReturn(mockMessagesSubCollection)
       `when`(mockMessagesSubCollection.add(any(Message::class.java)))
-        .thenReturn(Tasks.forResult(mockMessageDocument))
+          .thenReturn(Tasks.forResult(mockMessageDocument))
       `when`(
-        mockChatDocument.update(
-          mapOf(
-            "lastMessage" to messageContent,
-            "lastMessageTimestamp" to FieldValue.serverTimestamp(),
-            "lastMessageSender" to senderName,
-            "otherUserName" to username)))
-        .thenReturn(Tasks.forResult(null))
+              mockChatDocument.update(
+                  mapOf(
+                      "lastMessage" to messageContent,
+                      "lastMessageTimestamp" to FieldValue.serverTimestamp(),
+                      "lastMessageSender" to senderName,
+                      "otherUserName" to username)))
+          .thenReturn(Tasks.forResult(null))
 
       // Act
       chatRepository.sendMessage(chatId, messageContent, username)
@@ -277,12 +277,12 @@ class ChatRepositoryFirestoreTest {
       // Assert
       verify(mockMessagesSubCollection).add(any(Message::class.java))
       verify(mockChatDocument)
-        .update(
-          mapOf(
-            "lastMessage" to messageContent,
-            "lastMessageTimestamp" to FieldValue.serverTimestamp(),
-            "lastMessageSender" to senderName,
-            "otherUserName" to username))
+          .update(
+              mapOf(
+                  "lastMessage" to messageContent,
+                  "lastMessageTimestamp" to FieldValue.serverTimestamp(),
+                  "lastMessageSender" to senderName,
+                  "otherUserName" to username))
     }
   }
 
@@ -295,9 +295,9 @@ class ChatRepositoryFirestoreTest {
       val timestamp2 = Timestamp(Date(1000L)) // Earlier timestamp
 
       val chatSummary1 =
-        ChatSummary("chat1", "Hello", "user1", timestamp1, 1, listOf(currentUserId, "user2"))
+          ChatSummary("chat1", "Hello", "user1", timestamp1, 1, listOf(currentUserId, "user2"))
       val chatSummary2 =
-        ChatSummary("chat2", "Hi", "user2", timestamp2, 0, listOf(currentUserId, "user3"))
+          ChatSummary("chat2", "Hi", "user2", timestamp2, 0, listOf(currentUserId, "user3"))
 
       // Mock FirebaseAuth
       val mockAuthUser = mock(FirebaseUser::class.java)
@@ -307,25 +307,25 @@ class ChatRepositoryFirestoreTest {
       // Mock Query returned by whereArrayContains
       val mockQuery = mock(Query::class.java)
       `when`(mockChatsCollection.whereArrayContains("participants", currentUserId))
-        .thenReturn(mockQuery)
+          .thenReturn(mockQuery)
 
       // Mock QuerySnapshot and Documents
       val mockChatSnapshot = mock(QuerySnapshot::class.java)
       val mockDocumentSnapshot1 = mock(DocumentSnapshot::class.java)
       val mockDocumentSnapshot2 = mock(DocumentSnapshot::class.java)
       `when`(mockChatSnapshot.documents)
-        .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
+          .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
       `when`(mockDocumentSnapshot1.toObject(ChatSummary::class.java)).thenReturn(chatSummary1)
       `when`(mockDocumentSnapshot2.toObject(ChatSummary::class.java)).thenReturn(chatSummary2)
 
       // Mock addSnapshotListener on the Query
       doAnswer { invocation ->
-        val listener = invocation.getArgument<EventListener<QuerySnapshot>>(0)
-        listener.onEvent(mockChatSnapshot, null)
-        mockListenerRegistration
-      }
-        .`when`(mockQuery)
-        .addSnapshotListener(any<EventListener<QuerySnapshot>>())
+            val listener = invocation.getArgument<EventListener<QuerySnapshot>>(0)
+            listener.onEvent(mockChatSnapshot, null)
+            mockListenerRegistration
+          }
+          .`when`(mockQuery)
+          .addSnapshotListener(any<EventListener<QuerySnapshot>>())
 
       // Act
       val chatSummariesFlow = chatRepository.getChatSummaries()
@@ -364,7 +364,7 @@ class ChatRepositoryFirestoreTest {
     // Arrange
     val currentUserId = "user123"
     val expectedException =
-      FirebaseFirestoreException("Firestore error", FirebaseFirestoreException.Code.ABORTED)
+        FirebaseFirestoreException("Firestore error", FirebaseFirestoreException.Code.ABORTED)
 
     // Mock currentUser to return a valid user
     `when`(mockAuth.currentUser).thenReturn(mockAuthUser)
@@ -372,16 +372,16 @@ class ChatRepositoryFirestoreTest {
 
     // Mock the query returned by whereArrayContains
     `when`(mockChatsCollection.whereArrayContains("participants", currentUserId))
-      .thenReturn(mockQuery)
+        .thenReturn(mockQuery)
 
     // Mock addSnapshotListener to simulate an error
     doAnswer { invocation ->
-      val listener = invocation.getArgument<EventListener<QuerySnapshot>>(0)
-      listener.onEvent(null, expectedException)
-      mockListenerRegistration
-    }
-      .`when`(mockQuery)
-      .addSnapshotListener(any<EventListener<QuerySnapshot>>())
+          val listener = invocation.getArgument<EventListener<QuerySnapshot>>(0)
+          listener.onEvent(null, expectedException)
+          mockListenerRegistration
+        }
+        .`when`(mockQuery)
+        .addSnapshotListener(any<EventListener<QuerySnapshot>>())
 
     // Act & Assert
     try {
