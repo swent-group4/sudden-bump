@@ -35,7 +35,7 @@ class MapScreenTest {
         longitude = 0.0
       }
   private val user =
-      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch", location)
 
   @Before
   fun setUp() {

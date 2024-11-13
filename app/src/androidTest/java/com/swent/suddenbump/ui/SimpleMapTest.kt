@@ -19,8 +19,14 @@ class SimpleMapTest {
   private lateinit var userViewModel: UserViewModel
   private lateinit var chatRepository: ChatRepository
 
+  private val location =
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
+
   private val user =
-      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch")
+      User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch", location)
 
   @Before
   fun setUp() {
