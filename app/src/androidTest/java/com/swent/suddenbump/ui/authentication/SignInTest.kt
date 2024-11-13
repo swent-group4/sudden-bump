@@ -47,7 +47,6 @@ class LoginTest : TestCase() {
     }
   }
 
-
   @Test
   fun titleAndButtonAreCorrectlyDisplayed() {
     waitForNodeWithTag("loginTitle")
@@ -64,7 +63,7 @@ class LoginTest : TestCase() {
   @Test
   fun googleSignInReturnsValidActivityResult() {
     waitForNodeWithTag("loginButton")
-      composeTestRule.onNodeWithTag("loginButton").fetchSemanticsNode() != null
+    composeTestRule.onNodeWithTag("loginButton").fetchSemanticsNode() != null
     composeTestRule.onNodeWithTag("loginButton").performClick()
     composeTestRule.waitForIdle()
     intended(toPackage("com.google.android.gms"))

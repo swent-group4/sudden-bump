@@ -180,65 +180,73 @@ fun fetchLocationToServer(location: Location, userViewModel: UserViewModel) {
 }
 
 fun showFriendNearbyNotification(context: Context) {
-    val channelId = "friend_nearby_channel"
-    val channelName = "Friend Nearby Notifications"
-    val notificationId = 1
+  val channelId = "friend_nearby_channel"
+  val channelName = "Friend Nearby Notifications"
+  val notificationId = 1
 
-    val notificationChannel =
-        NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
-    val notificationManager = context.getSystemService(NotificationManager::class.java)
-    notificationManager?.createNotificationChannel(notificationChannel)
+  val notificationChannel =
+      NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+  val notificationManager = context.getSystemService(NotificationManager::class.java)
+  notificationManager?.createNotificationChannel(notificationChannel)
 
-    // Modify the intent to navigate to Screen.Map
-    val mapIntent =
-        Intent(context, MainActivity::class.java).apply {
-            putExtra("destination", "Screen.Map")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
+  // Modify the intent to navigate to Screen.Map
+  val mapIntent =
+      Intent(context, MainActivity::class.java).apply {
+        Log.d("IntentSB", "Navigating to Screen.Map")
+        putExtra("destination", "MAP")
+        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+      }
 
-    val pendingMapIntent: PendingIntent =
-        PendingIntent.getActivity(
-            context, 0, mapIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+  val pendingIntent: PendingIntent =
+      PendingIntent.getActivity(
+          context, 0, mapIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-    // Create intents for Accept and Refuse actions
-    val acceptIntent = Intent(context, MainActivity::class.java).apply {
-        action = "com.example.ACTION_ACCEPT"
+  // Create intents for Accept and Refuse actions
+  val acceptIntent =
+      Intent(context, MainActivity::class.java).apply {
+        Log.d("IntentSB", "Accept Intent")
+        action = "ACTION_ACCEPT"
         putExtra("action_type", "accept")
-    }
+      }
 
-    val refuseIntent = Intent(context, MainActivity::class.java).apply {
-        action = "com.example.ACTION_REFUSE"
+  val refuseIntent =
+      Intent(context, MainActivity::class.java).apply {
+        Log.d("IntentSB", "Refuse Intent")
+        action = "ACTION_REFUSE"
         putExtra("action_type", "refuse")
+      }
+
+  val acceptPendingIntent: PendingIntent =
+      PendingIntent.getBroadcast(
+          context,
+          1,
+          acceptIntent,
+          PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+  val refusePendingIntent: PendingIntent =
+      PendingIntent.getBroadcast(
+          context,
+          2,
+          refuseIntent,
+          PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+  // Build the notification with actions
+  val notificationBuilder =
+      NotificationCompat.Builder(context, channelId)
+          .setSmallIcon(android.R.drawable.ic_dialog_info)
+          .setContentTitle("Friend Nearby")
+          .setContentText("A friend is within your radius!")
+          .setPriority(NotificationCompat.PRIORITY_HIGH)
+          .setContentIntent(pendingIntent)
+          .setAutoCancel(true)
+          .addAction(android.R.drawable.ic_menu_compass, "Accept", acceptPendingIntent)
+          .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Refuse", refusePendingIntent)
+
+  try {
+    with(NotificationManagerCompat.from(context)) {
+      notify(notificationId, notificationBuilder.build())
     }
-
-    val acceptPendingIntent: PendingIntent =
-        PendingIntent.getActivity(
-            context, 1, acceptIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-    val refusePendingIntent: PendingIntent =
-        PendingIntent.getActivity(
-            context, 2, refuseIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-    // Build the notification with actions
-    val notificationBuilder =
-        NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Friend Nearby")
-            .setContentText("A friend is within your radius!")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pendingMapIntent)
-            .setAutoCancel(true)
-            .addAction(android.R.drawable.ic_menu_compass, "Accept", acceptPendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Refuse", refusePendingIntent)
-
-    try {
-        with(NotificationManagerCompat.from(context)) {
-            notify(notificationId, notificationBuilder.build())
-        }
-    } catch (e: SecurityException) {
-        Log.e("NotificationError", "Notification permission not granted", e)
-    }
+  } catch (e: SecurityException) {
+    Log.e("NotificationError", "Notification permission not granted", e)
+  }
 }

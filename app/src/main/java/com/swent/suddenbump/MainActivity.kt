@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     var newLocation by mutableStateOf<Location?>(null)
-
+    onNewIntent(intent)
     val notificationChannel =
         NotificationChannel("1", "FriendsNear", NotificationManager.IMPORTANCE_HIGH)
     val notificationManager = getSystemService(NotificationManager::class.java)
@@ -87,11 +87,11 @@ class MainActivity : ComponentActivity() {
     FirebaseApp.initializeApp(this)
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
-    auth.currentUser?.let {
-      // Sign out the user if they are already signed in
-      // This is useful for testing purposes
-      auth.signOut()
-    }
+    //    auth.currentUser?.let {
+    //      // Sign out the user if they are already signed in
+    //      // This is useful for testing purposes
+    //      auth.signOut()
+    //    }
 
     setContent {
       SampleAppTheme {
@@ -144,7 +144,6 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  @SuppressLint("UnrememberedMutableState")
   @Composable
   fun SuddenBumpApp(location: Location?) {
     val navController = rememberNavController()
@@ -207,23 +206,23 @@ class MainActivity : ComponentActivity() {
 
   override fun onNewIntent(intent: android.content.Intent) {
     super.onNewIntent(intent)
-    Log.d(
-        "MainActivity",
-        "onNewIntent called with destination: ${intent.getStringExtra("destination")}")
     setContent {
-      val navController = rememberNavController()
-      val navigationActions = NavigationActions(navController)
-      HandleIntent(intent, navigationActions)
+      Log.d(
+          "IntentSB",
+          "onNewIntent called with destination: ${intent.getStringExtra("destination")}")
+      HandleIntent(intent)
     }
   }
 
   @Composable
-  private fun HandleIntent(intent: android.content.Intent, navAction: NavigationActions) {
+  private fun HandleIntent(intent: android.content.Intent) {
     val destination = intent.getStringExtra("destination")
     if (destination != null) {
-      navAction.navigateTo(destination)
+      Log.d("IntentSB", "Navigating to destination: $destination")
+      // Navigate to the specified destination
     } else {
       // Handle other destinations or fallback logic if needed
+      Log.d("IntentSB", "destination is null")
     }
   }
 
