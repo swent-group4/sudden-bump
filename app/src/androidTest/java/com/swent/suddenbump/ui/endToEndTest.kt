@@ -39,15 +39,18 @@ class EndToEndTest {
             profilePicture = null, // Replace with an ImageBitmap if needed
             emailAddress = "test.user@example.com",
             lastKnownLocation = location)
-
+    val user2 =
+        User("2", "John", "Doe", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch", location)
     val mockUserStateFlow: StateFlow<User> = MutableStateFlow(mockUser)
+    val mockFriendStateFlow: MutableStateFlow<List<User>> = MutableStateFlow(List(1) { user2 })
     every { mockUserViewModel.getCurrentUser() } returns mockUserStateFlow
+    every { mockUserViewModel.getUserFriends() } returns mockFriendStateFlow
 
     // You may need to mock more methods depending on how your ViewModel is used
   }
 
   @Test
-  fun testEndToEndFullAppNavigation() {
+  fun fullAppNavigationTest() {
     // Wait for the app to load
     composeTestRule.waitForIdle()
 
@@ -101,5 +104,19 @@ class EndToEndTest {
     composeTestRule.onNodeWithTag("Messages").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("messages_list").assertExists()
+  }
+
+  @Test
+  fun testSendMessageEoE() {
+
+    // Mock the return values for getUserFriends() and getCurrentUser()
+
+    // Wait for the app to load
+    composeTestRule.waitForIdle()
+
+    // Step 1: Simulate user interaction for authentication
+    composeTestRule.onNodeWithTag("loginButton").assertExists().performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("overviewScreen").assertExists()
   }
 }
