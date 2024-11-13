@@ -18,120 +18,118 @@ import org.junit.Test
 
 class ChatScreenTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    // **Mock variables declared as properties of the test class**
-    private lateinit var mockViewModel: UserViewModel
-    private lateinit var fakeNavigationActions: FakeNavigationActions
-    private lateinit var mockNavController: NavHostController
+  // **Mock variables declared as properties of the test class**
+  private lateinit var mockViewModel: UserViewModel
+  private lateinit var fakeNavigationActions: FakeNavigationActions
+  private lateinit var mockNavController: NavHostController
 
-    // **Set up method to initialize mocks before each test**
-    @Before
-    fun setUp() {
-        // Initialize the mocked NavHostController
-        mockNavController = mockk(relaxed = true)
+  // **Set up method to initialize mocks before each test**
+  @Before
+  fun setUp() {
+    // Initialize the mocked NavHostController
+    mockNavController = mockk(relaxed = true)
 
-        // Initialize the FakeNavigationActions with the mocked NavHostController
-        fakeNavigationActions = FakeNavigationActions(mockNavController)
+    // Initialize the FakeNavigationActions with the mocked NavHostController
+    fakeNavigationActions = FakeNavigationActions(mockNavController)
 
-        // Initialize the mocked UserViewModel
-        mockViewModel = mockk(relaxed = true)
+    // Initialize the mocked UserViewModel
+    mockViewModel = mockk(relaxed = true)
+  }
+
+  // Adjusted FakeNavigationActions
+  class FakeNavigationActions(navController: NavHostController) : NavigationActions(navController) {
+    var goBackCalled = false
+
+    override fun navigateTo(destination: TopLevelDestination) {
+      // Do nothing or track calls if needed
     }
 
-    // Adjusted FakeNavigationActions
-    class FakeNavigationActions(navController: NavHostController) : NavigationActions(navController) {
-        var goBackCalled = false
-
-        override fun navigateTo(destination: TopLevelDestination) {
-            // Do nothing or track calls if needed
-        }
-
-        override fun navigateTo(screen: String) {
-            // Do nothing or track calls if needed
-        }
-
-        override fun goBack() {
-            goBackCalled = true
-        }
-
-        override fun currentRoute(): String {
-            return "" // Return an empty string or a test route
-        }
+    override fun navigateTo(screen: String) {
+      // Do nothing or track calls if needed
     }
 
-    @Test
-    fun testChatScreenDisplaysMessages() {
-        // **Arrange**
+    override fun goBack() {
+      goBackCalled = true
+    }
 
-        // Set up initial messages
-        val message1 = Message(
+    override fun currentRoute(): String {
+      return "" // Return an empty string or a test route
+    }
+  }
+
+  @Test
+  fun testChatScreenDisplaysMessages() {
+    // **Arrange**
+
+    // Set up initial messages
+    val message1 =
+        Message(
             senderId = "currentUserId",
             content = "Hello",
             timestamp = Timestamp(1620000000, 0),
-            isReadBy = listOf()
-        )
-        val message2 = Message(
+            isReadBy = listOf())
+    val message2 =
+        Message(
             senderId = "otherUserId",
             content = "Hi there",
             timestamp = Timestamp(1620003600, 0),
-            isReadBy = listOf()
-        )
-        val messagesFlow = MutableStateFlow<List<Message>>(listOf(message1, message2))
-        every { mockViewModel.messages } returns messagesFlow
+            isReadBy = listOf())
+    val messagesFlow = MutableStateFlow<List<Message>>(listOf(message1, message2))
+    every { mockViewModel.messages } returns messagesFlow
 
-        // Set current user
-        val currentUser = User(
+    // Set current user
+    val currentUser =
+        User(
             "currentUserId",
             "Test",
             "User",
             "123456789",
             null,
             "test@example.com",
-            GeoLocation(latitude = 0.0, longitude = 0.0)
-        )
-        val currentUserFlow = MutableStateFlow<User>(currentUser)
-        every { mockViewModel.getCurrentUser() } returns currentUserFlow
+            GeoLocation(latitude = 0.0, longitude = 0.0))
+    val currentUserFlow = MutableStateFlow<User>(currentUser)
+    every { mockViewModel.getCurrentUser() } returns currentUserFlow
 
-        // Set other user
-        val otherUser = User(
+    // Set other user
+    val otherUser =
+        User(
             "otherUserId",
             "Other",
             "User",
             "987654321",
             null,
             "other@example.com",
-            GeoLocation(latitude = 0.0, longitude = 0.0)
-        )
-        every { mockViewModel.user } returns otherUser
+            GeoLocation(latitude = 0.0, longitude = 0.0))
+    every { mockViewModel.user } returns otherUser
 
-        // **Act**
-        composeTestRule.setContent {
-            ChatScreen(viewModel = mockViewModel, navigationActions = fakeNavigationActions)
-        }
-
-        // **Assert**
-        composeTestRule.onNodeWithText("Hello").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Hi there").assertIsDisplayed()
+    // **Act**
+    composeTestRule.setContent {
+      ChatScreen(viewModel = mockViewModel, navigationActions = fakeNavigationActions)
     }
 
-    @Test
-    fun testBackButtonCallsGoBack() {
-        // **Arrange**
+    // **Assert**
+    composeTestRule.onNodeWithText("Hello").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Hi there").assertIsDisplayed()
+  }
 
-        // Since we already initialized mockViewModel and fakeNavigationActions in setUp(),
-        // we can directly use them here.
+  @Test
+  fun testBackButtonCallsGoBack() {
+    // **Arrange**
 
-        // **Act**
-        composeTestRule.setContent {
-            ChatScreen(viewModel = mockViewModel, navigationActions = fakeNavigationActions)
-        }
+    // Since we already initialized mockViewModel and fakeNavigationActions in setUp(),
+    // we can directly use them here.
 
-        // Click the back button
-        composeTestRule.onNodeWithContentDescription("Back").performClick()
-
-        // **Assert**
-        assert(fakeNavigationActions.goBackCalled)
+    // **Act**
+    composeTestRule.setContent {
+      ChatScreen(viewModel = mockViewModel, navigationActions = fakeNavigationActions)
     }
+
+    // Click the back button
+    composeTestRule.onNodeWithContentDescription("Back").performClick()
+
+    // **Assert**
+    assert(fakeNavigationActions.goBackCalled)
+  }
 }
-
