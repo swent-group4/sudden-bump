@@ -33,10 +33,12 @@ import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.LocationGetter
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
 import com.swent.suddenbump.ui.authentication.SignUpScreen
+import com.swent.suddenbump.ui.calendar.CalendarMeetingsScreen
 import com.swent.suddenbump.ui.chat.ChatScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
@@ -147,6 +149,7 @@ class MainActivity : ComponentActivity() {
     val navigationActions = NavigationActions(navController)
 
     val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
+    val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
 
     NavHost(navController = navController, startDestination = Route.AUTH) {
       navigation(
@@ -172,6 +175,14 @@ class MainActivity : ComponentActivity() {
         composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
+      }
+      navigation(
+          startDestination = Screen.CALENDAR,
+          route = Route.CALENDAR,
+      ) {
+        composable(Screen.CALENDAR) {
+          CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+        }
       }
 
       navigation(

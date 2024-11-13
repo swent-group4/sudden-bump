@@ -1,10 +1,14 @@
 package com.swent.suddenbump.model.user
 
 import android.location.Location
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.Message
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -17,6 +21,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.*
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.*
@@ -27,6 +32,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class UserViewModelTest {
+  @get:Rule val instantTaskExecutorRule = InstantTaskExecutorRule()
 
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
@@ -43,6 +49,7 @@ class UserViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   @Before
   fun setUp() {
     Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -52,6 +59,7 @@ class UserViewModelTest {
     Dispatchers.setMain(testDispatcher)
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   @After
   fun tearDown() {
     Dispatchers.resetMain()
@@ -463,6 +471,7 @@ class UserViewModelTest {
     assertThat(distance, `is`(Float.MAX_VALUE))
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun test_getOrCreateChat_success() = runTest {
     // Arrange
@@ -515,6 +524,7 @@ class UserViewModelTest {
     job.cancel()
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun test_sendMessage_success() = runTest {
     // Arrange
@@ -552,5 +562,46 @@ class UserViewModelTest {
 
     // Assert
     verify(chatRepository).sendMessage(chatId, messageContent, username)
+  }
+
+  @Test
+  fun testSendVerificationCode() {
+    val phoneNumber = "+1234567890"
+    val verificationId = "verificationId"
+    val observer = mock(Observer::class.java) as Observer<String>
+
+    userViewModel.verificationStatus.observeForever(observer)
+
+    doAnswer {
+          val onSuccess = it.getArgument<(String) -> Unit>(1)
+          onSuccess(verificationId)
+        }
+        .`when`(userRepository)
+        .sendVerificationCode(eq(phoneNumber), any(), any())
+
+    userViewModel.sendVerificationCode(phoneNumber)
+
+    verify(observer).onChanged("Code Sent")
+  }
+
+  @Test
+  fun testVerifyCode() {
+    val verificationId = "verificationId"
+    val code = "123456"
+    val observer = mock(Observer::class.java) as Observer<String>
+
+    (userViewModel.verificationId as MutableLiveData).postValue(verificationId)
+    userViewModel.verificationStatus.observeForever(observer)
+
+    doAnswer {
+          val onSuccess = it.getArgument<() -> Unit>(2)
+          onSuccess()
+        }
+        .`when`(userRepository)
+        .verifyCode(eq(verificationId), eq(code), any(), any())
+
+    userViewModel.verifyCode(code)
+
+    verify(observer).onChanged("Phone Verified")
   }
 }

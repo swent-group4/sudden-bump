@@ -6,14 +6,20 @@ import android.location.LocationManager
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import com.google.android.gms.tasks.Tasks
+import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
@@ -29,6 +35,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
   private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
 
   override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
+
+  private lateinit var verificationId: String
 
   override fun init(onSuccess: () -> Unit) {
     imageRepository.init(onSuccess)
@@ -557,6 +565,59 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
       }
     }
     onSuccess(friendsLocations)
+  }
+
+  override fun sendVerificationCode(
+      phoneNumber: String,
+      onSuccess: (String) -> Unit, // Change to accept verification ID
+      onFailure: (Exception) -> Unit
+  ) {
+    val options =
+        PhoneAuthOptions.newBuilder(FirebaseAuth.getInstance())
+            .setPhoneNumber(phoneNumber) // Phone number to verify
+            .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
+            .setActivity(MainActivity()) // Activity for callback binding
+            .setCallbacks(
+                object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                  override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                    // Auto-retrieval or instant verification succeeded
+                    onSuccess(credential.smsCode ?: "Auto-verified") // Return SMS code if available
+                  }
+
+                  override fun onVerificationFailed(e: FirebaseException) {
+                    Log.e(
+                        "PhoneAuth",
+                        "Verification failed: ${e.localizedMessage}, Cause: ${e.cause}")
+                    onFailure(e)
+                  }
+
+                  override fun onCodeSent(
+                      verificationId: String,
+                      token: PhoneAuthProvider.ForceResendingToken
+                  ) {
+                    // Save verification ID and resending token so we can use them later
+                    this@UserRepositoryFirestore.verificationId = verificationId
+                    onSuccess(verificationId) // Return verification ID
+                  }
+                })
+            .build()
+    PhoneAuthProvider.verifyPhoneNumber(options)
+  }
+
+  override fun verifyCode(
+      verificationId: String,
+      code: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    val credential = PhoneAuthProvider.getCredential(verificationId, code)
+    FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { task ->
+      if (task.isSuccessful) {
+        onSuccess()
+      } else {
+        task.exception?.let { onFailure(it) }
+      }
+    }
   }
 
   private fun documentSnapshotToUserList(

@@ -177,6 +177,7 @@ dependencies {
 
     // Other dependencies...
     implementation(libs.androidx.core.ktx)
+    testImplementation(libs.androidx.arch.core.testing)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -185,6 +186,8 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.test.core.ktx)
     implementation(libs.androidx.lifecycle.common.jvm)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
     globalTestImplementation(libs.androidx.junit)
@@ -238,6 +241,7 @@ dependencies {
     testImplementation(libs.json)
     globalTestImplementation(libs.kaspresso)
     globalTestImplementation(libs.kaspresso.compose)
+    testImplementation(libs.core.testing)
 
     // UI Testing
     androidTestImplementation(libs.androidx.junit)
