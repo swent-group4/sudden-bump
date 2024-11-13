@@ -11,14 +11,12 @@ import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.navigation.Screen
 import java.util.Date
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class EditMeetingScreenTest {
@@ -42,8 +40,6 @@ class EditMeetingScreenTest {
     meetingRepository = mock(MeetingRepository::class.java)
     navigationActions = mock(NavigationActions::class.java)
     meetingViewModel = MeetingViewModel(meetingRepository)
-
-    `when`(navigationActions.currentRoute()).thenReturn(Screen.EDIT_MEETING)
   }
 
   @Test

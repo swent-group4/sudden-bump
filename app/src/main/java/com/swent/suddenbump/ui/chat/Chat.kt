@@ -203,7 +203,7 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: 
         // Add Meeting Icon
         IconButton(onClick = { navigationActions.navigateTo(Screen.ADD_MEETING) }) {
           Icon(
-              imageVector = Icons.Default.DateRange, // Replace with your desired icon
+              imageVector = Icons.Default.DateRange,
               contentDescription = "Add Meeting",
               tint = Color.White,
               modifier = Modifier.size(28.dp))

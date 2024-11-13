@@ -25,12 +25,12 @@ import java.util.*
 @Composable
 fun AddMeetingScreen(
     navigationActions: NavigationActions,
-    viewModel: UserViewModel,
+    userViewModel: UserViewModel,
     meetingViewModel: MeetingViewModel
 ) {
   var location by remember { mutableStateOf("") }
   var date by remember { mutableStateOf("") }
-  val friendId = viewModel.user?.uid ?: ""
+  val friendId = userViewModel.user?.uid ?: ""
   val context = LocalContext.current
 
   Scaffold(
@@ -89,7 +89,7 @@ fun AddMeetingScreen(
                               friendId = friendId,
                               location = location,
                               date = meetingDate,
-                              creatorId = viewModel.getCurrentUser().value?.uid ?: "")
+                              creatorId = userViewModel.getCurrentUser().value?.uid ?: "")
                       meetingViewModel.addMeeting(newMeeting)
                       Toast.makeText(context, "Meeting created successfully", Toast.LENGTH_SHORT)
                           .show()

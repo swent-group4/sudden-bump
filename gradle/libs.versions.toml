@@ -67,7 +67,6 @@ runtimeLivedata = "1.7.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-#noinspection SimilarGradleDependency
 androidx-arch-core-testing = { module = "androidx.arch.core:core-testing", version = "2.1.0" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -130,7 +129,6 @@ coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version
 ucrop = { module = "com.github.yalantis:ucrop", name = "ucrop", version.ref = "ucrop" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "core-testing" }
 
 
 [plugins]

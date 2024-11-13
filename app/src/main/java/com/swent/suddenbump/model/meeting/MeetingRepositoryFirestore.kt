@@ -50,24 +50,6 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
         }
   }
 
-  /*override fun getMeetingById(
-      id: String,
-      onSuccess: (Meeting?) -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-      db.collection(meetingsCollectionPath).document(id).get().addOnCompleteListener { result ->
-          if (result.isSuccessful) {
-              val meeting = result.result?.toMeeting()
-              onSuccess(meeting)
-          } else {
-              result.exception?.let {
-                  Log.e("MeetingRepositoryFirestore", "Error getting document", it)
-                  onFailure(it)
-              }
-          }
-      }
-  }*/
-
   override fun updateMeeting(
       meeting: Meeting,
       onSuccess: () -> Unit,
