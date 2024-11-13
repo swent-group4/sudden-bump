@@ -257,6 +257,7 @@ dependencies {
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockito.inline.v400)
     implementation(kotlin("test"))
 }
 

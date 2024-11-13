@@ -37,8 +37,8 @@ fun EditMeetingScreen(
             TopAppBar(
                 title = { Text("Edit Meeting", color = Color.White, modifier = Modifier.testTag("Edit Meeting")) },
                 navigationIcon = {
-                    IconButton(onClick = { navigationActions.goBack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.testTag("Back"))
+                    IconButton(onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("Back")) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)

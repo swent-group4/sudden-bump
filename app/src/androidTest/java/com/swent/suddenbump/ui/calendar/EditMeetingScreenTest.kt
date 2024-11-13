@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.calendar
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -12,7 +13,6 @@ import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
-import com.swent.suddenbump.model.meeting.TestMeetingRepositoryHelper
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
@@ -29,6 +29,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
+import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
 class EditMeetingScreenTest {
@@ -41,7 +42,9 @@ class EditMeetingScreenTest {
 
     @get:Rule val composeTestRule = createComposeRule()
 
-    private val meeting = Meeting(meetingId = "JhXlhoSvTmbtTFSVpNnA", location = "Cafe", date = Timestamp.now(), friendId = "FPHuqGkCBo7Iinbo5OO9", creatorId = "P7vuP4bbEQB03OSR3QwJ")
+    private val meeting = Meeting(meetingId = "JhXlhoSvTmbtTFSVpNnA", location = "Cafe", date = Timestamp(
+        Date(1725494400000)
+    ), friendId = "FPHuqGkCBo7Iinbo5OO9", creatorId = "P7vuP4bbEQB03OSR3QwJ")
 
     @Before
     fun setUp() {
@@ -51,14 +54,15 @@ class EditMeetingScreenTest {
 
         `when`(navigationActions.currentRoute()).thenReturn(Screen.EDIT_MEETING)
 
-
-        composeTestRule.setContent {
-            EditMeetingScreen(navigationActions, meetingViewModel)
-        }
     }
 
     @Test
     fun displayAllComponents() {
+
+        meetingViewModel.selectMeeting(meeting)
+        composeTestRule.setContent {
+            EditMeetingScreen(navigationActions, meetingViewModel)
+        }
         // Check top app bar title
         composeTestRule.onNodeWithTag("Edit Meeting").assertIsDisplayed()
         composeTestRule.onNodeWithTag("Edit Meeting").assertTextEquals("Edit Meeting")
@@ -83,10 +87,8 @@ class EditMeetingScreenTest {
 
         Thread.sleep(10000)
 
-        /*composeTestRule.onNodeWithTag("inputTodoTitle").assertTextContains(todo.name)
-        composeTestRule.onNodeWithTag("inputTodoDescription").assertTextContains(todo.description)
-        composeTestRule.onNodeWithTag("inputTodoAssignee").assertTextContains(todo.assigneeName)
-        composeTestRule.onNodeWithTag("inputTodoDate").assertTextContains("5/9/2024")
-        composeTestRule.onNodeWithTag("inputTodoStatus").assertTextContains("Created")*/
+        composeTestRule.onNodeWithTag("Location").assertTextContains("Cafe")
+        composeTestRule.onNodeWithTag("Date").assertTextContains("05/09/2024")
     }
+
 }
