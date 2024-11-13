@@ -53,16 +53,24 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-    fun updateTimestamp(
-        user: User,
-        timestamp: Timestamp,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    )
+  fun updateTimestamp(
+      user: User,
+      timestamp: Timestamp,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 
   fun getFriendsLocation(
       userFriendsList: List<User>,
       onSuccess: (Map<User, Location?>) -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  fun saveLoginStatus(userId: String)
+
+  fun getSavedUid(): String
+
+  fun isUserLoggedIn(): Boolean
+
+  fun logoutUser()
 }

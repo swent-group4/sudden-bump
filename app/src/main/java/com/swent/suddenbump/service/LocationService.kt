@@ -15,59 +15,59 @@ import com.swent.suddenbump.R
 
 class LocationService : Service() {
 
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
+  private lateinit var fusedLocationClient: FusedLocationProviderClient
+  private lateinit var locationCallback: LocationCallback
 
-    override fun onCreate() {
-        super.onCreate()
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                locationResult.locations.forEach { location ->
-                    // Handle location updates here, e.g., send to a ViewModel or save to database
-                }
+  override fun onCreate() {
+    super.onCreate()
+    fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+    locationCallback =
+        object : LocationCallback() {
+          override fun onLocationResult(locationResult: LocationResult) {
+            locationResult.locations.forEach { location ->
+              // Handle location updates here, e.g., send to a ViewModel or save to database
             }
+          }
         }
-        startForegroundService()
-        requestLocationUpdates()
-    }
+    startForegroundService()
+    requestLocationUpdates()
+  }
 
-    private fun startForegroundService() {
-        val notificationChannelId = "LocationServiceChannel"
-        val channel = NotificationChannel(
-            notificationChannelId,
-            "Location Service",
-            NotificationManager.IMPORTANCE_LOW
-        )
-        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(channel)
+  private fun startForegroundService() {
+    val notificationChannelId = "LocationServiceChannel"
+    val channel =
+        NotificationChannel(
+            notificationChannelId, "Location Service", NotificationManager.IMPORTANCE_LOW)
+    val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    manager.createNotificationChannel(channel)
 
-        val notification: Notification = NotificationCompat.Builder(this, notificationChannelId)
+    val notification: Notification =
+        NotificationCompat.Builder(this, notificationChannelId)
             .setContentTitle("Location Service")
             .setContentText("Updating location in background")
             .setSmallIcon(R.drawable.profile)
             .build()
-        startForeground(1, notification)
-    }
+    startForeground(1, notification)
+  }
 
-    private fun requestLocationUpdates() {
-        val locationRequest = LocationRequest.create().apply {
-            interval = 10000 // Update interval in milliseconds
-            fastestInterval = 5000
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+  private fun requestLocationUpdates() {
+    val locationRequest =
+        LocationRequest.create().apply {
+          interval = 10000 // Update interval in milliseconds
+          fastestInterval = 5000
+          priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
 
-        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED ||
-            checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED
-        ) {
-            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, mainLooper)
-        }
+    if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED ||
+        checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED) {
+      fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, mainLooper)
     }
+  }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-    }
+  override fun onDestroy() {
+    super.onDestroy()
+    fusedLocationClient.removeLocationUpdates(locationCallback)
+  }
 
-    override fun onBind(intent: Intent?): IBinder? = null
+  override fun onBind(intent: Intent?): IBinder? = null
 }

@@ -1,15 +1,18 @@
 package com.swent.suddenbump.model.user
 
+import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.image.ImageBitMapIO
+import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,23 +42,28 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
   }
 
   companion object {
-    val Factory: ViewModelProvider.Factory =
-        object : ViewModelProvider.Factory {
-          @Suppress("UNCHECKED_CAST")
-          override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return UserViewModel(UserRepositoryFirestore(Firebase.firestore)) as T
-          }
+    fun provideFactory(context: Context): ViewModelProvider.Factory {
+      return object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+          val repository = UserRepositoryFirestore(Firebase.firestore, context)
+          return UserViewModel(repository) as T
         }
+      }
+    }
   }
 
   fun setCurrentUser() {
     repository.getUserAccount(
         onSuccess = { user ->
           _user.value = user
+          saveUserLoginStatus(_user.value.uid)
+          scheduleLocationUpdateWorker(getApplicationContext(), _user.value.uid)
+          Log.d(logTag, "User set 1: ${_user.value}")
           repository.getUserFriends(
               user = _user.value,
               onSuccess = { friendsList ->
-                Log.i(logTag, friendsList.toString())
+                Log.d(logTag, friendsList.toString())
                 _userFriends.value = friendsList
                 repository.getBlockedFriends(
                     user = _user.value,
@@ -157,14 +165,14 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     repository.updateLocation(user, location, onSuccess, onFailure)
   }
 
-    fun updateTimestamp(
-        user: User = _user.value,
-        timestamp: Timestamp,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        repository.updateTimestamp(user, timestamp, onSuccess, onFailure)
-    }
+  fun updateTimestamp(
+      user: User = _user.value,
+      timestamp: Timestamp,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.updateTimestamp(user, timestamp, onSuccess, onFailure)
+  }
 
   fun loadFriendsLocations() {
     viewModelScope.launch {
@@ -201,5 +209,21 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
 
   fun getNewUid(): String {
     return repository.getNewUid()
+  }
+
+  fun saveUserLoginStatus(userId: String) {
+    repository.saveLoginStatus(userId)
+  }
+
+  fun getSavedUid(): String {
+    return repository.getSavedUid()
+  }
+
+  fun isUserLoggedIn(): Boolean {
+    return repository.isUserLoggedIn()
+  }
+
+  fun logout() {
+    repository.logoutUser()
   }
 }

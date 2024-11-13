@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.user
 
+import android.content.Context
 import android.location.Location
 import android.os.Looper
 import androidx.compose.ui.graphics.ImageBitmap
@@ -83,7 +84,7 @@ class UserRepositoryFirestoreTest {
       FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
 
-    userRepositoryFirestore = UserRepositoryFirestore(mockFirestore)
+    userRepositoryFirestore = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
 
     `when`(mockTaskVoid.isSuccessful).thenReturn(true)
     `when`(mockTaskVoid.isCanceled).thenReturn(false)
@@ -291,45 +292,45 @@ class UserRepositoryFirestoreTest {
     verify(mockUserDocumentReference).update(anyString(), any())
   }
   /*
-  @Test
-  fun getFriendsLocationSuccessWithFriendsAndLocations() {
-    // Given
-    val friend1 = User("uid1", "Friend1", "Test", "000", null, "friend1@example.com")
-    val friend2 = User("uid2", "Friend2", "Test", "000", null, "friend2@example.com")
+    @Test
+    fun getFriendsLocationSuccessWithFriendsAndLocations() {
+      // Given
+      val friend1 = User("uid1", "Friend1", "Test", "000", null, "friend1@example.com")
+      val friend2 = User("uid2", "Friend2", "Test", "000", null, "friend2@example.com")
 
-    // Mock the snapshot locations
-    whenever(snapshot1.get("location")).thenReturn(mock(Location::class.java))
-    whenever(snapshot2.get("location")).thenReturn(null)
+      // Mock the snapshot locations
+      whenever(snapshot1.get("location")).thenReturn(mock(Location::class.java))
+      whenever(snapshot2.get("location")).thenReturn(null)
 
-    // Define the expected map
-    val expectedMap = mapOf(friend1 to snapshot1.get("location") as Location?, friend2 to null)
+      // Define the expected map
+      val expectedMap = mapOf(friend1 to snapshot1.get("location") as Location?, friend2 to null)
 
-    // When
-    userRepositoryFirestore.getFriendsLocation(
-        user,
-        { friendsLoc ->
-          // Then
-          assert(friendsLoc == expectedMap)
-        },
-        { fail("Failure callback should not be called") })
-  }
+      // When
+      userRepositoryFirestore.getFriendsLocation(
+          user,
+          { friendsLoc ->
+            // Then
+            assert(friendsLoc == expectedMap)
+          },
+          { fail("Failure callback should not be called") })
+    }
 
-  @Test
-  fun getFriendsLocationSuccessWithNoFriends() {
-    // Mock the snapshot locations
-    whenever(snapshot1.get("location")).thenReturn(mock(Location::class.java))
-    whenever(snapshot2.get("location")).thenReturn(null)
+    @Test
+    fun getFriendsLocationSuccessWithNoFriends() {
+      // Mock the snapshot locations
+      whenever(snapshot1.get("location")).thenReturn(mock(Location::class.java))
+      whenever(snapshot2.get("location")).thenReturn(null)
 
-    // When
-    userRepositoryFirestore.getFriendsLocation(
-        user,
-        { friendsLoc ->
-          // Then
-          assert(friendsLoc == emptyMap<User, Location>())
-        },
-        { fail("Failure callback should not be called") })
-  }
-*/
+      // When
+      userRepositoryFirestore.getFriendsLocation(
+          user,
+          { friendsLoc ->
+            // Then
+            assert(friendsLoc == emptyMap<User, Location>())
+          },
+          { fail("Failure callback should not be called") })
+    }
+  */
   @Test
   fun userToMap() {
     val testUser =

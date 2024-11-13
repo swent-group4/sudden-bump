@@ -1,6 +1,7 @@
 package com.swent.suddenbump.model.user
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.location.Location
 import android.location.LocationManager
 import android.util.Log
@@ -17,7 +18,8 @@ import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
-class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
+class UserRepositoryFirestore(private val db: FirebaseFirestore, private val context: Context) :
+    UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
   private val helper = UserRepositoryFirestoreHelper()
@@ -29,6 +31,9 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
   private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
 
   override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
+
+  private val sharedPreferences =
+      context.getSharedPreferences("SuddenBumpLocalDB", Context.MODE_PRIVATE)
 
   override fun init(onSuccess: () -> Unit) {
     imageRepository.init(onSuccess)
@@ -94,8 +99,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
     db.collection(emailCollectionPath)
         .document(FirebaseAuth.getInstance().currentUser!!.email.toString())
         .get()
-        .addOnFailureListener { onFailure(it) }
+        .addOnFailureListener {
+          Log.d("UserRepositoryFirestore", "Failed to get user account")
+          onFailure(it)
+        }
         .addOnSuccessListener { resultEmail ->
+          Log.d(
+              "UserRepositoryFirestore",
+              "Got user account: ${resultEmail.data!!["uid"].toString()}")
           db.collection(usersCollectionPath)
               .document(resultEmail.data!!["uid"].toString())
               .get()
@@ -263,20 +274,18 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         .addOnSuccessListener { onSuccess() }
   }
 
-    override fun updateTimestamp(
-        user: User,
-        timestamp: Timestamp,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(user.uid)
-            .update("timestamp", timestamp)
-            .addOnFailureListener { onFailure(it) }
-            .addOnSuccessListener { onSuccess() }
-    }
-
-
+  override fun updateTimestamp(
+      user: User,
+      timestamp: Timestamp,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(user.uid)
+        .update("timestamp", timestamp)
+        .addOnFailureListener { onFailure(it) }
+        .addOnSuccessListener { onSuccess() }
+  }
 
   @SuppressLint("SuspiciousIndentation")
   override fun getFriendsLocation(
@@ -306,6 +315,30 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
       }
     }
     onSuccess(friendsLocations)
+  }
+
+  override fun saveLoginStatus(userId: String) {
+    with(sharedPreferences.edit()) {
+      putBoolean("isLoggedIn", true)
+      putString("userId", userId)
+      apply()
+    }
+  }
+
+  override fun getSavedUid(): String {
+    return sharedPreferences.getString("userId", null) ?: ""
+  }
+
+  override fun isUserLoggedIn(): Boolean {
+    return sharedPreferences.getBoolean("isLoggedIn", false)
+  }
+
+  override fun logoutUser() {
+    with(sharedPreferences.edit()) {
+      putBoolean("isLoggedIn", false)
+      putString("userId", null)
+      apply()
+    }
   }
 
   private fun documentSnapshotToUserList(

@@ -1,10 +1,16 @@
 package com.swent.suddenbump.model.user
 
 import android.location.Location
+import androidx.test.core.app.ApplicationProvider
+import androidx.work.Configuration
+import androidx.work.WorkManager
+import androidx.work.testing.WorkManagerTestInitHelper
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -12,7 +18,9 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class UserViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
@@ -30,6 +38,16 @@ class UserViewModelTest {
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
     userViewModel = UserViewModel(userRepository)
+
+    val config = Configuration.Builder().setMinimumLoggingLevel(android.util.Log.DEBUG).build()
+
+    WorkManagerTestInitHelper.initializeTestWorkManager(
+        ApplicationProvider.getApplicationContext(), config)
+  }
+
+  @After
+  fun tearDown() {
+    WorkManager.getInstance(ApplicationProvider.getApplicationContext()).cancelAllWork()
   }
 
   @Test

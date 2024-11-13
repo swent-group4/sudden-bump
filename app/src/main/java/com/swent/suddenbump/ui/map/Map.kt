@@ -18,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
@@ -41,8 +40,7 @@ import kotlinx.coroutines.launch
 fun MapScreen(
     navigationActions: NavigationActions,
     location: Location?,
-    userViewModel: UserViewModel =
-        viewModel(factory = UserViewModel.Factory) // Inject UserViewModel
+    userViewModel: UserViewModel
 ) {
   Scaffold(
       bottomBar = {

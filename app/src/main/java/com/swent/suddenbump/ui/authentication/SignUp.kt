@@ -30,6 +30,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.TopLevelDestinations
 import com.swent.suddenbump.ui.utils.PhoneNumberVisualTransformation
+import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import com.yalantis.ucrop.UCrop
 import java.io.File
 import kotlinx.coroutines.launch
@@ -148,15 +149,20 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                           MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)
                         }
                         .asImageBitmap()
+                val newUid = userViewModel.getNewUid()
                 userViewModel.createUserAccount(
                     User(
-                        uid = userViewModel.getNewUid(),
+                        uid = newUid,
                         firstName = firstName,
                         lastName = lastName,
                         emailAddress = email,
                         phoneNumber = phoneNumber,
                         profilePicture = profileBitmap),
-                    onSuccess = { navigationActions.navigateTo(TopLevelDestinations.OVERVIEW) },
+                    onSuccess = {
+                      userViewModel.saveUserLoginStatus(newUid)
+                      scheduleLocationUpdateWorker(context, newUid)
+                      navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
+                    },
                     onFailure = {
                       Toast.makeText(context, "Account creation failed", Toast.LENGTH_SHORT).show()
                     })

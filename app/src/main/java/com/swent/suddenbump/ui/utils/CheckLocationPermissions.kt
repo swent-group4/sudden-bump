@@ -2,29 +2,25 @@ package com.swent.suddenbump.ui.utils
 
 import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.location.Location
 import android.util.Log
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import com.swent.suddenbump.model.LocationGetter
 
 private lateinit var locationGetter: LocationGetter
 
 fun initLocationGetter(context: Context) {
-    locationGetter =
-        LocationGetter(
-            context,
-            object : LocationGetter.LocationListener {
-                override fun onLocationResult(location: Location?) {
-                    // Handle location update
-                }
+  locationGetter =
+      LocationGetter(
+          context,
+          object : LocationGetter.LocationListener {
+            override fun onLocationResult(location: Location?) {
+              // Handle location update
+            }
 
-                override fun onLocationFailure(message: String) {
-                    Log.e("MainActivity", "Location Error: $message")
-                }
-            })
+            override fun onLocationFailure(message: String) {
+              Log.e("MainActivity", "Location Error: $message")
+            }
+          })
 }
 
 /*fun checkLocationPermissions(context: Context) {
@@ -56,21 +52,22 @@ fun initLocationGetter(context: Context) {
 }*/
 
 private fun handlePermissionResults(permissions: Map<String, Boolean>) {
-    val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-    val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-    val backgroundLocationGranted = permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
-    when {
-        fineLocationGranted -> {
-            locationGetter.requestLocationUpdates()
-        }
-        coarseLocationGranted -> {
-            locationGetter.requestLocationUpdates()
-        }
-        backgroundLocationGranted -> {
-            locationGetter.requestLocationUpdates()
-        }
-        else -> {
-            // Toast.makeText(this, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
-        }
+  val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+  val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+  val backgroundLocationGranted =
+      permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
+  when {
+    fineLocationGranted -> {
+      locationGetter.requestLocationUpdates()
     }
+    coarseLocationGranted -> {
+      locationGetter.requestLocationUpdates()
+    }
+    backgroundLocationGranted -> {
+      locationGetter.requestLocationUpdates()
+    }
+    else -> {
+      // Toast.makeText(this, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
+    }
+  }
 }

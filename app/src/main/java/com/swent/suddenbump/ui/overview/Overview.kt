@@ -33,21 +33,18 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
-import com.swent.suddenbump.MainActivity
-
-
 
 @Composable
 fun OverviewScreen(navigationActions: NavigationActions) {
   val mockUsers = generateMockUsers().sortedBy { it.relativeDist }
 
-    /*LaunchedEffect(Unit) {
-        if (CheckLocationPermissions.checkLocationPermissions() {
-            startLocationService(context)
-        } else {
-            requestPermissions(context)
-        }
-    }*/
+  /*LaunchedEffect(Unit) {
+      if (CheckLocationPermissions.checkLocationPermissions() {
+          startLocationService(context)
+      } else {
+          requestPermissions(context)
+      }
+  }*/
 
   Scaffold(
       topBar = {
@@ -116,17 +113,17 @@ fun OverviewScreen(navigationActions: NavigationActions) {
 }
 
 private fun startLocationService(context: Context) {
-    Intent(context, LocationService::class.java).apply {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(this)
-        } else {
-            context.startService(this)
-        }
+  Intent(context, LocationService::class.java).apply {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      context.startForegroundService(this)
+    } else {
+      context.startService(this)
     }
+  }
 }
 
 private fun stopLocationService(context: Context) {
-    context.stopService(Intent(context, LocationService::class.java))
+  context.stopService(Intent(context, LocationService::class.java))
 }
 
 @Preview(showBackground = true)

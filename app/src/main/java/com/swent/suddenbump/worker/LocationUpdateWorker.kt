@@ -14,19 +14,17 @@ import androidx.work.WorkerParameters
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
-import com.swent.suddenbump.model.user.UserViewModel
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlin.coroutines.suspendCoroutine
 
 class LocationUpdateWorker(
     context: Context,
@@ -37,86 +35,87 @@ class LocationUpdateWorker(
 
   override suspend fun doWork(): Result {
 
-      setForeground(createForegroundInfo())
-      return withContext(Dispatchers.IO) {
-        try {
-          // Get the current location (you need to implement this method)
-            Log.d("WorkerSuddenBump", "Starting doWork")
-          val location: Location = getCurrentLocation()
-            // Initialize UserRepository
-            Log.d("WorkerSuddenBump", "Got location: $location")
-            val repository = UserRepositoryFirestore(Firebase.firestore)
+    //      setForeground(createForegroundInfo())
+    return withContext(Dispatchers.IO) {
+      try {
+        // Get the current location (you need to implement this method)
+        Log.d("WorkerSuddenBump", "Starting doWork")
+        val location: Location = getCurrentLocation()
+        // Initialize UserRepository
+        Log.d("WorkerSuddenBump", "Got location: $location")
+        val repository = UserRepositoryFirestore(Firebase.firestore, applicationContext)
+        val uid = repository.getSavedUid()
 
-            var userDef = User(uid = "1", firstName = "Martin", lastName = "Vetterli", phoneNumber = "+41 00 000 00 01", profilePicture =null, emailAddress = "marin@email.com")
-            val uid = "P7vuP4bbEQB03OSR3QwJ"
-
-            Log.d("WorkerSuddenBump", "Got userId: $uid")
-
-            val user = uid?.let { getUserAccountSuspend(repository, it) }
-            Log.d("WorkerSuddenBump", "Got user: $user")
-
-            if (user != null) {
-
-                Log.d("WorkerSuddenBump", "User $user")
-
-                val timestamp = Timestamp.now()
-
-                repository.updateLocation(
-                    user = user,
-                    location = location,
-                    onSuccess = { /* Handle success */ },
-                    onFailure = { error -> /* Handle failure */ }
-                )
-
-                repository.updateTimestamp(
-                    user,
-                    timestamp = timestamp,
-                    onSuccess = { /* Handle success */ },
-                    onFailure = { error -> /* Handle failure */ }
-                )
-
-                Result.success()
-            }else {
-                Log.d("WorkerSuddenBump", "User not found")
-                Result.failure()
-            }
-        } catch (e: Exception) {
-            Result.failure()
+        if (uid == null) {
+          Log.d("WorkerSuddenBump", "User ID not found")
+          return@withContext Result.failure()
         }
+
+        Log.d("WorkerSuddenBump", "Got userId: $uid")
+
+        val user = uid?.let { getUserAccountSuspend(repository, it) }
+        Log.d("WorkerSuddenBump", "Got user: $user")
+
+        if (user != null) {
+
+          Log.d("WorkerSuddenBump", "User $user")
+
+          val timestamp = Timestamp.now()
+
+          repository.updateLocation(
+              user = user,
+              location = location,
+              onSuccess = { /* Handle success */},
+              onFailure = { error -> /* Handle failure */ })
+
+          repository.updateTimestamp(
+              user,
+              timestamp = timestamp,
+              onSuccess = { /* Handle success */},
+              onFailure = { error -> /* Handle failure */ })
+
+          Result.success()
+        } else {
+          Log.d("WorkerSuddenBump", "User not found")
+          Result.failure()
+        }
+      } catch (e: Exception) {
+        Result.failure()
       }
+    }
   }
 
-    private suspend fun getUserAccountSuspend(repository: UserRepositoryFirestore, userId: String): User? =
-        suspendCoroutine { cont ->
-            Log.d("WorkerSuddenBump", "Calling getUserAccount for userId: $userId")
-            repository.getUserAccount(
-                uid = userId,
-                onSuccess = { user ->
-                    Log.d("WorkerSuddenBump", "getUserAccount success: $user")
-                    cont.resume(user) },
-                onFailure = { error ->
-                    Log.e("WorkerSuddenBump", "getUserAccount failure", error)
-                    cont.resumeWithException(error) }
-            )
+  private suspend fun getUserAccountSuspend(
+      repository: UserRepositoryFirestore,
+      userId: String
+  ): User? = suspendCoroutine { cont ->
+    Log.d("WorkerSuddenBump", "Calling getUserAccount for userId: $userId")
+    repository.getUserAccount(
+        uid = userId,
+        onSuccess = { user ->
+          Log.d("WorkerSuddenBump", "getUserAccount success: $user")
+          cont.resume(user)
+        },
+        onFailure = { error ->
+          Log.e("WorkerSuddenBump", "getUserAccount failure", error)
+          cont.resumeWithException(error)
+        })
+  }
 
-        }
+  private fun createForegroundInfo(): ForegroundInfo {
+    val channelId = "LocationUpdateWorkerChannel"
+    val title = "Location Update"
+    val cancel = "Cancel"
 
-    private fun createForegroundInfo(): ForegroundInfo {
-        val channelId = "LocationUpdateWorkerChannel"
-        val title = "Location Update"
-        val cancel = "Cancel"
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      val channel = NotificationChannel(channelId, title, NotificationManager.IMPORTANCE_DEFAULT)
+      val notificationManager =
+          applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+      notificationManager.createNotificationChannel(channel)
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                title,
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-            val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val notification = NotificationCompat.Builder(applicationContext, channelId)
+    val notification =
+        NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle(title)
             .setTicker(title)
             .setContentText("Updating location in the background")
@@ -124,10 +123,8 @@ class LocationUpdateWorker(
             .setOngoing(true)
             .build()
 
-        return ForegroundInfo(1, notification)
-    }
-
-
+    return ForegroundInfo(1, notification)
+  }
 
   @SuppressLint("MissingPermission")
   private suspend fun getCurrentLocation(): Location = suspendCancellableCoroutine { cont ->

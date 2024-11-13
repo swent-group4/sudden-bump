@@ -5,6 +5,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.TopLevelDestinations
@@ -32,8 +33,13 @@ class MapScreenTest {
       // Mock Location object
       val mockLocation = mock(Location::class.java)
 
+      val userViewModel = mock(UserViewModel::class.java)
+
       // Set the content for testing
-      MapScreen(navigationActions = navigationActions, location = mockLocation)
+      MapScreen(
+          navigationActions = navigationActions,
+          location = mockLocation,
+          userViewModel = userViewModel)
     }
 
     // Verify that the bottom navigation is displayed
@@ -66,9 +72,14 @@ class MapScreenTest {
     // Mock Location (if needed)
     val mockLocation = mock(Location::class.java)
 
+    val userViewModel = mock(UserViewModel::class.java)
+
     // Set the content for testing
     composeTestRule.setContent {
-      MapScreen(navigationActions = mockNavigationActions, location = mockLocation)
+      MapScreen(
+          navigationActions = mockNavigationActions,
+          location = mockLocation,
+          userViewModel = userViewModel)
     }
 
     // Simulate a click on the "Map" tab (or any other tab based on your setup)

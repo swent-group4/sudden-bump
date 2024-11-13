@@ -30,11 +30,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SampleApp"
         tools:targetApi="34">
-        <service
-            android:name=".LocationService"
+<!--        <service
+            android:name=".worker.LocationUpdateWorker"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="location" />
+            android:foregroundServiceType="location" />-->
         <activity
             android:name="com.swent.suddenbump.MainActivity"
             android:exported="true"

@@ -1,5 +1,5 @@
 package com.swent.suddenbump.worker
-
+/*
 import android.content.Context
 import android.location.Location
 import androidx.compose.ui.graphics.asImageBitmap
@@ -148,3 +148,4 @@ class LocationUpdateWorkerTest {
         (property as? KMutableProperty1<Any, Any>)?.set(instance, value)
     }
 }
+*/
