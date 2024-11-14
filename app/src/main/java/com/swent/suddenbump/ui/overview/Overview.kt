@@ -106,7 +106,8 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
             horizontalAlignment = Alignment.CenterHorizontally) {
               if (users.isNotEmpty()) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                    modifier =
+                        Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("distanceTitle"),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically) {
                       Canvas(modifier = Modifier.size(16.dp)) {
@@ -126,7 +127,8 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                             .padding(bottom = 16.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color.White)
-                            .padding(16.dp)) {
+                            .padding(16.dp)
+                            .testTag("userList")) {
                       users.forEach { user ->
                         UserRow(
                             user = user,
@@ -175,10 +177,12 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
 fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
   Row(
       modifier =
-          Modifier.fillMaxWidth().clickable {
-            userViewModel.setSelectedContact(user)
-            navigationActions.navigateTo(Screen.CONTACT)
-          },
+          Modifier.fillMaxWidth()
+              .clickable {
+                userViewModel.setSelectedContact(user)
+                navigationActions.navigateTo(Screen.CONTACT)
+              }
+              .testTag("userRow"),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Row(

@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -48,32 +47,6 @@ import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
-
-@Composable
-fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
-
-  Card(
-      onClick = {
-        userViewModel.setSelectedContact(user)
-        navigationActions.navigateTo(Screen.CONTACT)
-      },
-      modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
-  ) {
-    Row(
-        modifier = Modifier.fillMaxHeight(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-      AsyncImage(
-          model = user.profilePicture,
-          contentDescription = null,
-          modifier = Modifier.width(100.dp).height(100.dp).padding(8.dp))
-      Column(modifier = Modifier.padding(16.dp)) {
-        Text(text = "${user.firstName} ${user.lastName}")
-        Text(text = "8 friends in common")
-      }
-    }
-  }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,7 +135,8 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                         Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color.White)
-                            .padding(16.dp)) {
+                            .padding(16.dp)
+                            .testTag("requestRow")) {
                       friendRequests.value.forEachIndexed { index, user ->
                         UserRequestRow(
                             user = user,
