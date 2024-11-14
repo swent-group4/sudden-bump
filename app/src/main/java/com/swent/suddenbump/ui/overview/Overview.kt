@@ -190,11 +190,14 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
               Text(
                   text = "${user.firstName} ${user.lastName.first()}.",
                   style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                  modifier = Modifier.testTag("userName"))
+                  modifier = Modifier.testTag("userName"),
+                  color = Color.White
+              )
               Text(
                   text = "Lausanne, Switzerland",
                   style = MaterialTheme.typography.bodyLarge,
-                  modifier = Modifier.testTag("userName"))
+                  modifier = Modifier.testTag("userName"),
+                  color = Color.White)
             }
         Icon(
             imageVector = Icons.Default.Email,
