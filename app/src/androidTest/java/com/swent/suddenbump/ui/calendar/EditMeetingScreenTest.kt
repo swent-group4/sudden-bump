@@ -14,8 +14,8 @@ import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import junit.framework.TestCase.assertEquals
 import java.util.Date
+import junit.framework.TestCase.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -33,7 +33,6 @@ class EditMeetingScreenTest {
   private lateinit var meetingRepository: MeetingRepository
   private lateinit var meetingViewModel: MeetingViewModel
   private lateinit var viewModel: MeetingViewModel
-
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -101,24 +100,19 @@ class EditMeetingScreenTest {
     composeTestRule.onNodeWithTag("Date").performTextInput("05/09/2024")
     composeTestRule.onNodeWithTag("Save Changes").performClick()
 
-
     // Assert
     val meetingCaptor = argumentCaptor<Meeting>()
     val successCaptor = argumentCaptor<() -> Unit>()
     val failureCaptor = argumentCaptor<(Exception) -> Unit>()
-    verify(meetingRepository).updateMeeting(
-      meetingCaptor.capture(),
-      successCaptor.capture(),
-      failureCaptor.capture()
-    )
+    verify(meetingRepository)
+        .updateMeeting(meetingCaptor.capture(), successCaptor.capture(), failureCaptor.capture())
 
     assertEquals("JhXlhoSvTmbtTFSVpNnA", meetingCaptor.firstValue.meetingId)
     assertEquals("New Location", meetingCaptor.firstValue.location)
     assertEquals(Timestamp(1725487200, 0), meetingCaptor.firstValue.date)
     assertEquals("FPHuqGkCBo7Iinbo5OO9", meetingCaptor.firstValue.friendId)
     assertEquals("P7vuP4bbEQB03OSR3QwJ", meetingCaptor.firstValue.creatorId)
-
-    }
+  }
 
   @Test
   fun deleteButton_deletesMeeting() {
@@ -132,10 +126,8 @@ class EditMeetingScreenTest {
     // Assert
     val successCaptor = argumentCaptor<() -> Unit>()
     val failureCaptor = argumentCaptor<(Exception) -> Unit>()
-    verify(meetingRepository).deleteMeetingById(
-      eq("JhXlhoSvTmbtTFSVpNnA"),
-      successCaptor.capture(),
-      failureCaptor.capture()
-    )
+    verify(meetingRepository)
+        .deleteMeetingById(
+            eq("JhXlhoSvTmbtTFSVpNnA"), successCaptor.capture(), failureCaptor.capture())
   }
 }

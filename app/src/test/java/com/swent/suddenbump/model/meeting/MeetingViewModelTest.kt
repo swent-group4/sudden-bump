@@ -28,7 +28,7 @@ class MeetingViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
 
-  val meeting =
+  private val meeting =
       Meeting(
           meetingId = "JhXlhoSvTmbtTFSVpNnA",
           location = "Cafe",
@@ -84,7 +84,7 @@ class MeetingViewModelTest {
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun updateMeeting_callsRepositoryUpdate()  = runTest {
+  fun updateMeeting_callsRepositoryUpdate() = runTest {
     meetingViewModel.updateMeeting(meeting)
     // Advance the coroutine to ensure it completes
     advanceUntilIdle()

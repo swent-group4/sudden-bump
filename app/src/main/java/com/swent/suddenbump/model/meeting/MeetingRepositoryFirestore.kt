@@ -42,9 +42,7 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
           if (result.isSuccessful) {
             onSuccess()
           } else {
-            result.exception?.let {
-              onFailure(it)
-            }
+            result.exception?.let { onFailure(it) }
           }
         }
   }
@@ -61,9 +59,7 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
           if (result.isSuccessful) {
             onSuccess()
           } else {
-            result.exception?.let {
-              onFailure(it)
-            }
+            result.exception?.let { onFailure(it) }
           }
         }
   }
@@ -77,9 +73,7 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
       if (result.isSuccessful) {
         onSuccess()
       } else {
-        result.exception?.let {
-          onFailure(it)
-        }
+        result.exception?.let { onFailure(it) }
       }
     }
   }

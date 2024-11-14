@@ -38,7 +38,7 @@ fun AddMeetingScreen(
         TopAppBar(
             title = {
               Text(
-                  "Schedule New Meeting with ${userViewModel.user?.firstName?: ""} ${userViewModel.user?.lastName?: ""}",
+                  "Add Meeting with ${userViewModel.user?.firstName?: ""}",
                   color = Color.White,
                   modifier = Modifier.testTag("Add New Meeting"))
             },

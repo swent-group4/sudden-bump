@@ -116,10 +116,12 @@ class MeetingRepositoryFirestoreTest {
   @Test
   fun updateMeeting_shouldCallOnFailure_whenFirestoreFails() {
     val exception = Exception("Firestore update failed")
-    `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forException(exception)) // Simulate failure
+    `when`(mockDocumentReference.set(any()))
+        .thenReturn(Tasks.forException(exception)) // Simulate failure
 
     var onFailureCalled = false
-    meetingRepositoryFirestore.updateMeeting(meeting, onSuccess = {}, onFailure = { onFailureCalled = true })
+    meetingRepositoryFirestore.updateMeeting(
+        meeting, onSuccess = {}, onFailure = { onFailureCalled = true })
 
     shadowOf(Looper.getMainLooper()).idle()
 
@@ -130,10 +132,12 @@ class MeetingRepositoryFirestoreTest {
   @Test
   fun deleteMeetingById_shouldCallOnFailure_whenFirestoreFails() {
     val exception = Exception("Firestore delete failed")
-    `when`(mockDocumentReference.delete()).thenReturn(Tasks.forException(exception)) // Simulate failure
+    `when`(mockDocumentReference.delete())
+        .thenReturn(Tasks.forException(exception)) // Simulate failure
 
     var onFailureCalled = false
-    meetingRepositoryFirestore.deleteMeetingById("1", onSuccess = {}, onFailure = { onFailureCalled = true })
+    meetingRepositoryFirestore.deleteMeetingById(
+        "1", onSuccess = {}, onFailure = { onFailureCalled = true })
 
     shadowOf(Looper.getMainLooper()).idle()
 
@@ -144,10 +148,12 @@ class MeetingRepositoryFirestoreTest {
   @Test
   fun addMeeting_shouldCallOnFailure_whenFirestoreFails() {
     val exception = Exception("Firestore add failed")
-    `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forException(exception)) // Simulate failure
+    `when`(mockDocumentReference.set(any()))
+        .thenReturn(Tasks.forException(exception)) // Simulate failure
 
     var onFailureCalled = false
-    meetingRepositoryFirestore.addMeeting(meeting, onSuccess = {}, onFailure = { onFailureCalled = true })
+    meetingRepositoryFirestore.addMeeting(
+        meeting, onSuccess = {}, onFailure = { onFailureCalled = true })
 
     shadowOf(Looper.getMainLooper()).idle()
 
