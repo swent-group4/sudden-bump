@@ -43,7 +43,6 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
             onSuccess()
           } else {
             result.exception?.let {
-              Log.e("MeetingRepositoryFirestore", "Error adding document", it)
               onFailure(it)
             }
           }
@@ -63,7 +62,6 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
             onSuccess()
           } else {
             result.exception?.let {
-              Log.e("MeetingRepositoryFirestore", "Error updating document", it)
               onFailure(it)
             }
           }
@@ -80,7 +78,6 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
         onSuccess()
       } else {
         result.exception?.let {
-          Log.e("MeetingRepositoryFirestore", "Error deleting document", it)
           onFailure(it)
         }
       }
