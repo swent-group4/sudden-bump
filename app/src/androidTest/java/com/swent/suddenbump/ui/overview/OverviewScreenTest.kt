@@ -39,23 +39,6 @@ class OverviewScreenTest {
     chatRepository = mock(ChatRepository::class.java)
     userViewModel = UserViewModel(repository = repository, chatRepository = chatRepository)
 
-    //    val currentUser = User(uid="1", firstName="John", lastName="Doe", phoneNumber =
-    // "0610136713", emailAddress = "john.doe@example.com", profilePicture = null, lastKnownLocation
-    // = location)
-    //    val users = listOf(
-    //      User(uid="2", firstName="Jane", lastName="Doe", phoneNumber = "0667977556", emailAddress
-    // = "jane.doe@example.com", profilePicture = null, lastKnownLocation = location),
-    //      User(uid="3", firstName="Alice", lastName="Smith", phoneNumber = "0612345678",
-    // emailAddress = "alice.smith@example.com", profilePicture = null, lastKnownLocation =
-    // location),
-    //    )
-    //
-    //    val currentUserStateFlow = MutableStateFlow(currentUser)
-    //    val usersStateFlow = MutableStateFlow(users)
-    //
-    //    `when`(userViewModel.getCurrentUser()).thenReturn(currentUserStateFlow)
-    //    `when`(userViewModel.getUserFriends()).thenReturn(usersStateFlow)
-
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
 
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
@@ -82,19 +65,4 @@ class OverviewScreenTest {
     composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
     verify(navigationActions).navigateTo(Screen.ADD_CONTACT)
   }
-
-  //  @Test
-  //  fun userListIsDisplayed() {
-  //    composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
-  //  }
-  //
-  //  @Test
-  //  fun noFriendsMessageIsDisplayedWhenNoFriends() {
-  //    val emptyListStateFlow = MutableStateFlow(emptyList<User>())
-  //    `when`(userViewModel.getUserFriends()).thenReturn(emptyListStateFlow)
-  //    composeTestRule.setContent {
-  //      OverviewScreen(navigationActions, userViewModel)
-  //    }
-  //    composeTestRule.onNodeWithTag("noFriends").assertIsDisplayed()
-  //  }
 }

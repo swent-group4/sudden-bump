@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -97,80 +99,90 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
             selectedItem = navigationActions.currentRoute())
       },
       content = { pd ->
-        Column(
-            modifier =
-                Modifier.fillMaxHeight()
-                    .background(Color.Black)
-                    .padding(pd)
-                    .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally) {
+          LazyColumn(
+              modifier = Modifier
+                  .fillMaxHeight()
+                  .background(Color.Black)
+                  .padding(pd)
+                  .padding(horizontal = 16.dp),
+              horizontalAlignment = Alignment.CenterHorizontally
+          ) {
               if (users.isNotEmpty()) {
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag("distanceTitle"),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                      Canvas(modifier = Modifier.size(16.dp)) {
-                        drawCircle(
-                            color = com.swent.suddenbump.ui.theme.Purple40, // Purple color
-                            radius = size.minDimension / 2)
+                  item {
+                      Row(
+                          modifier = Modifier
+                              .fillMaxWidth()
+                              .padding(vertical = 10.dp)
+                              .testTag("distanceTitle"),
+                          horizontalArrangement = Arrangement.spacedBy(8.dp),
+                          verticalAlignment = Alignment.CenterVertically
+                      ) {
+                          Canvas(modifier = Modifier.size(16.dp)) {
+                              drawCircle(
+                                  color = com.swent.suddenbump.ui.theme.Purple40,
+                                  radius = size.minDimension / 2
+                              )
+                          }
+                          Text(
+                              text = "Within 10km",
+                              style = MaterialTheme.typography.headlineSmall,
+                              color = com.swent.suddenbump.ui.theme.Purple40,
+                              modifier = Modifier.padding(start = 8.dp)
+                          )
                       }
-                      Text(
-                          text = "Within 10km",
-                          style = MaterialTheme.typography.headlineSmall,
-                          color = com.swent.suddenbump.ui.theme.Purple40,
-                          modifier = Modifier.padding(start = 8.dp))
-                    }
-                Column(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White)
-                            .padding(16.dp)
-                            .testTag("userList")) {
-                      users.forEach { user ->
-                        UserRow(
-                            user = user,
-                            navigationActions = navigationActions,
-                            userViewModel = userViewModel)
+                  }
+                  items(users) { user ->
+                      UserRow(
+                          user = user,
+                          navigationActions = navigationActions,
+                          userViewModel = userViewModel
+                      )
+                  }
+                  item {
+                      Row(
+                          modifier = Modifier
+                              .fillMaxWidth()
+                              .padding(vertical = 10.dp),
+                          horizontalArrangement = Arrangement.spacedBy(8.dp),
+                          verticalAlignment = Alignment.CenterVertically
+                      ) {
+                          Canvas(modifier = Modifier.size(16.dp)) {
+                              drawCircle(
+                                  color = com.swent.suddenbump.ui.theme.Purple40,
+                                  radius = size.minDimension / 2
+                              )
+                          }
+                          Text(
+                              text = "Within 30km",
+                              style = MaterialTheme.typography.headlineSmall,
+                              color = com.swent.suddenbump.ui.theme.Purple40,
+                              modifier = Modifier.padding(start = 8.dp)
+                          )
                       }
-                    }
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically) {
-                      Canvas(modifier = Modifier.size(16.dp)) {
-                        drawCircle(
-                            color = com.swent.suddenbump.ui.theme.Purple40, // Purple color
-                            radius = size.minDimension / 2)
-                      }
-                      Text(
-                          text = "Within 30km",
-                          style = MaterialTheme.typography.headlineSmall,
-                          color = com.swent.suddenbump.ui.theme.Purple40,
-                          modifier = Modifier.padding(start = 8.dp))
-                    }
-                Column(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White)
-                            .padding(16.dp)) {
-                      users.forEach { user ->
-                        UserRow(user = user, navigationActions = navigationActions, userViewModel)
-                      }
-                    }
+                  }
+                  items(users) { user ->
+                      UserRow(
+                          user = user,
+                          navigationActions = navigationActions,
+                          userViewModel = userViewModel
+                      )
+                  }
               } else {
-                Text(
-                    text = "Looks like no friends are nearby",
-                    color = Color.White,
-                    modifier =
-                        Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 8.dp),
-                    style = MaterialTheme.typography.titleLarge)
+                  item {
+                      Text(
+                          text = "Looks like no friends are nearby",
+                          color = Color.White,
+                          modifier = Modifier
+                              .testTag("noFriends")
+                              .fillMaxWidth()
+                              .padding(vertical = 8.dp),
+                          style = MaterialTheme.typography.titleLarge
+                      )
+                  }
               }
-            }
-      })
+          }
+      }
+  )
 }
 
 @Composable
@@ -209,11 +221,3 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
             )
       }
 }
-
-// @Preview(showBackground = true)
-// @Composable
-// fun PreviewOverviewScreen() {
-//  val navController = rememberNavController()
-//  val navigationActions = NavigationActions(navController)
-//  OverviewScreen(navigationActions)
-// }
