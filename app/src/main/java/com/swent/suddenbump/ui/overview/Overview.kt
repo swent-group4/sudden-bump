@@ -4,7 +4,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Email
@@ -27,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -99,90 +96,75 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
             selectedItem = navigationActions.currentRoute())
       },
       content = { pd ->
-          LazyColumn(
-              modifier = Modifier
-                  .fillMaxHeight()
-                  .background(Color.Black)
-                  .padding(pd)
-                  .padding(horizontal = 16.dp),
-              horizontalAlignment = Alignment.CenterHorizontally
-          ) {
+        LazyColumn(
+            modifier =
+                Modifier.fillMaxHeight()
+                    .background(Color.Black)
+                    .padding(pd)
+                    .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally) {
               if (users.isNotEmpty()) {
-                  item {
-                      Row(
-                          modifier = Modifier
-                              .fillMaxWidth()
+                item {
+                  Row(
+                      modifier =
+                          Modifier.fillMaxWidth()
                               .padding(vertical = 10.dp)
                               .testTag("distanceTitle"),
-                          horizontalArrangement = Arrangement.spacedBy(8.dp),
-                          verticalAlignment = Alignment.CenterVertically
-                      ) {
-                          Canvas(modifier = Modifier.size(16.dp)) {
-                              drawCircle(
-                                  color = com.swent.suddenbump.ui.theme.Purple40,
-                                  radius = size.minDimension / 2
-                              )
-                          }
-                          Text(
-                              text = "Within 10km",
-                              style = MaterialTheme.typography.headlineSmall,
+                      horizontalArrangement = Arrangement.spacedBy(8.dp),
+                      verticalAlignment = Alignment.CenterVertically) {
+                        Canvas(modifier = Modifier.size(16.dp)) {
+                          drawCircle(
                               color = com.swent.suddenbump.ui.theme.Purple40,
-                              modifier = Modifier.padding(start = 8.dp)
-                          )
+                              radius = size.minDimension / 2)
+                        }
+                        Text(
+                            text = "Within 10km",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = com.swent.suddenbump.ui.theme.Purple40,
+                            modifier = Modifier.padding(start = 8.dp))
                       }
-                  }
-                  items(users) { user ->
-                      UserRow(
-                          user = user,
-                          navigationActions = navigationActions,
-                          userViewModel = userViewModel
-                      )
-                  }
-                  item {
-                      Row(
-                          modifier = Modifier
-                              .fillMaxWidth()
-                              .padding(vertical = 10.dp),
-                          horizontalArrangement = Arrangement.spacedBy(8.dp),
-                          verticalAlignment = Alignment.CenterVertically
-                      ) {
-                          Canvas(modifier = Modifier.size(16.dp)) {
-                              drawCircle(
-                                  color = com.swent.suddenbump.ui.theme.Purple40,
-                                  radius = size.minDimension / 2
-                              )
-                          }
-                          Text(
-                              text = "Within 30km",
-                              style = MaterialTheme.typography.headlineSmall,
+                }
+                items(users) { user ->
+                  UserRow(
+                      user = user,
+                      navigationActions = navigationActions,
+                      userViewModel = userViewModel)
+                }
+                item {
+                  Row(
+                      modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                      horizontalArrangement = Arrangement.spacedBy(8.dp),
+                      verticalAlignment = Alignment.CenterVertically) {
+                        Canvas(modifier = Modifier.size(16.dp)) {
+                          drawCircle(
                               color = com.swent.suddenbump.ui.theme.Purple40,
-                              modifier = Modifier.padding(start = 8.dp)
-                          )
+                              radius = size.minDimension / 2)
+                        }
+                        Text(
+                            text = "Within 30km",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = com.swent.suddenbump.ui.theme.Purple40,
+                            modifier = Modifier.padding(start = 8.dp))
                       }
-                  }
-                  items(users) { user ->
-                      UserRow(
-                          user = user,
-                          navigationActions = navigationActions,
-                          userViewModel = userViewModel
-                      )
-                  }
+                }
+                items(users) { user ->
+                  UserRow(
+                      user = user,
+                      navigationActions = navigationActions,
+                      userViewModel = userViewModel)
+                }
               } else {
-                  item {
-                      Text(
-                          text = "Looks like no friends are nearby",
-                          color = Color.White,
-                          modifier = Modifier
-                              .testTag("noFriends")
-                              .fillMaxWidth()
-                              .padding(vertical = 8.dp),
-                          style = MaterialTheme.typography.titleLarge
-                      )
-                  }
+                item {
+                  Text(
+                      text = "Looks like no friends are nearby",
+                      color = Color.White,
+                      modifier =
+                          Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 8.dp),
+                      style = MaterialTheme.typography.titleLarge)
+                }
               }
-          }
-      }
-  )
+            }
+      })
 }
 
 @Composable
