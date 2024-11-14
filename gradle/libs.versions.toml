@@ -12,6 +12,7 @@ ktfmt = "0.17.0"
 libphonenumber = "8.13.47"
 mockitoAndroid = "5.14.1"
 mockitoCoreVersion = "3.11.2"
+mockitoInlineVersion = "4.0.0"
 ucrop = "2.2.9"
 ui = "1.7.3"
 uiTestJunit4 = "1.7.4"
@@ -41,6 +42,7 @@ mockitoCore = "5.14.1"
 mockitoInline = "5.2.0"
 mockitoKotlin = "5.4.0"
 mockk = "1.13.13"
+core-testing = "2.1.0"
 
 # Testing UI
 espressoCore = "3.6.1"
@@ -57,17 +59,20 @@ appcompat = "1.7.0"
 coreKtx = "1.13.1"
 lifecycleRuntimeKtx = "2.8.6"
 androidxCoreKtx = "1.6.1"
+androidx-arch-core = "2.1.0"
 composeActivity = "1.9.3"
 composeViewModel = "2.8.6"
 sonar = "5.1.0.4882"
 playServicesLocation = "21.3.0"
 lifecycleCommonJvm = "2.8.6"
 firebaseStorageKtx = "21.0.1"
+runtimeLivedata = "1.7.5"
 workRuntimeKtx = "2.7.1"
 workTesting = "2.7.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-arch-core-testing = { module = "androidx.arch.core:core-testing", version = "2.1.0" }
 androidx-work-runtime = { module = "androidx.work:work-runtime", version.ref = "workTesting" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "workTesting" }
@@ -93,6 +98,7 @@ compose-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifes
 kaspresso = { group = "com.kaspersky.android-components", name = "kaspresso", version.ref = "kaspresso" }
 kaspresso-compose = { group = "com.kaspersky.android-components", name = "kaspresso-compose-support", version.ref = "kaspresso" }
 
+mockito-inline-v400 = { module = "org.mockito:mockito-inline", version.ref = "mockitoInlineVersion" }
 mockito-core-v3112 = { module = "org.mockito:mockito-core", version.ref = "mockitoCoreVersion" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
@@ -132,6 +138,7 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version = "3.0.0-rc01
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version = "3.0.0-rc01" }
 ucrop = { module = "com.github.yalantis:ucrop", name = "ucrop", version.ref = "ucrop" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
+androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 
 
 [plugins]

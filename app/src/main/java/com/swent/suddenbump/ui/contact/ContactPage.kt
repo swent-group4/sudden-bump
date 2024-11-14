@@ -20,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -27,35 +28,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-
-data class MockUser(
-    val uid: String,
-    val firstName: String,
-    val lastName: String,
-    val birthDate: String,
-    val profilePictureUrl: String,
-    val phoneNumber: String,
-    val email: String,
-    val isFriend: Boolean = false,
-)
+import com.swent.suddenbump.ui.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ContactScreen(navigationActions: NavigationActions) {
-  val user =
-      MockUser(
-          uid = "123",
-          firstName = "Jane",
-          lastName = "Smith",
-          profilePictureUrl = "https://api.dicebear.com/9.x/lorelei/png?seed=JaneSmith",
-          phoneNumber = "+3345676543",
-          email = "jane.smith@gmail.com",
-          birthDate = "28 February 1998",
-          isFriend = true,
-      )
+fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+  val user = userViewModel.getSelectedContact().collectAsState().value
 
+  var isFriend =
+      userViewModel.getUserFriends().collectAsState().value.map { it.uid }.contains(user.uid)
+  var isFriendRequest =
+      userViewModel.getUserFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
+  var isFriendRequestSent =
+      userViewModel.getSentFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
+  // a
   Scaffold(
       modifier = Modifier.fillMaxSize().testTag("contactScreen"),
       topBar = {
@@ -82,7 +71,7 @@ fun ContactScreen(navigationActions: NavigationActions) {
               verticalArrangement = Arrangement.Top,
           ) {
             AsyncImage(
-                model = user.profilePictureUrl,
+                model = user.profilePicture,
                 contentDescription = null,
                 modifier =
                     Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
@@ -105,16 +94,6 @@ fun ContactScreen(navigationActions: NavigationActions) {
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 10.dp)
-                        .testTag("birthdayCard")) {
-                  Text(
-                      modifier = Modifier.padding(10.dp).testTag("birthdayText"),
-                      text = "Birthday: " + user.birthDate)
-                }
-
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 10.dp)
                         .testTag("phoneCard")) {
                   Text(modifier = Modifier.padding(10.dp), text = "Phone: " + user.phoneNumber)
                 }
@@ -124,27 +103,56 @@ fun ContactScreen(navigationActions: NavigationActions) {
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 10.dp)
                         .testTag("emailCard")) {
-                  Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.email)
+                  Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.emailAddress)
                 }
           }
 
-          if (user.isFriend) {
+          if (isFriend) {
             Button(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("sendMessageButton"),
-                onClick = { println("Button click !") }) {
+                onClick = {
+                  userViewModel.user = user
+                  navigationActions.navigateTo(Screen.CHAT)
+                }) {
                   Text("Send a message")
                 }
+          } else if (isFriendRequest) {
+            Button(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = 50.dp, vertical = 30.dp)
+                        .testTag("sendMessageButton"),
+                onClick = {
+                  userViewModel.acceptFriendRequest(
+                      userViewModel.getCurrentUser().value,
+                      friend = user,
+                      onSuccess = {
+                        isFriend = true
+                        isFriendRequest = false
+                      },
+                      onFailure = { println("Error accepting friend request") })
+                }) {
+                  Text("Accept friend request")
+                }
+          } else if (isFriendRequestSent) {
+            Text("Friend request sent")
           } else {
             Button(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 30.dp)
                         .testTag("addToContactsButton"),
-                onClick = { println("Button click !") }) {
-                  Text("Add to contacts")
+                onClick = {
+                  userViewModel.sendFriendRequest(
+                      userViewModel.getCurrentUser().value,
+                      friend = user,
+                      onSuccess = { isFriendRequestSent = true },
+                      onFailure = { println("Error sending friend request") })
+                }) {
+                  Text("SendFriendRequest")
                 }
           }
         }

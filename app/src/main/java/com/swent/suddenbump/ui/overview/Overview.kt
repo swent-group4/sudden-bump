@@ -26,6 +26,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.model.user.User
+import com.swent.suddenbump.model.user.UserViewModel
 import androidx.navigation.compose.rememberNavController
 import com.swent.suddenbump.service.LocationService
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
@@ -34,17 +36,14 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
 
-@Composable
-fun OverviewScreen(navigationActions: NavigationActions) {
-  val mockUsers = generateMockUsers().sortedBy { it.relativeDist }
+fun computeRelativeDistance(user1: User, user2: User): Int {
+  return 5
+}
 
-  /*LaunchedEffect(Unit) {
-      if (CheckLocationPermissions.checkLocationPermissions() {
-          startLocationService(context)
-      } else {
-          requestPermissions(context)
-      }
-  }*/
+@Composable
+fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+  val currentUser = userViewModel.getCurrentUser().collectAsState().value
+  val users = userViewModel.getUserFriends().collectAsState().value
 
   Scaffold(
       topBar = {
@@ -85,20 +84,21 @@ fun OverviewScreen(navigationActions: NavigationActions) {
       content = { pd ->
         Column(
             modifier = Modifier.padding(pd), horizontalAlignment = Alignment.CenterHorizontally) {
-              if (mockUsers.isNotEmpty()) {
+              if (users.isNotEmpty()) {
                 LazyColumn(modifier = Modifier.testTag("userList")) {
                   var currentDist: Int? = null
-                  mockUsers.forEach { user ->
-                    if (currentDist != user.relativeDist) {
-                      currentDist = user.relativeDist
+                  users.forEach { user ->
+                    val relativeDist = computeRelativeDistance(currentUser, user)
+                    if (currentDist != relativeDist) {
+                      currentDist = relativeDist
                       item {
                         Text(
-                            text = "Distance: ${user.relativeDist} km",
+                            text = "Distance: ${relativeDist} km",
                             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                             style = MaterialTheme.typography.headlineSmall)
                       }
                     }
-                    item { UserCard(user = user, navigationActions) }
+                    item { UserCard(user = user, navigationActions, userViewModel) }
                   }
                 }
               } else {
@@ -112,24 +112,10 @@ fun OverviewScreen(navigationActions: NavigationActions) {
       })
 }
 
-private fun startLocationService(context: Context) {
-  Intent(context, LocationService::class.java).apply {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      context.startForegroundService(this)
-    } else {
-      context.startService(this)
-    }
-  }
-}
-
-private fun stopLocationService(context: Context) {
-  context.stopService(Intent(context, LocationService::class.java))
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewOverviewScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  OverviewScreen(navigationActions)
-}
+// @Preview(showBackground = true)
+// @Composable
+// fun PreviewOverviewScreen() {
+//  val navController = rememberNavController()
+//  val navigationActions = NavigationActions(navController)
+//  OverviewScreen(navigationActions)
+// }

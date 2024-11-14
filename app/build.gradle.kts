@@ -58,6 +58,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -90,21 +91,10 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
-        //packagingOptions { jniLibs { useLegacyPackaging = true } }
     }
 
-    buildFeatures {
-        compose = true
-        buildConfig = true
-    }
-
-    kotlinOptions { jvmTarget = "11" }
-
-    // Robolectric needs to be run only in debug. But its tests are placed in the shared source set
-    // (test)
-    // The next lines transfers the src/test/* from shared to the testDebug one
-    //
-    // This prevent errors from occurring during unit tests
+    // Robolectric needs to be run only in debug. But its tests are placed in the shared source set (test)
+    // The next lines transfer the src/test/* from shared to the testDebug one
     sourceSets.getByName("testDebug") {
         val test = sourceSets.getByName("test")
 
@@ -127,24 +117,15 @@ sonar {
         property("sonar.organization", "swent-group4")
         property("sonar.host.url", "https://sonarcloud.io")
         // Comma-separated paths to the various directories containing the *.xml JUnit report files. Each path may be absolute or relative to the project base directory.
-        property(
-            "sonar.junit.reportPaths",
-            "${project.layout.buildDirectory.get()}/test-results/testDebugunitTest/"
-        )
+        property("sonar.junit.reportPaths", "${project.layout.buildDirectory.get()}/test-results/testDebugunitTest/")
         // Paths to xml files with Android Lint issues. If the main flavor is changed, this file will have to be changed too.
-        property(
-            "sonar.androidLint.reportPaths",
-            "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml"
-        )
+        property("sonar.androidLint.reportPaths", "${project.layout.buildDirectory.get()}/reports/lint-results-debug.xml")
         // Paths to JaCoCo XML coverage report files.
-        property(
-            "sonar.coverage.jacoco.xmlReportPaths",
-            "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml"
-        )
+        property("sonar.coverage.jacoco.xmlReportPaths", "${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
     }
 }
 
-// When a library is used both by robolectric and connected tests, use this function
+// When a library is used both by Robolectric and connected tests, use this function
 fun DependencyHandlerScope.globalTestImplementation(dep: Any) {
     androidTestImplementation(dep)
     testImplementation(dep)
@@ -157,8 +138,47 @@ buildscript {
 }
 
 dependencies {
+    // Firebase BoM
+    implementation(platform(libs.firebase.bom))
+    testImplementation(platform(libs.firebase.bom))
+    androidTestImplementation(platform(libs.firebase.bom))
+
+    // Firebase dependencies with protobuf-lite excluded
+    implementation(libs.firebase.firestore) {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
+    testImplementation(libs.firebase.firestore) {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
+    androidTestImplementation(libs.firebase.firestore) {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
+
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.ui.auth)
+
+    // Explicitly include protobuf-javalite
+    implementation("com.google.protobuf:protobuf-javalite:3.21.12")
+    testImplementation("com.google.protobuf:protobuf-javalite:3.21.12")
+    androidTestImplementation("com.google.protobuf:protobuf-javalite:3.21.12")
+
+    // Exclude protobuf-lite globally in test configurations
+    configurations {
+        named("testImplementation") {
+            exclude(group = "com.google.protobuf", module = "protobuf-lite")
+        }
+        named("androidTestImplementation") {
+            exclude(group = "com.google.protobuf", module = "protobuf-lite")
+        }
+    }
+
+    // Other dependencies...
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.core.ktx)
+    testImplementation(libs.androidx.arch.core.testing)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -170,15 +190,15 @@ dependencies {
     implementation(libs.firebase.storage.ktx)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.work.testing)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
 
     // Kotlin reflection library
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.31")
-
-    // ------------- Jetpack Compose ------------------
+    implementation(libs.kotlin.reflect)
+    // Jetpack Compose
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     globalTestImplementation(composeBom)
@@ -198,8 +218,7 @@ dependencies {
     globalTestImplementation(libs.compose.test.junit)
     debugImplementation(libs.compose.test.manifest)
 
-
-    // ----------       Robolectric     ------------
+    // Robolectric
     testImplementation(libs.robolectric)
 
     // Navigation
@@ -214,19 +233,17 @@ dependencies {
     // Image picker
     implementation(libs.ucrop)
 
-    // Google Service and Maps
+    // Google Services and Maps
     implementation(libs.maps.compose)
     implementation(libs.maps.compose.utils)
     implementation(libs.play.services.auth)
 
-    // Firebase
-    implementation(libs.firebase.database.ktx)
-    implementation(libs.firebase.firestore)
-    implementation(libs.firebase.ui.auth)
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.auth)
-    implementation(platform(libs.firebase.bom))
+    // Networking with OkHttp
+    implementation(libs.okhttp)
 
+    // Image loading with Coil
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     // Testing Unit
     androidTestImplementation(libs.mockk)
@@ -236,14 +253,7 @@ dependencies {
     globalTestImplementation(libs.kaspresso)
     globalTestImplementation(libs.kaspresso.compose)
 
-    // Networking with OkHttp
-    implementation(libs.okhttp)
-
-    // Image from internet with coil
-    implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
-
-    // Test UI
+    // UI Testing
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.espresso.intents)
@@ -256,17 +266,20 @@ dependencies {
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockito.inline.v400)
     implementation(kotlin("test"))
 }
 
 configurations.all {
     resolutionStrategy {
+        // Force specific versions to avoid conflicts
+        force("com.google.protobuf:protobuf-javalite:3.21.12")
         force("androidx.test.espresso:espresso-core:3.5.1")
     }
 }
 
 tasks.withType<Test> {
-    // Configure Jacoco for each tests
+    // Configure Jacoco for each test
     configure<JacocoTaskExtension> {
         isIncludeNoLocationClasses = true
         excludes = listOf("jdk.internal.*")
