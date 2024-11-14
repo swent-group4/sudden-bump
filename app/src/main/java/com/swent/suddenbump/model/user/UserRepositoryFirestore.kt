@@ -402,6 +402,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         }
   }
 
+    // Reject the friend request from friend to user.
   override fun deleteFriendRequest(
       user: User,
       friend: User,
