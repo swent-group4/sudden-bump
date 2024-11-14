@@ -8,9 +8,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
@@ -24,7 +21,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
@@ -34,12 +30,14 @@ import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import android.net.Uri
+import com.google.firebase.auth.FirebaseAuth
+import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
-    var username by remember { mutableStateOf("User123") }
+fun SettingsScreen(navigationActions: NavigationActions, userViewModel: UserViewModel, onNotificationsEnabledChange: (Boolean) -> Unit) {
     var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
+    var notificationsEnabled by remember { mutableStateOf(true) }
 
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -98,26 +96,6 @@ fun SettingsScreen(navigationActions: NavigationActions, userViewModel: UserView
                     }
                 }
 
-                // Username setting
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                    Text("Username")
-                    BasicTextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = {
-                            userViewModel.updateUsername(username, {
-                                // Handle success
-                            }, {
-                                // Handle failure
-                            })
-                        }),
-                        modifier = Modifier.testTag("usernameField"))
-                }
-
                 HorizontalDivider()
 
                 // Account Section
@@ -133,7 +111,20 @@ fun SettingsScreen(navigationActions: NavigationActions, userViewModel: UserView
                 HorizontalDivider()
 
                 // Notifications Section
-                Text("Notifications", Modifier.clickable { navigationActions.navigateTo("NotificationsScreen") })
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Enable Notifications")
+                    Switch(
+                        checked = notificationsEnabled,
+                        onCheckedChange = {
+                            notificationsEnabled = it
+                            onNotificationsEnabledChange(it)
+                        }
+                    )
+                }
                 HorizontalDivider()
 
                 // Storage and Data Section
@@ -145,27 +136,8 @@ fun SettingsScreen(navigationActions: NavigationActions, userViewModel: UserView
 
                 HorizontalDivider()
 
-                // Location Status Section
-                LocationStatusSection(userViewModel)
             }
         })
-}
-
-@Composable
-fun LocationStatusSection(userViewModel: UserViewModel) {
-    val isLocationSharingEnabled by userViewModel.isLocationSharingEnabled.collectAsState()
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text("Location Sharing")
-        Switch(
-            checked = isLocationSharingEnabled,
-            onCheckedChange = { userViewModel.updateLocationSharingStatus(it) }
-        )
-    }
 }
 
 @Preview(showBackground = true)
@@ -174,6 +146,9 @@ fun PreviewSettingsScreen() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
     val userRepository = UserRepositoryFirestore(FirebaseFirestore.getInstance())
-    val userViewModel = UserViewModel(userRepository)
-    SettingsScreen(navigationActions, userViewModel)
+
+    val chatRepository = ChatRepositoryFirestore(firestore = FirebaseFirestore.getInstance(), auth = FirebaseAuth.getInstance())
+
+    val userViewModel = UserViewModel(userRepository, chatRepository)
+    SettingsScreen(navigationActions, userViewModel, onNotificationsEnabledChange = {})
 }

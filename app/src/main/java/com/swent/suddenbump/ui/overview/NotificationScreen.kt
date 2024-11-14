@@ -14,7 +14,7 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(navigationActions: NavigationActions, viewModel: UserViewModel) {
-    val notificationsEnabled by viewModel.notificationsEnabled.collectAsState() // Observing the notification state
+    var notificationsEnabled by remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -39,34 +39,37 @@ fun NotificationScreen(navigationActions: NavigationActions, viewModel: UserView
             ) {
                 // Message Notifications Section
                 Text("Message Notifications")
-                NotificationOption("Show notifications", notificationsEnabled) { isEnabled ->
-                    viewModel.setNotificationPreference(viewModel.getCurrentUser().value.uid, isEnabled)
-                }
                 SoundOption()
 
                 Divider()
 
                 // Notifications for Reactions Section
                 Text("Notifications for reactions")
-                NotificationOption("Show notifications", notificationsEnabled) { isEnabled ->
-                    viewModel.setNotificationPreference(viewModel.getCurrentUser().value.uid, isEnabled)
-                }
 
                 Divider()
 
                 // Group Notifications Section
                 Text("Group Notifications")
-                NotificationOption("Show notifications", notificationsEnabled) { isEnabled ->
-                    viewModel.setNotificationPreference(viewModel.getCurrentUser().value.uid, isEnabled)
-                }
                 SoundOption()
 
                 Divider()
 
                 // Reaction Notifications Section
                 Text("Reaction notifications")
-                NotificationOption("Show notifications", notificationsEnabled) { isEnabled ->
-                    viewModel.setNotificationPreference(viewModel.getCurrentUser().value.uid, isEnabled)
+
+                Divider()
+
+                // Enable/Disable Notifications Switch
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Enable Notifications")
+                    Switch(
+                        checked = notificationsEnabled,
+                        onCheckedChange = { notificationsEnabled = it }
+                    )
                 }
 
                 Divider()
@@ -78,21 +81,6 @@ fun NotificationScreen(navigationActions: NavigationActions, viewModel: UserView
             }
         }
     )
-}
-
-@Composable
-fun NotificationOption(text: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text)
-        Checkbox(
-            checked = isChecked,
-            onCheckedChange = { onCheckedChange(it) }
-        )
-    }
 }
 
 @Composable
