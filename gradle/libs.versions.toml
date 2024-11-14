@@ -70,6 +70,7 @@ firebaseStorageKtx = "21.0.1"
 runtimeLivedata = "1.7.5"
 workRuntimeKtx = "2.7.1"
 workTesting = "2.7.1"
+core = "1.46.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -139,6 +140,7 @@ coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version
 ucrop = { module = "com.github.yalantis:ucrop", name = "ucrop", version.ref = "ucrop" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
+core = { group = "com.google.ar", name = "core", version.ref = "core" }
 
 
 [plugins]
