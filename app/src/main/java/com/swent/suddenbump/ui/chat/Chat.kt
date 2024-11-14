@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -193,7 +194,8 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?) {
             modifier =
                 Modifier.weight(1f)
                     .background(Color.Black, shape = MaterialTheme.shapes.small)
-                    .padding(12.dp),
+                    .padding(12.dp)
+                    .testTag("ChatInputTextBox"),
             textStyle = LocalTextStyle.current.copy(color = Color.White, fontSize = 16.sp))
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -205,7 +207,8 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?) {
                 viewModel.sendMessage(inputText.text, name) // Send message through ViewModel
                 inputText = TextFieldValue() // Clear input field after sending
               }
-            }) {
+            },
+            modifier = Modifier.testTag("SendButton")) {
               Icon(
                   imageVector = Icons.Default.Send,
                   contentDescription = "Send",
