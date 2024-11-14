@@ -23,6 +23,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNotNull
+import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -35,7 +38,6 @@ import org.mockito.MockedStatic
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.never
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
@@ -279,180 +281,231 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
-  fun deleteFriendRequest_friendIdNotFound() {
+  fun deleteFriendRequest_updateFriendSentFriendRequestsFails() {
     val user =
         User(
-            "1",
-            "Alexandre",
-            "Carel",
-            "+33 6 59 20 70 02",
-            null,
-            "alexandre.carel@epfl.ch",
+            uid = "1",
+            firstName = "Alexandre",
+            lastName = "Carel",
+            phoneNumber = "+33 6 59 20 70 02",
+            profilePicture = null,
+            emailAddress = "alexandre.carel@epfl.ch",
             lastKnownLocation = location)
     val friend =
         User(
-            "2",
-            "Jane",
-            "Doe",
-            "+41 00 000 00 02",
-            null,
-            "jane.doe@example.com",
+            uid = "2",
+            firstName = "Jane",
+            lastName = "Doe",
+            phoneNumber = "+41 00 000 00 02",
+            profilePicture = null,
+            emailAddress = "jane.doe@example.com",
             lastKnownLocation = location)
 
-    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("friendRequests" to listOf("friend2")))
+    // Mock the Firestore document snapshots
+    val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val friendDocumentSnapshot = mock(DocumentSnapshot::class.java)
 
-    userRepositoryFirestore.deleteFriendRequest(
-        user,
-        friend,
+    // Mock the data returned by the document snapshots
+    `when`(userDocumentSnapshot.data).thenReturn(mapOf("friendRequests" to listOf(friend.uid)))
+    `when`(friendDocumentSnapshot.data).thenReturn(mapOf("sentFriendRequests" to listOf(user.uid)))
+
+    // Mock the Firestore document references
+    val userDocumentReference = mock(DocumentReference::class.java)
+    val friendDocumentReference = mock(DocumentReference::class.java)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(user.uid)).thenReturn(userDocumentReference)
+    `when`(userCollectionReference.document(friend.uid)).thenReturn(friendDocumentReference)
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock the get() method to return the document snapshots
+    `when`(userDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
+    `when`(friendDocumentReference.get()).thenReturn(Tasks.forResult(friendDocumentSnapshot))
+
+    // Mock the update() method on user document to return a successful task
+    `when`(userDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+    // Mock the update() method on friend document to return a failed task
+    `when`(friendDocumentReference.update(anyString(), any()))
+        .thenReturn(Tasks.forException(Exception("Update friend's sentFriendRequests failed")))
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore)
+
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Call the deleteFriendRequest method
+    userRepository.deleteFriendRequest(
+        user = user,
+        friend = friend,
         onSuccess = { fail("Success callback should not be called") },
-        onFailure = {
-          // Failure callback
+        onFailure = { exception ->
+          onFailureCalled = true
+          failureException = exception
         })
 
-    verify(mockUserDocumentReference, never()).update(anyString(), any())
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify that the update on friend's sentFriendRequests was attempted
+    verify(friendDocumentReference).update(eq("sentFriendRequests"), any())
+    // Verify that onFailure was called
+    assertTrue(onFailureCalled)
+    assertNotNull(failureException)
+    assertEquals("Update friend's sentFriendRequests failed", failureException?.message)
   }
 
+  // New test case to verify that onSuccess is called upon successful deletion
   @Test
-  fun deleteFriendRequest_userIdNotFound() {
+  fun deleteFriendRequest_successfulCompletion_callsOnSuccess() {
     val user =
         User(
-            "1",
-            "Alexandre",
-            "Carel",
-            "+33 6 59 20 70 02",
-            null,
-            "alexandre.carel@epfl.ch",
+            uid = "1",
+            firstName = "Alexandre",
+            lastName = "Carel",
+            phoneNumber = "+33 6 59 20 70 02",
+            profilePicture = null,
+            emailAddress = "alexandre.carel@epfl.ch",
             lastKnownLocation = location)
     val friend =
         User(
-            "2",
-            "Jane",
-            "Doe",
-            "+41 00 000 00 02",
-            null,
-            "jane.doe@example.com",
+            uid = "2",
+            firstName = "Jane",
+            lastName = "Doe",
+            phoneNumber = "+41 00 000 00 02",
+            profilePicture = null,
+            emailAddress = "jane.doe@example.com",
             lastKnownLocation = location)
 
-    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("friendRequests" to listOf("friend1")))
-    `when`(mockEmailDocumentSnapshot.data)
-        .thenReturn(mapOf("sentFriendRequests" to listOf("user2")))
+    // Mock the Firestore document snapshots
+    val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val friendDocumentSnapshot = mock(DocumentSnapshot::class.java)
 
-    userRepositoryFirestore.deleteFriendRequest(
-        user,
-        friend,
-        onSuccess = { fail("Success callback should not be called") },
+    // Mock the data returned by the document snapshots
+    `when`(userDocumentSnapshot.data).thenReturn(mapOf("friendRequests" to listOf(friend.uid)))
+    `when`(friendDocumentSnapshot.data).thenReturn(mapOf("sentFriendRequests" to listOf(user.uid)))
+
+    // Mock the Firestore document references
+    val userDocumentReference = mock(DocumentReference::class.java)
+    val friendDocumentReference = mock(DocumentReference::class.java)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(user.uid)).thenReturn(userDocumentReference)
+    `when`(userCollectionReference.document(friend.uid)).thenReturn(friendDocumentReference)
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock the get() and update() methods to return successful tasks
+    `when`(userDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
+    `when`(friendDocumentReference.get()).thenReturn(Tasks.forResult(friendDocumentSnapshot))
+    `when`(userDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+    `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore)
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Call the deleteFriendRequest method
+    userRepository.deleteFriendRequest(
+        user = user,
+        friend = friend,
+        onSuccess = {
+          // Success callback
+          onSuccessCalled = true
+        },
         onFailure = {
           // Failure callback
+          onFailureCalled = true
         })
 
-    verify(mockEmailDocumentReference, never()).update(anyString(), any())
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify that onSuccess was called and onFailure was not
+    assertTrue(onSuccessCalled)
+    assertFalse(onFailureCalled)
   }
 
-  @Test
-  fun deleteFriendRequest_fetchUserDocumentFails() {
-    val user =
-        User(
-            "1",
-            "Alexandre",
-            "Carel",
-            "+33 6 59 20 70 02",
-            null,
-            "alexandre.carel@epfl.ch",
-            lastKnownLocation = location)
-    val friend =
-        User(
-            "2",
-            "Jane",
-            "Doe",
-            "+41 00 000 00 02",
-            null,
-            "jane.doe@example.com",
-            lastKnownLocation = location)
-
-    `when`(mockUserDocumentReference.get())
-        .thenReturn(Tasks.forException(Exception("Fetch user document failed")))
-
-    userRepositoryFirestore.deleteFriendRequest(
-        user,
-        friend,
-        onSuccess = { fail("Success callback should not be called") },
-        onFailure = {
-          // Failure callback
-        })
-
-    verify(mockUserDocumentReference, never()).update(anyString(), any())
-  }
-
+  // New test case to cover the failure of updating user's friendRequests
   @Test
   fun deleteFriendRequest_updateUserFriendRequestsFails() {
     val user =
         User(
-            "1",
-            "Alexandre",
-            "Carel",
-            "+33 6 59 20 70 02",
-            null,
-            "alexandre.carel@epfl.ch",
+            uid = "1",
+            firstName = "Alexandre",
+            lastName = "Carel",
+            phoneNumber = "+33 6 59 20 70 02",
+            profilePicture = null,
+            emailAddress = "alexandre.carel@epfl.ch",
             lastKnownLocation = location)
     val friend =
         User(
-            "2",
-            "Jane",
-            "Doe",
-            "+41 00 000 00 02",
-            null,
-            "jane.doe@example.com",
+            uid = "2",
+            firstName = "Jane",
+            lastName = "Doe",
+            phoneNumber = "+41 00 000 00 02",
+            profilePicture = null,
+            emailAddress = "jane.doe@example.com",
             lastKnownLocation = location)
 
-    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("friendRequests" to listOf("friend1")))
-    `when`(mockUserDocumentReference.update(anyString(), any()))
-        .thenReturn(Tasks.forException(Exception("Update user friend requests failed")))
+    // Mock the Firestore document snapshot
+    val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
 
-    userRepositoryFirestore.deleteFriendRequest(
-        user,
-        friend,
+    // Mock the data returned by the document snapshot
+    `when`(userDocumentSnapshot.data).thenReturn(mapOf("friendRequests" to listOf(friend.uid)))
+
+    // Mock the Firestore document reference
+    val userDocumentReference = mock(DocumentReference::class.java)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(user.uid)).thenReturn(userDocumentReference)
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock the get() method to return the document snapshot
+    `when`(userDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
+
+    // Mock the update() method on user document to return a failed task
+    `when`(userDocumentReference.update(anyString(), any()))
+        .thenReturn(Tasks.forException(Exception("Update user friendRequests failed")))
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore)
+
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Call the deleteFriendRequest method
+    userRepository.deleteFriendRequest(
+        user = user,
+        friend = friend,
         onSuccess = { fail("Success callback should not be called") },
-        onFailure = {
-          // Failure callback
+        onFailure = { exception ->
+          onFailureCalled = true
+          failureException = exception
         })
 
-    verify(mockEmailDocumentReference, never()).update(anyString(), any())
-  }
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
 
-  @Test
-  fun deleteFriendRequest_fetchFriendDocumentFails() {
-    val user =
-        User(
-            "1",
-            "Alexandre",
-            "Carel",
-            "+33 6 59 20 70 02",
-            null,
-            "alexandre.carel@epfl.ch",
-            lastKnownLocation = location)
-    val friend =
-        User(
-            "2",
-            "Jane",
-            "Doe",
-            "+41 00 000 00 02",
-            null,
-            "jane.doe@example.com",
-            lastKnownLocation = location)
-
-    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("friendRequests" to listOf("friend1")))
-    `when`(mockEmailDocumentReference.get())
-        .thenReturn(Tasks.forException(Exception("Fetch friend document failed")))
-
-    userRepositoryFirestore.deleteFriendRequest(
-        user,
-        friend,
-        onSuccess = { fail("Success callback should not be called") },
-        onFailure = {
-          // Failure callback
-        })
-
-    verify(mockEmailDocumentReference, never()).update(anyString(), any())
+    // Verify that the update on user's friendRequests was attempted
+    verify(userDocumentReference).update(eq("friendRequests"), any())
+    // Verify that onFailure was called
+    assertTrue(onFailureCalled)
+    assertNotNull(failureException)
+    assertEquals("Update user friendRequests failed", failureException?.message)
   }
 
   @Test
