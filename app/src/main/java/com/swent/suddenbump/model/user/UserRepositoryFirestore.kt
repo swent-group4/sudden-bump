@@ -571,13 +571,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         for (userFriend in userFriendsList) {
           val documentSnapshot =
               db.collection(usersCollectionPath).document(userFriend.uid).get().await()
-
+          Log.d("FriendsMarkers", "Doc SNap $documentSnapshot")
           if (documentSnapshot.exists()) {
             val friendSnapshot = documentSnapshot.data
-            val location =
-                helper.locationParser(friendSnapshot!!.get("lastKnownLocation").toString())
-            friendsLocations[userFriend] = location
-            Log.d("FriendsMarkers", "Succeeded Friends Locations ${userFriend}, ${location}")
+            val friendLocation =
+                helper.locationParser(friendSnapshot!!["lastKnownLocation"].toString())
+            friendsLocations[userFriend] = friendLocation
+            Log.d("FriendsMarkers", "Succeeded Friends Locations ${userFriend}, ${friendLocation}")
           }
         }
       } catch (e: Exception) {
