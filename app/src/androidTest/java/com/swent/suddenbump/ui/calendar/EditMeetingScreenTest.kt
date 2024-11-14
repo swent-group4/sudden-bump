@@ -14,7 +14,11 @@ import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
+import java.util.GregorianCalendar
+import java.util.Locale
 import junit.framework.TestCase.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -25,10 +29,6 @@ import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.GregorianCalendar
-import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
 class EditMeetingScreenTest {
@@ -114,13 +114,13 @@ class EditMeetingScreenTest {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val parsedDate = dateFormat.parse("05/09/2024")
     val calendar =
-      GregorianCalendar().apply {
-        time = parsedDate
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-      }
+        GregorianCalendar().apply {
+          time = parsedDate
+          set(Calendar.HOUR_OF_DAY, 0)
+          set(Calendar.MINUTE, 0)
+          set(Calendar.SECOND, 0)
+          set(Calendar.MILLISECOND, 0)
+        }
     val meetingDate = Timestamp(calendar.time)
 
     assertEquals("JhXlhoSvTmbtTFSVpNnA", meetingCaptor.firstValue.meetingId)
