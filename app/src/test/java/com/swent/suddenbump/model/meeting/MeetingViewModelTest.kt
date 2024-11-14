@@ -6,7 +6,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -69,5 +71,23 @@ class MeetingViewModelTest {
   fun addMeetingCallsRepository() {
     meetingViewModel.addMeeting(meeting)
     verify(meetingRepository).addMeeting(eq(meeting), any(), any())
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun deleteMeeting_callsRepositoryDelete() = runTest {
+    meetingViewModel.deleteMeeting("JhXlhoSvTmbtTFSVpNnA")
+    // Advance the coroutine to ensure it completes
+    advanceUntilIdle()
+    verify(meetingRepository).deleteMeetingById(eq("JhXlhoSvTmbtTFSVpNnA"), any(), any())
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun updateMeeting_callsRepositoryUpdate()  = runTest {
+    meetingViewModel.updateMeeting(meeting)
+    // Advance the coroutine to ensure it completes
+    advanceUntilIdle()
+    verify(meetingRepository).updateMeeting(eq(meeting), any(), any())
   }
 }
