@@ -192,4 +192,27 @@ class EndToEndTest {
 
     composeTestRule.onNodeWithTag("SendButton").assertExists().performClick()
   }
+
+
+  @Test
+  fun testFriendsNear() {
+
+    // Wait for the app to load
+    composeTestRule.waitForIdle()
+
+    // Step 1: Simulate user interaction for authentication
+    composeTestRule.onNodeWithTag("loginButton").assertExists().performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("overviewScreen").assertExists()
+
+    // Step 8: Navigate to Map screen
+    composeTestRule.onNodeWithTag("Map").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("mapView").assertExists()
+    composeTestRule.waitForIdle()
+
+    Thread.sleep(2000) // Waits for 2 seconds
+
+  }
+
 }
