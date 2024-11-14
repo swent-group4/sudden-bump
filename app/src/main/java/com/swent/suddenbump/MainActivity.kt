@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -153,7 +154,7 @@ class MainActivity : ComponentActivity() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
-      val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
+    val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
     val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
 
     val startRoute =

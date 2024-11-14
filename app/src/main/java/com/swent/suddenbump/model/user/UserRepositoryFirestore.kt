@@ -6,9 +6,9 @@ import android.location.Location
 import android.location.LocationManager
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
-import com.google.firebase.Timestamp
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseException
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
@@ -22,6 +22,7 @@ import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
@@ -538,7 +539,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   ) {
     db.collection(usersCollectionPath)
         .document(user.uid)
-        .update("location", location)
+        .update("lastKnownLocation", helper.locationToString(location))
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
   }
@@ -547,12 +548,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
       user: User,
       timestamp: Timestamp,
       onSuccess: () -> Unit,
-  ){
-      db.collection(usersCollectionPath)
-          .document(user.uid)
-          .update("timestamp", timestamp)
-          .addOnFailureListener { onFailure(it) }
-          .addOnSuccessListener { onSuccess() }
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(user.uid)
+        .update("timestamp", timestamp)
+        .addOnFailureListener { onFailure(it) }
+        .addOnSuccessListener { onSuccess() }
   }
 
   @SuppressLint("SuspiciousIndentation")
@@ -572,7 +574,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
 
           if (documentSnapshot.exists()) {
             val friendSnapshot = documentSnapshot.data
-            val location = helper.locationParser(friendSnapshot!!.get("location").toString())
+            val location =
+                helper.locationParser(friendSnapshot!!.get("lastKnownLocation").toString())
             friendsLocations[userFriend] = location
             Log.d("FriendsMarkers", "Succeeded Friends Locations ${userFriend}, ${location}")
           }
@@ -636,6 +639,16 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         task.exception?.let { onFailure(it) }
       }
     }
+  }
+
+  override fun saveLoginStatus(userId: String) {
+    with(sharedPreferences.edit()) {
+      putBoolean("isLoggedIn", true)
+      putString("userId", userId)
+      apply()
+    }
+  }
+
   override fun getSavedUid(): String {
     return sharedPreferences.getString("userId", null) ?: ""
   }
@@ -689,10 +702,10 @@ internal class UserRepositoryFirestoreHelper() {
         "lastName" to user.lastName,
         "phoneNumber" to user.phoneNumber,
         "emailAddress" to user.emailAddress,
-        "lastKnownLocation" to locationToString(user.lastKnownLocation))
+        "lastKnownLocation" to locationToString(user.lastKnownLocation.value))
   }
 
-  private fun locationToString(lastKnownLocation: Location?): String {
+  fun locationToString(lastKnownLocation: Location?): String {
     if (lastKnownLocation != null) {
       return "{" +
           "provider=" +
@@ -764,7 +777,8 @@ internal class UserRepositoryFirestoreHelper() {
         phoneNumber = document.data?.get("phoneNumber").toString(),
         emailAddress = document.data?.get("emailAddress").toString(),
         profilePicture = profilePicture,
-        lastKnownLocation = lastKnownLocation)
+        lastKnownLocation = MutableStateFlow(lastKnownLocation ?: Location("")),
+    )
   }
 
   fun documentSnapshotToList(uidJsonList: String): List<String> {

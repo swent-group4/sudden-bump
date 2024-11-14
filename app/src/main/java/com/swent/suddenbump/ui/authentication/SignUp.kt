@@ -36,6 +36,7 @@ import com.swent.suddenbump.ui.utils.PhoneNumberVisualTransformation
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import com.yalantis.ucrop.UCrop
 import java.io.File
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,10 +60,11 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
   val coroutineScope = rememberCoroutineScope()
   val context = LocalContext.current
   val baseLocation =
-      Location("providerName").apply {
-        latitude = 0.0 // Set latitude
-        longitude = 0.0 // Set longitude
-      }
+      MutableStateFlow(
+          Location("providerName").apply {
+            latitude = 0.0 // Set latitude
+            longitude = 0.0 // Set longitude
+          })
   val verificationStatus by userViewModel.verificationStatus.observeAsState()
 
   val cropLauncher =

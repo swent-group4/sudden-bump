@@ -37,12 +37,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.user.UserViewModel
@@ -54,10 +52,7 @@ import com.swent.suddenbump.ui.theme.Purple80
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MessagesScreen(
-    viewModel: UserViewModel = viewModel(factory = UserViewModel.Factory),
-    navigationActions: NavigationActions
-) {
+fun MessagesScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
   val messages by viewModel.chatSummaries.collectAsStateWithLifecycle(emptyList())
   var search by remember { mutableStateOf("") }
 
@@ -194,13 +189,4 @@ fun MessageItem(
               }
         }
       }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewMessagesScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
-  MessagesScreen(userViewModel, navigationActions)
 }

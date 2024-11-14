@@ -25,6 +25,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import junit.framework.TestCase.fail
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -71,10 +72,11 @@ class UserRepositoryFirestoreTest {
   val snapshot2: DocumentSnapshot = mock(DocumentSnapshot::class.java)
 
   private val location =
-      Location("mock_provider").apply {
-        latitude = 0.0
-        longitude = 0.0
-      }
+      MutableStateFlow(
+          Location("mock_provider").apply {
+            latitude = 0.0
+            longitude = 0.0
+          })
   private val user =
       User(
           uid = "1",
@@ -272,7 +274,7 @@ class UserRepositoryFirestoreTest {
     `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
 
     // Create the UserRepositoryFirestore instance
-    val userRepository = UserRepositoryFirestore(mockFirestore)
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
 
     // Call the createFriend method
     userRepository.createFriend(
@@ -342,7 +344,7 @@ class UserRepositoryFirestoreTest {
     `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
 
     // Create the UserRepositoryFirestore instance
-    val userRepository = UserRepositoryFirestore(mockFirestore)
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
 
     // Call the createFriendRequest method
     userRepository.createFriendRequest(
@@ -444,7 +446,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
     userRepositoryFirestore.updateLocation(
-        user = user, location = location, onSuccess = {}, onFailure = {})
+        user = user, location = location.value, onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle()
 
@@ -480,8 +482,8 @@ class UserRepositoryFirestoreTest {
     val snapshot2 = mock(DocumentSnapshot::class.java)
 
     // Mock the snapshot locations
-    whenever(snapshot1.get("location")).thenReturn(location1)
-    whenever(snapshot2.get("location")).thenReturn(null)
+    whenever(snapshot1.get("lastKnownLocation")).thenReturn(location1)
+    whenever(snapshot2.get("lastKnownLocation")).thenReturn(null)
 
     // Mock the user repository to return the snapshots
     val userRepositoryFirestore = mock(UserRepositoryFirestore::class.java)
@@ -514,8 +516,8 @@ class UserRepositoryFirestoreTest {
   @Test
   fun getFriendsLocationSuccessWithNoFriends() {
     // Mock the snapshot locations
-    whenever(snapshot1.get("location")).thenReturn(mock(Location::class.java))
-    whenever(snapshot2.get("location")).thenReturn(null)
+    whenever(snapshot1.get("lastKnownLocation")).thenReturn(mock(Location::class.java))
+    whenever(snapshot2.get("lastKnownLocation")).thenReturn(null)
 
     // When
     userRepositoryFirestore.getFriendsLocation(

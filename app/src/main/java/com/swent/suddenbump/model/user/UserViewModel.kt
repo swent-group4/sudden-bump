@@ -19,8 +19,8 @@ import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
-import kotlinx.coroutines.flow.Flow
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,10 +38,11 @@ open class UserViewModel(
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
   val locationDummy =
-      Location("providerName").apply {
-        latitude = 0.0 // Set latitude
-        longitude = 0.0 // Set longitude
-      }
+      MutableStateFlow(
+          Location("dummy").apply {
+            latitude = 0.0 // Set latitude
+            longitude = 0.0 // Set longitude
+          })
 
   private val _user: MutableStateFlow<User> =
       MutableStateFlow(
@@ -62,12 +63,6 @@ open class UserViewModel(
   private val _recommendedFriends: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(_user.value))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
-  private val _userLocation: MutableStateFlow<Location> =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
 
@@ -95,8 +90,8 @@ open class UserViewModel(
           val userRepository = UserRepositoryFirestore(Firebase.firestore, context)
           return UserViewModel(
               userRepository,
-              ChatRepositoryFirestore(Firebase.firestore, FirebaseAuth.getInstance())
-          ) as T
+              ChatRepositoryFirestore(Firebase.firestore, FirebaseAuth.getInstance()))
+              as T
         }
       }
     }
@@ -264,7 +259,7 @@ open class UserViewModel(
   }
 
   fun getLocation(): StateFlow<Location> {
-    return _userLocation.asStateFlow()
+    return _user.value.lastKnownLocation.asStateFlow()
   }
 
   fun updateLocation(
@@ -273,7 +268,7 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    _userLocation.value = location
+    _user.value.lastKnownLocation.value = location
     repository.updateLocation(user, location, onSuccess, onFailure)
   }
 
@@ -322,13 +317,12 @@ open class UserViewModel(
 
   fun getRelativeDistance(friend: User): Float {
     loadFriendsLocations()
-    val userLocation = _userLocation.value
-    val friendLocation = friendsLocations.value[friend]
-    return if (friendLocation != null) {
-      userLocation.distanceTo(friendLocation)
-    } else {
-      Float.MAX_VALUE
+    val userLocation = _user.value.lastKnownLocation.value
+    val friendLocation = friend.lastKnownLocation.value
+    if ((userLocation == locationDummy.value || friendLocation == locationDummy.value)) {
+      return Float.MAX_VALUE
     }
+    return userLocation.distanceTo(friendLocation)
   }
 
   fun isFriendsInRadius(radius: Int): Boolean {
@@ -336,8 +330,9 @@ open class UserViewModel(
     friendsLocations.value.values.forEach { friendLocation ->
       if (friendLocation != null) {
         Log.d(
-            "FriendsRadius", "Friends Locations: ${_userLocation.value.distanceTo(friendLocation)}")
-        if (_userLocation.value.distanceTo(friendLocation) <= radius) {
+            "FriendsRadius",
+            "Friends Locations: ${_user.value.lastKnownLocation.value.distanceTo(friendLocation)}")
+        if (_user.value.lastKnownLocation.value.distanceTo(friendLocation) <= radius) {
           return true
         }
       }

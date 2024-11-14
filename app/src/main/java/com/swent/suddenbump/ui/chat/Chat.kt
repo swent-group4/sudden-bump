@@ -44,11 +44,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
 import com.swent.suddenbump.model.chat.ListItem
 import com.swent.suddenbump.model.chat.generateListItems
 import com.swent.suddenbump.model.chat.toOnlyTimeFormat
@@ -227,13 +225,4 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: 
                   modifier = Modifier.size(28.dp))
             }
       }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewChatScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
-  ChatScreen(userViewModel, navigationActions)
 }
