@@ -25,6 +25,10 @@ import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.GregorianCalendar
+import java.util.Locale
 
 @RunWith(AndroidJUnit4::class)
 class EditMeetingScreenTest {
@@ -107,9 +111,21 @@ class EditMeetingScreenTest {
     verify(meetingRepository)
         .updateMeeting(meetingCaptor.capture(), successCaptor.capture(), failureCaptor.capture())
 
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val parsedDate = dateFormat.parse("05/09/2024")
+    val calendar =
+      GregorianCalendar().apply {
+        time = parsedDate
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+      }
+    val meetingDate = Timestamp(calendar.time)
+
     assertEquals("JhXlhoSvTmbtTFSVpNnA", meetingCaptor.firstValue.meetingId)
     assertEquals("New Location", meetingCaptor.firstValue.location)
-    assertEquals(Timestamp(1725487200, 0), meetingCaptor.firstValue.date)
+    assertEquals(meetingDate, meetingCaptor.firstValue.date)
     assertEquals("FPHuqGkCBo7Iinbo5OO9", meetingCaptor.firstValue.friendId)
     assertEquals("P7vuP4bbEQB03OSR3QwJ", meetingCaptor.firstValue.creatorId)
   }
