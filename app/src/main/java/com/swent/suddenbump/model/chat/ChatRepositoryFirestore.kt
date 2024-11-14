@@ -14,7 +14,10 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 
-class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRepository {
+class ChatRepositoryFirestore(
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth
+) : ChatRepository {
 
   private val messagesCollection = firestore.collection("messages")
 
@@ -29,7 +32,7 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
   }
 
   override suspend fun getOrCreateChat(userId: String): String {
-    val userId2 = FirebaseAuth.getInstance().currentUser?.uid ?: return ""
+    val userId2 = auth.currentUser?.uid ?: return ""
     var chatId = ""
 
     try {
@@ -90,8 +93,8 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
   }
 
   override suspend fun sendMessage(chatId: String, messageContent: String, username: String) {
-    val senderId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-    val senderName = FirebaseAuth.getInstance().currentUser?.displayName ?: return
+    val senderId = auth.currentUser?.uid ?: return
+    val senderName = auth.currentUser?.displayName ?: return
 
     try {
       val message =
@@ -120,7 +123,7 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
 
   override fun getChatSummaries(): Flow<List<ChatSummary>> = callbackFlow {
     val currentUserId =
-        FirebaseAuth.getInstance().currentUser?.uid
+        auth.currentUser?.uid
             ?: run {
               close(IllegalStateException("User not logged in"))
               return@callbackFlow

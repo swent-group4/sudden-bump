@@ -98,6 +98,10 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
 
   private fun Meeting.toMap(): Map<String, Any> {
     return mapOf(
-        "meetingId" to meetingId, "location" to location, "date" to date, "friendId" to friendId)
+        "meetingId" to meetingId,
+        "location" to location,
+        "date" to date,
+        "friendId" to friendId,
+        "creatorId" to creatorId)
   }
 }
