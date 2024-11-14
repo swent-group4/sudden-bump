@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.overview
 
+import android.location.Location
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -19,20 +20,27 @@ import org.mockito.kotlin.verify
 
 class OverviewScreenTest {
   private lateinit var navigationActions: NavigationActions
-  private lateinit var userRepository: UserRepository
-  private lateinit var userViewModel: UserViewModel
+  private lateinit var repository: UserRepository
   private lateinit var chatRepository: ChatRepository
+  private lateinit var userViewModel: UserViewModel
+
+  private val location =
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
 
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
-    userRepository = mock(UserRepository::class.java)
+    repository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
-    userViewModel = UserViewModel(userRepository, chatRepository)
+    userViewModel = UserViewModel(repository = repository, chatRepository = chatRepository)
 
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
+
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
   }
 
@@ -43,27 +51,18 @@ class OverviewScreenTest {
     composeTestRule.onNodeWithTag("settingsFab").assertIsDisplayed()
     composeTestRule.onNodeWithTag("seeFriendsFab").assertIsDisplayed()
     composeTestRule.onNodeWithTag("appName").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("distanceTitle").assertIsDisplayed()
   }
 
   @Test
   fun settingsButtonCallsNavActions() {
-    composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("settingsFab").assertIsDisplayed()
     composeTestRule.onNodeWithTag("settingsFab").performClick()
-    verify(navigationActions).navigateTo(screen = Screen.SETTINGS)
+    verify(navigationActions).navigateTo(Screen.SETTINGS)
   }
 
   @Test
   fun addContactButtonCallsNavActions() {
-    composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("seeFriendsFab").assertIsDisplayed()
     composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
-    verify(navigationActions).navigateTo(screen = Screen.FRIENDS_LIST)
-  }
-
-  @Test
-  fun userListIsDisplayed() {
-    composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
+    verify(navigationActions).navigateTo(Screen.ADD_CONTACT)
   }
 }

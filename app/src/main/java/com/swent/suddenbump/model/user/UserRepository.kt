@@ -27,6 +27,13 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
+  fun deleteFriendRequest(
+      user: User,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
   fun createFriend(user: User, friend: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit)
@@ -74,7 +81,6 @@ interface UserRepository {
 
   fun getRecommendedFriends(
       user: User,
-      friendsList: List<User>,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   )

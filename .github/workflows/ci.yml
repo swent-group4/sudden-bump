@@ -12,6 +12,7 @@ on:
       - 93-verify-number-with-sms-code
       - 124-connect-google-calendar-to-the-app-to-add-the-meeting-with-your-friends
       - 143-add-and-edit-meetings-on-the-calendar
+      - 149-add-ui-improvements
 
   pull_request:
     types:
