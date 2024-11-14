@@ -23,7 +23,6 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito
 import org.mockito.Mockito.*
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doAnswer
@@ -341,11 +340,11 @@ class UserViewModelTest {
 
   @Test
   fun updateLocation() {
-    val mockLocation = Mockito.mock(Location::class.java)
+    val mockLocation = mock(Location::class.java)
 
     // Set up the mock to return specific values
-    Mockito.`when`(mockLocation.latitude).thenReturn(1.0)
-    Mockito.`when`(mockLocation.longitude).thenReturn(1.0)
+    `when`(mockLocation.latitude).thenReturn(1.0)
+    `when`(mockLocation.longitude).thenReturn(1.0)
 
     userViewModel.updateLocation(location = mockLocation, onSuccess = {}, onFailure = {})
     verify(userRepository).updateLocation(any(), any(), any(), any())

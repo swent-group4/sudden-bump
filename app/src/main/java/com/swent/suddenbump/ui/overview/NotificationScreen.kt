@@ -14,91 +14,79 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationScreen(navigationActions: NavigationActions, viewModel: UserViewModel) {
-    var notificationsEnabled by remember { mutableStateOf(true) }
+  var notificationsEnabled by remember { mutableStateOf(true) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Notifications") },
-                navigationIcon = {
-                    IconButton(onClick = { navigationActions.goBack() }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                })
-        },
-        content = { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Message Notifications Section
-                Text("Message Notifications")
-                SoundOption()
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = { Text("Notifications") },
+            navigationIcon = {
+              IconButton(onClick = { navigationActions.goBack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = "Back")
+              }
+            })
+      },
+      content = { paddingValues ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+              // Message Notifications Section
+              Text("Message Notifications")
+              SoundOption()
 
-                Divider()
+              Divider()
 
-                // Notifications for Reactions Section
-                Text("Notifications for reactions")
+              // Notifications for Reactions Section
+              Text("Notifications for reactions")
 
-                Divider()
+              Divider()
 
-                // Group Notifications Section
-                Text("Group Notifications")
-                SoundOption()
+              // Group Notifications Section
+              Text("Group Notifications")
+              SoundOption()
 
-                Divider()
+              Divider()
 
-                // Reaction Notifications Section
-                Text("Reaction notifications")
+              // Reaction Notifications Section
+              Text("Reaction notifications")
 
-                Divider()
+              Divider()
 
-                // Enable/Disable Notifications Switch
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+              // Enable/Disable Notifications Switch
+              Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceBetween,
+                  verticalAlignment = Alignment.CenterVertically) {
                     Text("Enable Notifications")
                     Switch(
                         checked = notificationsEnabled,
-                        onCheckedChange = { notificationsEnabled = it }
-                    )
-                }
+                        onCheckedChange = { notificationsEnabled = it })
+                  }
 
-                Divider()
+              Divider()
 
-                // Reset Notification Settings Button
-                Button(onClick = { /* Add logic to reset notification settings */ }) {
-                    Text("Reset notification settings")
-                }
+              // Reset Notification Settings Button
+              Button(onClick = { /* Add logic to reset notification settings */}) {
+                Text("Reset notification settings")
+              }
             }
-        }
-    )
+      })
 }
 
 @Composable
 fun SoundOption() {
-    val options = listOf("By default", "None")
-    var selectedOption by remember { mutableStateOf(options[0]) }
+  val options = listOf("By default", "None")
+  var selectedOption by remember { mutableStateOf(options[0]) }
 
-    options.forEach { option ->
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(option)
-            RadioButton(
-                selected = (selectedOption == option),
-                onClick = { selectedOption = option }
-            )
+  options.forEach { option ->
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(option)
+          RadioButton(selected = (selectedOption == option), onClick = { selectedOption = option })
         }
-    }
+  }
 }
