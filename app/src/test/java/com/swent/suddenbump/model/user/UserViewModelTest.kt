@@ -115,7 +115,7 @@ class UserViewModelTest {
     verify(userRepository).getUserFriendRequests(any(), any(), any())
     verify(userRepository).getSentFriendRequests(any(), any(), any())
     verify(userRepository).getBlockedFriends(any(), any(), any())
-    verify(userRepository).getRecommendedFriends(any(), any(), any(), any())
+    verify(userRepository).getRecommendedFriends(any(), any(), any())
 
     assertThat(userViewModel.getCurrentUser().value.uid, `is`(user2.uid))
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
@@ -174,7 +174,7 @@ class UserViewModelTest {
     verify(userRepository).getBlockedFriends(any(), any(), any())
     verify(userRepository).getUserFriendRequests(any(), any(), any())
     verify(userRepository).getSentFriendRequests(any(), any(), any())
-    verify(userRepository).getRecommendedFriends(any(), any(), any(), any())
+    verify(userRepository).getRecommendedFriends(any(), any(), any())
 
     assertThat(userViewModel.getCurrentUser().value.uid, `is`(user2.uid))
     assert(userViewModel.getUserFriends().value.map { it.uid }.contains(user2.uid))
@@ -271,6 +271,46 @@ class UserViewModelTest {
     // Verify the state updates
     assert(userViewModel.getUserFriends().value.contains(friend))
     assert(!userViewModel.getUserFriendRequests().value.contains(friend))
+  }
+
+  @Test
+  fun declineFriendRequest_shouldRemoveFriendRequest() {
+    val user =
+        User(
+            "1",
+            "Alexandre",
+            "Carel",
+            "+33 6 59 20 70 02",
+            null,
+            "alexandre.carel@epfl.ch",
+            lastKnownLocation = location)
+    val friend =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+41 00 000 00 02",
+            null,
+            "jane.doe@example.com",
+            lastKnownLocation = location)
+
+    // Mock the repository method
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .deleteFriendRequest(any(), any(), any(), any())
+
+    // Call the method
+    userViewModel.declineFriendRequest(user, friend, {}, {})
+
+    // Verify the repository interaction
+    verify(userRepository).deleteFriendRequest(eq(user), eq(friend), any(), any())
+
+    // Verify the state update
+    assert(!userViewModel.getUserFriendRequests().value.map { it.uid }.contains(friend.uid))
   }
 
   @Test
