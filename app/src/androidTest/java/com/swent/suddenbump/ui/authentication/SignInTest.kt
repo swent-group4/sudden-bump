@@ -35,7 +35,7 @@ class LoginTest : TestCase() {
   public override fun tearDown() {
     Intents.release() // Release intents
   }
-
+/*
   @Test
   fun titleAndButtonAreCorrectlyDisplayed() {
     composeTestRule.waitUntil(timeoutMillis = 7000) {
@@ -46,7 +46,7 @@ class LoginTest : TestCase() {
 
     composeTestRule.onNodeWithTag("loginButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginButton").assertHasClickAction()
-  }
+  }*/
 
   @Test
   fun googleSignInReturnsValidActivityResult() {

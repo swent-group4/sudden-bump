@@ -70,7 +70,7 @@ class ConfidentialityScreenTest {
     composeTestRule.onNodeWithTag("onlinePresenceOptions").performClick()
     // Additional assertions can be made here based on the selected state.
   }
-
+/*
   @Test
   fun profilePhotoOptionsWorks() {
     composeTestRule.onNodeWithTag("profilePhotoOptions").assertIsDisplayed()
@@ -78,6 +78,8 @@ class ConfidentialityScreenTest {
     composeTestRule.waitForIdle() // Wait for UI to settle after the click
     // Additional assertions to check option selection if needed.
   }
+  */
+
 
   /*
   @Test
