@@ -141,7 +141,7 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
                   }
                   is ListItem.Messages -> {
                     val messageItem = list[index] as ListItem.Messages
-                    MessageBubble(messageItem)
+                    MessageBubble(messageItem, user)
                   }
                 }
               }
@@ -152,14 +152,14 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
 }
 
 @Composable
-fun MessageBubble(data: ListItem.Messages) {
+fun MessageBubble(data: ListItem.Messages, user: User) {
   val message = data.message
   val screenWidth = LocalConfiguration.current.screenWidthDp.dp
   val bubbleMaxWidth = screenWidth * 0.8f
 
   Column(
       modifier = Modifier.fillMaxWidth().padding(8.dp),
-      horizontalAlignment = if (message.isOwner) Alignment.End else Alignment.Start) {
+      horizontalAlignment = if (message.senderId == user.uid) Alignment.End else Alignment.Start) {
         // Timestamp
         Text(
             text = message.timestamp.toDate().toOnlyTimeFormat(),
@@ -172,13 +172,13 @@ fun MessageBubble(data: ListItem.Messages) {
             modifier = Modifier.widthIn(max = bubbleMaxWidth),
             colors =
                 CardDefaults.cardColors(
-                    containerColor = if (message.isOwner) violetColor else Color.White,
+                    containerColor = if (message.senderId == user.uid) violetColor else Color.White,
                 ),
             shape = RoundedCornerShape(15),
             border = BorderStroke(1.dp, Color.White)) {
               Text(
                   text = message.content,
-                  color = if (message.isOwner) Color.White else Color.Black,
+                  color = if (message.senderId == user.uid) Color.White else Color.Black,
                   fontSize = 16.sp,
                   modifier = Modifier.padding(10.dp))
             }
@@ -221,9 +221,9 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: 
             onClick = {
               if (inputText.text.isNotEmpty()) {
                 val name = otherUser?.firstName + " " + otherUser?.lastName
-                viewModel.user?.let {
-                  viewModel.sendMessage(inputText.text, it)
-                } // Send message through ViewModel
+                viewModel.sendMessage(
+                    inputText.text,
+                    viewModel.getCurrentUser().value) // Send message through ViewModel
                 inputText = TextFieldValue() // Clear input field after sending
               }
             },
