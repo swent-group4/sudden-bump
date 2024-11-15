@@ -236,13 +236,11 @@ class MainActivity : ComponentActivity() {
       }
 
       // Add new screens from Settings.kt
-      composable("UsernameAndPhotoScreen") { UsernameAndPhotoScreen() }
       composable("AccountScreen") { AccountScreen(navigationActions) }
       composable("ConfidentialityScreen") {
         ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
       }
       composable("DiscussionsScreen") { DiscussionScreen(navigationActions) }
-      composable("NotificationsScreen") { NotificationScreen(navigationActions, userViewModel) }
       composable("StorageAndDataScreen") { StorageAndDataScreen(navigationActions) }
       composable("HelpScreen") { HelpScreen(navigationActions) }
     }
