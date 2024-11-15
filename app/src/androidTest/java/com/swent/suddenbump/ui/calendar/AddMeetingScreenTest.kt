@@ -89,6 +89,9 @@ class AddMeetingScreenTest {
 
   @Test
   fun saveButton_savesMeeting() {
+
+    `when`(meetingRepository.getNewMeetingId()).thenReturn("mockedMeetingId")
+
     // Arrange
     composeTestRule.setContent {
       AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
