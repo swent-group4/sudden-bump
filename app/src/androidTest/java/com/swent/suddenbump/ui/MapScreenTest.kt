@@ -60,7 +60,8 @@ class MapScreenTest {
       MapScreen(
           navigationActions = navigationActions,
           location = mockLocation,
-          userViewModel = userViewModel)
+          userViewModel = userViewModel,
+          notificationsEnabled = true)
     }
 
     // Verify that the bottom navigation is displayed
@@ -98,7 +99,8 @@ class MapScreenTest {
       MapScreen(
           navigationActions = mockNavigationActions,
           location = mockLocation,
-          userViewModel = userViewModel)
+          userViewModel = userViewModel,
+          notificationsEnabled = true)
     }
 
     // Simulate a click on the "Map" tab (or any other tab based on your setup)

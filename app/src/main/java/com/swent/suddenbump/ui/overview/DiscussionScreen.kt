@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
@@ -21,12 +22,14 @@ fun DiscussionScreen(navigationActions: NavigationActions) {
         TopAppBar(
             title = { Text("Chats", color = Color.White) },
             navigationIcon = {
-              IconButton(onClick = { navigationActions.goBack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White)
-              }
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White)
+                  }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40))
       },
@@ -39,50 +42,68 @@ fun DiscussionScreen(navigationActions: NavigationActions) {
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
               // Chat Wallpaper Section
-              Text("Chat wallpaper", color = Color.White)
+              Text(
+                  "Chat wallpaper",
+                  color = Color.White,
+                  modifier = Modifier.testTag("chatWallpaperText"))
               Button(
                   onClick = { /* Add logic for chat wallpaper */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
+                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+                  modifier = Modifier.testTag("changeChatWallpaperButton")) {
                     Text("Change chat wallpaper", color = Color.White)
                   }
 
               Divider()
 
               // Export Chat Section
-              Text("Export chat", color = Color.White)
+              Text(
+                  "Export chat", color = Color.White, modifier = Modifier.testTag("exportChatText"))
               Button(
                   onClick = { /* Add logic for exporting chat */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
+                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+                  modifier = Modifier.testTag("exportChatButton")) {
                     Text("Export chat")
                   }
 
               Divider()
 
               // Archive All Chats Section
-              Text("Archive all chats", color = Color.White)
+              Text(
+                  "Archive all chats",
+                  color = Color.White,
+                  modifier = Modifier.testTag("archiveAllChatsText"))
               Button(
                   onClick = { /* Add logic for archiving all chats */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
+                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+                  modifier = Modifier.testTag("archiveAllChatsButton")) {
                     Text("Archive all chats")
                   }
 
               Divider()
 
               // Clear All Chats Section
-              Text("Clear all chats", color = Color.White)
+              Text(
+                  "Clear all chats",
+                  color = Color.White,
+                  modifier = Modifier.testTag("clearAllChatsText"))
               Button(
                   onClick = { /* Add logic for clearing all chats */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
+                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+                  modifier = Modifier.testTag("clearAllChatsButton")) {
                     Text("Clear all chats")
                   }
 
               Divider()
 
               // Delete All Chats Section
-              Text("Delete all chats", color = Color.White)
+              Text(
+                  "Delete all chats",
+                  color = Color.White,
+                  modifier = Modifier.testTag("deleteAllChatsText"))
               Button(
                   onClick = { /* Add logic for deleting all chats */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
+                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+                  modifier = Modifier.testTag("deleteAllChatsButton")) {
                     Text("Delete all chats")
                   }
             }

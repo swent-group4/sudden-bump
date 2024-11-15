@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
@@ -21,11 +22,13 @@ fun HelpScreen(navigationActions: NavigationActions) {
         TopAppBar(
             title = { Text("Help", color = Color.White) },
             navigationIcon = {
-              IconButton(onClick = { navigationActions.goBack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Back")
-              }
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back")
+                  }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40))
       },
@@ -38,40 +41,48 @@ fun HelpScreen(navigationActions: NavigationActions) {
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
               // Help Center Section
-              Text("Help Center", color = Color.White)
+              Text(
+                  "Help Center", color = Color.White, modifier = Modifier.testTag("helpCenterText"))
               Button(
                   onClick = { /* Add logic for Help Center */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
+                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+                  modifier = Modifier.testTag("visitHelpCenterButton")) {
                     Text("Visit Help Center", color = Color.White)
                   }
 
               Divider()
 
               // Contact Us Section
-              Text("Contact Us", color = Color.White)
+              Text("Contact Us", color = Color.White, modifier = Modifier.testTag("contactUsText"))
               Button(
                   onClick = { /* Add logic for Contact Us */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
-                    Text("Contact Us")
+                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+                  modifier = Modifier.testTag("contactUsButton")) {
+                    Text("Get in Touch")
                   }
 
               Divider()
 
               // Terms and Privacy Policy Section
-              Text("Terms and Privacy Policy", color = Color.White)
+              Text(
+                  "Terms and Privacy Policy",
+                  color = Color.White,
+                  modifier = Modifier.testTag("termsPrivacyPolicyText"))
               Button(
                   onClick = { /* Add logic for Terms and Privacy Policy */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
+                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+                  modifier = Modifier.testTag("viewTermsPrivacyPolicyButton")) {
                     Text("View Terms and Privacy Policy", color = Color.White)
                   }
 
               Divider()
 
               // Licenses Section
-              Text("Licenses", color = Color.White)
+              Text("Licenses", color = Color.White, modifier = Modifier.testTag("licensesText"))
               Button(
                   onClick = { /* Add logic for Licenses */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
+                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+                  modifier = Modifier.testTag("viewLicensesButton")) {
                     Text("View Licenses", color = Color.White)
                   }
 
@@ -81,7 +92,8 @@ fun HelpScreen(navigationActions: NavigationActions) {
               Text(
                   "© 2024 SuddenBump LLC",
                   style = MaterialTheme.typography.bodySmall,
-                  color = Color.White)
+                  color = Color.White,
+                  modifier = Modifier.testTag("footerText"))
             }
       })
 }

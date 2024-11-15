@@ -1,128 +1,115 @@
-/*package com.swent.suddenbump.ui.settings
+package com.swent.suddenbump.ui.overview
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
-import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.overview.SettingsScreen
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
+import com.swent.suddenbump.ui.navigation.NavigationActions
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.kotlin.verify
 
+@RunWith(AndroidJUnit4::class)
 class SettingsScreenTest {
 
-    @get:Rule val composeTestRule = createComposeRule()
+  private lateinit var navigationActions: NavigationActions
+  private lateinit var userRepository: UserRepository
+  private lateinit var userViewModel: UserViewModel
+  private lateinit var chatRepository: ChatRepository
+  private var notificationsEnabled = true
 
-    @Before
-    fun setUp() {
-        composeTestRule.setContent {
-            val navController = rememberNavController()
-            val navigationActions = NavigationActions(navController)
-            val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
-            SettingsScreen(navigationActions, userViewModel)
-        }
+  @get:Rule val composeTestRule = createComposeRule()
+
+  @Before
+  fun setUp() {
+    navigationActions = mock(NavigationActions::class.java)
+    userRepository = mock(UserRepository::class.java)
+    chatRepository = mock(ChatRepository::class.java)
+    userViewModel = UserViewModel(userRepository, chatRepository)
+
+    composeTestRule.setContent {
+      SettingsScreen(
+          navigationActions = navigationActions,
+          userViewModel = userViewModel,
+          onNotificationsEnabledChange = { notificationsEnabled = it })
     }
+  }
 
-    @Test
-    fun testProfilePictureIsDisplayed() {
-        composeTestRule.onNodeWithTag("profilePicture").assertExists()
-    }
+  @Test
+  fun hasRequiredComponents() {
+    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("settingsTitle").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("profilePicture").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("addPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+  }
 
-    @Test
-    fun testAddPhotoButtonIsClickable() {
-        composeTestRule.onNodeWithTag("addPhotoButton")
-            .assertExists()
-            .assertIsEnabled()
-            .performClick()
-    }
+  @Test
+  fun goBackButtonCallsNavActions() {
+    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("goBackButton").performClick()
+    verify(navigationActions).goBack()
+  }
 
-    @Test
-    fun testUsernameFieldUpdatesCorrectly() {
-        val newUsername = "NewUser123"
-        composeTestRule.onNodeWithTag("usernameField")
-            .assertExists()
-            .performTextInput(newUsername)
-            .assertTextEquals(newUsername)
-    }
+  @Test
+  fun accountButtonNavigatesToAccountScreen() {
+    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Account").performClick()
+    verify(navigationActions).navigateTo(screen = Screen.ACCOUNT)
+  }
 
-    @Test
-    fun testNotificationsButtonIsClickable() {
-        composeTestRule.onNodeWithText("Notifications")
-            .assertExists()
-            .assertIsEnabled()
-            .performClick()
-    }
+  @Test
+  fun confidentialityButtonNavigatesToConfidentialityScreen() {
+    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Confidentiality").performClick()
+    verify(navigationActions).navigateTo(screen = Screen.CONFIDENTIALITY)
+  }
 
-    @Test
-    fun testAccountSectionIsClickable() {
-        composeTestRule.onNodeWithText("Account")
-            .assertExists()
-            .assertIsEnabled()
-            .performClick()
-    }
+  @Test
+  fun discussionsButtonNavigatesToDiscussionsScreen() {
+    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Discussions").performClick()
+    verify(navigationActions).navigateTo(screen = Screen.DISCUSSIONS)
+  }
 
-    @Test
-    fun testConfidentialitySectionIsClickable() {
-        composeTestRule.onNodeWithText("Confidentiality")
-            .assertExists()
-            .assertIsEnabled()
-            .performClick()
-    }
+  /*@Test
+  fun toggleNotificationsSwitch() {
+      // Find the "Enable Notifications" switch and toggle it
+      composeTestRule.onNodeWithText("Enable Notifications").assertIsDisplayed()
+      composeTestRule.onNodeWithText("Enable Notifications").performClick()
 
-    @Test
-    fun testDiscussionsSectionIsClickable() {
-        composeTestRule.onNodeWithText("Discussions")
-            .assertExists()
-            .assertIsEnabled()
-            .performClick()
-    }
+      // Assert that the notificationsEnabled value was updated
+      assert(!notificationsEnabled)
+  }
+  */
 
-    @Test
-    fun testStorageAndDataSectionIsClickable() {
-        composeTestRule.onNodeWithText("Storage and Data")
-            .assertExists()
-            .assertIsEnabled()
-            .performClick()
-    }
+  @Test
+  fun storageAndDataButtonNavigatesToStorageAndDataScreen() {
+    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Storage and Data").performClick()
+    verify(navigationActions).navigateTo(screen = Screen.STORAGE_AND_DATA)
+  }
 
-    @Test
-    fun testHelpButtonIsClickable() {
-        composeTestRule.onNodeWithText("Help")
-            .assertExists()
-            .assertIsEnabled()
-            .performClick()
-    }
+  @Test
+  fun helpButtonNavigatesToHelpScreen() {
+    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Help").performClick()
+    verify(navigationActions).navigateTo(screen = Screen.HELP)
+  }
+}
 
-    @Test
-    fun testLocationStatusSwitchToggles() {
-        val locationSwitch = composeTestRule.onNodeWithText("Location Sharing")
-        locationSwitch.assertExists()
-        locationSwitch.assertIsToggleable()
-        locationSwitch.performClick().assertIsOff()
-        locationSwitch.performClick().assertIsOn()
-    }
-
-    @Test
-    fun testGoBackButtonIsClickable() {
-        composeTestRule.onNodeWithTag("goBackButton")
-            .assertExists()
-            .assertIsEnabled()
-            .performClick()
-    }
-
-    @Test
-    fun testLanguageDropdownSelectionChanges() {
-        composeTestRule.onNodeWithTag("languageButton")
-            .assertExists()
-            .performClick()
-
-        composeTestRule.onNodeWithText("French")
-            .assertExists()
-            .performClick()
-
-        composeTestRule.onNodeWithTag("languageButton")
-            .assertTextContains("French")
-    }
-}*/
+object Screen {
+  const val ACCOUNT = "AccountScreen"
+  const val CONFIDENTIALITY = "ConfidentialityScreen"
+  const val DISCUSSIONS = "DiscussionsScreen"
+  const val STORAGE_AND_DATA = "StorageAndDataScreen"
+  const val HELP = "HelpScreen"
+}
