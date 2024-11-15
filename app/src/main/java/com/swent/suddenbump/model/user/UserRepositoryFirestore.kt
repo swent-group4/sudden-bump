@@ -402,6 +402,61 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         }
   }
 
+  // Reject the friend request from friend to user.
+  override fun deleteFriendRequest(
+      user: User,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    // Remove the friendId from the user's friendRequests list
+    db.collection(usersCollectionPath)
+        .document(user.uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val friendRequestsUidList =
+              result.data?.get("friendRequests") as? List<String> ?: emptyList()
+          val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
+
+          if (friend.uid in mutableFriendRequestsUidList) {
+            mutableFriendRequestsUidList.remove(friend.uid)
+            db.collection(usersCollectionPath)
+                .document(user.uid)
+                .update("friendRequests", mutableFriendRequestsUidList)
+                .addOnFailureListener { e -> onFailure(e) }
+                .addOnSuccessListener {
+                  // Remove the userId from the friend's sentFriendRequests list
+                  db.collection(usersCollectionPath)
+                      .document(friend.uid)
+                      .get()
+                      .addOnFailureListener { e -> onFailure(e) }
+                      .addOnSuccessListener { friendResult ->
+                        val sentFriendRequestsUidList =
+                            friendResult.data?.get("sentFriendRequests") as? List<String>
+                                ?: emptyList()
+                        val mutableSentFriendRequestsUidList =
+                            sentFriendRequestsUidList.toMutableList()
+
+                        if (user.uid in mutableSentFriendRequestsUidList) {
+                          mutableSentFriendRequestsUidList.remove(user.uid)
+                          db.collection(usersCollectionPath)
+                              .document(friend.uid)
+                              .update("sentFriendRequests", mutableSentFriendRequestsUidList)
+                              .addOnFailureListener { e -> onFailure(e) }
+                              .addOnSuccessListener { onSuccess() }
+                        } else {
+                          onFailure(
+                              Exception("User ID not found in friend's sentFriendRequests list"))
+                        }
+                      }
+                }
+          } else {
+            onFailure(Exception("Friend ID not found in user's friendRequests list"))
+          }
+        }
+  }
+
   override fun setSentFriendRequests(
       user: User,
       friendRequestsList: List<User>,
@@ -477,18 +532,28 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   override fun getRecommendedFriends(
       user: User,
-      friendsList: List<User>,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    // For the moment return all users that are not already friends with the current user
+    // Fetch the user's friends list from the database
     db.collection(usersCollectionPath)
+        .document(user.uid)
         .get()
         .addOnFailureListener { onFailure(it) }
-        .addOnSuccessListener { result ->
-          val allUsers = result.documents.mapNotNull { helper.documentSnapshotToUser(it, null) }
-          val recommendedFriends = allUsers.filter { it !in friendsList }
-          onSuccess(recommendedFriends)
+        .addOnSuccessListener { userDocument ->
+          val friendsUidList = userDocument.data?.get("friendsList") as? List<String> ?: emptyList()
+
+          // Fetch all users from the database
+          db.collection(usersCollectionPath)
+              .get()
+              .addOnFailureListener { onFailure(it) }
+              .addOnSuccessListener { result ->
+                val allUsers =
+                    result.documents.mapNotNull { helper.documentSnapshotToUser(it, null) }
+                val recommendedFriends =
+                    allUsers.filter { it.uid !in friendsUidList && it.uid != user.uid }
+                onSuccess(recommendedFriends)
+              }
         }
   }
 

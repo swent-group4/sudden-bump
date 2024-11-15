@@ -123,7 +123,6 @@ open class UserViewModel(
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getRecommendedFriends(
               user = _user.value,
-              friendsList = _userFriends.value,
               onSuccess = { recommendedFriendsList ->
                 _recommendedFriends.value = recommendedFriendsList
               },
@@ -161,7 +160,6 @@ open class UserViewModel(
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getRecommendedFriends(
               user = _user.value,
-              friendsList = _userFriends.value,
               onSuccess = { recommendedFriendsList ->
                 _recommendedFriends.value = recommendedFriendsList
               },
@@ -198,6 +196,16 @@ open class UserViewModel(
     repository.createFriend(user, friend, onSuccess, onFailure)
     _userFriendRequests.value = _userFriendRequests.value.minus(friend)
     _userFriends.value = _userFriends.value.plus(friend)
+  }
+
+  fun declineFriendRequest(
+      user: User = _user.value,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.deleteFriendRequest(user, friend, onSuccess, onFailure)
+    _userFriendRequests.value = _userFriendRequests.value.minus(friend)
   }
 
   fun sendFriendRequest(

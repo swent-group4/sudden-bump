@@ -1,6 +1,5 @@
 package com.swent.suddenbump.ui.contacts
 
-/*
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.swent.suddenbump.model.chat.ChatRepository
@@ -38,6 +37,8 @@ class ContactScreenTest {
 
   @Test
   fun testInitialScreenState() {
+    composeTestRule.onNodeWithTag("contactScreen").assertIsDisplayed()
+
     // Verify the top bar title
     composeTestRule.onNodeWithText("Contact").assertIsDisplayed()
 
@@ -81,4 +82,3 @@ class ContactScreenTest {
     //    verify(navigationActions).navigateTo(Route.MESSAGE)
   }
 }
-*/
