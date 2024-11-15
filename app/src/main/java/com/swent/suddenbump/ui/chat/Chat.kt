@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.chat
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -60,11 +61,13 @@ import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.purple
 import com.swent.suddenbump.ui.theme.violetColor
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
   // Observe messages from the ViewModel
-  viewModel.getOrCreateChat()
+  viewModel.getUserFriends().value.forEach { friend -> viewModel.getOrCreateChat(friend.uid) }
+
   val messages by viewModel.messages.collectAsState(emptyList())
   val user by viewModel.getCurrentUser().collectAsState()
   val otherUser = viewModel.user
@@ -218,7 +221,7 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: 
             onClick = {
               if (inputText.text.isNotEmpty()) {
                 val name = otherUser?.firstName + " " + otherUser?.lastName
-                viewModel.sendMessage(inputText.text, name) // Send message through ViewModel
+                viewModel.sendMessage(inputText.text, viewModel.getCurrentUser().value) // Send message through ViewModel
                 inputText = TextFieldValue() // Clear input field after sending
               }
             },

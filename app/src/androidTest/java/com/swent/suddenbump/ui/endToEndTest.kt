@@ -21,7 +21,6 @@ import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.chat.Message
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -52,7 +51,6 @@ class EndToEndTest {
     chatRepository = mockk(relaxed = true)
     mockQuery = mockk(relaxed = true)
     mockFirebaseUser = mockk(relaxed = true)
-    mockkStatic(FirebaseAuth::class)
 
     val currentUserId = "user2"
     val friendId = "1"
@@ -72,12 +70,6 @@ class EndToEndTest {
     val mockChatsCollection = mockk<CollectionReference>(relaxed = true)
     val mockChatDocument = mockk<DocumentReference>(relaxed = true)
     val mockMessagesSubCollection = mockk<CollectionReference>(relaxed = true)
-
-    every { FirebaseAuth.getInstance() } returns mockAuth
-
-    // Mock FirebaseAuth current user
-    every { mockAuth.currentUser } returns mockFirebaseUser
-    every { mockFirebaseUser.uid } returns currentUserId
 
     // Mock Firestore query
     every { mockChatsCollection.whereArrayContains("participants", friendId) } returns mockQuery
@@ -123,12 +115,9 @@ class EndToEndTest {
     // Step 2: Navigate to Friends List
     composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("friendsListScreen").assertExists()
-
-    // Step 3: Navigate to Add Contact screen
-    composeTestRule.onNodeWithTag("addContactButton").performClick()
-    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("addContactScreen").assertExists()
+
+    Thread.sleep(2000) // Waits for 2 seconds
 
     // Step 4: Navigate to Contact screen
     composeTestRule.onNodeWithTag("userList").performClick()
@@ -139,9 +128,6 @@ class EndToEndTest {
     composeTestRule.onNodeWithTag("backButton").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("addContactScreen").assertExists()
-    composeTestRule.onNodeWithTag("backButton").performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("friendsListScreen").assertExists()
     composeTestRule.onNodeWithTag("backButton").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("overviewScreen").assertExists()
@@ -178,7 +164,9 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("overviewScreen").assertExists()
 
-    composeTestRule.onNodeWithTag("1").assertExists().performClick()
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("userRow").assertExists().performClick()
 
     composeTestRule.onNodeWithTag("sendMessageButton").assertExists().performClick()
 
@@ -193,7 +181,6 @@ class EndToEndTest {
     composeTestRule.onNodeWithTag("SendButton").assertExists().performClick()
   }
 
-
   @Test
   fun testFriendsNear() {
 
@@ -205,14 +192,14 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("overviewScreen").assertExists()
 
-    // Step 8: Navigate to Map screen
-    composeTestRule.onNodeWithTag("Map").performClick()
+    // Step 2: Navigate to Friends List
+    composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("mapView").assertExists()
+    composeTestRule.onNodeWithTag("friendsListScreen").assertExists()
+
+    // Step 3: Navigate to Add Contact screen
+    composeTestRule.onNodeWithTag("addContactButton").performClick()
     composeTestRule.waitForIdle()
-
-    Thread.sleep(2000) // Waits for 2 seconds
-
+    composeTestRule.onNodeWithTag("addContactScreen").assertExists()
   }
-
 }

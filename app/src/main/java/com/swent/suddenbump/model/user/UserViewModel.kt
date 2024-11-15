@@ -8,7 +8,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.chat.ChatRepository
@@ -90,7 +89,7 @@ open class UserViewModel(
           override fun <T : ViewModel> create(modelClass: Class<T>): T {
             return UserViewModel(
                 UserRepositoryFirestore(Firebase.firestore),
-                ChatRepositoryFirestore(Firebase.firestore, FirebaseAuth.getInstance()))
+                ChatRepositoryFirestore(Firebase.firestore))
                 as T
           }
         }
@@ -343,26 +342,27 @@ open class UserViewModel(
   val messages: Flow<List<Message>> = _messages
 
   private var chatId: String? = null
+
+  private var isGettingChatId = false
+
   var user: User? = null
   private val userId: String?
     get() = user?.uid
 
-  private var isGettingChatId = false
-
-  fun getOrCreateChat() =
+  fun getOrCreateChat(friendId: String) =
       viewModelScope.launch {
         if (!isGettingChatId) {
           isGettingChatId = true
-          chatId = chatRepository.getOrCreateChat(userId ?: "")
+          chatId = chatRepository.getOrCreateChat(friendId, _user.value.uid)
           isGettingChatId = false
           chatRepository.getMessages(chatId!!).collect { messages -> _messages.value = messages }
         }
       }
 
   // Send a new message and add it to Firestore
-  fun sendMessage(messageContent: String, username: String) {
+  fun sendMessage(messageContent: String, user: User) {
     viewModelScope.launch {
-      if (chatId != null) chatRepository.sendMessage(chatId!!, messageContent, username)
+      if (chatId != null) chatRepository.sendMessage(chatId!!, messageContent, user)
     }
   }
 

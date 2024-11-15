@@ -147,12 +147,12 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                             modifier = Modifier.padding(start = 8.dp))
                       }
                 }
-                items(users) { user ->
-                  UserRow(
-                      user = user,
-                      navigationActions = navigationActions,
-                      userViewModel = userViewModel)
-                }
+                //                items(users) { user ->
+                //                  UserRow(
+                //                      user = user,
+                //                      navigationActions = navigationActions,
+                //                      userViewModel = userViewModel)
+                //                }
               } else {
                 item {
                   Text(
@@ -190,7 +190,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
               Text(
                   text = "${user.firstName} ${user.lastName.first()}.",
                   style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                  modifier = Modifier.testTag("userName"),
+                  modifier = Modifier.testTag(user.uid),
                   color = Color.White)
               Text(
                   text = "Lausanne, Switzerland",

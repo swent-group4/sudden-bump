@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.overview
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -38,6 +39,7 @@ import com.swent.suddenbump.ui.navigation.Screen
 
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
+  Log.d("End-to-End", "UserCard: $user.uid")
   Card(
       onClick = {
         userViewModel.setSelectedContact(user)
