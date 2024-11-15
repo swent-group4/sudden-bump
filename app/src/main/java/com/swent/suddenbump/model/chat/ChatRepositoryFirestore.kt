@@ -1,7 +1,6 @@
 package com.swent.suddenbump.model.chat
 
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -14,10 +13,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 
-class ChatRepositoryFirestore(
-    private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
-) : ChatRepository {
+class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRepository {
 
   private val messagesCollection = firestore.collection("messages")
 
@@ -31,17 +27,16 @@ class ChatRepositoryFirestore(
     }
   }
 
-  override suspend fun getOrCreateChat(userId: String): String {
-    val userId2 = auth.currentUser?.uid ?: return ""
+  override suspend fun getOrCreateChat(friendId: String, userId: String): String {
     var chatId = ""
 
     try {
       val chatQuery =
-          firestore.collection("chats").whereArrayContains("participants", userId).get().await()
+          firestore.collection("chats").whereArrayContains("participants", friendId).get().await()
 
       for (document in chatQuery.documents) {
         val participants = document.get("participants") as? List<String>
-        if (participants != null && participants.contains(userId2)) {
+        if (participants != null && participants.contains(userId)) {
           chatId = document.id
           break
         }
@@ -51,7 +46,7 @@ class ChatRepositoryFirestore(
         val newChatRef = firestore.collection("chats").document()
         newChatRef.set(
             mapOf(
-                "participants" to listOf(userId, userId2),
+                "participants" to listOf(friendId, userId),
                 "lastMessage" to "",
                 "lastMessageTimestamp" to null))
         chatId = newChatRef.id
@@ -92,9 +87,10 @@ class ChatRepositoryFirestore(
     awaitClose { registration?.remove() }
   }
 
-  override suspend fun sendMessage(chatId: String, messageContent: String, username: String) {
-    val senderId = auth.currentUser?.uid ?: return
-    val senderName = auth.currentUser?.displayName ?: return
+  override suspend fun sendMessage(chatId: String, messageContent: String, user: User) {
+    val senderId = user.uid
+    val senderName = user.firstName
+    val username = user.lastName
 
     try {
       val message =
@@ -121,13 +117,8 @@ class ChatRepositoryFirestore(
     }
   }
 
-  override fun getChatSummaries(): Flow<List<ChatSummary>> = callbackFlow {
-    val currentUserId =
-        auth.currentUser?.uid
-            ?: run {
-              close(IllegalStateException("User not logged in"))
-              return@callbackFlow
-            }
+  override fun getChatSummaries(userId: String): Flow<List<ChatSummary>> = callbackFlow {
+    val currentUserId = userId
 
     val registration =
         firestore

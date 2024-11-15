@@ -12,6 +12,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.MainActivity
+import com.swent.suddenbump.ui.utils.isRunningTest
 import junit.framework.TestCase
 import org.junit.After
 import org.junit.Before

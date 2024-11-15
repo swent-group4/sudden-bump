@@ -22,6 +22,8 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
+import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 
 @RunWith(AndroidJUnit4::class)
@@ -40,6 +42,8 @@ class AddMeetingScreenTest {
 
   @Before
   fun setUp() {
+    MockitoAnnotations.openMocks(this)
+
     meetingRepository = mock(MeetingRepository::class.java)
     userRepository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
@@ -80,5 +84,23 @@ class AddMeetingScreenTest {
     composeTestRule.onNodeWithTag("Save Meeting").performClick()
 
     verify(meetingRepository, never()).addMeeting(anyOrNull(), anyOrNull(), anyOrNull())
+  }
+
+  @Test
+  fun saveButton_savesMeeting() {
+    `when`(meetingRepository.getNewMeetingId()).thenReturn("mockedMeetingId")
+    // Arrange
+    composeTestRule.setContent {
+      AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
+    }
+
+    // Act
+    composeTestRule.onNodeWithTag("Location").performTextInput("Central Park")
+    composeTestRule.onNodeWithTag("Date").performTextInput("05/09/2024")
+    composeTestRule.onNodeWithTag("Save Meeting").performClick()
+    composeTestRule.waitForIdle() // Ensure all actions are processed
+
+    // Assert: Check addMeeting is called with any arguments
+    verify(meetingRepository).addMeeting(any(), any(), any())
   }
 }

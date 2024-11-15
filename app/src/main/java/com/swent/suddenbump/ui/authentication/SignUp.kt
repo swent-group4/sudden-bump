@@ -10,8 +10,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -32,14 +34,29 @@ import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.TopLevelDestinations
+import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.theme.PurpleGrey40
 import com.swent.suddenbump.ui.utils.PhoneNumberVisualTransformation
+import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import com.yalantis.ucrop.UCrop
 import java.io.File
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Composable function for the Sign-Up screen.
+ *
+ * @param navigationActions Actions for navigating between screens.
+ * @param userViewModel ViewModel for managing user-related data.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+
+  // Get the current context
+  val context = LocalContext.current
+
+  // State variables for user input fields
   var firstName by remember {
     mutableStateOf(
         FirebaseAuth.getInstance().currentUser?.displayName?.split(" ")?.firstOrNull() ?: "")
@@ -51,19 +68,26 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
   val email = FirebaseAuth.getInstance().currentUser?.email ?: ""
   var phoneNumber by remember {
     mutableStateOf(FirebaseAuth.getInstance().currentUser?.phoneNumber ?: "")
-  } // will be filled only if user's phone number is public on Google Account
+  }
   var verificationCode by remember { mutableStateOf("") }
   var isCodeSent by remember { mutableStateOf(false) }
   var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
+
+  // Coroutine scope for launching coroutines
   val coroutineScope = rememberCoroutineScope()
-  val context = LocalContext.current
+
+  // StateFlow for base location
   val baseLocation =
-      Location("providerName").apply {
-        latitude = 0.0 // Set latitude
-        longitude = 0.0 // Set longitude
-      }
+      MutableStateFlow(
+          Location("providerName").apply {
+            latitude = 0.0
+            longitude = 0.0
+          })
+
+  // LiveData for verification status
   val verificationStatus by userViewModel.verificationStatus.observeAsState()
 
+  // Launcher for cropping images
   val cropLauncher =
       rememberLauncherForActivityResult(
           contract = ActivityResultContracts.StartActivityForResult()) { result ->
@@ -75,6 +99,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
             }
           }
 
+  // Launcher for selecting images
   val launcher =
       rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
         ->
@@ -89,163 +114,310 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
         }
       }
 
+  // Scaffold for the Sign-Up screen layout
   Scaffold(
       topBar = {
         TopAppBar(
-            title = { Text(text = "Sign Up") },
+            title = { Text(text = "Sign Up", color = Color.White) },
             navigationIcon = {
               IconButton(onClick = { navigationActions.goBack() }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White)
               }
-            })
+            },
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Black, titleContentColor = Color.White))
       },
+      containerColor = Color.Black,
       content = { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-          Box(
-              modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-              contentAlignment = Alignment.Center) {
-                IconButton(
-                    onClick = { coroutineScope.launch { launcher.launch("image/*") } },
-                    modifier =
-                        Modifier.size(64.dp)
-                            .background(Color.Gray, CircleShape)
-                            .testTag("profilePictureButton")) {
-                      if (profilePictureUri != null) {
-                        val bitmap =
-                            MediaStore.Images.Media.getBitmap(
-                                LocalContext.current.contentResolver, profilePictureUri)
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier.size(64.dp).testTag("profilePicture"))
-                      } else {
-                        Icon(
-                            painter = painterResource(id = R.drawable.outline_add_a_photo_24),
-                            contentDescription = "Import Profile Picture",
-                            tint = Color.White,
-                            modifier = Modifier.testTag("noProfilePic"))
-                      }
-                    }
-              }
-
-          OutlinedTextField(
-              value = firstName,
-              onValueChange = { firstName = it },
-              label = { Text("First Name") },
-              modifier = Modifier.fillMaxWidth().testTag("firstNameField"))
-          Spacer(modifier = Modifier.height(16.dp))
-          OutlinedTextField(
-              value = lastName,
-              onValueChange = { lastName = it },
-              label = { Text("Last Name") },
-              modifier = Modifier.fillMaxWidth().testTag("lastNameField"))
-          Spacer(modifier = Modifier.height(16.dp))
-          OutlinedTextField(
-              value = email,
-              onValueChange = {},
-              label = { Text("Email") },
-              enabled = false,
-              modifier = Modifier.fillMaxWidth().testTag("emailField"),
-          )
-          Spacer(modifier = Modifier.height(16.dp))
-
-          // Phone number input
-          OutlinedTextField(
-              value = phoneNumber,
-              onValueChange = { phoneNumber = it },
-              label = { Text("Phone Number") },
-              modifier = Modifier.fillMaxWidth().testTag("phoneField"),
-              visualTransformation = PhoneNumberVisualTransformation(),
-              placeholder = { Text("Use international prefix with +") },
-              keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone))
-
-          // Button to send verification code
-          Button(
-              onClick = {
-                userViewModel.sendVerificationCode(phoneNumber)
-                isCodeSent = true
-              },
-              modifier = Modifier.fillMaxWidth().testTag("sendCodeButton"),
-              enabled = phoneNumber.isNotBlank()) {
-                Text("Send Verification Code")
-              }
-
-          // Verification code input if code has been sent
-          if (isCodeSent) {
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedTextField(
-                value = verificationCode,
-                onValueChange = { verificationCode = it },
-                label = { Text("Verification Code") },
-                modifier = Modifier.fillMaxWidth().testTag("codeField"),
-                placeholder = { Text("6-digit code received by SMS") },
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number))
-
-            // Button to verify code
-            Button(
-                onClick = { userViewModel.verifyCode(verificationCode) },
-                modifier = Modifier.fillMaxWidth().testTag("verifyCodeButton"),
-                enabled = verificationCode.length == 6) {
-                  Text("Verify Code")
-                }
-
-            // Display verification status
-            verificationStatus?.let {
-              Text(
-                  text = it,
-                  modifier = Modifier.fillMaxWidth().padding(16.dp),
-                  color = if (it.contains("failed", true)) Color.Red else Color.Green)
-            }
-          }
-
-          Spacer(modifier = Modifier.height(16.dp))
-
-          // Create account button
-          Button(
-              onClick = {
-                val profileBitmap =
-                    if (profilePictureUri != null) {
-                          MediaStore.Images.Media.getBitmap(
-                              context.contentResolver, profilePictureUri)
-                        } else {
-                          val defaultUri =
-                              Uri.parse("android.resource://${context.packageName}/raw/profile")
-                          MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)
+        Column(
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())) {
+              // Profile picture selection
+              Box(
+                  modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                  contentAlignment = Alignment.Center) {
+                    IconButton(
+                        onClick = { coroutineScope.launch { launcher.launch("image/*") } },
+                        modifier =
+                            Modifier.size(64.dp)
+                                .background(Color.Gray, CircleShape)
+                                .testTag("profilePictureButton")) {
+                          if (profilePictureUri != null) {
+                            val bitmap =
+                                MediaStore.Images.Media.getBitmap(
+                                    LocalContext.current.contentResolver, profilePictureUri)
+                            Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = "Profile Picture",
+                                modifier = Modifier.size(64.dp).testTag("profilePicture"))
+                          } else {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_add_a_photo_24),
+                                contentDescription = "Import Profile Picture",
+                                tint = Color.White,
+                                modifier = Modifier.testTag("noProfilePic"))
+                          }
                         }
-                        .asImageBitmap()
+                  }
 
-                userViewModel.createUserAccount(
-                    User(
-                        uid = userViewModel.getNewUid(),
-                        firstName = firstName,
-                        lastName = lastName,
-                        emailAddress = email,
-                        phoneNumber = phoneNumber,
-                        profilePicture = profileBitmap,
-                        lastKnownLocation = baseLocation),
-                    onSuccess = { navigationActions.navigateTo(TopLevelDestinations.OVERVIEW) },
-                    onFailure = {
-                      Toast.makeText(context, "Account creation failed", Toast.LENGTH_SHORT).show()
-                    })
-              },
-              enabled =
-                  firstName.isNotBlank() &&
-                      lastName.isNotBlank() &&
-                      email.isNotBlank() &&
-                      phoneNumber.isNotBlank() &&
-                      verificationStatus == "Phone Verified",
-              modifier = Modifier.fillMaxWidth().testTag("createAccountButton")) {
-                Text("Create Account")
+              // First name input field
+              OutlinedTextField(
+                  value = firstName,
+                  onValueChange = { firstName = it },
+                  label = { Text("First Name") },
+                  colors =
+                      TextFieldDefaults.colors(
+                          focusedTextColor = Color.White,
+                          unfocusedTextColor = Color.White,
+                          disabledTextColor = Color.Gray,
+                          errorTextColor = Color.Red,
+                          cursorColor = Color.White,
+                          errorCursorColor = Color.Red,
+                          focusedIndicatorColor = Color.White,
+                          unfocusedIndicatorColor = Color.Gray,
+                          disabledIndicatorColor = Color.LightGray,
+                          errorIndicatorColor = Color.Red,
+                          focusedLabelColor = Color.White,
+                          unfocusedLabelColor = Color.Gray,
+                          disabledLabelColor = Color.LightGray,
+                          errorLabelColor = Color.Red,
+                          focusedPlaceholderColor = Color.White,
+                          unfocusedPlaceholderColor = Color.Gray,
+                          disabledPlaceholderColor = Color.LightGray,
+                          errorPlaceholderColor = Color.Red,
+                          focusedContainerColor = Color.Black,
+                          unfocusedContainerColor = Color.Black,
+                          disabledContainerColor = Color.DarkGray,
+                          errorContainerColor = Color.Black),
+                  modifier = Modifier.fillMaxWidth().testTag("firstNameField").padding(16.dp))
+
+              // Last name input field
+              OutlinedTextField(
+                  value = lastName,
+                  onValueChange = { lastName = it },
+                  label = { Text("Last Name") },
+                  colors =
+                      TextFieldDefaults.colors(
+                          focusedTextColor = Color.White,
+                          unfocusedTextColor = Color.White,
+                          disabledTextColor = Color.Gray,
+                          errorTextColor = Color.Red,
+                          cursorColor = Color.White,
+                          errorCursorColor = Color.Red,
+                          focusedIndicatorColor = Color.White,
+                          unfocusedIndicatorColor = Color.Gray,
+                          disabledIndicatorColor = Color.LightGray,
+                          errorIndicatorColor = Color.Red,
+                          focusedLabelColor = Color.White,
+                          unfocusedLabelColor = Color.Gray,
+                          disabledLabelColor = Color.LightGray,
+                          errorLabelColor = Color.Red,
+                          focusedPlaceholderColor = Color.White,
+                          unfocusedPlaceholderColor = Color.Gray,
+                          disabledPlaceholderColor = Color.LightGray,
+                          errorPlaceholderColor = Color.Red,
+                          focusedContainerColor = Color.Black,
+                          unfocusedContainerColor = Color.Black,
+                          disabledContainerColor = Color.DarkGray,
+                          errorContainerColor = Color.Black),
+                  modifier = Modifier.fillMaxWidth().testTag("lastNameField").padding(16.dp))
+
+              // Email input field (disabled)
+              OutlinedTextField(
+                  value = email,
+                  onValueChange = {},
+                  label = { Text("Email") },
+                  enabled = false,
+                  colors =
+                      TextFieldDefaults.colors(
+                          focusedTextColor = Color.White,
+                          unfocusedTextColor = Color.White,
+                          disabledTextColor = Color.Gray,
+                          errorTextColor = Color.Red,
+                          cursorColor = Color.White,
+                          errorCursorColor = Color.Red,
+                          focusedIndicatorColor = Color.White,
+                          unfocusedIndicatorColor = Color.Gray,
+                          disabledIndicatorColor = Color.LightGray,
+                          errorIndicatorColor = Color.Red,
+                          focusedLabelColor = Color.White,
+                          unfocusedLabelColor = Color.Gray,
+                          disabledLabelColor = Color.LightGray,
+                          errorLabelColor = Color.Red,
+                          focusedPlaceholderColor = Color.White,
+                          unfocusedPlaceholderColor = Color.Gray,
+                          disabledPlaceholderColor = Color.LightGray,
+                          errorPlaceholderColor = Color.Red,
+                          focusedContainerColor = Color.Black,
+                          unfocusedContainerColor = Color.Black,
+                          disabledContainerColor = Color.Black,
+                          errorContainerColor = Color.Black),
+                  modifier = Modifier.fillMaxWidth().testTag("emailField").padding(16.dp))
+
+              // Phone number input field
+              OutlinedTextField(
+                  value = phoneNumber,
+                  onValueChange = { phoneNumber = it },
+                  label = { Text("Phone Number") },
+                  modifier = Modifier.fillMaxWidth().testTag("phoneField").padding(16.dp),
+                  visualTransformation = PhoneNumberVisualTransformation(),
+                  placeholder = { Text("Use international prefix with +") },
+                  colors =
+                      TextFieldDefaults.colors(
+                          focusedTextColor = Color.White,
+                          unfocusedTextColor = Color.White,
+                          disabledTextColor = Color.Gray,
+                          errorTextColor = Color.Red,
+                          cursorColor = Color.White,
+                          errorCursorColor = Color.Red,
+                          focusedIndicatorColor = Color.White,
+                          unfocusedIndicatorColor = Color.Gray,
+                          disabledIndicatorColor = Color.LightGray,
+                          errorIndicatorColor = Color.Red,
+                          focusedLabelColor = Color.White,
+                          unfocusedLabelColor = Color.Gray,
+                          disabledLabelColor = Color.LightGray,
+                          errorLabelColor = Color.Red,
+                          focusedPlaceholderColor = Color.White,
+                          unfocusedPlaceholderColor = Color.Gray,
+                          disabledPlaceholderColor = Color.LightGray,
+                          errorPlaceholderColor = Color.Red,
+                          focusedContainerColor = Color.Black,
+                          unfocusedContainerColor = Color.Black,
+                          disabledContainerColor = Color.DarkGray,
+                          errorContainerColor = Color.Black),
+                  keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone))
+
+              // Button to send verification code
+              Button(
+                  onClick = {
+                    userViewModel.sendVerificationCode(phoneNumber)
+                    isCodeSent = true
+                  },
+                  modifier = Modifier.fillMaxWidth().testTag("sendCodeButton").padding(16.dp),
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = Purple40,
+                          contentColor = Color.White,
+                          disabledContainerColor = PurpleGrey40,
+                          disabledContentColor = Color.LightGray),
+                  enabled = phoneNumber.isNotBlank()) {
+                    Text("Send Verification Code")
+                  }
+
+              // Verification code input field (visible if code is sent)
+              if (isCodeSent) {
+                OutlinedTextField(
+                    value = verificationCode,
+                    onValueChange = { verificationCode = it },
+                    label = { Text("Verification Code") },
+                    modifier = Modifier.fillMaxWidth().testTag("codeField").padding(16.dp),
+                    placeholder = { Text("6-digit code received by SMS") },
+                    colors =
+                        TextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            disabledTextColor = Color.Gray,
+                            errorTextColor = Color.Red,
+                            cursorColor = Color.White,
+                            errorCursorColor = Color.Red,
+                            focusedIndicatorColor = Color.White,
+                            unfocusedIndicatorColor = Color.Gray,
+                            disabledIndicatorColor = Color.LightGray,
+                            errorIndicatorColor = Color.Red,
+                            focusedLabelColor = Color.White,
+                            unfocusedLabelColor = Color.Gray,
+                            disabledLabelColor = Color.LightGray,
+                            errorLabelColor = Color.Red,
+                            focusedPlaceholderColor = Color.White,
+                            unfocusedPlaceholderColor = Color.Gray,
+                            disabledPlaceholderColor = Color.LightGray,
+                            errorPlaceholderColor = Color.Red,
+                            focusedContainerColor = Color.Black,
+                            unfocusedContainerColor = Color.Black,
+                            disabledContainerColor = Color.DarkGray,
+                            errorContainerColor = Color.Black),
+                    keyboardOptions =
+                        KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number))
+
+                // Button to verify the code
+                Button(
+                    onClick = { userViewModel.verifyCode(verificationCode) },
+                    modifier = Modifier.fillMaxWidth().testTag("verifyCodeButton").padding(16.dp),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = Purple40,
+                            contentColor = Color.White,
+                            disabledContainerColor = PurpleGrey40,
+                            disabledContentColor = Color.LightGray),
+                    enabled = verificationCode.length == 6) {
+                      Text("Verify Code")
+                    }
+
+                // Display verification status
+                verificationStatus?.let {
+                  Text(
+                      text = it,
+                      modifier = Modifier.fillMaxWidth().padding(16.dp),
+                      color = if (it.contains("failed", true)) Color.Red else Color.Green)
+                }
               }
-        }
+
+              // Button to create the account
+              Button(
+                  onClick = {
+                    val profileBitmap =
+                        if (profilePictureUri != null) {
+                              MediaStore.Images.Media.getBitmap(
+                                  context.contentResolver, profilePictureUri)
+                            } else {
+                              val defaultUri =
+                                  Uri.parse("android.resource://${context.packageName}/raw/profile")
+                              MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)
+                            }
+                            .asImageBitmap()
+                    val newUid = userViewModel.getNewUid()
+                    userViewModel.createUserAccount(
+                        User(
+                            uid = newUid,
+                            firstName = firstName,
+                            lastName = lastName,
+                            emailAddress = email,
+                            phoneNumber = phoneNumber,
+                            profilePicture = profileBitmap,
+                            lastKnownLocation = baseLocation),
+                        onSuccess = {
+                          userViewModel.saveUserLoginStatus(newUid)
+                          scheduleLocationUpdateWorker(context, newUid)
+                          navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
+                        },
+                        onFailure = {
+                          Toast.makeText(context, "Account creation failed", Toast.LENGTH_SHORT)
+                              .show()
+                        })
+                  },
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = Purple40,
+                          contentColor = Color.White,
+                          disabledContainerColor = PurpleGrey40,
+                          disabledContentColor = Color.LightGray),
+                  enabled =
+                      firstName.isNotBlank() &&
+                          lastName.isNotBlank() &&
+                          email.isNotBlank() &&
+                          phoneNumber.isNotBlank() &&
+                          verificationStatus == "Phone Verified",
+                  modifier =
+                      Modifier.fillMaxWidth().testTag("createAccountButton").padding(16.dp)) {
+                    Text("Create Account")
+                  }
+            }
       })
 }
-
-/*@Preview(showBackground = true)
-@Composable
-fun SignUpScreenPreview() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
-  SignUpScreen(navigationActions, userViewModel)
-}*/
