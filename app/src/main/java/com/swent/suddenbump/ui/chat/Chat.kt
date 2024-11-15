@@ -66,7 +66,7 @@ import com.swent.suddenbump.ui.theme.violetColor
 @Composable
 fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
   // Observe messages from the ViewModel
-  viewModel.getUserFriends().value.forEach { friend -> viewModel.getOrCreateChat(friend.uid) }
+  viewModel.user?.let { viewModel.getOrCreateChat(it.uid) }
 
   val messages by viewModel.messages.collectAsState(emptyList())
   val user by viewModel.getCurrentUser().collectAsState()
@@ -221,9 +221,9 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: 
             onClick = {
               if (inputText.text.isNotEmpty()) {
                 val name = otherUser?.firstName + " " + otherUser?.lastName
-                viewModel.sendMessage(
-                    inputText.text,
-                    viewModel.getCurrentUser().value) // Send message through ViewModel
+                viewModel.user?.let {
+                  viewModel.sendMessage(inputText.text, it)
+                } // Send message through ViewModel
                 inputText = TextFieldValue() // Clear input field after sending
               }
             },

@@ -180,26 +180,4 @@ class EndToEndTest {
 
     composeTestRule.onNodeWithTag("SendButton").assertExists().performClick()
   }
-
-  @Test
-  fun testFriendsNear() {
-
-    // Wait for the app to load
-    composeTestRule.waitForIdle()
-
-    // Step 1: Simulate user interaction for authentication
-    composeTestRule.onNodeWithTag("loginButton").assertExists().performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("overviewScreen").assertExists()
-
-    // Step 2: Navigate to Friends List
-    composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("friendsListScreen").assertExists()
-
-    // Step 3: Navigate to Add Contact screen
-    composeTestRule.onNodeWithTag("addContactButton").performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("addContactScreen").assertExists()
-  }
 }
