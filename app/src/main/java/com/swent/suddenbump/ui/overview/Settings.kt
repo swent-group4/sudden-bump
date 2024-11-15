@@ -193,10 +193,11 @@ fun PreviewSettingsScreen() {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
 
+  val context = LocalContext.current
   val firestoreInstance = FirebaseFirestore.getInstance()
   val authInstance = FirebaseAuth.getInstance()
 
-  val userRepository = UserRepositoryFirestore(firestoreInstance)
+  val userRepository = UserRepositoryFirestore(firestoreInstance, context)
   val chatRepository = ChatRepositoryFirestore(firestore = firestoreInstance, auth = authInstance)
 
   val userViewModel = UserViewModel(userRepository, chatRepository)
