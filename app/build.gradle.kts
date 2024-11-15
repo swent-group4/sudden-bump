@@ -25,7 +25,7 @@ android {
 
     defaultConfig {
         applicationId = "com.swent.suddenbump"
-        minSdk = 28
+        minSdk = 29
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -176,6 +176,7 @@ dependencies {
     }
 
     // Other dependencies...
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.core.ktx)
     testImplementation(libs.androidx.arch.core.testing)
     implementation(libs.androidx.appcompat)
@@ -187,12 +188,16 @@ dependencies {
     implementation(libs.test.core.ktx)
     implementation(libs.androidx.lifecycle.common.jvm)
     implementation(libs.firebase.storage.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.work.testing)
     implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.espresso.intents)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
 
+    // Kotlin reflection library
+    implementation(libs.kotlin.reflect)
     // Jetpack Compose
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
@@ -200,11 +205,16 @@ dependencies {
 
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
+    // Material Design 3
     implementation(libs.compose.material3)
+    // Integration with activities
     implementation(libs.compose.activity)
+    // Integration with ViewModels
     implementation(libs.compose.viewmodel)
+    // Android Studio Preview support
     implementation(libs.compose.preview)
     debugImplementation(libs.compose.tooling)
+    // UI Tests
     globalTestImplementation(libs.compose.test.junit)
     debugImplementation(libs.compose.test.manifest)
 
@@ -215,6 +225,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+
 
     // Phone number formatting
     implementation(libs.libphonenumber)
@@ -255,7 +266,6 @@ dependencies {
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.mockito.inline.v400)
     implementation(kotlin("test"))
 }
 
