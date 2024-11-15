@@ -36,13 +36,10 @@ class AddContactScreenTest {
   @Test
   fun testInitialScreenState() {
     // Verify the top bar title
-    composeTestRule.onNodeWithText("Add contact").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add friends").assertIsDisplayed()
 
     // Verify the search field is displayed
     composeTestRule.onNodeWithTag("searchTextField").assertIsDisplayed()
-
-    // Verify the recommended row is displayed
-    composeTestRule.onNodeWithTag("recommendedRow").assertIsDisplayed()
 
     // Verify the list of users is displayed
     composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
@@ -57,6 +54,13 @@ class AddContactScreenTest {
     composeTestRule
         .onNodeWithText("Looks like no user corresponds to your query")
         .assertIsDisplayed()
+  }
+
+  @Test
+  fun testNoRequestWhenSearch() {
+    composeTestRule.onNodeWithTag("searchTextField").performTextInput("ABC")
+
+    composeTestRule.onNodeWithTag("requestRow").assertIsNotDisplayed()
   }
 
   @Test

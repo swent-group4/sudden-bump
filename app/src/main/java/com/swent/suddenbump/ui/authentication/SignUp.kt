@@ -33,8 +33,10 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.TopLevelDestinations
 import com.swent.suddenbump.ui.utils.PhoneNumberVisualTransformation
+import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import com.yalantis.ucrop.UCrop
 import java.io.File
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,10 +60,11 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
   val coroutineScope = rememberCoroutineScope()
   val context = LocalContext.current
   val baseLocation =
-      Location("providerName").apply {
-        latitude = 0.0 // Set latitude
-        longitude = 0.0 // Set longitude
-      }
+      MutableStateFlow(
+          Location("providerName").apply {
+            latitude = 0.0 // Set latitude
+            longitude = 0.0 // Set longitude
+          })
   val verificationStatus by userViewModel.verificationStatus.observeAsState()
 
   val cropLauncher =
@@ -127,7 +130,6 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                       }
                     }
               }
-
           OutlinedTextField(
               value = firstName,
               onValueChange = { firstName = it },
@@ -213,17 +215,21 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                           MediaStore.Images.Media.getBitmap(context.contentResolver, defaultUri)
                         }
                         .asImageBitmap()
-
+                val newUid = userViewModel.getNewUid()
                 userViewModel.createUserAccount(
                     User(
-                        uid = userViewModel.getNewUid(),
+                        uid = newUid,
                         firstName = firstName,
                         lastName = lastName,
                         emailAddress = email,
                         phoneNumber = phoneNumber,
                         profilePicture = profileBitmap,
                         lastKnownLocation = baseLocation),
-                    onSuccess = { navigationActions.navigateTo(TopLevelDestinations.OVERVIEW) },
+                    onSuccess = {
+                      userViewModel.saveUserLoginStatus(newUid)
+                      scheduleLocationUpdateWorker(context, newUid)
+                      navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
+                    },
                     onFailure = {
                       Toast.makeText(context, "Account creation failed", Toast.LENGTH_SHORT).show()
                     })

@@ -13,6 +13,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -54,6 +55,7 @@ import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
+import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 
 class MainActivity : ComponentActivity() {
 
@@ -89,11 +91,12 @@ class MainActivity : ComponentActivity() {
     FirebaseApp.initializeApp(this)
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
-    auth.currentUser?.let {
+    /*auth.currentUser?.let {
       // Sign out the user if they are already signed in
       // This is useful for testing purposes
       auth.signOut()
-    }
+
+    }*/
 
     setContent {
       SampleAppTheme {
@@ -102,9 +105,6 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
               SuddenBumpApp(newLocation)
-              //              val userViewModel =
-              // UserViewModel(UserRepositoryFirestore(Firebase.firestore))
-              //              TestComposableScreen(userViewModel)
             }
       }
     }
@@ -136,6 +136,8 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  @SuppressLint(
+      "UnrememberedMutableState", "StateFlowValueCalledInComposition", "SuspiciousIndentation")
   private fun checkNotificationPermission() {
     val notificationPermissionGranted =
         ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
@@ -152,10 +154,28 @@ class MainActivity : ComponentActivity() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
-    val userViewModel: UserViewModel = viewModel(factory = UserViewModel.Factory)
     val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
+    val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
 
-    NavHost(navController = navController, startDestination = Route.AUTH) {
+    val startRoute =
+        if (userViewModel.isUserLoggedIn()) {
+          val uid = userViewModel.getSavedUid()
+          Log.d("MainActivity", "User logged in: $uid")
+          userViewModel.setCurrentUser(
+              uid,
+              onSuccess = {
+                Log.i("MainActivity", "User set: ${userViewModel.getCurrentUser().value}")
+              },
+              onFailure = { e -> Log.e("MainActivity", e.toString()) })
+          scheduleLocationUpdateWorker(this, uid)
+          Route.OVERVIEW
+        } else {
+          Route.AUTH
+        }
+
+    // Schedule the LocationUpdateWorker
+
+    NavHost(navController = navController, startDestination = startRoute) {
       navigation(
           startDestination = Screen.AUTH,
           route = Route.AUTH,
@@ -230,12 +250,16 @@ class MainActivity : ComponentActivity() {
   private fun handlePermissionResults(permissions: Map<String, Boolean>) {
     val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
     val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-
+    val backgroundLocationGranted =
+        permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
     when {
       fineLocationGranted -> {
         locationGetter.requestLocationUpdates()
       }
       coarseLocationGranted -> {
+        locationGetter.requestLocationUpdates()
+      }
+      backgroundLocationGranted -> {
         locationGetter.requestLocationUpdates()
       }
       else -> {

@@ -1,32 +1,51 @@
-name: Build with Gradle
+name: Build APK
+
+env:
+  # The name of the main module repository
+  main_project_module: app
+
 
 on:
-  workflow_dispatch:  # Manual trigger from the GitHub UI
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+    types:
+      - closed
+
+#  release:
 
 jobs:
   build:
+
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Set up JDK
-        uses: actions/setup-java@v2
+      # Set Current Date As Env Variable
+      - name: Set current date as env variable
+        run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      # Set Repository Name As Env Variable
+      - name: Set repository name as env variable
+        run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
         with:
-          java-version: '11'
-          distribution: 'adopt'
+          distribution: "temurin"
+          java-version: "17"
+          cache: gradle
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v2
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
 
-      # Load google-services.json and local.properties from the secrets
-      - name: Decode secrets
+      - name: Create local.properties and set API key
         env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
@@ -34,5 +53,35 @@ jobs:
           echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
           echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
 
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Build APK
+        run: |
+          ./gradlew build assemble
+          ls -R ${{ env.main_project_module }}/build/outputs/apk/
+
+      # Save time to environment variable
+      - name: Set current date and time as environment variables
+        run: echo "date_time=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+
+      # Create Release
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: AppRelease-${{ env.date_time }}
+          release_name: App Release - ${{ env.date_time }}
+          draft: false
+          prerelease: false
+
+      # Upload APK to Release
+      - name: Upload APK to Release
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: app/build/outputs/apk/debug/app-debug.apk
+          asset_name: SuddenBump.apk
+          asset_content_type: application/zip

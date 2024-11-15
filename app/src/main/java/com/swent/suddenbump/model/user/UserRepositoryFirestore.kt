@@ -1,12 +1,14 @@
 package com.swent.suddenbump.model.user
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.location.Location
 import android.location.LocationManager
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseException
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
@@ -20,10 +22,12 @@ import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
-class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepository {
+class UserRepositoryFirestore(private val db: FirebaseFirestore, private val context: Context) :
+    UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
   private val helper = UserRepositoryFirestoreHelper()
@@ -37,6 +41,9 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
   override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
 
   private lateinit var verificationId: String
+
+  private val sharedPreferences =
+      context.getSharedPreferences("SuddenBumpLocalDB", Context.MODE_PRIVATE)
 
   override fun init(onSuccess: () -> Unit) {
     imageRepository.init(onSuccess)
@@ -402,6 +409,61 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         }
   }
 
+  // Reject the friend request from friend to user.
+  override fun deleteFriendRequest(
+      user: User,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    // Remove the friendId from the user's friendRequests list
+    db.collection(usersCollectionPath)
+        .document(user.uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val friendRequestsUidList =
+              result.data?.get("friendRequests") as? List<String> ?: emptyList()
+          val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
+
+          if (friend.uid in mutableFriendRequestsUidList) {
+            mutableFriendRequestsUidList.remove(friend.uid)
+            db.collection(usersCollectionPath)
+                .document(user.uid)
+                .update("friendRequests", mutableFriendRequestsUidList)
+                .addOnFailureListener { e -> onFailure(e) }
+                .addOnSuccessListener {
+                  // Remove the userId from the friend's sentFriendRequests list
+                  db.collection(usersCollectionPath)
+                      .document(friend.uid)
+                      .get()
+                      .addOnFailureListener { e -> onFailure(e) }
+                      .addOnSuccessListener { friendResult ->
+                        val sentFriendRequestsUidList =
+                            friendResult.data?.get("sentFriendRequests") as? List<String>
+                                ?: emptyList()
+                        val mutableSentFriendRequestsUidList =
+                            sentFriendRequestsUidList.toMutableList()
+
+                        if (user.uid in mutableSentFriendRequestsUidList) {
+                          mutableSentFriendRequestsUidList.remove(user.uid)
+                          db.collection(usersCollectionPath)
+                              .document(friend.uid)
+                              .update("sentFriendRequests", mutableSentFriendRequestsUidList)
+                              .addOnFailureListener { e -> onFailure(e) }
+                              .addOnSuccessListener { onSuccess() }
+                        } else {
+                          onFailure(
+                              Exception("User ID not found in friend's sentFriendRequests list"))
+                        }
+                      }
+                }
+          } else {
+            onFailure(Exception("Friend ID not found in user's friendRequests list"))
+          }
+        }
+  }
+
   override fun setSentFriendRequests(
       user: User,
       friendRequestsList: List<User>,
@@ -477,18 +539,28 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
 
   override fun getRecommendedFriends(
       user: User,
-      friendsList: List<User>,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    // For the moment return all users that are not already friends with the current user
+    // Fetch the user's friends list from the database
     db.collection(usersCollectionPath)
+        .document(user.uid)
         .get()
         .addOnFailureListener { onFailure(it) }
-        .addOnSuccessListener { result ->
-          val allUsers = result.documents.mapNotNull { helper.documentSnapshotToUser(it, null) }
-          val recommendedFriends = allUsers.filter { it !in friendsList }
-          onSuccess(recommendedFriends)
+        .addOnSuccessListener { userDocument ->
+          val friendsUidList = userDocument.data?.get("friendsList") as? List<String> ?: emptyList()
+
+          // Fetch all users from the database
+          db.collection(usersCollectionPath)
+              .get()
+              .addOnFailureListener { onFailure(it) }
+              .addOnSuccessListener { result ->
+                val allUsers =
+                    result.documents.mapNotNull { helper.documentSnapshotToUser(it, null) }
+                val recommendedFriends =
+                    allUsers.filter { it.uid !in friendsUidList && it.uid != user.uid }
+                onSuccess(recommendedFriends)
+              }
         }
   }
 
@@ -532,7 +604,20 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
   ) {
     db.collection(usersCollectionPath)
         .document(user.uid)
-        .update("location", location)
+        .update("lastKnownLocation", helper.locationToString(location))
+        .addOnFailureListener { onFailure(it) }
+        .addOnSuccessListener { onSuccess() }
+  }
+
+  override fun updateTimestamp(
+      user: User,
+      timestamp: Timestamp,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(user.uid)
+        .update("timestamp", timestamp)
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
   }
@@ -551,12 +636,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
         for (userFriend in userFriendsList) {
           val documentSnapshot =
               db.collection(usersCollectionPath).document(userFriend.uid).get().await()
-
+          Log.d("FriendsMarkers", "Doc SNap $documentSnapshot")
           if (documentSnapshot.exists()) {
             val friendSnapshot = documentSnapshot.data
-            val location = helper.locationParser(friendSnapshot!!.get("location").toString())
-            friendsLocations[userFriend] = location
-            Log.d("FriendsMarkers", "Succeeded Friends Locations ${userFriend}, ${location}")
+            val friendLocation =
+                helper.locationParser(friendSnapshot!!["lastKnownLocation"].toString())
+            friendsLocations[userFriend] = friendLocation
+            Log.d("FriendsMarkers", "Succeeded Friends Locations ${userFriend}, ${friendLocation}")
           }
         }
       } catch (e: Exception) {
@@ -620,6 +706,30 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore) : UserRepositor
     }
   }
 
+  override fun saveLoginStatus(userId: String) {
+    with(sharedPreferences.edit()) {
+      putBoolean("isLoggedIn", true)
+      putString("userId", userId)
+      apply()
+    }
+  }
+
+  override fun getSavedUid(): String {
+    return sharedPreferences.getString("userId", null) ?: ""
+  }
+
+  override fun isUserLoggedIn(): Boolean {
+    return sharedPreferences.getBoolean("isLoggedIn", false)
+  }
+
+  override fun logoutUser() {
+    with(sharedPreferences.edit()) {
+      putBoolean("isLoggedIn", false)
+      putString("userId", null)
+      apply()
+    }
+  }
+
   private fun documentSnapshotToUserList(
       uidJsonList: String,
       onFailure: (Exception) -> Unit
@@ -657,10 +767,10 @@ internal class UserRepositoryFirestoreHelper() {
         "lastName" to user.lastName,
         "phoneNumber" to user.phoneNumber,
         "emailAddress" to user.emailAddress,
-        "lastKnownLocation" to locationToString(user.lastKnownLocation))
+        "lastKnownLocation" to locationToString(user.lastKnownLocation.value))
   }
 
-  private fun locationToString(lastKnownLocation: Location?): String {
+  fun locationToString(lastKnownLocation: Location?): String {
     if (lastKnownLocation != null) {
       return "{" +
           "provider=" +
@@ -732,7 +842,8 @@ internal class UserRepositoryFirestoreHelper() {
         phoneNumber = document.data?.get("phoneNumber").toString(),
         emailAddress = document.data?.get("emailAddress").toString(),
         profilePicture = profilePicture,
-        lastKnownLocation = lastKnownLocation)
+        lastKnownLocation = MutableStateFlow(lastKnownLocation ?: Location("")),
+    )
   }
 
   fun documentSnapshotToList(uidJsonList: String): List<String> {
