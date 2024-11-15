@@ -70,6 +70,7 @@ class ConfidentialityScreenTest {
     composeTestRule.onNodeWithTag("onlinePresenceOptions").performClick()
     // Additional assertions can be made here based on the selected state.
   }
+
   /*
   @Test
   fun profilePhotoOptionsWorks() {

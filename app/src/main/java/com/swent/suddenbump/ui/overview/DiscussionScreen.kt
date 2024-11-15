@@ -41,71 +41,65 @@ fun DiscussionScreen(navigationActions: NavigationActions) {
                     .background(Color.Black)
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              // Chat Wallpaper Section
-              Text(
-                  "Chat wallpaper",
-                  color = Color.White,
-                  modifier = Modifier.testTag("chatWallpaperText"))
-              Button(
+              SectionWithButton(
+                  label = "Chat wallpaper",
+                  buttonText = "Change chat wallpaper",
                   onClick = { /* Add logic for chat wallpaper */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                  modifier = Modifier.testTag("changeChatWallpaperButton")) {
-                    Text("Change chat wallpaper", color = Color.White)
-                  }
+                  labelTag = "chatWallpaperText",
+                  buttonTag = "changeChatWallpaperButton")
 
               Divider()
 
-              // Export Chat Section
-              Text(
-                  "Export chat", color = Color.White, modifier = Modifier.testTag("exportChatText"))
-              Button(
+              SectionWithButton(
+                  label = "Export chat",
+                  buttonText = "Export chat",
                   onClick = { /* Add logic for exporting chat */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                  modifier = Modifier.testTag("exportChatButton")) {
-                    Text("Export chat")
-                  }
+                  labelTag = "exportChatText",
+                  buttonTag = "exportChatButton")
 
               Divider()
 
-              // Archive All Chats Section
-              Text(
-                  "Archive all chats",
-                  color = Color.White,
-                  modifier = Modifier.testTag("archiveAllChatsText"))
-              Button(
+              SectionWithButton(
+                  label = "Archive all chats",
+                  buttonText = "Archive all chats",
                   onClick = { /* Add logic for archiving all chats */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                  modifier = Modifier.testTag("archiveAllChatsButton")) {
-                    Text("Archive all chats")
-                  }
+                  labelTag = "archiveAllChatsText",
+                  buttonTag = "archiveAllChatsButton")
 
               Divider()
 
-              // Clear All Chats Section
-              Text(
-                  "Clear all chats",
-                  color = Color.White,
-                  modifier = Modifier.testTag("clearAllChatsText"))
-              Button(
+              SectionWithButton(
+                  label = "Clear all chats",
+                  buttonText = "Clear all chats",
                   onClick = { /* Add logic for clearing all chats */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                  modifier = Modifier.testTag("clearAllChatsButton")) {
-                    Text("Clear all chats")
-                  }
+                  labelTag = "clearAllChatsText",
+                  buttonTag = "clearAllChatsButton")
 
               Divider()
 
-              // Delete All Chats Section
-              Text(
-                  "Delete all chats",
-                  color = Color.White,
-                  modifier = Modifier.testTag("deleteAllChatsText"))
-              Button(
+              SectionWithButton(
+                  label = "Delete all chats",
+                  buttonText = "Delete all chats",
                   onClick = { /* Add logic for deleting all chats */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                  modifier = Modifier.testTag("deleteAllChatsButton")) {
-                    Text("Delete all chats")
-                  }
+                  labelTag = "deleteAllChatsText",
+                  buttonTag = "deleteAllChatsButton")
             }
       })
+}
+
+@Composable
+fun SectionWithButton(
+    label: String,
+    buttonText: String,
+    onClick: () -> Unit,
+    labelTag: String,
+    buttonTag: String
+) {
+  Text(text = label, color = Color.White, modifier = Modifier.testTag(labelTag))
+  Button(
+      onClick = onClick,
+      colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+      modifier = Modifier.testTag(buttonTag)) {
+        Text(buttonText, color = Color.White)
+      }
 }

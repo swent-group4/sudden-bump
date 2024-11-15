@@ -3,6 +3,7 @@ package com.swent.suddenbump.ui.overview
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -70,123 +71,120 @@ fun SettingsScreen(
               },
               colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40))
         },
-        content = { pd ->
+        content = { paddingValues ->
           Column(
-              modifier = Modifier.padding(pd).fillMaxSize().padding(16.dp).background(Color.Black),
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(paddingValues)
+                      .padding(16.dp)
+                      .background(Color.Black),
               verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                // Username and Photo Section
-                Text(
-                    userViewModel.getCurrentUser().collectAsState().value.firstName,
-                    color = Color.White)
-                Box(
-                    modifier =
-                        Modifier.size(120.dp)
-                            .clip(CircleShape)
-                            .background(Color.Gray)
-                            .align(Alignment.CenterHorizontally)
-                            .testTag("profilePicture")) {
-                      profilePictureUri?.let {
-                        val bitmap =
-                            BitmapFactory.decodeStream(context.contentResolver.openInputStream(it))
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Profile Picture",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize())
-                      }
-                          ?: Image(
-                              painter = painterResource(id = R.drawable.settings_user),
-                              contentDescription = "Profile Picture",
-                              contentScale = ContentScale.Crop,
-                              modifier = Modifier.fillMaxSize())
-                    }
-
-                // Button to add photo
-                Button(
-                    onClick = { launcher.launch("image/*") },
-                    Modifier.align(Alignment.CenterHorizontally).testTag("addPhotoButton"),
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
-                      Text("Add Photo", color = Color.White)
-                    }
-
-                // Account Section
-                Text(
-                    "Account",
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .clickable { navigationActions.navigateTo("AccountScreen") }
-                        .background(Color.Gray, RoundedCornerShape(8.dp))
-                        .padding(8.dp),
-                    color = Color.White)
-
-                // Confidentiality Section
-                Text(
-                    "Confidentiality",
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .clickable { navigationActions.navigateTo("ConfidentialityScreen") }
-                        .background(Color.Gray, RoundedCornerShape(8.dp))
-                        .padding(8.dp),
-                    color = Color.White)
-
-                // Discussions Section
-                Text(
-                    "Discussions",
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .clickable { navigationActions.navigateTo("DiscussionsScreen") }
-                        .background(Color.Gray, RoundedCornerShape(8.dp))
-                        .padding(8.dp),
-                    color = Color.White)
-
-                // Notifications Section
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically) {
-                      Text(
-                          "Enable Notifications",
-                          Modifier.weight(1f)
-                              .padding(horizontal = 8.dp)
-                              .background(Color.Gray, RoundedCornerShape(8.dp))
-                              .padding(8.dp),
-                          color = Color.White)
-                      Switch(
-                          checked = notificationsEnabled,
-                          onCheckedChange = {
-                            notificationsEnabled = it
-                            onNotificationsEnabledChange(it)
-                          },
-                          colors =
-                              SwitchDefaults.colors(
-                                  checkedThumbColor = Color.White,
-                                  checkedTrackColor = Purple80,
-                                  uncheckedThumbColor = Color.Gray,
-                                  uncheckedTrackColor = Color.DarkGray))
-                    }
-
-                // Storage and Data Section
-                Text(
-                    "Storage and Data",
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .clickable { navigationActions.navigateTo("StorageAndDataScreen") }
-                        .background(Color.Gray, RoundedCornerShape(8.dp))
-                        .padding(8.dp),
-                    color = Color.White)
-
-                // Help Section
-                Text(
-                    "Help",
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .clickable { navigationActions.navigateTo("HelpScreen") }
-                        .background(Color.Gray, RoundedCornerShape(8.dp))
-                        .padding(8.dp),
-                    color = Color.White)
+                ProfileSection(profilePictureUri, launcher, userViewModel)
+                SettingsOption("Account", Color.Gray) {
+                  navigationActions.navigateTo("AccountScreen")
+                }
+                SettingsOption("Confidentiality", Color.Gray) {
+                  navigationActions.navigateTo("ConfidentialityScreen")
+                }
+                SettingsOption("Discussions", Color.Gray) {
+                  navigationActions.navigateTo("DiscussionsScreen")
+                }
+                NotificationsSwitch(notificationsEnabled) {
+                  notificationsEnabled = it
+                  onNotificationsEnabledChange(it)
+                }
+                SettingsOption("Storage and Data", Color.Gray) {
+                  navigationActions.navigateTo("StorageAndDataScreen")
+                }
+                SettingsOption("Help", Color.Gray) { navigationActions.navigateTo("HelpScreen") }
               }
         })
   }
+}
+
+@Composable
+fun ProfileSection(
+    profilePictureUri: Uri?,
+    launcher: ActivityResultLauncher<String>,
+    userViewModel: UserViewModel
+) {
+  val context = LocalContext.current
+  val userName = userViewModel.getCurrentUser().collectAsState().value.firstName
+
+  Column(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalAlignment = Alignment.CenterHorizontally // Center everything in this Column
+      ) {
+        Text(userName, color = Color.White)
+
+        Box(
+            modifier =
+                Modifier.size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color.Gray)
+                    .testTag("profilePicture")) {
+              profilePictureUri?.let {
+                val bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(it))
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Profile Picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize())
+              }
+                  ?: Image(
+                      painter = painterResource(id = R.drawable.settings_user),
+                      contentDescription = "Profile Picture",
+                      contentScale = ContentScale.Crop,
+                      modifier = Modifier.fillMaxSize())
+            }
+
+        Button(
+            onClick = { launcher.launch("image/*") },
+            modifier = Modifier.testTag("addPhotoButton"),
+            colors = ButtonDefaults.buttonColors(containerColor = Purple80)) {
+              Text("Add Photo", color = Color.White)
+            }
+      }
+}
+
+@Composable
+fun SettingsOption(label: String, backgroundColor: Color, onClick: () -> Unit) {
+  Text(
+      text = label,
+      color = Color.White,
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 8.dp)
+              .clickable { onClick() }
+              .background(backgroundColor, RoundedCornerShape(8.dp))
+              .padding(8.dp)
+              .testTag("${label.replace(" ", "")}Option"))
+}
+
+@Composable
+fun NotificationsSwitch(notificationsEnabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
+  Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = "Enable Notifications",
+            color = Color.White,
+            modifier =
+                Modifier.weight(1f)
+                    .padding(horizontal = 8.dp)
+                    .background(Color.Gray, RoundedCornerShape(8.dp))
+                    .padding(8.dp))
+        Switch(
+            checked = notificationsEnabled,
+            onCheckedChange = onCheckedChange,
+            colors =
+                SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Purple80,
+                    uncheckedThumbColor = Color.Gray,
+                    uncheckedTrackColor = Color.DarkGray))
+      }
 }
 
 @Preview(showBackground = true)

@@ -1,9 +1,6 @@
 package com.swent.suddenbump.ui.overview
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
@@ -15,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.theme.clickableTextModifier
+import com.swent.suddenbump.ui.theme.screenPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,49 +36,43 @@ fun AccountScreen(navigationActions: NavigationActions) {
       },
       content = { paddingValues ->
         Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(paddingValues)
-                    .background(Color.Black)
-                    .padding(16.dp),
+            modifier = screenPadding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-
-              // Account Section
+              // Each section uses the reusable clickableTextModifier
               Text(
-                  "Birthday",
-                  Modifier.fillMaxWidth()
-                      .padding(horizontal = 8.dp)
-                      .clickable { navigationActions.navigateTo("AccountScreen") }
-                      .background(Color.Gray, RoundedCornerShape(8.dp))
-                      .padding(8.dp),
-                  color = Color.White)
-
-              Text(
-                  "Language",
-                  Modifier.fillMaxWidth()
-                      .padding(horizontal = 8.dp)
-                      .clickable { navigationActions.navigateTo("AccountScreen") }
-                      .background(Color.Gray, RoundedCornerShape(8.dp))
-                      .padding(8.dp),
-                  color = Color.White)
+                  text = "Birthday",
+                  color = Color.White,
+                  modifier =
+                      clickableTextModifier(
+                          backgroundColor = Color.Gray, testTag = "birthdaySection") {
+                            navigationActions.navigateTo("AccountScreen")
+                          })
 
               Text(
-                  "Delete Account",
-                  Modifier.fillMaxWidth()
-                      .padding(horizontal = 8.dp)
-                      .clickable { navigationActions.navigateTo("Delete Account") }
-                      .background(Pink40, RoundedCornerShape(8.dp))
-                      .padding(8.dp),
-                  color = Color.White)
+                  text = "Language",
+                  color = Color.White,
+                  modifier =
+                      clickableTextModifier(
+                          backgroundColor = Color.Gray, testTag = "languageSection") {
+                            navigationActions.navigateTo("AccountScreen")
+                          })
 
               Text(
-                  "Log out",
-                  Modifier.fillMaxWidth()
-                      .padding(horizontal = 8.dp)
-                      .clickable { navigationActions.navigateTo("Log out") }
-                      .background(Pink40, RoundedCornerShape(8.dp))
-                      .padding(8.dp),
-                  color = Color.White)
+                  text = "Delete Account",
+                  color = Color.White,
+                  modifier =
+                      clickableTextModifier(
+                          backgroundColor = Pink40, testTag = "deleteAccountSection") {
+                            navigationActions.navigateTo("Delete Account")
+                          })
+
+              Text(
+                  text = "Log out",
+                  color = Color.White,
+                  modifier =
+                      clickableTextModifier(backgroundColor = Pink40, testTag = "logoutSection") {
+                        navigationActions.navigateTo("Log out")
+                      })
             }
       })
 }

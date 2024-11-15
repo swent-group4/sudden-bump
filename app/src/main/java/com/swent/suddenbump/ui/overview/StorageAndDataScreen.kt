@@ -42,35 +42,24 @@ fun StorageAndDataScreen(navigationActions: NavigationActions) {
                     .background(Color.Black)
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              // Manage Storage Section
-              Text(
-                  "Manage storage",
-                  color = Color.White,
-                  modifier = Modifier.testTag("manageStorageText"))
-              Button(
+              LabeledButtonSection(
+                  label = "Manage storage",
+                  buttonText = "Manage storage",
                   onClick = { /* Add logic for managing storage */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                  modifier = Modifier.testTag("manageStorageButton")) {
-                    Text("Manage storage", color = Color.White)
-                  }
+                  labelTag = "manageStorageText",
+                  buttonTag = "manageStorageButton")
 
               Divider()
 
-              // Network Usage Section
-              Text(
-                  "Network usage",
-                  color = Color.White,
-                  modifier = Modifier.testTag("networkUsageText"))
-              Button(
+              LabeledButtonSection(
+                  label = "Network usage",
+                  buttonText = "View network usage",
                   onClick = { /* Add logic for network usage */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                  modifier = Modifier.testTag("viewNetworkUsageButton")) {
-                    Text("View network usage", color = Color.White)
-                  }
+                  labelTag = "networkUsageText",
+                  buttonTag = "viewNetworkUsageButton")
 
               Divider()
 
-              // Media Quality Section
               Text(
                   "Media Quality",
                   color = Color.White,
@@ -78,6 +67,25 @@ fun StorageAndDataScreen(navigationActions: NavigationActions) {
               MediaQualityOptions(modifier = Modifier.testTag("mediaQualityOptions"))
             }
       })
+}
+
+@Composable
+fun LabeledButtonSection(
+    label: String,
+    buttonText: String,
+    onClick: () -> Unit,
+    labelTag: String,
+    buttonTag: String
+) {
+  Column {
+    Text(text = label, color = Color.White, modifier = Modifier.testTag(labelTag))
+    Button(
+        onClick = onClick,
+        colors = ButtonDefaults.buttonColors(containerColor = Purple80),
+        modifier = Modifier.fillMaxWidth().testTag(buttonTag)) {
+          Text(buttonText, color = Color.White)
+        }
+  }
 }
 
 @Composable
