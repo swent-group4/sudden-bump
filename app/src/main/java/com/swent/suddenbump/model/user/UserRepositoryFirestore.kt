@@ -26,6 +26,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 
+/**
+ * A Firebase Firestore-backed implementation of the UserRepository interface, managing user
+ * accounts, friend relationships, and profile pictures, as well as sending and verifying phone
+ * verification codes.
+ *
+ * @property db The Firestore database instance used to perform CRUD operations.
+ * @property context Application context, used for accessing shared preferences.
+ */
 class UserRepositoryFirestore(private val db: FirebaseFirestore, private val context: Context) :
     UserRepository {
 
@@ -45,15 +53,32 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   private val sharedPreferences =
       context.getSharedPreferences("SuddenBumpLocalDB", Context.MODE_PRIVATE)
 
+  /**
+   * Initializes the repository by setting up the image repository.
+   *
+   * @param onSuccess Called when initialization is successful.
+   */
   override fun init(onSuccess: () -> Unit) {
     imageRepository.init(onSuccess)
     onSuccess()
   }
 
+  /**
+   * Generates a new unique user ID.
+   *
+   * @return The generated user ID as a String.
+   */
   override fun getNewUid(): String {
     return db.collection(usersCollectionPath).document().id
   }
 
+  /**
+   * Verifies if no account exists with the given email address.
+   *
+   * @param emailAddress The email address to verify.
+   * @param onSuccess Called with `true` if no account exists, `false` otherwise.
+   * @param onFailure Called with an exception if the check fails.
+   */
   override fun verifyNoAccountExists(
       emailAddress: String,
       onSuccess: (Boolean) -> Unit,
@@ -72,6 +97,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Creates a new user account with the given User object and uploads profile picture if available.
+   *
+   * @param user The User object containing user information.
+   * @param onSuccess Called when the account is successfully created.
+   * @param onFailure Called with an exception if account creation fails.
+   */
   override fun createUserAccount(
       user: User,
       onSuccess: () -> Unit,
@@ -105,6 +137,12 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Retrieves the current authenticated user's account details.
+   *
+   * @param onSuccess Called with the User object if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit) {
     db.collection(emailCollectionPath)
         .document(FirebaseAuth.getInstance().currentUser!!.email.toString())
@@ -133,6 +171,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Retrieves another user's account details by user ID.
+   *
+   * @param uid The user ID of the account to retrieve.
+   * @param onSuccess Called with the User object if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getUserAccount(
       uid: String,
       onSuccess: (User) -> Unit,
@@ -157,6 +202,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Updates the account details of the given User object in the database.
+   *
+   * @param user The User object containing updated information.
+   * @param onSuccess Called when the account update is successful.
+   * @param onFailure Called with an exception if the update fails.
+   */
   override fun updateUserAccount(
       user: User,
       onSuccess: () -> Unit,
@@ -184,6 +236,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Deletes a user account by user ID.
+   *
+   * @param id The user ID of the account to delete.
+   * @param onSuccess Called when the account deletion is successful.
+   * @param onFailure Called with an exception if deletion fails.
+   */
   override fun deleteUserAccount(
       id: String,
       onSuccess: () -> Unit,
@@ -196,6 +255,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnFailureListener { e -> onFailure(e) }
   }
 
+  /**
+   * Retrieves friend requests received by the specified user.
+   *
+   * @param user The user whose friend requests are being retrieved.
+   * @param onSuccess Called with a list of Users who sent friend requests if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getUserFriendRequests(
       user: User,
       onSuccess: (List<User>) -> Unit,
@@ -230,6 +296,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Retrieves friend requests sent by the specified user.
+   *
+   * @param user The user who sent the friend requests.
+   * @param onSuccess Called with a list of Users who received friend requests from the user.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getSentFriendRequests(
       user: User,
       onSuccess: (List<User>) -> Unit,
@@ -264,6 +337,15 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Adds a friend to the specified user's friend list, removing any pending friend requests between
+   * them.
+   *
+   * @param user The user who is adding a friend.
+   * @param friend The friend being added.
+   * @param onSuccess Called when the friend addition is successful.
+   * @param onFailure Called with an exception if the operation fails.
+   */
   override fun createFriend(
       user: User,
       friend: User,
@@ -364,6 +446,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Sends a friend request from the specified user to the target friend.
+   *
+   * @param user The user sending the friend request.
+   * @param friend The target friend who will receive the request.
+   * @param onSuccess Called when the friend request is successfully sent.
+   * @param onFailure Called with an exception if the request fails.
+   */
   override fun createFriendRequest(
       user: User,
       friend: User,
@@ -409,7 +499,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
-  // Reject the friend request from friend to user.
+  /**
+   * Deletes a friend request from the specified user to the target friend.
+   *
+   * @param user The user deleting the friend request.
+   * @param friend The friend whose request is being deleted.
+   * @param onSuccess Called when the friend request is successfully deleted.
+   * @param onFailure Called with an exception if deletion fails.
+   */
   override fun deleteFriendRequest(
       user: User,
       friend: User,
@@ -464,6 +561,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Sets the list of sent friend requests for the specified user.
+   *
+   * @param user The user whose sent friend requests are being set.
+   * @param friendRequestsList A list of User objects representing the sent friend requests.
+   * @param onSuccess Called when the list is successfully updated.
+   * @param onFailure Called with an exception if the update fails.
+   */
   override fun setSentFriendRequests(
       user: User,
       friendRequestsList: List<User>,
@@ -478,6 +583,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
 
+  /**
+   * Sets the list of received friend requests for the specified user.
+   *
+   * @param user The user whose received friend requests are being set.
+   * @param friendRequestsList A list of User objects representing the received friend requests.
+   * @param onSuccess Called when the list is successfully updated.
+   * @param onFailure Called with an exception if the update fails.
+   */
   override fun setUserFriendRequests(
       user: User,
       friendRequestsList: List<User>,
@@ -492,6 +605,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
 
+  /**
+   * Retrieves a list of friends for the specified user.
+   *
+   * @param user The user whose friends are being retrieved.
+   * @param onSuccess Called with a list of User objects representing the user's friends if
+   *   retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getUserFriends(
       user: User,
       onSuccess: (List<User>) -> Unit,
@@ -523,6 +644,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Sets the list of friends for the specified user.
+   *
+   * @param user The user whose friends list is being set.
+   * @param friendsList A list of User objects representing the user's friends.
+   * @param onSuccess Called when the list is successfully updated.
+   * @param onFailure Called with an exception if the update fails.
+   */
   override fun setUserFriends(
       user: User,
       friendsList: List<User>,
@@ -537,6 +666,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
 
+  /**
+   * Retrieves a list of recommended friends for the specified user, excluding current friends.
+   *
+   * @param user The user requesting friend recommendations.
+   * @param onSuccess Called with a list of recommended friends if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getRecommendedFriends(
       user: User,
       onSuccess: (List<User>) -> Unit,
@@ -564,6 +700,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Retrieves a list of blocked users for the specified user.
+   *
+   * @param user The user whose blocked users list is being retrieved.
+   * @param onSuccess Called with a list of blocked User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getBlockedFriends(
       user: User,
       onSuccess: (List<User>) -> Unit,
@@ -583,6 +726,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Sets the list of blocked users for the specified user.
+   *
+   * @param user The user whose blocked list is being set.
+   * @param blockedFriendsList A list of User objects representing blocked users.
+   * @param onSuccess Called when the list is successfully updated.
+   * @param onFailure Called with an exception if the update fails.
+   */
   override fun setBlockedFriends(
       user: User,
       blockedFriendsList: List<User>,
@@ -596,6 +747,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
 
+  /**
+   * Updates the last known location of the specified user.
+   *
+   * @param user The user whose location is being updated.
+   * @param location The new Location object to update.
+   * @param onSuccess Called when the location is successfully updated.
+   * @param onFailure Called with an exception if the update fails.
+   */
   override fun updateLocation(
       user: User,
       location: Location,
@@ -609,6 +768,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
 
+  /**
+   * Updates the timestamp for the specified user.
+   *
+   * @param user The user whose timestamp is being updated.
+   * @param timestamp The new Timestamp to update.
+   * @param onSuccess Called when the timestamp is successfully updated.
+   * @param onFailure Called with an exception if the update fails.
+   */
   override fun updateTimestamp(
       user: User,
       timestamp: Timestamp,
@@ -622,6 +789,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
 
+  /**
+   * Retrieves the locations of the specified user's friends.
+   *
+   * @param userFriendsList A list of friends for whom locations are to be retrieved.
+   * @param onSuccess Called with a map of User objects to their last known Location if retrieval
+   *   succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   @SuppressLint("SuspiciousIndentation")
   override fun getFriendsLocation(
       userFriendsList: List<User>,
@@ -653,6 +828,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     onSuccess(friendsLocations)
   }
 
+  /**
+   * Sends a phone number verification code to the given phone number.
+   *
+   * @param phoneNumber The phone number to verify.
+   * @param onSuccess Called with the verification ID or code if verification is successful.
+   * @param onFailure Called with an exception if verification fails.
+   */
   override fun sendVerificationCode(
       phoneNumber: String,
       onSuccess: (String) -> Unit, // Change to accept verification ID
@@ -690,6 +872,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     PhoneAuthProvider.verifyPhoneNumber(options)
   }
 
+  /**
+   * Verifies the code entered by the user.
+   *
+   * @param verificationId The verification ID associated with the code.
+   * @param code The verification code provided by the user.
+   * @param onSuccess Called when code verification is successful.
+   * @param onFailure Called with an exception if verification fails.
+   */
   override fun verifyCode(
       verificationId: String,
       code: String,
@@ -706,6 +896,11 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     }
   }
 
+  /**
+   * Saves the login status of a user in shared preferences.
+   *
+   * @param userId The unique identifier of the user to save.
+   */
   override fun saveLoginStatus(userId: String) {
     with(sharedPreferences.edit()) {
       putBoolean("isLoggedIn", true)
@@ -714,14 +909,27 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     }
   }
 
+  /**
+   * Retrieves the saved user ID from shared preferences.
+   *
+   * @return The saved user ID as a String, or an empty string if no user is logged in.
+   */
   override fun getSavedUid(): String {
     return sharedPreferences.getString("userId", null) ?: ""
   }
 
+  /**
+   * Checks if a user is currently logged in based on shared preferences.
+   *
+   * @return `true` if the user is logged in, `false` otherwise.
+   */
   override fun isUserLoggedIn(): Boolean {
     return sharedPreferences.getBoolean("isLoggedIn", false)
   }
 
+  /**
+   * Logs out the current user by updating shared preferences to remove login status and user ID.
+   */
   override fun logoutUser() {
     with(sharedPreferences.edit()) {
       putBoolean("isLoggedIn", false)
@@ -730,6 +938,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     }
   }
 
+  /**
+   * Converts a JSON list of user IDs into a list of User objects by fetching their details from
+   * Firestore.
+   *
+   * @param uidJsonList The JSON-formatted String containing user IDs.
+   * @param onFailure Called with an exception if any user data retrieval fails.
+   * @return A list of User objects corresponding to the IDs in the input JSON.
+   */
   private fun documentSnapshotToUserList(
       uidJsonList: String,
       onFailure: (Exception) -> Unit
@@ -759,7 +975,17 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   }
 }
 
+/**
+ * Helper class for UserRepositoryFirestore, providing methods for converting User objects to
+ * Firestore data maps, and utilities for parsing and converting location data.
+ */
 internal class UserRepositoryFirestoreHelper() {
+  /**
+   * Converts a User object into a map representation suitable for Firestore.
+   *
+   * @param user The User object to convert.
+   * @return A map of user data fields.
+   */
   fun userToMapOf(user: User): Map<String, String> {
     return mapOf(
         "uid" to user.uid,
@@ -770,6 +996,12 @@ internal class UserRepositoryFirestoreHelper() {
         "lastKnownLocation" to locationToString(user.lastKnownLocation.value))
   }
 
+  /**
+   * Converts a Location object into a String format suitable for Firestore storage.
+   *
+   * @param lastKnownLocation The Location object to convert.
+   * @return The location as a formatted String.
+   */
   fun locationToString(lastKnownLocation: Location?): String {
     if (lastKnownLocation != null) {
       return "{" +
@@ -783,6 +1015,12 @@ internal class UserRepositoryFirestoreHelper() {
     } else return "{" + "provider= " + "latitude= " + ", " + "longitude= " + "}"
   }
 
+  /**
+   * Parses a location String back into a Location object.
+   *
+   * @param mapAttributes The formatted String containing location details.
+   * @return The reconstructed Location object.
+   */
   fun locationParser(mapAttributes: String): Location {
     val locationMap =
         mapAttributes
@@ -822,6 +1060,13 @@ internal class UserRepositoryFirestoreHelper() {
     }
   }
 
+  /**
+   * Converts a DocumentSnapshot from Firestore into a User object.
+   *
+   * @param document The DocumentSnapshot to convert.
+   * @param profilePicture The user's profile picture as an ImageBitmap, if available.
+   * @return The reconstructed User object.
+   */
   fun documentSnapshotToUser(document: DocumentSnapshot, profilePicture: ImageBitmap?): User {
     val lastKnownLocationString = document.data?.get("lastKnownLocation")?.toString()
     val lastKnownLocation =
@@ -846,11 +1091,24 @@ internal class UserRepositoryFirestoreHelper() {
     )
   }
 
+  /**
+   * Parses a JSON list of user IDs from a String and returns them as a list.
+   *
+   * @param uidJsonList The JSON-formatted String containing user IDs.
+   * @return A list of user IDs.
+   */
   fun documentSnapshotToList(uidJsonList: String): List<String> {
     val uidList = uidJsonList.trim('[', ']').split(", ").filter { it.isNotBlank() }
     return uidList
   }
 
+  /**
+   * Constructs the storage path for a user's profile picture.
+   *
+   * @param uid The user ID.
+   * @param reference The root StorageReference for profile pictures.
+   * @return The complete path to the profile picture.
+   */
   fun uidToProfilePicturePath(uid: String, reference: StorageReference): String {
     return reference.child("$uid.jpeg").toString()
   }

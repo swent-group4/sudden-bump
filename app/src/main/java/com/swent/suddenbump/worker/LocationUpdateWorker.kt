@@ -26,6 +26,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
+/**
+ * Worker class for updating the user's location in the background.
+ *
+ * @param context The application context.
+ * @param workerParams Parameters to setup the worker.
+ */
 class LocationUpdateWorker(
     context: Context,
     workerParams: WorkerParameters,
@@ -33,12 +39,15 @@ class LocationUpdateWorker(
   private val fusedLocationClient: FusedLocationProviderClient =
       LocationServices.getFusedLocationProviderClient(context)
 
+  /**
+   * Performs the background work to update the user's location.
+   *
+   * @return The result of the work.
+   */
   override suspend fun doWork(): Result {
-
-    //      setForeground(createForegroundInfo())
     return withContext(Dispatchers.IO) {
       try {
-        // Get the current location (you need to implement this method)
+        // Get the current location
         Log.d("WorkerSuddenBump", "Starting doWork")
         val location: Location = getCurrentLocation()
         // Initialize UserRepository
@@ -57,7 +66,6 @@ class LocationUpdateWorker(
         Log.d("WorkerSuddenBump", "Got user: $user")
 
         if (user != null) {
-
           Log.d("WorkerSuddenBump", "User $user")
 
           val timestamp = Timestamp.now()
@@ -85,6 +93,13 @@ class LocationUpdateWorker(
     }
   }
 
+  /**
+   * Suspends the coroutine and retrieves the user account.
+   *
+   * @param repository The user repository.
+   * @param userId The user ID.
+   * @return The user account or null if not found.
+   */
   private suspend fun getUserAccountSuspend(
       repository: UserRepositoryFirestore,
       userId: String
@@ -102,6 +117,11 @@ class LocationUpdateWorker(
         })
   }
 
+  /**
+   * Creates the foreground notification for the worker.
+   *
+   * @return The ForegroundInfo containing the notification.
+   */
   private fun createForegroundInfo(): ForegroundInfo {
     val channelId = "LocationUpdateWorkerChannel"
     val title = "Location Update"
@@ -126,6 +146,11 @@ class LocationUpdateWorker(
     return ForegroundInfo(1, notification)
   }
 
+  /**
+   * Retrieves the current location.
+   *
+   * @return The current location.
+   */
   @SuppressLint("MissingPermission")
   private suspend fun getCurrentLocation(): Location = suspendCancellableCoroutine { cont ->
     fusedLocationClient.lastLocation
