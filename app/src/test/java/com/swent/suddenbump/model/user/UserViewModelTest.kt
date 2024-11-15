@@ -4,10 +4,15 @@ import android.location.Location
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.test.core.app.ApplicationProvider
+import androidx.work.Configuration
+import androidx.work.WorkManager
+import androidx.work.testing.WorkManagerTestInitHelper
 import com.swent.suddenbump.model.chat.ChatRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.*
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -20,6 +25,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.*
 import org.mockito.kotlin.any
@@ -27,7 +33,9 @@ import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class UserViewModelTest {
   @get:Rule val instantTaskExecutorRule = InstantTaskExecutorRule()
 
@@ -37,10 +45,11 @@ class UserViewModelTest {
 
   private val exception = Exception()
   private val location =
-      Location("mock_provider").apply {
-        latitude = 0.0
-        longitude = 0.0
-      }
+      MutableStateFlow(
+          Location("mock_provider").apply {
+            latitude = 0.0
+            longitude = 0.0
+          })
   private val user =
       User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch", location)
 
@@ -54,12 +63,18 @@ class UserViewModelTest {
     chatRepository = mock(ChatRepository::class.java)
     userViewModel = UserViewModel(userRepository, chatRepository)
     Dispatchers.setMain(testDispatcher)
+
+    val config = Configuration.Builder().setMinimumLoggingLevel(android.util.Log.DEBUG).build()
+
+    WorkManagerTestInitHelper.initializeTestWorkManager(
+        ApplicationProvider.getApplicationContext(), config)
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+    WorkManager.getInstance(ApplicationProvider.getApplicationContext()).cancelAllWork()
   }
 
   @Test
@@ -448,14 +463,16 @@ class UserViewModelTest {
   @Test
   fun getRelativeDistance_knownFriendLocation() {
     // Arrange
+    userViewModel.setUser(user, {}, {})
     val friendLocation =
-        Location("mock_provider").apply {
-          latitude = 1.0
-          longitude = 1.0
-        }
+        MutableStateFlow(
+            Location("mock_provider").apply {
+              latitude = 1.0
+              longitude = 1.0
+            })
     val friend =
         User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", friendLocation)
-    val friendsMap = mapOf(friend to friendLocation)
+    val friendsMap = mapOf(friend to friendLocation.value)
 
     // Mock repository method for loading friend locations
     whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
@@ -464,19 +481,19 @@ class UserViewModelTest {
     }
 
     // Update the user location
-    userViewModel.updateLocation(friend, friendLocation, onSuccess = {}, onFailure = {})
+    userViewModel.updateLocation(friend, friendLocation.value, onSuccess = {}, onFailure = {})
 
     // Act
     val distance = userViewModel.getRelativeDistance(friend)
 
     // Assert
-    assertThat(distance, `is`(location.distanceTo(friendLocation)))
+    assertThat(distance, `is`(user.lastKnownLocation.value.distanceTo(friendLocation.value)))
   }
 
   @Test
   fun getRelativeDistance_unknownFriendLocation() {
     // Arrange
-    userViewModel.updateLocation(location = location, onSuccess = {}, onFailure = {})
+    userViewModel.updateLocation(location = location.value, onSuccess = {}, onFailure = {})
 
     val friend =
         User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
@@ -492,14 +509,15 @@ class UserViewModelTest {
   fun getRelativeDistance_noUserLocation() {
     // Arrange
     val friendLocation =
-        Location("mock_provider").apply {
-          latitude = 1.0
-          longitude = 1.0
-        }
+        MutableStateFlow(
+            Location("mock_provider").apply {
+              latitude = 1.0
+              longitude = 1.0
+            })
     val friend =
         User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", friendLocation)
 
-    userViewModel.updateLocation(friend, friendLocation, onSuccess = {}, onFailure = {})
+    userViewModel.updateLocation(friend, friendLocation.value, onSuccess = {}, onFailure = {})
 
     // Act
     val distance = userViewModel.getRelativeDistance(friend)

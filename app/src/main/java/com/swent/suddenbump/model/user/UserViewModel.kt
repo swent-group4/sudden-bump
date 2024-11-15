@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.user
 
+import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
@@ -8,6 +9,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.test.core.app.ApplicationProvider.getApplicationContext
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.chat.ChatRepository
@@ -15,6 +18,7 @@ import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
+import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,10 +37,11 @@ open class UserViewModel(
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
   val locationDummy =
-      Location("providerName").apply {
-        latitude = 0.0 // Set latitude
-        longitude = 0.0 // Set longitude
-      }
+      MutableStateFlow(
+          Location("dummy").apply {
+            latitude = 0.0 // Set latitude
+            longitude = 0.0 // Set longitude
+          })
 
   private val _user: MutableStateFlow<User> =
       MutableStateFlow(
@@ -57,12 +62,6 @@ open class UserViewModel(
   private val _recommendedFriends: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(_user.value))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
-  private val _userLocation: MutableStateFlow<Location> =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
 
@@ -83,26 +82,28 @@ open class UserViewModel(
   }
 
   companion object {
-    val Factory: ViewModelProvider.Factory =
-        object : ViewModelProvider.Factory {
-          @Suppress("UNCHECKED_CAST")
-          override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return UserViewModel(
-                UserRepositoryFirestore(Firebase.firestore),
-                ChatRepositoryFirestore(Firebase.firestore))
-                as T
-          }
+    fun provideFactory(context: Context): ViewModelProvider.Factory {
+      return object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+          val userRepository = UserRepositoryFirestore(Firebase.firestore, context)
+          return UserViewModel(userRepository, ChatRepositoryFirestore(Firebase.firestore)) as T
         }
+      }
+    }
   }
 
   fun setCurrentUser() {
     repository.getUserAccount(
-        onSuccess = {
-          _user.value = it
+        onSuccess = { user ->
+          _user.value = user
+          saveUserLoginStatus(_user.value.uid)
+          scheduleLocationUpdateWorker(getApplicationContext(), _user.value.uid)
+          Log.d(logTag, "User set 1: ${_user.value}")
           repository.getUserFriends(
               user = _user.value,
               onSuccess = { friendsList ->
-                Log.i(logTag, friendsList.toString())
+                Log.d(logTag, friendsList.toString())
                 _userFriends.value = friendsList
                 repository.getBlockedFriends(
                     user = _user.value,
@@ -262,7 +263,7 @@ open class UserViewModel(
   }
 
   fun getLocation(): StateFlow<Location> {
-    return _userLocation.asStateFlow()
+    return _user.value.lastKnownLocation.asStateFlow()
   }
 
   fun updateLocation(
@@ -271,8 +272,17 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    _userLocation.value = location
+    _user.value.lastKnownLocation.value = location
     repository.updateLocation(user, location, onSuccess, onFailure)
+  }
+
+  fun updateTimestamp(
+      user: User = _user.value,
+      timestamp: Timestamp,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.updateTimestamp(user, timestamp, onSuccess, onFailure)
   }
 
   fun loadFriendsLocations() {
@@ -311,13 +321,12 @@ open class UserViewModel(
 
   fun getRelativeDistance(friend: User): Float {
     loadFriendsLocations()
-    val userLocation = _userLocation.value
-    val friendLocation = friendsLocations.value[friend]
-    return if (friendLocation != null) {
-      userLocation.distanceTo(friendLocation)
-    } else {
-      Float.MAX_VALUE
+    val userLocation = _user.value.lastKnownLocation.value
+    val friendLocation = friend.lastKnownLocation.value
+    if ((userLocation == locationDummy.value || friendLocation == locationDummy.value)) {
+      return Float.MAX_VALUE
     }
+    return userLocation.distanceTo(friendLocation)
   }
 
   fun isFriendsInRadius(radius: Int): Boolean {
@@ -325,8 +334,9 @@ open class UserViewModel(
     friendsLocations.value.values.forEach { friendLocation ->
       if (friendLocation != null) {
         Log.d(
-            "FriendsRadius", "Friends Locations: ${_userLocation.value.distanceTo(friendLocation)}")
-        if (_userLocation.value.distanceTo(friendLocation) <= radius) {
+            "FriendsRadius",
+            "Friends Locations: ${_user.value.lastKnownLocation.value.distanceTo(friendLocation)}")
+        if (_user.value.lastKnownLocation.value.distanceTo(friendLocation) <= radius) {
           return true
         }
       }
@@ -336,6 +346,22 @@ open class UserViewModel(
 
   fun getNewUid(): String {
     return repository.getNewUid()
+  }
+
+  fun saveUserLoginStatus(userId: String) {
+    repository.saveLoginStatus(userId)
+  }
+
+  fun getSavedUid(): String {
+    return repository.getSavedUid()
+  }
+
+  fun isUserLoggedIn(): Boolean {
+    return repository.isUserLoggedIn()
+  }
+
+  fun logout() {
+    repository.logoutUser()
   }
 
   private val _messages = MutableStateFlow<List<Message>>(emptyList())

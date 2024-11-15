@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.chat
 
+import android.location.Location
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.NavHostController
@@ -23,6 +24,12 @@ class ChatScreenTest {
   private lateinit var mockViewModel: UserViewModel
   private lateinit var fakeNavigationActions: FakeNavigationActions
   private lateinit var mockNavController: NavHostController
+  private val location =
+      MutableStateFlow(
+          Location("mock_provider").apply {
+            latitude = 0.0
+            longitude = 0.0
+          })
 
   // **Set up method to initialize mocks before each test**
   @Before
@@ -80,13 +87,13 @@ class ChatScreenTest {
 
     // Set current user
     val currentUser =
-        User("currentUserId", "Test", "User", "123456789", null, "test@example.com", null)
+        User("currentUserId", "Test", "User", "123456789", null, "test@example.com", location)
     val currentUserFlow = MutableStateFlow<User>(currentUser)
     every { mockViewModel.getCurrentUser() } returns currentUserFlow
 
     // Set other user
     val otherUser =
-        User("otherUserId", "Other", "User", "987654321", null, "other@example.com", null)
+        User("otherUserId", "Other", "User", "987654321", null, "other@example.com", location)
     every { mockViewModel.user } returns otherUser
 
     // **Act**

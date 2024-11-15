@@ -1,6 +1,6 @@
 package com.swent.suddenbump.ui.overview
 
-import android.util.Log
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -37,9 +37,9 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
-  Log.d("End-to-End", "UserCard: $user.uid")
   Card(
       onClick = {
         userViewModel.setSelectedContact(user)
@@ -61,7 +61,7 @@ fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: Us
         Text(text = "Phone: ${user.phoneNumber}")
         Text(
             text =
-                "latitude: ${user.lastKnownLocation?.latitude}, longitude: ${user.lastKnownLocation?.longitude}")
+                "latitude: ${user.lastKnownLocation.value.latitude}, longitude: ${user.lastKnownLocation.value.longitude}")
       }
     }
   }
