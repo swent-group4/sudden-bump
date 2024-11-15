@@ -97,7 +97,7 @@ class SettingsScreenTest {
     composeTestRule.onNodeWithText("Storage and Data").performClick()
     verify(navigationActions).navigateTo(screen = Screen.STORAGE_AND_DATA)
   }
-/*
+  /*
   @Test
   fun helpButtonNavigatesToHelpScreen() {
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
