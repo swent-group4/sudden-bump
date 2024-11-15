@@ -196,8 +196,9 @@ fun PreviewSettingsScreen() {
   val firestoreInstance = FirebaseFirestore.getInstance()
   val authInstance = FirebaseAuth.getInstance()
 
-  val userRepository = UserRepositoryFirestore(firestoreInstance)
-  val chatRepository = ChatRepositoryFirestore(firestore = firestoreInstance, auth = authInstance)
+  val userRepository =
+      UserRepositoryFirestore(db = firestoreInstance, context = LocalContext.current)
+  val chatRepository = ChatRepositoryFirestore(firestore = firestoreInstance)
 
   val userViewModel = UserViewModel(userRepository, chatRepository)
   SettingsScreen(navigationActions, userViewModel, onNotificationsEnabledChange = {})
