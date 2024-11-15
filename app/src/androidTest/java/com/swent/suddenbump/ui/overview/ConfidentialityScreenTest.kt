@@ -75,8 +75,10 @@ class ConfidentialityScreenTest {
   fun profilePhotoOptionsWorks() {
     composeTestRule.onNodeWithTag("profilePhotoOptions").assertIsDisplayed()
     composeTestRule.onNodeWithTag("profilePhotoOptions").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle after the click
     // Additional assertions to check option selection if needed.
   }
+
   /*
   @Test
   fun myInfoOptionsWorks() {
