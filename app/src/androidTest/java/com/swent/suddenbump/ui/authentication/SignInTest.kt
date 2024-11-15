@@ -1,5 +1,8 @@
 package com.swent.suddenbump.ui.authentication
 
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -23,8 +26,14 @@ class LoginTest : TestCase() {
 
   @get:Rule val activityScenarioRule = ActivityScenarioRule(MainActivity::class.java)
 
+  var isGoogleSignInEnabledForTesting = false
+
+  fun isRunningTest(): Boolean {
+    return true // or implement the actual logic
+  }
+
   @Before
-  public fun setup() {
+  fun setup() {
     Intents.init() // Initialize intents
   }
 
@@ -32,24 +41,24 @@ class LoginTest : TestCase() {
   public override fun tearDown() {
     Intents.release() // Release intents
   }
-  /*
+
   @Test
   fun titleAndButtonAreCorrectlyDisplayed() {
-    composeTestRule.waitUntil(timeoutMillis = 7000) {
-      composeTestRule.onNodeWithTag("loginTitle").fetchSemanticsNode() != null
-    }
+
+    assertEquals(true, isRunningTest())
+
     composeTestRule.onNodeWithTag("loginTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginTitle").assertTextEquals("SuddenBump!")
 
     composeTestRule.onNodeWithTag("loginButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginButton").assertHasClickAction()
-  }*/
+  }
 
   @Test
   fun googleSignInReturnsValidActivityResult() {
-    composeTestRule.waitUntil(timeoutMillis = 7000) {
-      composeTestRule.onNodeWithTag("loginButton").fetchSemanticsNode() != null
-    }
+
+    isGoogleSignInEnabledForTesting = true
+
     composeTestRule.onNodeWithTag("loginButton").performClick()
     composeTestRule.waitForIdle()
     intended(toPackage("com.google.android.gms"))
