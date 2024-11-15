@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.chat
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -41,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
@@ -57,11 +59,13 @@ import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.purple
 import com.swent.suddenbump.ui.theme.violetColor
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
   // Observe messages from the ViewModel
-  viewModel.getOrCreateChat()
+  viewModel.user?.let { viewModel.getOrCreateChat(it.uid) }
+
   val messages by viewModel.messages.collectAsState(emptyList())
   val user by viewModel.getCurrentUser().collectAsState()
   val otherUser = viewModel.user
@@ -135,7 +139,7 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
                   }
                   is ListItem.Messages -> {
                     val messageItem = list[index] as ListItem.Messages
-                    MessageBubble(messageItem)
+                    MessageBubble(messageItem, user)
                   }
                 }
               }
@@ -146,14 +150,14 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
 }
 
 @Composable
-fun MessageBubble(data: ListItem.Messages) {
+fun MessageBubble(data: ListItem.Messages, user: User) {
   val message = data.message
   val screenWidth = LocalConfiguration.current.screenWidthDp.dp
   val bubbleMaxWidth = screenWidth * 0.8f
 
   Column(
       modifier = Modifier.fillMaxWidth().padding(8.dp),
-      horizontalAlignment = if (message.isOwner) Alignment.End else Alignment.Start) {
+      horizontalAlignment = if (message.senderId == user.uid) Alignment.End else Alignment.Start) {
         // Timestamp
         Text(
             text = message.timestamp.toDate().toOnlyTimeFormat(),
@@ -166,13 +170,13 @@ fun MessageBubble(data: ListItem.Messages) {
             modifier = Modifier.widthIn(max = bubbleMaxWidth),
             colors =
                 CardDefaults.cardColors(
-                    containerColor = if (message.isOwner) violetColor else Color.White,
+                    containerColor = if (message.senderId == user.uid) violetColor else Color.White,
                 ),
             shape = RoundedCornerShape(15),
             border = BorderStroke(1.dp, Color.White)) {
               Text(
                   text = message.content,
-                  color = if (message.isOwner) Color.White else Color.Black,
+                  color = if (message.senderId == user.uid) Color.White else Color.Black,
                   fontSize = 16.sp,
                   modifier = Modifier.padding(10.dp))
             }
@@ -193,7 +197,8 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: 
             modifier =
                 Modifier.weight(1f)
                     .background(Color.Black, shape = MaterialTheme.shapes.small)
-                    .padding(12.dp),
+                    .padding(12.dp)
+                    .testTag("ChatInputTextBox"),
             textStyle = LocalTextStyle.current.copy(color = Color.White, fontSize = 16.sp))
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -214,10 +219,13 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: 
             onClick = {
               if (inputText.text.isNotEmpty()) {
                 val name = otherUser?.firstName + " " + otherUser?.lastName
-                viewModel.sendMessage(inputText.text, name) // Send message through ViewModel
+                viewModel.sendMessage(
+                    inputText.text,
+                    viewModel.getCurrentUser().value) // Send message through ViewModel
                 inputText = TextFieldValue() // Clear input field after sending
               }
-            }) {
+            },
+            modifier = Modifier.testTag("SendButton")) {
               Icon(
                   imageVector = Icons.Default.Send,
                   contentDescription = "Send",

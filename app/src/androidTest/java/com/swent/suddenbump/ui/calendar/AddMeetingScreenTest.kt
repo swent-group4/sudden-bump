@@ -52,7 +52,6 @@ class AddMeetingScreenTest {
     userViewModel = UserViewModel(userRepository, chatRepository)
 
     `when`(navigationActions.currentRoute()).thenReturn(Screen.ADD_MEETING)
-    `when`(meetingRepository.getNewMeetingId()).thenReturn("mockedMeetingId")
   }
 
   @Test
@@ -89,6 +88,7 @@ class AddMeetingScreenTest {
 
   @Test
   fun saveButton_savesMeeting() {
+    `when`(meetingRepository.getNewMeetingId()).thenReturn("mockedMeetingId")
     // Arrange
     composeTestRule.setContent {
       AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)

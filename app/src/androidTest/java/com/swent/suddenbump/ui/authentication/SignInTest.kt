@@ -12,6 +12,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.MainActivity
+import com.swent.suddenbump.ui.utils.isRunningTest
 import junit.framework.TestCase
 import org.junit.After
 import org.junit.Before
@@ -27,7 +28,7 @@ class LoginTest : TestCase() {
   @get:Rule val activityScenarioRule = ActivityScenarioRule(MainActivity::class.java)
 
   @Before
-  public fun setup() {
+  fun setup() {
     Intents.init() // Initialize intents
   }
 
@@ -38,9 +39,9 @@ class LoginTest : TestCase() {
 
   @Test
   fun titleAndButtonAreCorrectlyDisplayed() {
-    composeTestRule.waitUntil(timeoutMillis = 7000) {
-      composeTestRule.onNodeWithTag("loginTitle").fetchSemanticsNode() != null
-    }
+
+    assertEquals(true, isRunningTest())
+
     composeTestRule.onNodeWithTag("loginTitle").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginTitle").assertTextEquals("SuddenBump!")
 
@@ -50,9 +51,9 @@ class LoginTest : TestCase() {
 
   @Test
   fun googleSignInReturnsValidActivityResult() {
-    composeTestRule.waitUntil(timeoutMillis = 7000) {
-      composeTestRule.onNodeWithTag("loginButton").fetchSemanticsNode() != null
-    }
+
+    isGoogleSignInEnabledForTesting = true
+
     composeTestRule.onNodeWithTag("loginButton").performClick()
     composeTestRule.waitForIdle()
     intended(toPackage("com.google.android.gms"))

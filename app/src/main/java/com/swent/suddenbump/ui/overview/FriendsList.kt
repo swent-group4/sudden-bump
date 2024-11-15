@@ -45,7 +45,7 @@ fun UserCard(user: User, navigationActions: NavigationActions, userViewModel: Us
         userViewModel.setSelectedContact(user)
         navigationActions.navigateTo(Screen.CONTACT)
       },
-      modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp),
+      modifier = Modifier.fillMaxWidth().height(150.dp).padding(8.dp).testTag(user.uid),
   ) {
     Row(
         modifier = Modifier.fillMaxHeight(),
