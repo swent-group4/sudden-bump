@@ -10,6 +10,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
 import org.junit.Before
 import org.junit.Test
@@ -99,5 +100,64 @@ class MeetingRepositoryFirestoreTest {
     shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
 
     verify(mockDocumentReference).delete()
+  }
+
+  @Test
+  fun updateMeeting_shouldCallFirestoreCollection() {
+    `when`(mockDocumentReference.set(any())).thenReturn(Tasks.forResult(null)) // Simulate success
+
+    meetingRepositoryFirestore.updateMeeting(meeting, onSuccess = {}, onFailure = {})
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    verify(mockDocumentReference).set(any())
+  }
+
+  @Test
+  fun updateMeeting_shouldCallOnFailure_whenFirestoreFails() {
+    val exception = Exception("Firestore update failed")
+    `when`(mockDocumentReference.set(any()))
+        .thenReturn(Tasks.forException(exception)) // Simulate failure
+
+    var onFailureCalled = false
+    meetingRepositoryFirestore.updateMeeting(
+        meeting, onSuccess = {}, onFailure = { onFailureCalled = true })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    verify(mockDocumentReference).set(any())
+    assertTrue(onFailureCalled)
+  }
+
+  @Test
+  fun deleteMeetingById_shouldCallOnFailure_whenFirestoreFails() {
+    val exception = Exception("Firestore delete failed")
+    `when`(mockDocumentReference.delete())
+        .thenReturn(Tasks.forException(exception)) // Simulate failure
+
+    var onFailureCalled = false
+    meetingRepositoryFirestore.deleteMeetingById(
+        "1", onSuccess = {}, onFailure = { onFailureCalled = true })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    verify(mockDocumentReference).delete()
+    assertTrue(onFailureCalled)
+  }
+
+  @Test
+  fun addMeeting_shouldCallOnFailure_whenFirestoreFails() {
+    val exception = Exception("Firestore add failed")
+    `when`(mockDocumentReference.set(any()))
+        .thenReturn(Tasks.forException(exception)) // Simulate failure
+
+    var onFailureCalled = false
+    meetingRepositoryFirestore.addMeeting(
+        meeting, onSuccess = {}, onFailure = { onFailureCalled = true })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    verify(mockDocumentReference).set(any())
+    assertTrue(onFailureCalled)
   }
 }

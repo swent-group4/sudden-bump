@@ -1,6 +1,7 @@
 package com.swent.suddenbump.model.user
 
 import android.location.Location
+import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.image.ImageRepository
 
 interface UserRepository {
@@ -20,6 +21,13 @@ interface UserRepository {
   fun createUserAccount(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun createFriendRequest(
+      user: User,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun deleteFriendRequest(
       user: User,
       friend: User,
       onSuccess: () -> Unit,
@@ -73,7 +81,6 @@ interface UserRepository {
 
   fun getRecommendedFriends(
       user: User,
-      friendsList: List<User>,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   )
@@ -90,6 +97,13 @@ interface UserRepository {
   fun updateLocation(
       user: User,
       location: Location,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun updateTimestamp(
+      user: User,
+      timestamp: Timestamp,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
@@ -112,4 +126,12 @@ interface UserRepository {
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  fun saveLoginStatus(userId: String)
+
+  fun getSavedUid(): String
+
+  fun isUserLoggedIn(): Boolean
+
+  fun logoutUser()
 }

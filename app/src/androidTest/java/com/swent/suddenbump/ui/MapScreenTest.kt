@@ -12,6 +12,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.map.MapScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.TopLevelDestinations
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -30,10 +31,11 @@ class MapScreenTest {
 
   private val exception = Exception()
   private val location =
-      Location("mock_provider").apply {
-        latitude = 0.0
-        longitude = 0.0
-      }
+      MutableStateFlow(
+          Location("mock_provider").apply {
+            latitude = 0.0
+            longitude = 0.0
+          })
   private val user =
       User("1", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch", location)
 
