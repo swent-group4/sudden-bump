@@ -267,7 +267,7 @@ class UserRepositoryFirestoreTest {
     `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
 
     // Create the UserRepositoryFirestore instance
-    val userRepository = UserRepositoryFirestore(mockFirestore)
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
 
     // Call the deleteFriendRequest method
     userRepository.deleteFriendRequest(
@@ -336,7 +336,7 @@ class UserRepositoryFirestoreTest {
         .thenReturn(Tasks.forException(Exception("Update friend's sentFriendRequests failed")))
 
     // Create the UserRepositoryFirestore instance
-    val userRepository = UserRepositoryFirestore(mockFirestore)
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
 
     var onFailureCalled = false
     var failureException: Exception? = null
@@ -412,7 +412,7 @@ class UserRepositoryFirestoreTest {
     `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
 
     // Create the UserRepositoryFirestore instance
-    val userRepository = UserRepositoryFirestore(mockFirestore)
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
 
     var onSuccessCalled = false
     var onFailureCalled = false
@@ -485,7 +485,7 @@ class UserRepositoryFirestoreTest {
         .thenReturn(Tasks.forException(Exception("Update user friendRequests failed")))
 
     // Create the UserRepositoryFirestore instance
-    val userRepository = UserRepositoryFirestore(mockFirestore)
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
 
     var onFailureCalled = false
     var failureException: Exception? = null
@@ -568,7 +568,7 @@ class UserRepositoryFirestoreTest {
         .thenReturn(listOf(friendDocumentSnapshot, nonFriendDocumentSnapshot))
 
     // Create the UserRepositoryFirestore instance
-    val userRepository = UserRepositoryFirestore(mockFirestore)
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
 
     // Call the getRecommendedFriends method
     userRepository.getRecommendedFriends(
