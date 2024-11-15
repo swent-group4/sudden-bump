@@ -1,6 +1,7 @@
 package com.swent.suddenbump.model.user
 
 import android.location.Location
+import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.image.ImageRepository
 
 interface UserRepository {
@@ -100,6 +101,13 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
+  fun updateTimestamp(
+      user: User,
+      timestamp: Timestamp,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
   fun getFriendsLocation(
       userFriendsList: List<User>,
       onSuccess: (Map<User, Location?>) -> Unit,
@@ -118,4 +126,12 @@ interface UserRepository {
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  fun saveLoginStatus(userId: String)
+
+  fun getSavedUid(): String
+
+  fun isUserLoggedIn(): Boolean
+
+  fun logoutUser()
 }

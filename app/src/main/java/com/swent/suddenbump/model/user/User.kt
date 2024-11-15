@@ -2,6 +2,7 @@ package com.swent.suddenbump.model.user
 
 import android.location.Location
 import androidx.compose.ui.graphics.ImageBitmap
+import kotlinx.coroutines.flow.MutableStateFlow
 
 data class User(
     val uid: String,
@@ -10,5 +11,5 @@ data class User(
     val phoneNumber: String,
     val profilePicture: ImageBitmap?,
     val emailAddress: String,
-    val lastKnownLocation: Location?,
+    val lastKnownLocation: MutableStateFlow<Location>,
 )

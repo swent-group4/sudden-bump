@@ -15,7 +15,13 @@ import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -68,7 +74,6 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
     location?.let {
       val latLng = LatLng(it.latitude, it.longitude)
       markerState.position = LatLng(it.latitude, it.longitude)
-
       if (!zoomDone) {
         // Perform zoom only the first time the location is set
         cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
