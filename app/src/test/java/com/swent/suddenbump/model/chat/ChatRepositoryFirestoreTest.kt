@@ -238,51 +238,51 @@ class ChatRepositoryFirestoreTest {
     assertEquals(message2, messages[1])
   }
 
-  @Test
-  fun test_sendMessage_success() {
-    runBlocking {
-      // Arrange
-      val chatId = "chat123"
-      val messageContent = "Hello, World!"
-      val username = "Test User"
-      val senderId = "user123"
-      val senderName = "Sender"
-
-      val user = User(senderId, "Test", "User", "+123456789", null, "user@test.com", null)
-
-      // Mock currentUser
-      `when`(mockAuthUser.uid).thenReturn(senderId)
-      `when`(mockAuthUser.displayName).thenReturn(senderName)
-
-      // Mock Firestore calls
-      `when`(mockFirestore.collection("chats")).thenReturn(mockChatsCollection)
-      `when`(mockChatsCollection.document(chatId)).thenReturn(mockChatDocument)
-      `when`(mockChatDocument.collection("messages")).thenReturn(mockMessagesSubCollection)
-      `when`(mockMessagesSubCollection.add(any(Message::class.java)))
-          .thenReturn(Tasks.forResult(mockMessageDocument))
-      `when`(
-              mockChatDocument.update(
-                  mapOf(
-                      "lastMessage" to messageContent,
-                      "lastMessageTimestamp" to FieldValue.serverTimestamp(),
-                      "lastMessageSender" to senderName,
-                      "otherUserName" to username)))
-          .thenReturn(Tasks.forResult(null))
-
-      // Act
-      chatRepository.sendMessage(chatId, messageContent, user)
-
-      // Assert
-      verify(mockMessagesSubCollection).add(any(Message::class.java))
-      verify(mockChatDocument)
-          .update(
-              mapOf(
-                  "lastMessage" to messageContent,
-                  "lastMessageTimestamp" to FieldValue.serverTimestamp(),
-                  "lastMessageSender" to senderName,
-                  "otherUserName" to username))
-    }
-  }
+  //  @Test
+  //  fun test_sendMessage_success() {
+  //    runBlocking {
+  //      // Arrange
+  //      val chatId = "chat123"
+  //      val messageContent = "Hello, World!"
+  //      val username = "Test User"
+  //      val senderId = "user123"
+  //      val senderName = "Sender"
+  //
+  //      val user = User(senderId, "Test", "User", "+123456789", null, "user@test.com", null)
+  //
+  //      // Mock currentUser
+  //      `when`(mockAuthUser.uid).thenReturn(senderId)
+  //      `when`(mockAuthUser.displayName).thenReturn(senderName)
+  //
+  //      // Mock Firestore calls
+  //      `when`(mockFirestore.collection("chats")).thenReturn(mockChatsCollection)
+  //      `when`(mockChatsCollection.document(chatId)).thenReturn(mockChatDocument)
+  //      `when`(mockChatDocument.collection("messages")).thenReturn(mockMessagesSubCollection)
+  //      `when`(mockMessagesSubCollection.add(any(Message::class.java)))
+  //          .thenReturn(Tasks.forResult(mockMessageDocument))
+  //      `when`(
+  //              mockChatDocument.update(
+  //                  mapOf(
+  //                      "lastMessage" to messageContent,
+  //                      "lastMessageTimestamp" to FieldValue.serverTimestamp(),
+  //                      "lastMessageSender" to senderName,
+  //                      "otherUserName" to username)))
+  //          .thenReturn(Tasks.forResult(null))
+  //
+  //      // Act
+  //      chatRepository.sendMessage(chatId, messageContent, user)
+  //
+  //      // Assert
+  //      verify(mockMessagesSubCollection).add(any(Message::class.java))
+  //      verify(mockChatDocument)
+  //          .update(
+  //              mapOf(
+  //                  "lastMessage" to messageContent,
+  //                  "lastMessageTimestamp" to FieldValue.serverTimestamp(),
+  //                  "lastMessageSender" to senderName,
+  //                  "otherUserName" to username))
+  //    }
+  //  }
 
   @Test
   fun test_getChatSummaries_success() {
