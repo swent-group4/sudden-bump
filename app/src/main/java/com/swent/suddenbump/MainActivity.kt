@@ -50,10 +50,10 @@ import com.swent.suddenbump.ui.messages.MessagesScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.overview.*
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
-import com.swent.suddenbump.ui.settings.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
@@ -197,7 +197,12 @@ class MainActivity : ComponentActivity() {
         composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
-        composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
+        composable(Screen.SETTINGS) {
+          SettingsScreen(
+              navigationActions,
+              userViewModel,
+              onNotificationsEnabledChange = { /* handle change */})
+        }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
         composable(Screen.ADD_MEETING) {
@@ -219,7 +224,7 @@ class MainActivity : ComponentActivity() {
           route = Route.MAP,
       ) {
         composable(Screen.MAP) {
-          MapScreen(navigationActions, location, userViewModel)
+          MapScreen(navigationActions, location, userViewModel, notificationsEnabled = true)
           checkLocationPermissions()
         }
       }
@@ -229,6 +234,15 @@ class MainActivity : ComponentActivity() {
       ) {
         composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions) }
       }
+
+      // Add new screens from Settings.kt
+      composable("AccountScreen") { AccountScreen(navigationActions) }
+      composable("ConfidentialityScreen") {
+        ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
+      }
+      composable("DiscussionsScreen") { DiscussionScreen(navigationActions) }
+      composable("StorageAndDataScreen") { StorageAndDataScreen(navigationActions) }
+      composable("HelpScreen") { HelpScreen(navigationActions) }
     }
   }
 

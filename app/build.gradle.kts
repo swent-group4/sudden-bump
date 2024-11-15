@@ -252,6 +252,7 @@ dependencies {
     testImplementation(libs.json)
     globalTestImplementation(libs.kaspresso)
     globalTestImplementation(libs.kaspresso.compose)
+    testImplementation(libs.core.testing)
 
     // UI Testing
     androidTestImplementation(libs.androidx.junit)
@@ -267,6 +268,7 @@ dependencies {
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
     implementation(kotlin("test"))
+
 }
 
 configurations.all {
