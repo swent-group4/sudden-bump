@@ -139,7 +139,6 @@ coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version
 ucrop = { module = "com.github.yalantis:ucrop", name = "ucrop", version.ref = "ucrop" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "core-testing" }
 
 
 [plugins]

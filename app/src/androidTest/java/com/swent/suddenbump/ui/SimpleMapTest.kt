@@ -47,8 +47,6 @@ class SimpleMapTest {
         }
 
     // Render the SimpleMap composable with the initial location
-    composeTestRule.setContent {
-      SimpleMap(location = newLocation, userViewModel = userViewModel, notificationsEnabled = true)
-    }
+    composeTestRule.setContent { SimpleMap(location = newLocation, userViewModel = userViewModel) }
   }
 }
