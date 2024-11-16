@@ -1,5 +1,8 @@
 package com.swent.suddenbump.ui.authentication
 
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -9,6 +12,7 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.MainActivity
+import com.swent.suddenbump.ui.utils.isRunningTest
 import junit.framework.TestCase
 import org.junit.After
 import org.junit.Before
@@ -32,7 +36,7 @@ class LoginTest : TestCase() {
   public override fun tearDown() {
     Intents.release() // Release intents
   }
-  /*
+
   @Test
   fun titleAndButtonAreCorrectlyDisplayed() {
 
@@ -43,7 +47,7 @@ class LoginTest : TestCase() {
 
     composeTestRule.onNodeWithTag("loginButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("loginButton").assertHasClickAction()
-  }*/
+  }
 
   @Test
   fun googleSignInReturnsValidActivityResult() {

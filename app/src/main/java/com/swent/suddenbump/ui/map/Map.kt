@@ -51,8 +51,7 @@ import kotlinx.coroutines.launch
 fun MapScreen(
     navigationActions: NavigationActions,
     location: Location?,
-    userViewModel: UserViewModel,
-    notificationsEnabled: Boolean
+    userViewModel: UserViewModel
 ) {
   Scaffold(
       bottomBar = {
@@ -61,11 +60,11 @@ fun MapScreen(
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { _ -> SimpleMap(location, userViewModel, notificationsEnabled) })
+      content = { _ -> SimpleMap(location, userViewModel) })
 }
 
 @Composable
-fun SimpleMap(location: Location?, userViewModel: UserViewModel, notificationsEnabled: Boolean) {
+fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
   val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) } // Track if the zoom has been performed
@@ -81,9 +80,9 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel, notificationsEn
 
         fetchLocationToServer(location, userViewModel)
 
-        if (userViewModel.isFriendsInRadius(8000) && notificationsEnabled) {
+        if (userViewModel.isFriendsInRadius(8000)) {
           Log.d("FriendsRadius", "isTriggered")
-          showFriendNearbyNotification(context) // Show notification
+          showFriendNearbyNotification(context) // Show notification}
         }
 
         zoomDone = true // Mark zoom as done
@@ -99,9 +98,9 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel, notificationsEn
 
       currentLocation?.let {
         fetchLocationToServer(currentLocation!!, userViewModel)
-        if (userViewModel.isFriendsInRadius(8000) && notificationsEnabled) {
+        if (userViewModel.isFriendsInRadius(8000)) {
           Log.d("FriendsRadius", "isTriggered")
-          showFriendNearbyNotification(context) // Show notification
+          showFriendNearbyNotification(context) // Show notification}
         }
       } ?: Log.d("LocationUpdate", "Location is null")
 
