@@ -22,100 +22,83 @@ import com.swent.suddenbump.ui.theme.Purple40
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(navigationActions: NavigationActions) {
-    Scaffold(
-        modifier = Modifier.background(Color.Black).testTag("AccountScreen"), // Set outer contour to black
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Account",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        ),
-                        modifier = Modifier.testTag("accountTitle")
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier = Modifier.testTag("backButton")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40)
-            )
-        },
-        content = { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
+  Scaffold(
+      modifier =
+          Modifier.background(Color.Black).testTag("AccountScreen"), // Set outer contour to black
+      topBar = {
+        TopAppBar(
+            title = {
+              Text(
+                  "Account",
+                  style =
+                      MaterialTheme.typography.headlineMedium.copy(
+                          fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White),
+                  modifier = Modifier.testTag("accountTitle"))
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White)
+                  }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40))
+      },
+      content = { paddingValues ->
+        Column(
+            modifier =
+                Modifier.fillMaxSize()
                     .background(Color.Black)
                     .padding(paddingValues)
-                    .padding(16.dp)
-                    , // Inner background also set to black
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                AccountOption(
-                    label = "Birthday",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("AccountScreen") },
-                    testTag = "birthdaySection"
-                )
-                AccountOption(
-                    label = "Language",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("AccountScreen") },
-                    testTag = "languageSection"
-                )
-                AccountOption(
-                    label = "Delete Account",
-                    backgroundColor = Pink40,
-                    onClick = { navigationActions.navigateTo("Delete Account") },
-                    testTag = "deleteAccountSection"
-                )
-                AccountOption(
-                    label = "Log out",
-                    backgroundColor = Pink40,
-                    onClick = { navigationActions.navigateTo("Log out") },
-                    testTag = "logoutSection"
-                )
+                    .padding(16.dp), // Inner background also set to black
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+              AccountOption(
+                  label = "Birthday",
+                  backgroundColor = Color.White,
+                  onClick = { navigationActions.navigateTo("AccountScreen") },
+                  testTag = "birthdaySection")
+              AccountOption(
+                  label = "Language",
+                  backgroundColor = Color.White,
+                  onClick = { navigationActions.navigateTo("AccountScreen") },
+                  testTag = "languageSection")
+              AccountOption(
+                  label = "Delete Account",
+                  backgroundColor = Pink40,
+                  onClick = { navigationActions.navigateTo("Delete Account") },
+                  testTag = "deleteAccountSection")
+              AccountOption(
+                  label = "Log out",
+                  backgroundColor = Pink40,
+                  onClick = { navigationActions.navigateTo("Log out") },
+                  testTag = "logoutSection")
             }
-        }
-    )
+      })
 }
 
 @Composable
-fun AccountOption(
-    label: String,
-    backgroundColor: Color,
-    onClick: () -> Unit,
-    testTag: String
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .clickable { onClick() }
-            .background(backgroundColor, RoundedCornerShape(8.dp))
-            .height(48.dp)
-            .testTag(testTag),
-        contentAlignment = Alignment.CenterStart // Center vertically and align to start (left)
-    ) {
+fun AccountOption(label: String, backgroundColor: Color, onClick: () -> Unit, testTag: String) {
+  Box(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 8.dp)
+              .clickable { onClick() }
+              .background(backgroundColor, RoundedCornerShape(8.dp))
+              .height(48.dp)
+              .testTag(testTag),
+      contentAlignment = Alignment.CenterStart // Center vertically and align to start (left)
+      ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (backgroundColor == Pink40) Color.White else Color.Black
-            ),
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (backgroundColor == Pink40) Color.White else Color.Black),
             modifier = Modifier.padding(start = 16.dp) // Add padding for alignment
-        )
-    }
+            )
+      }
 }

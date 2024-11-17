@@ -38,10 +38,10 @@ class EndToEndTest {
   private lateinit var mockFirebaseUser: FirebaseUser
 
   private val location =
-    Location("mockProvider").apply {
-      latitude = 37.7749
-      longitude = -122.4194
-    }
+      Location("mockProvider").apply {
+        latitude = 37.7749
+        longitude = -122.4194
+      }
 
   @Before
   fun setUp() {
@@ -83,21 +83,21 @@ class EndToEndTest {
     every { mockChatsCollection.document(any<String>()) } returns mockChatDocument
     every { mockChatDocument.collection("messages") } returns mockMessagesSubCollection
     every { mockMessagesSubCollection.orderBy("timestamp", Query.Direction.DESCENDING) } returns
-            mockQuery
+        mockQuery
 
     // Mock Firestore query behavior using MockK
     every { mockQuery.get() } returns Tasks.forResult(mockQuerySnapshot)
     every { mockQuerySnapshot.documents } returns
-            listOf(mockDocumentSnapshot1, mockDocumentSnapshot2)
+        listOf(mockDocumentSnapshot1, mockDocumentSnapshot2)
     every { mockDocumentSnapshot1.toObject(Message::class.java) } returns message1
     every { mockDocumentSnapshot2.toObject(Message::class.java) } returns message2
 
     // Mock Firestore query
     every { mockMessagesCollection.orderBy("timestamp", Query.Direction.ASCENDING) } returns
-            mockQuery
+        mockQuery
     every { mockQuery.get() } returns Tasks.forResult(mockQuerySnapshot)
     every { mockQuerySnapshot.documents } returns
-            listOf(mockDocumentSnapshot1, mockDocumentSnapshot2)
+        listOf(mockDocumentSnapshot1, mockDocumentSnapshot2)
     every { mockDocumentSnapshot1.toObject(Message::class.java) } returns message1
     every { mockDocumentSnapshot2.toObject(Message::class.java) } returns message2
   }
@@ -169,7 +169,6 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("settingsScreen").assertExists()
 
-
     // Step 11: Navigate to Help screen
     composeTestRule.onNodeWithTag("HelpOption").performClick()
     composeTestRule.waitForIdle()
@@ -216,8 +215,8 @@ class EndToEndTest {
     composeTestRule.onNodeWithTag("SendButton").assertExists().performClick()
 
     composeTestRule
-      .onNodeWithTag("ChatInputTextBox")
-      .performTextInput("Do you want to meet at Rolex today at 10?")
+        .onNodeWithTag("ChatInputTextBox")
+        .performTextInput("Do you want to meet at Rolex today at 10?")
 
     composeTestRule.onNodeWithTag("SendButton").assertExists().performClick()
   }
