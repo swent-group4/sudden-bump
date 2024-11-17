@@ -38,10 +38,10 @@ class EndToEndTest {
   private lateinit var mockFirebaseUser: FirebaseUser
 
   private val location =
-      Location("mockProvider").apply {
-        latitude = 37.7749
-        longitude = -122.4194
-      }
+    Location("mockProvider").apply {
+      latitude = 37.7749
+      longitude = -122.4194
+    }
 
   @Before
   fun setUp() {
@@ -83,21 +83,21 @@ class EndToEndTest {
     every { mockChatsCollection.document(any<String>()) } returns mockChatDocument
     every { mockChatDocument.collection("messages") } returns mockMessagesSubCollection
     every { mockMessagesSubCollection.orderBy("timestamp", Query.Direction.DESCENDING) } returns
-        mockQuery
+            mockQuery
 
     // Mock Firestore query behavior using MockK
     every { mockQuery.get() } returns Tasks.forResult(mockQuerySnapshot)
     every { mockQuerySnapshot.documents } returns
-        listOf(mockDocumentSnapshot1, mockDocumentSnapshot2)
+            listOf(mockDocumentSnapshot1, mockDocumentSnapshot2)
     every { mockDocumentSnapshot1.toObject(Message::class.java) } returns message1
     every { mockDocumentSnapshot2.toObject(Message::class.java) } returns message2
 
     // Mock Firestore query
     every { mockMessagesCollection.orderBy("timestamp", Query.Direction.ASCENDING) } returns
-        mockQuery
+            mockQuery
     every { mockQuery.get() } returns Tasks.forResult(mockQuerySnapshot)
     every { mockQuerySnapshot.documents } returns
-        listOf(mockDocumentSnapshot1, mockDocumentSnapshot2)
+            listOf(mockDocumentSnapshot1, mockDocumentSnapshot2)
     every { mockDocumentSnapshot1.toObject(Message::class.java) } returns message1
     every { mockDocumentSnapshot2.toObject(Message::class.java) } returns message2
   }
@@ -137,17 +137,58 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("settingsScreen").assertExists()
 
-    // Step 7: Navigate back to Overview
-    composeTestRule.onNodeWithTag("customGoBackButton").performClick()
+    // Step 7: Navigate to Account screen
+    composeTestRule.onNodeWithTag("AccountOption").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("AccountScreen").assertExists()
+    composeTestRule.onNodeWithTag("backButton").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("settingsScreen").assertExists()
+
+    // Step 8: Navigate to Confidentiality screen
+    composeTestRule.onNodeWithTag("ConfidentialityOption").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("confidentialityScreen").assertExists()
+    composeTestRule.onNodeWithTag("backButton").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("settingsScreen").assertExists()
+
+    // Step 9: Navigate to Discussions screen
+    composeTestRule.onNodeWithTag("DiscussionsOption").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("discussionScreen").assertExists()
+    composeTestRule.onNodeWithTag("backButton").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("settingsScreen").assertExists()
+
+    // Step 10: Navigate to Storage and Data screen
+    composeTestRule.onNodeWithTag("StorageAndDataOption").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("storageAndDataScreen").assertExists()
+    composeTestRule.onNodeWithTag("backButton").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("settingsScreen").assertExists()
+
+
+    // Step 11: Navigate to Help screen
+    composeTestRule.onNodeWithTag("HelpOption").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("helpScreen").assertExists()
+    composeTestRule.onNodeWithTag("backButton").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("settingsScreen").assertExists()
+
+    // Step 12: Navigate back to Overview
+    composeTestRule.onNodeWithTag("goBackButton").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("overviewScreen").assertExists()
 
-    // Step 8: Navigate to Map screen
+    // Step 13: Navigate to Map screen
     composeTestRule.onNodeWithTag("Map").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("mapView").assertExists()
 
-    // Step 9: Navigate to Messages screen
+    // Step 14: Navigate to Messages screen
     composeTestRule.onNodeWithTag("Messages").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("messages_list").assertExists()
@@ -175,8 +216,8 @@ class EndToEndTest {
     composeTestRule.onNodeWithTag("SendButton").assertExists().performClick()
 
     composeTestRule
-        .onNodeWithTag("ChatInputTextBox")
-        .performTextInput("Do you want to meet at Rolex today at 10?")
+      .onNodeWithTag("ChatInputTextBox")
+      .performTextInput("Do you want to meet at Rolex today at 10?")
 
     composeTestRule.onNodeWithTag("SendButton").assertExists().performClick()
   }

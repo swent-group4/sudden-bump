@@ -1,10 +1,16 @@
-package com.swent.suddenbump.ui.settings
+package com.swent.suddenbump.ui.overview
 
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
@@ -13,260 +19,267 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.swent.suddenbump.R
+import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
+import com.swent.suddenbump.model.user.UserRepositoryFirestore
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.theme.SampleAppTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navigationActions: NavigationActions) {
-  var notificationsEnabled by remember { mutableStateOf(true) }
-  var username by remember { mutableStateOf("User123") }
-  var expandedVisibility by remember { mutableStateOf(false) }
-  var selectedVisibility by remember { mutableStateOf("Visible for all") }
-  var expandedLanguage by remember { mutableStateOf(false) }
-  var selectedLanguage by remember { mutableStateOf("English") }
-  var accountPrivate by remember { mutableStateOf(false) }
-  var dataUsageLimit by remember { mutableStateOf(50f) }
+fun SettingsScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel,
+    onNotificationsEnabledChange: (Boolean) -> Unit
+) {
+    var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
+    var notificationsEnabled by remember { mutableStateOf(true) }
 
-  Scaffold(
-      modifier = Modifier.testTag("settingsScreen"),
-      topBar = { CustomTopBar(title = "Settings", onBackClick = { navigationActions.goBack() }) },
-      content = { pd ->
-        Column(
-            modifier = Modifier.padding(pd).fillMaxSize().padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              // Profile Picture Section
-              Text("Profile Picture")
-              Row(
-                  modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                  verticalAlignment = Alignment.CenterVertically,
-                  horizontalArrangement = Arrangement.SpaceBetween) {
-                    // Placeholder for profile picture
-                    Box(
-                        modifier =
-                            Modifier.size(80.dp)
-                                .clip(CircleShape)
-                                .background(Color.Gray)
-                                .testTag("profilePicture")) {
-                          Image(
-                              painter = painterResource(id = android.R.drawable.ic_menu_camera),
-                              contentDescription = "Profile Picture",
-                              contentScale = ContentScale.Crop,
-                              modifier = Modifier.fillMaxSize())
+    val context = LocalContext.current
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            profilePictureUri = uri
+        }
+
+    SampleAppTheme(darkTheme = true) {
+        Scaffold(
+            modifier = Modifier.testTag("settingsScreen"),
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "Settings",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            ),
+                            modifier = Modifier.testTag("settingsTitle")
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { navigationActions.goBack() },
+                            Modifier.testTag("goBackButton")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
                         }
-
-                    // Button to add photo
-                    Button(onClick = { /* Add photo logic */}, Modifier.testTag("addPhotoButton")) {
-                      Text("Add Photo")
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40)
+                )
+            },
+            content = { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                        .background(Color.Black),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    ProfileSection(profilePictureUri, launcher, userViewModel)
+                    SettingsOption(
+                        label = "Account",
+                        backgroundColor = Color.White,
+                        onClick = { navigationActions.navigateTo("AccountScreen") },
+                        testTag = "AccountOption"
+                    )
+                    SettingsOption(
+                        label = "Confidentiality",
+                        backgroundColor = Color.White,
+                        onClick = { navigationActions.navigateTo("ConfidentialityScreen") },
+                        testTag = "ConfidentialityOption"
+                    )
+                    SettingsOption(
+                        label = "Discussions",
+                        backgroundColor = Color.White,
+                        onClick = { navigationActions.navigateTo("DiscussionsScreen") },
+                        testTag = "DiscussionsOption"
+                    )
+                    NotificationsSwitch(notificationsEnabled) {
+                        notificationsEnabled = it
+                        onNotificationsEnabledChange(it)
                     }
-                  }
-
-              // Username setting
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically) {
-                    Text("Username")
-                    BasicTextField(
-                        value = username,
-                        onValueChange = { username = it },
-                        modifier = Modifier.testTag("usernameField"))
-                  }
-
-              // Notifications toggle
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically) {
-                    Text("Enable Notifications")
-                    Switch(
-                        checked = notificationsEnabled,
-                        onCheckedChange = { notificationsEnabled = it },
-                        modifier = Modifier.testTag("notificationsSwitch"))
-                  }
-
-              // Visibility Drop-down menu
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically) {
-                    Text("Visibility")
-                    Column {
-                      Text(
-                          text = selectedVisibility,
-                          modifier = Modifier.testTag("selectedVisibilityText"))
-                      Button(
-                          onClick = { expandedVisibility = !expandedVisibility },
-                          Modifier.testTag("visibilityButton")) {
-                            Text(selectedVisibility)
-                          }
-                      if (expandedVisibility) {
-                        DropdownMenu(
-                            expanded = expandedVisibility,
-                            onDismissRequest = { expandedVisibility = false },
-                            modifier = Modifier.testTag("visibilityDropdown")) {
-                              DropdownMenuItem(
-                                  onClick = {
-                                    selectedVisibility = "Visible for all"
-                                    expandedVisibility = false
-                                  },
-                                  text = {
-                                    Text(
-                                        "Visible for all",
-                                        modifier = Modifier.testTag("visibleForAllOption"))
-                                  })
-                              DropdownMenuItem(
-                                  onClick = {
-                                    selectedVisibility = "Visible for my contacts"
-                                    expandedVisibility = false
-                                  },
-                                  text = {
-                                    Text(
-                                        "Visible for my contacts",
-                                        modifier = Modifier.testTag("visibleForMyContactsOption"))
-                                  })
-                              DropdownMenuItem(
-                                  onClick = {
-                                    selectedVisibility = "Visible for my friends"
-                                    expandedVisibility = false
-                                  },
-                                  text = {
-                                    Text(
-                                        "Visible for my friends",
-                                        modifier = Modifier.testTag("visibleForMyFriendsOption"))
-                                  })
-                            }
-                      }
-                    }
-                  }
-
-              // Language Selection
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically) {
-                    Text("Language")
-                    Box {
-                      Button(
-                          onClick = { expandedLanguage = !expandedLanguage },
-                          Modifier.testTag("languageButton")) {
-                            Text(selectedLanguage)
-                          }
-                      DropdownMenu(
-                          expanded = expandedLanguage,
-                          onDismissRequest = { expandedLanguage = false },
-                      ) {
-                        DropdownMenuItem(
-                            onClick = {
-                              selectedLanguage = "English"
-                              expandedLanguage = false
-                            },
-                            text = { Text("English") })
-                        DropdownMenuItem(
-                            onClick = {
-                              selectedLanguage = "Spanish"
-                              expandedLanguage = false
-                            },
-                            text = { Text("Spanish") })
-                        DropdownMenuItem(
-                            onClick = {
-                              selectedLanguage = "French"
-                              expandedLanguage = false
-                            },
-                            text = { Text("French") })
-                      }
-                    }
-                  }
-
-              // Account Privacy toggle
-              Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically) {
-                    Text("Account Private")
-                    Switch(
-                        checked = accountPrivate,
-                        onCheckedChange = { accountPrivate = it },
-                        modifier = Modifier.testTag("accountPrivacySwitch"))
-                  }
-
-              // Data Usage Limit Slider
-              Column(modifier = Modifier.fillMaxWidth()) {
-                Text("Data Usage Limit: ${dataUsageLimit.toInt()}MB")
-                Slider(
-                    value = dataUsageLimit,
-                    onValueChange = { dataUsageLimit = it },
-                    valueRange = 0f..100f,
-                    modifier = Modifier.testTag("dataUsageSlider"))
-              }
-
-              // Change Password Button
-              Button(
-                  onClick = { /* Show a dialog saying "Feature coming soon" */},
-                  modifier = Modifier.fillMaxWidth().testTag("changePasswordButton")) {
-                    Text("Change Password")
-                  }
-
-              // Logout Button
-              Button(
-                  onClick = { /* Show a dialog saying "Logged out successfully" */},
-                  colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                  modifier = Modifier.fillMaxWidth().testTag("logoutButton")) {
-                    Text("Logout", color = Color.White)
-                  }
-
-              // Help Button
-              Button(
-                  onClick = { /* Show help dialog */},
-                  modifier = Modifier.fillMaxWidth().testTag("helpButton")) {
-                    Text("Help")
-                  }
-
-              // Invite a Friend Button
-              Button(
-                  onClick = { /* Show invite link dialog */},
-                  modifier = Modifier.fillMaxWidth().testTag("inviteFriendButton")) {
-                    Text("Invite a Friend")
-                  }
-
-              // Important Messages Button
-              Button(
-                  onClick = { /* Show important messages dialog */},
-                  modifier = Modifier.fillMaxWidth().testTag("importantMessagesButton")) {
-                    Text("Important Messages")
-                  }
+                    SettingsOption(
+                        label = "Storage and Data",
+                        backgroundColor = Color.White,
+                        onClick = { navigationActions.navigateTo("StorageAndDataScreen") },
+                        testTag = "StorageAndDataOption"
+                    )
+                    SettingsOption(
+                        label = "Help",
+                        backgroundColor = Color.White,
+                        onClick = { navigationActions.navigateTo("HelpScreen") },
+                        testTag = "HelpOption"
+                    )
+                }
             }
-      })
+        )
+    }
 }
 
 @Composable
-fun CustomTopBar(title: String, onBackClick: () -> Unit) {
-  Box(
-      modifier =
-          Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.primary).padding(16.dp)) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()) {
-              IconButton(onClick = onBackClick, modifier = Modifier.testTag("customGoBackButton")) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White)
-              }
-              Text(text = title, color = Color.White, style = MaterialTheme.typography.titleLarge)
+fun ProfileSection(
+    profilePictureUri: Uri?,
+    launcher: ActivityResultLauncher<String>,
+    userViewModel: UserViewModel
+) {
+    val context = LocalContext.current
+    val userName = userViewModel.getCurrentUser().collectAsState().value.firstName
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(16.dp)) // Additional space above the photo
+        Text(
+            userName,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            ),
+            modifier = Modifier.testTag("userName")
+        )
+
+        Spacer(modifier = Modifier.height(16.dp)) // Additional space above the photo
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .background(Color.Gray)
+                .testTag("profilePicture")
+        ) {
+            profilePictureUri?.let {
+                val bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(it))
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = "Profile Picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
-      }
+                ?: Image(
+                    painter = painterResource(id = R.drawable.settings_user),
+                    contentDescription = "Profile Picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+        }
+        Spacer(modifier = Modifier.height(16.dp)) // Additional space below the photo
+        Button(
+            onClick = { launcher.launch("image/*") },
+            modifier = Modifier.testTag("addPhotoButton"),
+            colors = ButtonDefaults.buttonColors(containerColor = Purple40) // Changed to Purple40
+        ) {
+            Text(
+                "Add Photo",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            )
+        }
+    }
 }
+
+@Composable
+fun SettingsOption(
+    label: String,
+    backgroundColor: Color,
+    onClick: () -> Unit,
+    testTag: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+            .clickable { onClick() }
+            .background(backgroundColor, RoundedCornerShape(8.dp))
+            .height(48.dp)
+            .testTag(testTag),
+        verticalAlignment = Alignment.CenterVertically // Center content vertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            ),
+            modifier = Modifier.padding(start = 16.dp) // Add padding to the left
+        )
+    }
+}
+
+
+@Composable
+fun NotificationsSwitch(notificationsEnabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(horizontal = 8.dp)
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp), // Padding inside the Row
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically // Center vertically
+    ) {
+        Text(
+            text = "Enable Notifications",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+        )
+        Switch(
+            checked = notificationsEnabled,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = Purple40,
+                uncheckedThumbColor = Color.Gray,
+                uncheckedTrackColor = Color.DarkGray
+            )
+        )
+    }
+}
+
+
+
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewSettingsScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  SettingsScreen(navigationActions)
+    val navController = rememberNavController()
+    val navigationActions = NavigationActions(navController)
+
+    val firestoreInstance = FirebaseFirestore.getInstance()
+    val authInstance = FirebaseAuth.getInstance()
+
+    val userRepository =
+        UserRepositoryFirestore(db = firestoreInstance, context = LocalContext.current)
+    val chatRepository = ChatRepositoryFirestore(firestore = firestoreInstance)
+
+    val userViewModel = UserViewModel(userRepository, chatRepository)
+    SettingsScreen(navigationActions, userViewModel, onNotificationsEnabledChange = {})
 }
