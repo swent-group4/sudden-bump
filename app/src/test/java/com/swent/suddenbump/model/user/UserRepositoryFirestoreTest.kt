@@ -173,6 +173,30 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
+  fun initShouldCallImageRepositoryInitAndInvokeOnSuccess() {
+    // Arrange
+    val mockImageRepository = mock(ImageRepository::class.java)
+    val userRepositoryFirestore = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
+
+    // Use reflection to inject the mock ImageRepository
+    val imageRepositoryField =
+        UserRepositoryFirestore::class.java.getDeclaredField("imageRepository")
+    imageRepositoryField.isAccessible = true
+    imageRepositoryField.set(userRepositoryFirestore, mockImageRepository)
+
+    var onSuccessCalled = false
+
+    // Act
+    userRepositoryFirestore.init {
+      onSuccessCalled = true // This should be set to true if onSuccess is called
+    }
+
+    // Assert
+    verify(mockImageRepository).init(any()) // Verify that imageRepository.init() was called
+    assertTrue(onSuccessCalled) // Verify that the onSuccess callback was invoked
+  }
+
+  @Test
   fun verifyNoAccountExists_callsDocuments() {
 
     `when`(mockEmailCollectionReference.get()).thenReturn(Tasks.forResult(mockEmailQuerySnapshot))
@@ -457,7 +481,7 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
-  fun testNoUploadWhenProfilePictureIsNull() {
+  fun createUserAccountNoUploadWhenProfilePictureIsNull() {
     // Arrange
     val mockUser = user.copy(profilePicture = null)
 
@@ -472,7 +496,7 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
-  fun testCreateUserAccountWithProfilePictureUpload() {
+  fun createUserAccountWithProfilePictureUpload() {
     // Arrange
     val profilePicture = mock(ImageBitmap::class.java) // Mock ImageBitmap
     val userWithProfilePicture =
@@ -540,7 +564,7 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
-  fun testCreateUserAccountWithProfilePictureUploadFailure() {
+  fun createUserAccountWithProfilePictureUploadFailure() {
     // Arrange
     val profilePicture = mock(ImageBitmap::class.java) // Mock ImageBitmap
     val userWithProfilePicture =
@@ -613,7 +637,7 @@ class UserRepositoryFirestoreTest {
    * reference and not the document reference.
    */
   @Test
-  fun getUserAccount_callsDocuments() {
+  fun getUserAccount1_callsDocuments() {
     `when`(mockUserCollectionReference.get()).thenReturn(Tasks.forResult(mockUserQuerySnapshot))
     `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
 
@@ -626,6 +650,420 @@ class UserRepositoryFirestoreTest {
         onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
 
     verify(timeout(100)) { (mockUserQuerySnapshot).documents }
+  }
+
+  @Test
+  fun getUserAccount1ShouldFetchUserDocumentAndDownloadImageOnSuccess() {
+    // Arrange
+    val uid = "1234"
+    val email = "test@example.com"
+    val profilePicturePath = "profilePictures/$uid.jpeg"
+    val profilePicture = mock(ImageBitmap::class.java)
+    val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val emailDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val mockImageRepository = mock(ImageRepository::class.java)
+
+    // Mock Firestore interactions
+    whenever(mockFirestore.collection("Emails")).thenReturn(mockEmailCollectionReference)
+    whenever(mockEmailCollectionReference.document(email)).thenReturn(mockEmailDocumentReference)
+    whenever(mockEmailDocumentReference.get()).thenReturn(Tasks.forResult(emailDocumentSnapshot))
+    whenever(emailDocumentSnapshot.data).thenReturn(mapOf("uid" to uid))
+
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
+    whenever(userDocumentSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "uid" to uid,
+                "firstName" to "John",
+                "lastName" to "Doe",
+                "phoneNumber" to "+1234567890",
+                "emailAddress" to email))
+
+    // Mock helper methods
+    val helper = mock(UserRepositoryFirestoreHelper::class.java)
+    whenever(helper.uidToProfilePicturePath(eq(uid), any())).thenReturn(profilePicturePath)
+    whenever(helper.documentSnapshotToUser(eq(userDocumentSnapshot), eq(profilePicture)))
+        .thenReturn(
+            User(
+                uid = uid,
+                firstName = "John",
+                lastName = "Doe",
+                phoneNumber = "+1234567890",
+                profilePicture = profilePicture,
+                emailAddress = email,
+                lastKnownLocation = MutableStateFlow(Location("mock_provider"))))
+
+    // Inject mocked helper into userRepositoryFirestore
+    val helperField = UserRepositoryFirestore::class.java.getDeclaredField("helper")
+    helperField.isAccessible = true
+    helperField.set(userRepositoryFirestore, helper)
+
+    // Mock ImageRepository behavior
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<(ImageBitmap) -> Unit>(1)
+          onSuccess(profilePicture) // Simulate image download success
+          null
+        }
+        .`when`(mockImageRepository)
+        .downloadImage(eq(profilePicturePath), any(), any())
+
+    // Inject mockImageRepository into userRepositoryFirestore
+    val imageRepositoryField =
+        UserRepositoryFirestore::class.java.getDeclaredField("imageRepository")
+    imageRepositoryField.isAccessible = true
+    imageRepositoryField.set(userRepositoryFirestore, mockImageRepository)
+
+    var onSuccessCalled = false
+    var returnedUser: User? = null
+
+    // Act
+    userRepositoryFirestore.getUserAccount(
+        onSuccess = {
+          onSuccessCalled = true
+          returnedUser = it
+        },
+        onFailure = { fail("Failure callback should not be called") })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue(onSuccessCalled)
+    assertNotNull(returnedUser)
+    assertEquals(uid, returnedUser?.uid)
+    assertEquals("John", returnedUser?.firstName)
+    assertEquals("Doe", returnedUser?.lastName)
+    assertEquals(email, returnedUser?.emailAddress)
+    assertEquals(profilePicture, returnedUser?.profilePicture)
+
+    verify(mockEmailDocumentReference).get()
+    verify(mockUserDocumentReference).get()
+    verify(mockImageRepository).downloadImage(eq(profilePicturePath), any(), any())
+  }
+
+  @Test
+  fun getUserAccount1ShouldCallOnFailureWhenGetUserFails() {
+    // Arrange
+    val uid = "1234"
+    val email = "test@example.com"
+    val exception = Exception("Failed to fetch user document")
+
+    val resultEmailSnapshot = mock(DocumentSnapshot::class.java)
+    whenever(resultEmailSnapshot.data).thenReturn(mapOf("uid" to uid))
+
+    // Mock Firestore interactions
+    whenever(mockFirestore.collection("Emails").document(email).get())
+        .thenReturn(Tasks.forResult(resultEmailSnapshot))
+    whenever(mockFirestore.collection("Users").document(uid).get())
+        .thenReturn(Tasks.forException(exception))
+
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.getUserAccount(
+        onSuccess = { fail("Success callback should not be called") },
+        onFailure = {
+          onFailureCalled = true
+          failureException = it
+        })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue(onFailureCalled)
+    assertEquals(exception, failureException)
+    verify(mockFirestore.collection("Users").document(uid)).get()
+  }
+
+  @Test
+  fun getUserAccount1ShouldCallOnFailureWhenDownloadImageFails() {
+    // Arrange
+    val uid = "1234"
+    val email = "test@example.com"
+    val exception = Exception("Image download failed")
+    val resultEmailSnapshot = mock(DocumentSnapshot::class.java)
+    val resultUserSnapshot = mock(DocumentSnapshot::class.java)
+    val profilePicturePath = "profilePictures/$uid.jpeg"
+
+    // Define collection paths
+    val emailCollectionPath = "Emails"
+    val usersCollectionPath = "Users"
+
+    // Mock Firestore email collection
+    whenever(mockFirestore.collection(emailCollectionPath)).thenReturn(mockEmailCollectionReference)
+    whenever(mockEmailCollectionReference.document(email)).thenReturn(mockEmailDocumentReference)
+    whenever(mockEmailDocumentReference.get()).thenReturn(Tasks.forResult(resultEmailSnapshot))
+    whenever(resultEmailSnapshot.data).thenReturn(mapOf("uid" to uid))
+
+    // Mock Firestore user collection
+    whenever(mockFirestore.collection(usersCollectionPath)).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(resultUserSnapshot))
+    whenever(resultUserSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "uid" to uid,
+                "firstName" to "John",
+                "lastName" to "Doe",
+                "phoneNumber" to "+1234567890",
+                "emailAddress" to email))
+
+    // Mock helper methods
+    val helper = mock(UserRepositoryFirestoreHelper::class.java)
+    whenever(helper.uidToProfilePicturePath(eq(uid), any())).thenReturn(profilePicturePath)
+
+    // Mock ImageRepository to simulate failure
+    doAnswer { invocation ->
+          val onFailure = invocation.getArgument<(Exception) -> Unit>(2)
+          onFailure(exception) // Simulate failure
+          null
+        }
+        .`when`(mockImageRepository)
+        .downloadImage(eq(profilePicturePath), any(), any())
+
+    // Inject mocks into UserRepositoryFirestore
+    val helperField = UserRepositoryFirestore::class.java.getDeclaredField("helper")
+    helperField.isAccessible = true
+    helperField.set(userRepositoryFirestore, helper)
+
+    val imageRepositoryField =
+        UserRepositoryFirestore::class.java.getDeclaredField("imageRepository")
+    imageRepositoryField.isAccessible = true
+    imageRepositoryField.set(userRepositoryFirestore, mockImageRepository)
+
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.getUserAccount(
+        onSuccess = { fail("onSuccess should not be called") },
+        onFailure = { exception ->
+          onFailureCalled = true
+          failureException = exception
+        })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue(onFailureCalled)
+    assertEquals("Image download failed", failureException?.message)
+    verify(mockImageRepository).downloadImage(eq(profilePicturePath), any(), any())
+  }
+
+  @Test
+  fun getUserAccount2ShouldCallOnFailureWhenRetrievalFails() {
+    // Arrange
+    val uid = "1234"
+    val exception = Exception("User retrieval failed")
+
+    // Inject usersCollectionPath and profilePicturesRef
+    val usersCollectionPathField =
+        UserRepositoryFirestore::class.java.getDeclaredField("usersCollectionPath")
+    usersCollectionPathField.isAccessible = true
+    usersCollectionPathField.set(userRepositoryFirestore, "Users")
+
+    val profilePicturesRefField =
+        UserRepositoryFirestore::class.java.getDeclaredField("profilePicturesRef")
+    profilePicturesRefField.isAccessible = true
+    profilePicturesRefField.set(userRepositoryFirestore, mock(StorageReference::class.java))
+
+    // Mock Firestore user collection to simulate failure
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.get()).thenReturn(Tasks.forException(exception))
+
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.getUserAccount(
+        uid = uid,
+        onSuccess = { fail("onSuccess should not be called") },
+        onFailure = { error ->
+          onFailureCalled = true
+          failureException = error
+        })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue(onFailureCalled)
+    assertEquals(exception, failureException)
+    verify(mockFirestore.collection("Users").document(uid)).get()
+  }
+
+  @Test
+  fun getUserAccount2ShouldFetchUserDocumentAndDownloadImageOnSuccess() {
+    // Arrange
+    val uid = "1234"
+    val email = "test@example.com"
+    val profilePicturePath = "profilePictures/$uid.jpeg"
+    val profilePicture = mock(ImageBitmap::class.java)
+    val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val emailDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val mockImageRepository = mock(ImageRepository::class.java)
+
+    // Mock Firestore interactions
+    whenever(mockFirestore.collection("Emails")).thenReturn(mockEmailCollectionReference)
+    whenever(mockEmailCollectionReference.document(email)).thenReturn(mockEmailDocumentReference)
+    whenever(mockEmailDocumentReference.get()).thenReturn(Tasks.forResult(emailDocumentSnapshot))
+    whenever(emailDocumentSnapshot.data).thenReturn(mapOf("uid" to uid))
+
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
+    whenever(userDocumentSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "uid" to uid,
+                "firstName" to "John",
+                "lastName" to "Doe",
+                "phoneNumber" to "+1234567890",
+                "emailAddress" to email))
+
+    // Mock helper methods
+    val helper = mock(UserRepositoryFirestoreHelper::class.java)
+    whenever(helper.uidToProfilePicturePath(eq(uid), any())).thenReturn(profilePicturePath)
+    whenever(helper.documentSnapshotToUser(eq(userDocumentSnapshot), eq(profilePicture)))
+        .thenReturn(
+            User(
+                uid = uid,
+                firstName = "John",
+                lastName = "Doe",
+                phoneNumber = "+1234567890",
+                profilePicture = profilePicture,
+                emailAddress = email,
+                lastKnownLocation = MutableStateFlow(Location("mock_provider"))))
+
+    // Inject mocked helper into userRepositoryFirestore
+    val helperField = UserRepositoryFirestore::class.java.getDeclaredField("helper")
+    helperField.isAccessible = true
+    helperField.set(userRepositoryFirestore, helper)
+
+    // Mock ImageRepository behavior
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<(ImageBitmap) -> Unit>(1)
+          onSuccess(profilePicture) // Simulate image download success
+          null
+        }
+        .`when`(mockImageRepository)
+        .downloadImage(eq(profilePicturePath), any(), any())
+
+    // Inject mockImageRepository into userRepositoryFirestore
+    val imageRepositoryField =
+        UserRepositoryFirestore::class.java.getDeclaredField("imageRepository")
+    imageRepositoryField.isAccessible = true
+    imageRepositoryField.set(userRepositoryFirestore, mockImageRepository)
+
+    var onSuccessCalled = false
+    var returnedUser: User? = null
+
+    // Act
+    userRepositoryFirestore.getUserAccount(
+        uid = uid,
+        onSuccess = {
+          onSuccessCalled = true
+          returnedUser = it
+        },
+        onFailure = { fail("Failure callback should not be called") })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue(onSuccessCalled)
+    assertNotNull(returnedUser)
+    assertEquals(uid, returnedUser?.uid)
+    assertEquals("John", returnedUser?.firstName)
+    assertEquals("Doe", returnedUser?.lastName)
+    assertEquals(email, returnedUser?.emailAddress)
+    assertEquals(profilePicture, returnedUser?.profilePicture)
+
+    verify(mockUserDocumentReference).get()
+    verify(mockImageRepository).downloadImage(eq(profilePicturePath), any(), any())
+  }
+
+  @Test
+  fun getUserAccount2ShouldCallOnFailureWhenDownloadImageFails() {
+    // Arrange
+    val uid = "1234"
+    val email = "test@example.com"
+    val exception = Exception("Image download failed")
+    val resultEmailSnapshot = mock(DocumentSnapshot::class.java)
+    val resultUserSnapshot = mock(DocumentSnapshot::class.java)
+    val profilePicturePath = "profilePictures/$uid.jpeg"
+
+    // Define collection paths
+    val emailCollectionPath = "Emails"
+    val usersCollectionPath = "Users"
+
+    // Mock Firestore email collection
+    whenever(mockFirestore.collection(emailCollectionPath)).thenReturn(mockEmailCollectionReference)
+    whenever(mockEmailCollectionReference.document(email)).thenReturn(mockEmailDocumentReference)
+    whenever(mockEmailDocumentReference.get()).thenReturn(Tasks.forResult(resultEmailSnapshot))
+    whenever(resultEmailSnapshot.data).thenReturn(mapOf("uid" to uid))
+
+    // Mock Firestore user collection
+    whenever(mockFirestore.collection(usersCollectionPath)).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(resultUserSnapshot))
+    whenever(resultUserSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "uid" to uid,
+                "firstName" to "John",
+                "lastName" to "Doe",
+                "phoneNumber" to "+1234567890",
+                "emailAddress" to email))
+
+    // Mock helper methods
+    val helper = mock(UserRepositoryFirestoreHelper::class.java)
+    whenever(helper.uidToProfilePicturePath(eq(uid), any())).thenReturn(profilePicturePath)
+
+    // Mock ImageRepository to simulate failure
+    doAnswer { invocation ->
+          val onFailure = invocation.getArgument<(Exception) -> Unit>(2)
+          onFailure(exception) // Simulate failure
+          null
+        }
+        .`when`(mockImageRepository)
+        .downloadImage(eq(profilePicturePath), any(), any())
+
+    // Inject mocks into UserRepositoryFirestore
+    val helperField = UserRepositoryFirestore::class.java.getDeclaredField("helper")
+    helperField.isAccessible = true
+    helperField.set(userRepositoryFirestore, helper)
+
+    val imageRepositoryField =
+        UserRepositoryFirestore::class.java.getDeclaredField("imageRepository")
+    imageRepositoryField.isAccessible = true
+    imageRepositoryField.set(userRepositoryFirestore, mockImageRepository)
+
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.getUserAccount(
+        uid,
+        onSuccess = { fail("onSuccess should not be called") },
+        onFailure = { exception ->
+          onFailureCalled = true
+          failureException = exception
+        })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue(onFailureCalled)
+    assertEquals("Image download failed", failureException?.message)
+    verify(mockImageRepository).downloadImage(eq(profilePicturePath), any(), any())
   }
 
   /**
