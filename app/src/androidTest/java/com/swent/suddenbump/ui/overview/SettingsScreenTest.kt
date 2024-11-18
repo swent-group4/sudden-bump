@@ -56,6 +56,7 @@ class SettingsScreenTest {
   fun goBackButtonCallsNavActions() {
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("goBackButton").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).goBack()
   }
 
@@ -63,6 +64,7 @@ class SettingsScreenTest {
   fun accountButtonNavigatesToAccountScreen() {
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
     composeTestRule.onNodeWithText("Account").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).navigateTo(screen = Screen.ACCOUNT)
   }
 
@@ -70,6 +72,7 @@ class SettingsScreenTest {
   fun confidentialityButtonNavigatesToConfidentialityScreen() {
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
     composeTestRule.onNodeWithText("Confidentiality").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).navigateTo(screen = Screen.CONFIDENTIALITY)
   }
 
@@ -77,34 +80,17 @@ class SettingsScreenTest {
   fun discussionsButtonNavigatesToDiscussionsScreen() {
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
     composeTestRule.onNodeWithText("Discussions").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).navigateTo(screen = Screen.DISCUSSIONS)
   }
-
-  /*@Test
-  fun toggleNotificationsSwitch() {
-      // Find the "Enable Notifications" switch and toggle it
-      composeTestRule.onNodeWithText("Enable Notifications").assertIsDisplayed()
-      composeTestRule.onNodeWithText("Enable Notifications").performClick()
-
-      // Assert that the notificationsEnabled value was updated
-      assert(!notificationsEnabled)
-  }
-  */
 
   @Test
   fun storageAndDataButtonNavigatesToStorageAndDataScreen() {
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
     composeTestRule.onNodeWithText("Storage and Data").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).navigateTo(screen = Screen.STORAGE_AND_DATA)
   }
-  /*
-  @Test
-  fun helpButtonNavigatesToHelpScreen() {
-    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Help").performClick()
-    composeTestRule.waitForIdle() // Wait for UI to settle after the click
-    verify(navigationActions).navigateTo(screen = Screen.HELP)
-  }*/
 }
 
 object Screen {
