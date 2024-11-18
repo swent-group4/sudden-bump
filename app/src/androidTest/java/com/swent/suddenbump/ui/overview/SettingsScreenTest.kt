@@ -91,6 +91,14 @@ class SettingsScreenTest {
     composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).navigateTo(screen = Screen.STORAGE_AND_DATA)
   }
+
+  @Test
+  fun helpButtonNavigatesToHelpScreen() {
+    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Help").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle after the click
+    verify(navigationActions).navigateTo(screen = Screen.HELP)
+  }
 }
 
 object Screen {
