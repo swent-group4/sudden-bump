@@ -65,10 +65,9 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
             // Date Field (Non-clickable)
             OutlinedTextField(
                 value = date,
-                onValueChange = {},
+                onValueChange = { date = it },
                 label = { Text("Date (dd/MM/yyyy)") },
                 textStyle = TextStyle(color = Color.White),
-                readOnly = true,
                 modifier = Modifier
                     .fillMaxWidth(),
                 trailingIcon = {
