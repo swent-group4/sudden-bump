@@ -10,6 +10,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -27,43 +28,11 @@ data class SectionData(
 
 @Composable
 fun DiscussionScreen(navigationActions: NavigationActions) {
-  val sections =
-      listOf(
-          SectionData(
-              label = "Chat wallpaper",
-              buttonText = "Change chat wallpaper",
-              labelTag = "chatWallpaperText",
-              buttonTag = "changeChatWallpaperButton"),
-          SectionData(
-              label = "Export chat",
-              buttonText = "Export chat",
-              labelTag = "exportChatText",
-              buttonTag = "exportChatButton"),
-          SectionData(
-              label = "Archive all chats",
-              buttonText = "Archive all chats",
-              labelTag = "archiveAllChatsText",
-              buttonTag = "archiveAllChatsButton"),
-          SectionData(
-              label = "Clear all chats",
-              buttonText = "Clear all chats",
-              labelTag = "clearAllChatsText",
-              buttonTag = "clearAllChatsButton"),
-          SectionData(
-              label = "Delete all chats",
-              buttonText = "Delete all chats",
-              labelTag = "deleteAllChatsText",
-              buttonTag = "deleteAllChatsButton"))
+  val sections = remember { createDiscussionSections() }
 
   Scaffold(
       modifier = Modifier.testTag("discussionScreen").background(Color.Black),
-      topBar = {
-        CustomTopBar(
-            title = "Chats",
-            navigationActions = navigationActions,
-            titleTag = "discussionTitle",
-            backButtonTag = "backButton")
-      },
+      topBar = { createTopBar(navigationActions) },
       content = { paddingValues ->
         LazyColumn(
             modifier =
@@ -85,6 +54,39 @@ fun DiscussionScreen(navigationActions: NavigationActions) {
       })
 }
 
+/** Helper function to create the top bar for DiscussionScreen */
+@Composable
+fun createTopBar(navigationActions: NavigationActions) {
+  CustomTopBar(
+      title = "Chats",
+      navigationActions = navigationActions,
+      titleTag = "discussionTitle",
+      backButtonTag = "backButton")
+}
+
+/** Create the list of sections for the DiscussionScreen */
+fun createDiscussionSections(): List<SectionData> =
+    listOf(
+        createSectionData(
+            "Chat wallpaper",
+            "Change chat wallpaper",
+            "chatWallpaperText",
+            "changeChatWallpaperButton"),
+        createSectionData("Export chat", "Export chat", "exportChatText", "exportChatButton"),
+        createSectionData(
+            "Archive all chats",
+            "Archive all chats",
+            "archiveAllChatsText",
+            "archiveAllChatsButton"),
+        createSectionData(
+            "Clear all chats", "Clear all chats", "clearAllChatsText", "clearAllChatsButton"),
+        createSectionData(
+            "Delete all chats", "Delete all chats", "deleteAllChatsText", "deleteAllChatsButton"))
+
+/** Helper function to create a SectionData instance */
+fun createSectionData(label: String, buttonText: String, labelTag: String, buttonTag: String) =
+    SectionData(label = label, buttonText = buttonText, labelTag = labelTag, buttonTag = buttonTag)
+
 /** Extension function to add items with dividers in LazyColumn. */
 inline fun <T> LazyListScope.itemsWithDividers(
     items: List<T>,
@@ -93,8 +95,11 @@ inline fun <T> LazyListScope.itemsWithDividers(
   items.forEachIndexed { index, item ->
     item {
       content(item)
+
       if (index != items.lastIndex) {
-        Divider(color = Color.White, modifier = Modifier.padding(vertical = 8.dp))
+        Divider(
+            color = Color.White,
+            modifier = Modifier.padding(vertical = 8.dp).testTag("divider_$index"))
       }
     }
   }
