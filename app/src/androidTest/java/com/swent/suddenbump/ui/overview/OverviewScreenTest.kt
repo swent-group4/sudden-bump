@@ -4,7 +4,9 @@ import android.location.Location
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.printToLog
 import com.google.firebase.firestore.FirebaseFirestore
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.User
@@ -155,6 +157,8 @@ class OverviewScreenTest {
 
   @Test
   fun displaysFriendsWithinCategories() {
+    // Add this line before your assertions
+    composeTestRule.onRoot().printToLog("UI_TREE")
     // Proceed with assertions
     composeTestRule.onNodeWithTag("Within 5km").assertIsDisplayed()
     composeTestRule.onNodeWithTag("Within 10km").assertIsDisplayed()

@@ -186,7 +186,8 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                 userViewModel.setSelectedContact(user)
                 navigationActions.navigateTo(Screen.CONTACT)
               }
-              .testTag(user.uid),
+              .testTag(user.uid)
+              .testTag("userRow"),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Row(
