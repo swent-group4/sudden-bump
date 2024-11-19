@@ -43,12 +43,13 @@ fun AccountScreen(navigationActions: NavigationActions) {
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
               item {
                 // Language Section with Pop-Up Menu
-                Box {
+                Box(modifier = Modifier.testTag("languageSection")) { // Only one testTag here
                   AccountOption(
                       label = "Language",
                       backgroundColor = Color.White,
                       onClick = { isLanguageMenuExpanded = true },
-                      testTag = "languageSection")
+                      testTag = "" // Remove redundant tag from the child
+                      )
                   DropdownMenu(
                       expanded = isLanguageMenuExpanded,
                       onDismissRequest = { isLanguageMenuExpanded = false }) {
@@ -81,23 +82,43 @@ fun AccountScreen(navigationActions: NavigationActions) {
                     testTag = "logoutSection")
               }
 
-              item { PasswordChangeSection() }
+              item {
+                ChangeSection(
+                    title = "Change Password",
+                    placeholder = "Enter new password",
+                    sectionTag = "passwordChangeSection",
+                    placeholderTag = "passwordPlaceholder",
+                    buttonTag = "passwordChangeButton")
+              }
 
-              item { EmailChangeSection() }
+              item {
+                ChangeSection(
+                    title = "Change Email",
+                    placeholder = "Enter new email",
+                    sectionTag = "emailChangeSection",
+                    placeholderTag = "emailPlaceholder",
+                    buttonTag = "emailChangeButton")
+              }
             }
       })
 }
 
 @Composable
-fun PasswordChangeSection() {
+fun ChangeSection(
+    title: String,
+    placeholder: String,
+    sectionTag: String,
+    placeholderTag: String,
+    buttonTag: String
+) {
   Column(
       modifier =
           Modifier.fillMaxWidth()
               .background(Color.White, RoundedCornerShape(8.dp))
               .padding(16.dp)
-              .testTag("passwordChangeSection")) {
+              .testTag(sectionTag)) {
         Text(
-            text = "Change Password",
+            text = title,
             style =
                 MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black))
@@ -107,9 +128,9 @@ fun PasswordChangeSection() {
                 Modifier.fillMaxWidth()
                     .height(48.dp)
                     .background(Color.LightGray, RoundedCornerShape(8.dp))
-                    .testTag("passwordPlaceholder")) {
+                    .testTag(placeholderTag)) {
               Text(
-                  text = "Enter new password",
+                  text = placeholder,
                   style =
                       MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp, color = Color.Gray),
                   modifier = Modifier.align(Alignment.CenterStart).padding(8.dp))
@@ -117,50 +138,10 @@ fun PasswordChangeSection() {
         Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = { /* Do nothing for now */},
-            modifier = Modifier.fillMaxWidth().testTag("passwordChangeButton"),
+            modifier = Modifier.fillMaxWidth().testTag(buttonTag),
             colors = ButtonDefaults.buttonColors(containerColor = Pink40)) {
               Text(
-                  text = "Update Password",
-                  style =
-                      MaterialTheme.typography.bodyLarge.copy(
-                          fontWeight = FontWeight.Bold, color = Color.White))
-            }
-      }
-}
-
-@Composable
-fun EmailChangeSection() {
-  Column(
-      modifier =
-          Modifier.fillMaxWidth()
-              .background(Color.White, RoundedCornerShape(8.dp))
-              .padding(16.dp)
-              .testTag("emailChangeSection")) {
-        Text(
-            text = "Change Email",
-            style =
-                MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black))
-        Spacer(modifier = Modifier.height(8.dp))
-        Box(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .height(48.dp)
-                    .background(Color.LightGray, RoundedCornerShape(8.dp))
-                    .testTag("emailPlaceholder")) {
-              Text(
-                  text = "Enter new email",
-                  style =
-                      MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp, color = Color.Gray),
-                  modifier = Modifier.align(Alignment.CenterStart).padding(8.dp))
-            }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = { /* Do nothing for now */},
-            modifier = Modifier.fillMaxWidth().testTag("emailChangeButton"),
-            colors = ButtonDefaults.buttonColors(containerColor = Pink40)) {
-              Text(
-                  text = "Update Email",
+                  text = "Update ${title.split(" ")[1]}",
                   style =
                       MaterialTheme.typography.bodyLarge.copy(
                           fontWeight = FontWeight.Bold, color = Color.White))
