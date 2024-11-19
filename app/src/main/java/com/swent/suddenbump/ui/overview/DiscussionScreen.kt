@@ -5,6 +5,7 @@ package com.swent.suddenbump.ui.overview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -72,18 +73,29 @@ fun DiscussionScreen(navigationActions: NavigationActions) {
                     .padding(16.dp)
                     .testTag("discussionLazyColumn"),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              items(sections.size) { index ->
-                val section = sections[index]
+              itemsWithDividers(sections) { section ->
                 LabeledButtonSection(
                     label = section.label,
                     buttonText = section.buttonText,
                     onClick = { /* TODO: Add logic for each section */},
                     labelTag = section.labelTag,
                     buttonTag = section.buttonTag)
-                if (index != sections.lastIndex) {
-                  Divider(color = Color.White, modifier = Modifier.padding(vertical = 8.dp))
-                }
               }
             }
       })
+}
+
+/** Extension function to add items with dividers in LazyColumn. */
+inline fun <T> LazyListScope.itemsWithDividers(
+    items: List<T>,
+    crossinline content: @Composable (T) -> Unit
+) {
+  items.forEachIndexed { index, item ->
+    item {
+      content(item)
+      if (index != items.lastIndex) {
+        Divider(color = Color.White, modifier = Modifier.padding(vertical = 8.dp))
+      }
+    }
+  }
 }
