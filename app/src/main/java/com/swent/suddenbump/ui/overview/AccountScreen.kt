@@ -1,49 +1,31 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.swent.suddenbump.ui.overview
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.Pink40
+import com.swent.suddenbump.ui.utils.AccountOption
 import com.swent.suddenbump.ui.utils.CustomTopBar
-import com.swent.suddenbump.ui.utils.LabeledButtonSection
 
-data class AccountSectionData(
-    val label: String,
-    val buttonText: String,
-    val labelTag: String,
-    val buttonTag: String
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(navigationActions: NavigationActions) {
-  val sections =
-      listOf(
-          AccountSectionData(
-              "Change Email", "Update Email", "changeEmailText", "updateEmailButton"),
-          AccountSectionData(
-              "Change Password", "Update Password", "changePasswordText", "updatePasswordButton"),
-          AccountSectionData(
-              "Delete Account", "Remove Account", "deleteAccountText", "removeAccountButton"))
+  var selectedLanguage by remember { mutableStateOf("English") }
+  var isLanguageMenuExpanded by remember { mutableStateOf(false) }
 
   Scaffold(
-      modifier = Modifier.testTag("accountScreen").background(Color.Black),
+      modifier = Modifier.background(Color.Black).testTag("AccountScreen"),
       topBar = {
         CustomTopBar(
             title = "Account",
@@ -52,56 +34,136 @@ fun AccountScreen(navigationActions: NavigationActions) {
             backButtonTag = "backButton")
       },
       content = { paddingValues ->
-        Column(
+        LazyColumn(
             modifier =
                 Modifier.fillMaxSize()
                     .background(Color.Black)
                     .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              sections.forEach { section ->
-                LabeledButtonSection(
-                    label = section.label,
-                    buttonText = section.buttonText,
-                    onClick = { /* TODO: Add logic for each section */},
-                    labelTag = section.labelTag,
-                    buttonTag = section.buttonTag)
-                Divider(color = Color.White, modifier = Modifier.padding(vertical = 8.dp))
+              item {
+                // Language Section with Pop-Up Menu
+                Box {
+                  AccountOption(
+                      label = "Language",
+                      backgroundColor = Color.White,
+                      onClick = { isLanguageMenuExpanded = true },
+                      testTag = "languageSection")
+                  DropdownMenu(
+                      expanded = isLanguageMenuExpanded,
+                      onDismissRequest = { isLanguageMenuExpanded = false }) {
+                        listOf("English", "French", "German").forEach { language ->
+                          DropdownMenuItem(
+                              text = { Text(language) },
+                              onClick = {
+                                selectedLanguage = language
+                                isLanguageMenuExpanded = false
+                              },
+                              modifier = Modifier.testTag("languageMenuItem_$language"))
+                        }
+                      }
+                }
               }
 
-              Spacer(modifier = Modifier.height(16.dp))
+              item {
+                AccountOption(
+                    label = "Delete Account",
+                    backgroundColor = Pink40,
+                    onClick = { navigationActions.navigateTo("AccountScreen") },
+                    testTag = "deleteAccountSection")
+              }
 
-              // Additional Account Settings
-              AccountPreferences(modifier = Modifier.testTag("accountPreferences"))
+              item {
+                AccountOption(
+                    label = "Log out",
+                    backgroundColor = Pink40,
+                    onClick = { navigationActions.navigateTo("AccountScreen") },
+                    testTag = "logoutSection")
+              }
+
+              item { PasswordChangeSection() }
+
+              item { EmailChangeSection() }
             }
       })
 }
 
 @Composable
-fun AccountPreferences(modifier: Modifier = Modifier) {
-  val options = listOf("Enable Notifications", "Enable Two-Factor Authentication")
-  var selectedOption by remember { mutableStateOf(options[0]) } // Proper delegation for state
+fun PasswordChangeSection() {
+  Column(
+      modifier =
+          Modifier.fillMaxWidth()
+              .background(Color.White, RoundedCornerShape(8.dp))
+              .padding(16.dp)
+              .testTag("passwordChangeSection")) {
+        Text(
+            text = "Change Password",
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black))
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(48.dp)
+                    .background(Color.LightGray, RoundedCornerShape(8.dp))
+                    .testTag("passwordPlaceholder")) {
+              Text(
+                  text = "Enter new password",
+                  style =
+                      MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp, color = Color.Gray),
+                  modifier = Modifier.align(Alignment.CenterStart).padding(8.dp))
+            }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = { /* Do nothing for now */},
+            modifier = Modifier.fillMaxWidth().testTag("passwordChangeButton"),
+            colors = ButtonDefaults.buttonColors(containerColor = Pink40)) {
+              Text(
+                  text = "Update Password",
+                  style =
+                      MaterialTheme.typography.bodyLarge.copy(
+                          fontWeight = FontWeight.Bold, color = Color.White))
+            }
+      }
+}
 
-  Column(modifier = modifier.fillMaxWidth().background(Color.White).padding(16.dp)) {
-    options.forEach { option ->
-      Row(
-          modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-          horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(
-                text = option,
-                style =
-                    MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color = Color.Black),
-                modifier = Modifier.testTag("${option.replace(" ", "")}Option"))
-            androidx.compose.material3.Checkbox(
-                checked = selectedOption == option,
-                onCheckedChange = { if (it) selectedOption = option },
-                colors =
-                    androidx.compose.material3.CheckboxDefaults.colors(
-                        checkedColor = com.swent.suddenbump.ui.theme.Purple40))
-          }
-    }
-  }
+@Composable
+fun EmailChangeSection() {
+  Column(
+      modifier =
+          Modifier.fillMaxWidth()
+              .background(Color.White, RoundedCornerShape(8.dp))
+              .padding(16.dp)
+              .testTag("emailChangeSection")) {
+        Text(
+            text = "Change Email",
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black))
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(48.dp)
+                    .background(Color.LightGray, RoundedCornerShape(8.dp))
+                    .testTag("emailPlaceholder")) {
+              Text(
+                  text = "Enter new email",
+                  style =
+                      MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp, color = Color.Gray),
+                  modifier = Modifier.align(Alignment.CenterStart).padding(8.dp))
+            }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = { /* Do nothing for now */},
+            modifier = Modifier.fillMaxWidth().testTag("emailChangeButton"),
+            colors = ButtonDefaults.buttonColors(containerColor = Pink40)) {
+              Text(
+                  text = "Update Email",
+                  style =
+                      MaterialTheme.typography.bodyLarge.copy(
+                          fontWeight = FontWeight.Bold, color = Color.White))
+            }
+      }
 }

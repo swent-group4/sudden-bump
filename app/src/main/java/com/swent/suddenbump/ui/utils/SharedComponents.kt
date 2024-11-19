@@ -1,12 +1,14 @@
 package com.swent.suddenbump.ui.utils
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -14,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
 
 /**
@@ -92,4 +95,56 @@ fun CustomTopBar(
             }
       },
       colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40))
+}
+
+@Composable
+fun OptionColumn(
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+  Column(modifier = modifier.fillMaxWidth().background(Color.White).padding(16.dp)) {
+    options.forEach { option ->
+      Row(
+          modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+          horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(
+                text = option,
+                style =
+                    MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color = Color.Black),
+                modifier = Modifier.testTag("${option.replace(" ", "")}Option"))
+            androidx.compose.material3.Checkbox(
+                checked = selectedOption == option,
+                onCheckedChange = { if (it) onOptionSelected(option) },
+                colors =
+                    androidx.compose.material3.CheckboxDefaults.colors(
+                        checkedColor = com.swent.suddenbump.ui.theme.Purple40))
+          }
+    }
+  }
+}
+
+@Composable
+fun AccountOption(label: String, backgroundColor: Color, onClick: () -> Unit, testTag: String) {
+  Box(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = 8.dp)
+              .clickable { onClick() }
+              .background(backgroundColor, RoundedCornerShape(8.dp))
+              .height(48.dp)
+              .testTag(testTag),
+      contentAlignment = Alignment.CenterStart) {
+        Text(
+            text = label,
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 16.sp,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = if (backgroundColor == Pink40) Color.White else Color.Black),
+            modifier = Modifier.padding(start = 16.dp))
+      }
 }

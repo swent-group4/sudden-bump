@@ -24,7 +24,6 @@ class AccountScreenTest {
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
-
     composeTestRule.setContent { AccountScreen(navigationActions = navigationActions) }
   }
 
@@ -34,10 +33,12 @@ class AccountScreenTest {
     composeTestRule.onNodeWithText("Account").assertIsDisplayed()
 
     // Verify that each section is displayed
-    composeTestRule.onNodeWithText("Birthday").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Language").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Delete Account").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Log out").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("languageSection").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("deleteAccountSection").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("logoutSection").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("passwordChangeSection").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("emailChangeSection").assertIsDisplayed()
   }
 
   @Test
@@ -48,30 +49,51 @@ class AccountScreenTest {
   }
 
   @Test
-  fun birthdayButtonNavigatesToAccountScreen() {
-    // Perform a click on the "Birthday" section and verify navigation to "AccountScreen"
-    composeTestRule.onNodeWithText("Birthday").performClick()
+  fun languageButtonOpensLanguageMenu() {
+    // Perform a click on the "Language" section
+    composeTestRule.onNodeWithTag("languageSection").performClick()
+
+    // Verify that the dropdown menu appears
+    composeTestRule.onNodeWithTag("languageMenuItem_English").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("languageMenuItem_French").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("languageMenuItem_German").assertIsDisplayed()
+  }
+
+  @Test
+  fun deleteAccountButtonNavigatesToAccountScreen() {
+    // Perform a click on the "Delete Account" section
+    composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
     verify(navigationActions).navigateTo("AccountScreen")
   }
 
   @Test
-  fun languageButtonNavigatesToAccountScreen() {
-    // Perform a click on the "Language" section and verify navigation to "AccountScreen"
-    composeTestRule.onNodeWithText("Language").performClick()
+  fun logOutButtonNavigatesToAccountScreen() {
+    // Perform a click on the "Log out" section
+    composeTestRule.onNodeWithTag("logoutSection").performClick()
     verify(navigationActions).navigateTo("AccountScreen")
   }
 
   @Test
-  fun deleteAccountButtonNavigatesToDeleteAccount() {
-    // Perform a click on the "Delete Account" section and verify navigation to "Delete Account"
-    composeTestRule.onNodeWithText("Delete Account").performClick()
-    verify(navigationActions).navigateTo("Delete Account")
+  fun passwordSectionIsDisplayed() {
+    // Verify the "Change Password" section is displayed
+    composeTestRule.onNodeWithTag("passwordChangeSection").assertIsDisplayed()
+
+    // Verify placeholder box is displayed instead of a keyboard input
+    composeTestRule.onNodeWithTag("passwordPlaceholder").assertIsDisplayed()
+
+    // Verify button exists for password change
+    composeTestRule.onNodeWithTag("passwordChangeButton").assertIsDisplayed()
   }
 
   @Test
-  fun logOutButtonNavigatesToLogOut() {
-    // Perform a click on the "Log out" section and verify navigation to "Log out"
-    composeTestRule.onNodeWithText("Log out").performClick()
-    verify(navigationActions).navigateTo("Log out")
+  fun emailSectionIsDisplayed() {
+    // Verify the "Change Email" section is displayed
+    composeTestRule.onNodeWithTag("emailChangeSection").assertIsDisplayed()
+
+    // Verify placeholder box is displayed instead of a keyboard input
+    composeTestRule.onNodeWithTag("emailPlaceholder").assertIsDisplayed()
+
+    // Verify button exists for email change
+    composeTestRule.onNodeWithTag("emailChangeButton").assertIsDisplayed()
   }
 }
