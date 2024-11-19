@@ -1,10 +1,12 @@
 package com.swent.suddenbump.ui.overview
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.UserRepository
@@ -87,15 +89,40 @@ class SettingsScreenTest {
   @Test
   fun storageAndDataButtonNavigatesToStorageAndDataScreen() {
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Storage and Data").performClick()
-    composeTestRule.waitForIdle() // Wait for UI to settle after the click
+
+    // Scroll down to bring the "Storage and Data" option into view
+    composeTestRule
+        .onNodeWithTag("settingsLazyColumn")
+        .performScrollToNode(hasTestTag("StorageAndDataOption"))
+
+    // Now check if the node exists and perform the action
+    composeTestRule
+        .onNodeWithTag("StorageAndDataOption")
+        .assertExists(
+            "Storage and Data option not found. Ensure the tag is correctly set in the composable.")
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule.waitForIdle() // Wait for UI to settle
     verify(navigationActions).navigateTo(screen = Screen.STORAGE_AND_DATA)
   }
 
   @Test
   fun helpButtonNavigatesToHelpScreen() {
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Help").performClick()
+
+    // Scroll to bring the "Help" option into view
+    composeTestRule
+        .onNodeWithTag("settingsLazyColumn")
+        .performScrollToNode(hasTestTag("HelpOption")) // Use testTag to scroll to the Help button
+
+    // Now check if the "Help" button exists, is displayed, and perform the click
+    composeTestRule
+        .onNodeWithTag("HelpOption")
+        .assertExists("Help button does not exist.")
+        .assertIsDisplayed()
+        .performClick()
+
     composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).navigateTo(screen = Screen.HELP)
   }

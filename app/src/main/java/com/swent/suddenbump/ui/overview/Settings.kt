@@ -9,6 +9,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -80,43 +81,59 @@ fun SettingsScreen(
               colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40))
         },
         content = { paddingValues ->
-          Column(
+          LazyColumn(
               modifier =
                   Modifier.fillMaxSize()
                       .padding(paddingValues)
                       .padding(16.dp)
-                      .background(Color.Black),
+                      .background(Color.Black)
+                      .testTag("settingsLazyColumn"),
               verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                ProfileSection(profilePictureUri, launcher, userViewModel)
-                SettingsOption(
-                    label = "Account",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("AccountScreen") },
-                    testTag = "AccountOption")
-                SettingsOption(
-                    label = "Confidentiality",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("ConfidentialityScreen") },
-                    testTag = "ConfidentialityOption")
-                SettingsOption(
-                    label = "Discussions",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("DiscussionsScreen") },
-                    testTag = "DiscussionsOption")
-                NotificationsSwitch(notificationsEnabled) {
-                  notificationsEnabled = it
-                  onNotificationsEnabledChange(it)
+                item { ProfileSection(profilePictureUri, launcher, userViewModel) }
+                item {
+                  SettingsOption(
+                      label = "Account",
+                      backgroundColor = Color.White,
+                      onClick = { navigationActions.navigateTo("AccountScreen") },
+                      modifier = Modifier.testTag("AccountOption"))
                 }
-                SettingsOption(
-                    label = "Storage and Data",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("StorageAndDataScreen") },
-                    testTag = "StorageAndDataOption")
-                SettingsOption(
-                    label = "Help",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("HelpScreen") },
-                    testTag = "HelpOption")
+                item {
+                  SettingsOption(
+                      label = "Confidentiality",
+                      backgroundColor = Color.White,
+                      onClick = { navigationActions.navigateTo("ConfidentialityScreen") },
+                      modifier = Modifier.testTag("ConfidentialityOption"))
+                }
+                item {
+                  SettingsOption(
+                      label = "Discussions",
+                      backgroundColor = Color.White,
+                      onClick = { navigationActions.navigateTo("DiscussionsScreen") },
+                      modifier = Modifier.testTag("DiscussionsOption"))
+                }
+                item {
+                  NotificationsSwitch(
+                      notificationsEnabled = notificationsEnabled,
+                      onCheckedChange = {
+                        notificationsEnabled = it
+                        onNotificationsEnabledChange(it)
+                      },
+                      modifier = Modifier.testTag("NotificationsSwitch"))
+                }
+                item {
+                  SettingsOption(
+                      label = "Storage and Data",
+                      backgroundColor = Color.White,
+                      onClick = { navigationActions.navigateTo("StorageAndDataScreen") },
+                      modifier = Modifier.testTag("StorageAndDataOption"))
+                }
+                item {
+                  SettingsOption(
+                      label = "Help",
+                      backgroundColor = Color.White,
+                      onClick = { navigationActions.navigateTo("HelpScreen") },
+                      modifier = Modifier.testTag("HelpOption"))
+                }
               }
         })
   }
@@ -165,8 +182,7 @@ fun ProfileSection(
     Button(
         onClick = { launcher.launch("image/*") },
         modifier = Modifier.testTag("addPhotoButton"),
-        colors = ButtonDefaults.buttonColors(containerColor = Purple40) // Changed to Purple40
-        ) {
+        colors = ButtonDefaults.buttonColors(containerColor = Purple40)) {
           Text(
               "Add Photo",
               style =
@@ -177,39 +193,46 @@ fun ProfileSection(
 }
 
 @Composable
-fun SettingsOption(label: String, backgroundColor: Color, onClick: () -> Unit, testTag: String) {
+fun SettingsOption(
+    label: String,
+    backgroundColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
   Row(
       modifier =
-          Modifier.fillMaxWidth()
+          modifier
+              .fillMaxWidth()
               .padding(horizontal = 8.dp)
               .clickable { onClick() }
               .background(backgroundColor, RoundedCornerShape(8.dp))
-              .height(48.dp)
-              .testTag(testTag),
-      verticalAlignment = Alignment.CenterVertically // Center content vertically
-      ) {
+              .height(48.dp),
+      verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = label,
             style =
                 MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black),
-            modifier = Modifier.padding(start = 16.dp) // Add padding to the left
-            )
+            modifier = Modifier.padding(start = 16.dp))
       }
 }
 
 @Composable
-fun NotificationsSwitch(notificationsEnabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
+fun NotificationsSwitch(
+    notificationsEnabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
   Row(
       modifier =
-          Modifier.fillMaxWidth()
+          modifier
+              .fillMaxWidth()
               .height(56.dp)
               .padding(horizontal = 8.dp)
               .background(Color.White, RoundedCornerShape(8.dp))
-              .padding(horizontal = 16.dp), // Padding inside the Row
+              .padding(horizontal = 16.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically // Center vertically
-      ) {
+      verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = "Enable Notifications",
             style =

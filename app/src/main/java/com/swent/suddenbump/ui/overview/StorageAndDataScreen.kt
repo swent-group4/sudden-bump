@@ -2,7 +2,9 @@ package com.swent.suddenbump.ui.overview
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
@@ -52,6 +54,7 @@ fun StorageAndDataScreen(navigationActions: NavigationActions) {
                 Modifier.fillMaxSize()
                     .background(Color.Black) // Inner black background
                     .padding(paddingValues)
+                    .verticalScroll(rememberScrollState()) // Add scrolling behavior
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
               LabeledButtonSection(

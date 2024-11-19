@@ -2,7 +2,9 @@ package com.swent.suddenbump.ui.overview
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
@@ -61,7 +63,9 @@ fun HelpScreen(navigationActions: NavigationActions) {
                 Modifier.fillMaxSize()
                     .background(Color.Black) // Inner black background
                     .padding(paddingValues)
-                    .padding(16.dp),
+                    .verticalScroll(rememberScrollState()) // Add scrolling behavior
+                    .padding(16.dp)
+                    .testTag("helpScreenScrollable"), // Tag for scrolling
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
               sections.forEach { section ->
                 HelpSectionWithButton(
@@ -72,14 +76,19 @@ fun HelpScreen(navigationActions: NavigationActions) {
                     buttonTag = section.buttonTag)
               }
 
-              Spacer(modifier = Modifier.weight(1f))
+              Spacer(modifier = Modifier.height(16.dp))
 
+              // Footer Text
               Text(
                   "© 2024 SuddenBump LLC",
                   style =
                       MaterialTheme.typography.bodySmall.copy(
                           fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White),
-                  modifier = Modifier.testTag("footerText"))
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(top = 32.dp)
+                          .testTag("footerText") // Tag for the footer
+                  )
             }
       })
 }

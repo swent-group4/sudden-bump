@@ -1,9 +1,12 @@
 package com.swent.suddenbump.ui.overview
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import org.junit.Before
@@ -30,49 +33,62 @@ class DiscussionScreenTests {
   @Test
   fun displaysTopBarWithChatsTitle() {
     // Verify that the top bar title "Chats" is displayed
-    composeTestRule.onNodeWithTag("discussionTitle").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Chats").assertIsDisplayed()
   }
 
   @Test
   fun goBackButtonCallsNavigationAction() {
     // Perform click on the back button and verify the goBack action is triggered
-    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("backButton").performClick()
-    composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).goBack()
   }
 
   @Test
   fun displaysChatWallpaperSection() {
-    // Verify that the "Chat wallpaper" section is displayed
+    // Scroll to the "Chat wallpaper" section before verifying
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("chatWallpaperText"))
     composeTestRule.onNodeWithTag("chatWallpaperText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("changeChatWallpaperButton").assertIsDisplayed()
   }
 
   @Test
   fun displaysExportChatSection() {
-    // Verify that the "Export chat" section is displayed
+    // Scroll to the "Export chat" section before verifying
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("exportChatText"))
     composeTestRule.onNodeWithTag("exportChatText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("exportChatButton").assertIsDisplayed()
   }
 
   @Test
   fun displaysArchiveAllChatsSection() {
-    // Verify that the "Archive all chats" section is displayed
+    // Scroll to the "Archive all chats" section before verifying
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("archiveAllChatsText"))
     composeTestRule.onNodeWithTag("archiveAllChatsText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("archiveAllChatsButton").assertIsDisplayed()
   }
 
   @Test
   fun displaysClearAllChatsSection() {
-    // Verify that the "Clear all chats" section is displayed
+    // Scroll to the "Clear all chats" section before verifying
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("clearAllChatsText"))
     composeTestRule.onNodeWithTag("clearAllChatsText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("clearAllChatsButton").assertIsDisplayed()
   }
 
   @Test
   fun displaysDeleteAllChatsSection() {
-    // Verify that the "Delete all chats" section is displayed
+    // Scroll to the "Delete all chats" section before verifying
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("deleteAllChatsText"))
     composeTestRule.onNodeWithTag("deleteAllChatsText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("deleteAllChatsButton").assertIsDisplayed()
   }

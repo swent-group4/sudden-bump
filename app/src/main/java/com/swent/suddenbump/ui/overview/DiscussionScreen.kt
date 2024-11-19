@@ -2,6 +2,7 @@ package com.swent.suddenbump.ui.overview
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -63,21 +64,25 @@ fun DiscussionScreen(navigationActions: NavigationActions) {
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40))
       },
       content = { paddingValues ->
-        Column(
+        LazyColumn(
             modifier =
                 Modifier.fillMaxSize()
-                    .background(Color.Black) // Inner black background
+                    .background(Color.Black)
                     .padding(paddingValues)
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .testTag("discussionLazyColumn"), // Add testTag for scrollable LazyColumn
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              sections.forEach { section ->
+              items(sections.size) { index ->
+                val section = sections[index]
                 SectionWithButton(
                     label = section.label,
                     buttonText = section.buttonText,
                     onClick = { /* Add specific logic */},
                     labelTag = section.labelTag,
                     buttonTag = section.buttonTag)
-                Divider(color = Color.White)
+                if (index != sections.lastIndex) {
+                  Divider(color = Color.White, modifier = Modifier.padding(vertical = 8.dp))
+                }
               }
             }
       })
