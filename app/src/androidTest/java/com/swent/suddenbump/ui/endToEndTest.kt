@@ -1,9 +1,11 @@
 package com.swent.suddenbump.ui
 
 import android.location.Location
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.gms.tasks.Tasks
@@ -126,7 +128,10 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("settingsScreen").assertExists()
 
-    // Step 6: Navigate to Storage and Data screen
+    // Step 6: Scroll and navigate to Storage and Data screen
+    composeTestRule
+        .onNodeWithTag("settingsLazyColumn")
+        .performScrollToNode(hasTestTag("StorageAndDataOption")) // Scroll to make option visible
     composeTestRule.onNodeWithTag("StorageAndDataOption").performClick()
     composeTestRule.waitUntil(timeoutMillis = 10_000) {
       try {
