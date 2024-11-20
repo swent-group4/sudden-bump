@@ -74,8 +74,16 @@ fun ConfirmDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
       text = {
         Text("Are you sure you want to delete all messages? This action cannot be undone.")
       },
-      confirmButton = { TextButton(onClick = onConfirm) { Text("Confirm") } },
-      dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+      confirmButton = {
+        TextButton(onClick = onConfirm, modifier = Modifier.testTag("confirmButton")) {
+          Text("Confirm")
+        }
+      },
+      dismissButton = {
+        TextButton(onClick = onDismiss, modifier = Modifier.testTag("cancelButton")) {
+          Text("Cancel")
+        }
+      })
 }
 
 /** Helper function to create the top bar for DiscussionScreen */
