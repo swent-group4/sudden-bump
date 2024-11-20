@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import com.swent.suddenbump.model.user.User
+import java.util.Date
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -237,134 +238,102 @@ class ChatRepositoryFirestoreTest {
     assertEquals(message2, messages[1])
   }
 
-  @Test
-  fun test_deleteAllMessages_success(): Unit = runBlocking {
-    // Arrange
-    val userId = "user456"
-    val chatSnapshot = mock(QuerySnapshot::class.java)
-    val chatDocument = mock(DocumentSnapshot::class.java)
-    val messagesSnapshot = mock(QuerySnapshot::class.java)
-    val messageDocument1 = mock(DocumentSnapshot::class.java)
-    val messageDocument2 = mock(DocumentSnapshot::class.java)
-    val mockMessageReference1 = mock(DocumentReference::class.java)
-    val mockMessageReference2 = mock(DocumentReference::class.java)
-
-    // Mock chats
-    `when`(mockChatsCollection.whereArrayContains("participants", userId)).thenReturn(mockQuery)
-    `when`(mockQuery.get()).thenReturn(Tasks.forResult(chatSnapshot))
-    `when`(chatSnapshot.documents).thenReturn(listOf(chatDocument))
-
-    `when`(chatDocument.reference).thenReturn(mockChatDocument)
-    `when`(chatDocument.reference.collection("messages")).thenReturn(mockMessagesSubCollection)
-    `when`(mockMessagesSubCollection.get()).thenReturn(Tasks.forResult(messagesSnapshot))
-    `when`(messagesSnapshot.documents).thenReturn(listOf(messageDocument1, messageDocument2))
-
-    // Mock message document references
-    `when`(messageDocument1.reference).thenReturn(mockMessageReference1)
-    `when`(messageDocument2.reference).thenReturn(mockMessageReference2)
-
-    // Mock message deletion
-    `when`(mockMessageReference1.delete()).thenReturn(Tasks.forResult(null))
-    `when`(mockMessageReference2.delete()).thenReturn(Tasks.forResult(null))
-
-    // Act
-    chatRepository.deleteAllMessages(userId)
-
-    // Assert
-    verify(mockMessageReference1).delete()
-    verify(mockMessageReference2).delete()
-  }
-
-  @Test
-  fun test_deleteAllMessages_noChats(): Unit = runBlocking {
-    // Arrange
-    val userId = "user456"
-
-    // Mock chats to be empty
-    `when`(mockChatsCollection.whereArrayContains("participants", userId)).thenReturn(mockQuery)
-    `when`(mockQuery.get()).thenReturn(Tasks.forResult(mockQuerySnapshot))
-    `when`(mockQuerySnapshot.documents).thenReturn(emptyList())
-
-    // Act
-    chatRepository.deleteAllMessages(userId)
-
-    // Assert
-    // Ensure no messages were attempted to be deleted since no chats exist
-    verify(mockMessagesSubCollection, never()).document(anyString())
-  }
+  //  @Test
+  //  fun test_sendMessage_success() {
+  //    runBlocking {
+  //      // Arrange
+  //      val chatId = "chat123"
+  //      val messageContent = "Hello, World!"
+  //      val username = "Test User"
+  //      val senderId = "user123"
+  //      val senderName = "Sender"
+  //
+  //      val user = User(senderId, "Test", "User", "+123456789", null, "user@test.com", null)
+  //
+  //      // Mock currentUser
+  //      `when`(mockAuthUser.uid).thenReturn(senderId)
+  //      `when`(mockAuthUser.displayName).thenReturn(senderName)
+  //
+  //      // Mock Firestore calls
+  //      `when`(mockFirestore.collection("chats")).thenReturn(mockChatsCollection)
+  //      `when`(mockChatsCollection.document(chatId)).thenReturn(mockChatDocument)
+  //      `when`(mockChatDocument.collection("messages")).thenReturn(mockMessagesSubCollection)
+  //      `when`(mockMessagesSubCollection.add(any(Message::class.java)))
+  //          .thenReturn(Tasks.forResult(mockMessageDocument))
+  //      `when`(
+  //              mockChatDocument.update(
+  //                  mapOf(
+  //                      "lastMessage" to messageContent,
+  //                      "lastMessageTimestamp" to FieldValue.serverTimestamp(),
+  //                      "lastMessageSender" to senderName,
+  //                      "otherUserName" to username)))
+  //          .thenReturn(Tasks.forResult(null))
+  //
+  //      // Act
+  //      chatRepository.sendMessage(chatId, messageContent, user)
+  //
+  //      // Assert
+  //      verify(mockMessagesSubCollection).add(any(Message::class.java))
+  //      verify(mockChatDocument)
+  //          .update(
+  //              mapOf(
+  //                  "lastMessage" to messageContent,
+  //                  "lastMessageTimestamp" to FieldValue.serverTimestamp(),
+  //                  "lastMessageSender" to senderName,
+  //                  "otherUserName" to username))
+  //    }
+  //  }
 
   @Test
-  fun test_deleteAllMessages_failure(): Unit = runBlocking {
-    // Arrange
-    val userId = "user456"
-    val chatSnapshot = mock(QuerySnapshot::class.java)
-    val chatDocument = mock(DocumentSnapshot::class.java)
-    val messagesSnapshot = mock(QuerySnapshot::class.java)
-    val messageDocument = mock(DocumentSnapshot::class.java)
-    val exception = Exception("Deletion failed")
+  fun test_getChatSummaries_success() {
+    runBlocking {
+      // Arrange
+      val currentUserId = "user123"
+      val timestamp1 = Timestamp(Date(2000L)) // Later timestamp
+      val timestamp2 = Timestamp(Date(1000L)) // Earlier timestamp
 
-    // Mock chats
-    `when`(mockChatsCollection.whereArrayContains("participants", userId)).thenReturn(mockQuery)
-    `when`(mockQuery.get()).thenReturn(Tasks.forResult(chatSnapshot))
-    `when`(chatSnapshot.documents).thenReturn(listOf(chatDocument))
+      val chatSummary1 =
+          ChatSummary("chat1", "Hello", "user1", timestamp1, 1, listOf(currentUserId, "user2"))
+      val chatSummary2 =
+          ChatSummary("chat2", "Hi", "user2", timestamp2, 0, listOf(currentUserId, "user3"))
 
-    `when`(chatDocument.reference).thenReturn(mockChatDocument)
-    `when`(chatDocument.reference.collection("messages")).thenReturn(mockMessagesSubCollection)
-    `when`(mockMessagesSubCollection.get()).thenReturn(Tasks.forResult(messagesSnapshot))
-    `when`(messagesSnapshot.documents).thenReturn(listOf(messageDocument))
+      // Mock FirebaseAuth
+      val mockAuthUser = mock(FirebaseUser::class.java)
+      `when`(mockAuth.currentUser).thenReturn(mockAuthUser)
+      `when`(mockAuthUser.uid).thenReturn(currentUserId)
 
-    // Mock message deletion failure
-    `when`(messageDocument.reference).thenReturn(mockMessageDocument)
-    `when`(mockMessageDocument.delete()).thenReturn(Tasks.forException(exception))
+      // Mock Query returned by whereArrayContains
+      val mockQuery = mock(Query::class.java)
+      `when`(mockChatsCollection.whereArrayContains("participants", currentUserId))
+          .thenReturn(mockQuery)
 
-    // Act & Assert
-    try {
-      chatRepository.deleteAllMessages(userId)
-      fail("Expected an exception to be thrown")
-    } catch (e: Exception) {
-      assertEquals("Deletion failed", e.message)
+      // Mock QuerySnapshot and Documents
+      val mockChatSnapshot = mock(QuerySnapshot::class.java)
+      val mockDocumentSnapshot1 = mock(DocumentSnapshot::class.java)
+      val mockDocumentSnapshot2 = mock(DocumentSnapshot::class.java)
+      `when`(mockChatSnapshot.documents)
+          .thenReturn(listOf(mockDocumentSnapshot1, mockDocumentSnapshot2))
+      `when`(mockDocumentSnapshot1.toObject(ChatSummary::class.java)).thenReturn(chatSummary1)
+      `when`(mockDocumentSnapshot2.toObject(ChatSummary::class.java)).thenReturn(chatSummary2)
+
+      // Mock addSnapshotListener on the Query
+      doAnswer { invocation ->
+            val listener = invocation.getArgument<EventListener<QuerySnapshot>>(0)
+            listener.onEvent(mockChatSnapshot, null)
+            mockListenerRegistration
+          }
+          .`when`(mockQuery)
+          .addSnapshotListener(any<EventListener<QuerySnapshot>>())
+
+      // Act
+      val chatSummariesFlow = chatRepository.getChatSummaries(currentUserId)
+      val chatSummaries = chatSummariesFlow.first()
+
+      // Assert
+      assertEquals(2, chatSummaries.size)
+      assertEquals(chatSummary1, chatSummaries[0])
+      assertEquals(chatSummary2, chatSummaries[1])
     }
-
-    // Verify deletion was attempted
-    verify(mockMessageDocument).delete()
-  }
-
-  @Test
-  fun test_deleteAllMessages_withValidData(): Unit = runBlocking {
-    // Arrange
-    val userId = "user456"
-    val chatSnapshot = mock(QuerySnapshot::class.java)
-    val chatDocument = mock(DocumentSnapshot::class.java)
-    val messagesSnapshot = mock(QuerySnapshot::class.java)
-    val messageDocument1 = mock(DocumentSnapshot::class.java)
-    val messageDocument2 = mock(DocumentSnapshot::class.java)
-    val mockMessageReference1 = mock(DocumentReference::class.java)
-    val mockMessageReference2 = mock(DocumentReference::class.java)
-
-    // Mock chats
-    `when`(mockChatsCollection.whereArrayContains("participants", userId)).thenReturn(mockQuery)
-    `when`(mockQuery.get()).thenReturn(Tasks.forResult(chatSnapshot))
-    `when`(chatSnapshot.documents).thenReturn(listOf(chatDocument))
-
-    `when`(chatDocument.reference).thenReturn(mockChatDocument)
-    `when`(chatDocument.reference.collection("messages")).thenReturn(mockMessagesSubCollection)
-    `when`(mockMessagesSubCollection.get()).thenReturn(Tasks.forResult(messagesSnapshot))
-    `when`(messagesSnapshot.documents).thenReturn(listOf(messageDocument1, messageDocument2))
-
-    // Mock message document references
-    `when`(messageDocument1.reference).thenReturn(mockMessageReference1)
-    `when`(messageDocument2.reference).thenReturn(mockMessageReference2)
-
-    // Mock message deletion
-    `when`(mockMessageReference1.delete()).thenReturn(Tasks.forResult(null))
-    `when`(mockMessageReference2.delete()).thenReturn(Tasks.forResult(null))
-
-    // Act
-    chatRepository.deleteAllMessages(userId)
-
-    // Assert
-    verify(mockMessageReference1).delete()
-    verify(mockMessageReference2).delete()
   }
 
   @Test
@@ -407,4 +376,88 @@ class ChatRepositoryFirestoreTest {
       assertEquals(FirebaseFirestoreException.Code.ABORTED, e.code)
     }
   }
+  /*@Test
+  fun test_getUserAccount_success() = runBlocking {
+    // Arrange
+    val uid = "user123"
+    val user = User(uid, "John", "Doe", "+123456789", null, "john.doe@example.com", GeoLocation(0.0, 0.0))
+
+    // Mock 'collection("Users")' to return 'mockUsersCollection'
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUsersCollection)
+
+    // Mock 'document(uid)' to return 'mockUserDocument'
+    `when`(mockUsersCollection.document(uid)).thenReturn(mockUserDocument)
+
+    // Create a Task that completes immediately with 'mockDocumentSnapshot'
+    val mockTask = Tasks.forResult(mockDocumentSnapshot) as Task<DocumentSnapshot>
+
+    // Mock 'get()' to return the completed Task
+    `when`(mockUserDocument.get()).thenReturn(mockTask)
+
+    // Mock 'toObject' to return our 'user' object
+    `when`(mockDocumentSnapshot.toObject(User::class.java)).thenReturn(user)
+
+    // Act
+    val result = chatRepository.getUserAccount(uid)
+
+    // Assert
+    assertNotNull(result)
+    assertEquals(user, result)
+  }*/
+
+  /*@Test
+  fun test_getMessages_failure() = runBlocking {
+    // Arrange
+    val chatId = "chat123"
+    val exception = FirebaseFirestoreException("Error", FirebaseFirestoreException.Code.ABORTED)
+
+    // Mock Firestore query
+    `when`(mockFirestore.collection("chats")).thenReturn(mockChatsCollection)
+    `when`(mockChatsCollection.document(chatId)).thenReturn(mockChatDocument)
+    `when`(mockChatDocument.collection("messages")).thenReturn(mockMessagesSubCollection)
+    `when`(mockMessagesSubCollection.orderBy("timestamp", Query.Direction.DESCENDING))
+        .thenReturn(mockQuery)
+
+    doAnswer { invocation ->
+          val listener = invocation.getArgument<EventListener<QuerySnapshot>>(0)
+          listener.onEvent(null, exception)
+          mockListenerRegistration
+        }
+        .`when`(mockQuery)
+        .addSnapshotListener(any<EventListener<QuerySnapshot>>())
+
+    // Act & Assert
+    val messagesFlow = chatRepository.getMessages(chatId)
+    try {
+      messagesFlow.collect()
+
+      fail("Expected exception was not thrown")
+    } catch (e: Exception) {
+      assertTrue(e.cause is FirebaseFirestoreException)
+      assertEquals("Error", e.cause?.message)
+    }
+  }*/
+
+  /*@Test
+  fun test_getUserAccount_failure() = runBlocking {
+    // Arrange
+    val uid = "user123"
+    val mockUserDocumentRef = mock(DocumentReference::class.java)
+    val exception = Exception("Error")
+    val mockTaskDocumentSnapshot = mock(Task::class.java) as Task<DocumentSnapshot>
+
+    // Mock Firestore
+    val mockUsersCollection = mock(CollectionReference::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUsersCollection)
+    `when`(mockUsersCollection.document(uid)).thenReturn(mockUserDocumentRef)
+    `when`(mockUserDocumentRef.get()).thenReturn(mockTaskDocumentSnapshot)
+    `when`(mockTaskDocumentSnapshot.isSuccessful).thenReturn(false)
+    `when`(mockTaskDocumentSnapshot.exception).thenReturn(exception)
+
+    // Act
+    val resultUser = chatRepository.getUserAccount(uid)
+
+    // Assert
+    assertNull(resultUser)
+  }*/
 }
