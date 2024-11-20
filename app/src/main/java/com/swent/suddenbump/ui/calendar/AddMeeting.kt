@@ -89,7 +89,8 @@ fun AddMeetingScreen(
                               friendId = friendId,
                               location = location,
                               date = meetingDate,
-                              creatorId = userViewModel.getCurrentUser().value?.uid ?: "")
+                              creatorId = userViewModel.getCurrentUser().value?.uid ?: "",
+                              accepted = false)
                       meetingViewModel.addMeeting(newMeeting)
                       Toast.makeText(context, "Meeting created successfully", Toast.LENGTH_SHORT)
                           .show()
