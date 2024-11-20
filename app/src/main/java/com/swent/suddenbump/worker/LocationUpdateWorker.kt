@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.location.Location
-import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -19,6 +18,7 @@ import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
+import com.swent.suddenbump.ui.map.showFriendNearbyNotification
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -70,17 +70,42 @@ class LocationUpdateWorker(
 
           val timestamp = Timestamp.now()
 
-          repository.updateLocation(
-              user = user,
+          repository.updateUserLocation(
+              uid = user.uid,
               location = location,
               onSuccess = { /* Handle success */},
               onFailure = { error -> /* Handle failure */ })
 
           repository.updateTimestamp(
-              user,
+              user.uid,
               timestamp = timestamp,
               onSuccess = { /* Handle success */},
               onFailure = { error -> /* Handle failure */ })
+
+          repository.getUserFriends(
+              uid = user.uid,
+              onSuccess = { friends ->
+                repository.getFriendsLocation(
+                    userFriendsList = friends,
+                    onSuccess = { friendsLocations ->
+                      friendsLocations.forEach { (_, friendLocation) ->
+                        if (friendLocation != null) {
+                          // Check if friend is nearby
+                          if (location.distanceTo(friendLocation) < 5000) {
+                            // Show notification
+                            showFriendNearbyNotification(applicationContext)
+                          }
+                        }
+                      }
+                    },
+                    onFailure = { error ->
+                      Log.d(
+                          "WorkerSuddenBump", "Retrieval of friends position encountered an issue")
+                    })
+              },
+              onFailure = { error ->
+                Log.d("WorkerSuddenBump", "Retrieval of friends encountered an issue")
+              })
 
           Result.success()
         } else {
@@ -127,12 +152,10 @@ class LocationUpdateWorker(
     val title = "Location Update"
     val cancel = "Cancel"
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      val channel = NotificationChannel(channelId, title, NotificationManager.IMPORTANCE_DEFAULT)
-      val notificationManager =
-          applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-      notificationManager.createNotificationChannel(channel)
-    }
+    val channel = NotificationChannel(channelId, title, NotificationManager.IMPORTANCE_DEFAULT)
+    val notificationManager =
+        applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    notificationManager.createNotificationChannel(channel)
 
     val notification =
         NotificationCompat.Builder(applicationContext, channelId)

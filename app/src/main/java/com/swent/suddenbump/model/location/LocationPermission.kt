@@ -1,4 +1,4 @@
-package com.swent.suddenbump.model
+package com.swent.suddenbump.model.location
 
 import android.Manifest
 import android.app.Activity

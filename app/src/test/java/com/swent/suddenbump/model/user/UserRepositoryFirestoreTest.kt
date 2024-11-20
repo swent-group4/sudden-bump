@@ -1310,24 +1310,23 @@ class UserRepositoryFirestoreTest {
             emailAddress = "john.doe@example.com",
             lastKnownLocation = location)
 
-      val friend2 =
-          User(
-              uid = "456",
-              firstName = "John",
-              lastName = "Doe",
-              phoneNumber = "123456789",
-              profilePicture = null,
-              emailAddress = "john.doe@example.com",
-              lastKnownLocation = location)
+    val friend2 =
+        User(
+            uid = "456",
+            firstName = "John",
+            lastName = "Doe",
+            phoneNumber = "123456789",
+            profilePicture = null,
+            emailAddress = "john.doe@example.com",
+            lastKnownLocation = location)
 
     // Mock friend request UIDs
     val friendRequestsUidList = listOf(friend1.uid, friend2.uid)
 
     // Mock user document snapshot
     val userSnapshot = mock(DocumentSnapshot::class.java)
-      val friend1Snapshot = mock(DocumentSnapshot::class.java)
-      val friend2Snapshot = mock(DocumentSnapshot::class.java)
-
+    val friend1Snapshot = mock(DocumentSnapshot::class.java)
+    val friend2Snapshot = mock(DocumentSnapshot::class.java)
 
     `when`(mockUserDocumentSnapshot.data)
         .thenReturn(mapOf("friendRequests" to friendRequestsUidList))
@@ -1338,14 +1337,13 @@ class UserRepositoryFirestoreTest {
     `when`(mockFirestore.collection("Users").document(friend1.uid)).thenReturn(friend1DocumentRef)
     `when`(friend1DocumentRef.get()).thenReturn(Tasks.forResult(friend1Snapshot))
 
-      val friend2DocumentRef = mock(DocumentReference::class.java)
+    val friend2DocumentRef = mock(DocumentReference::class.java)
 
-      `when`(mockFirestore.collection("Users").document(friend2.uid)).thenReturn(friend2DocumentRef)
-      `when`(friend2DocumentRef.get()).thenReturn(Tasks.forResult(friend2Snapshot))
+    `when`(mockFirestore.collection("Users").document(friend2.uid)).thenReturn(friend2DocumentRef)
+    `when`(friend2DocumentRef.get()).thenReturn(Tasks.forResult(friend2Snapshot))
 
     `when`(friend1Snapshot.exists()).thenReturn(true)
     `when`(friend2Snapshot.exists()).thenReturn(true)
-
 
     val helper = mock(UserRepositoryFirestoreHelper::class.java)
     `when`(helper.documentSnapshotToUser(friend1Snapshot, null)).thenReturn(friend1)
@@ -1368,7 +1366,7 @@ class UserRepositoryFirestoreTest {
 
     // Invoke the method
     userRepositoryFirestore.getUserFriendRequests(
-        user,
+        user.uid,
         onSuccess = { result ->
           // Verify the result
           assert(result.size == 2)
@@ -1406,7 +1404,7 @@ class UserRepositoryFirestoreTest {
 
     // Act
     userRepositoryFirestore.getUserFriendRequests(
-        user = user,
+        uid = user.uid,
         onSuccess = { func -> assert(func.size == 1 && func[0].uid == "5678") },
         onFailure = { fail("onFailure should not be called") })
   }
@@ -1423,7 +1421,7 @@ class UserRepositoryFirestoreTest {
 
     // Act
     userRepositoryFirestore.getUserFriendRequests(
-        user = user,
+        uid = user.uid,
         onSuccess = { friendRequestsList ->
           // Assert
           assertTrue(friendRequestsList.isEmpty())
@@ -1444,7 +1442,7 @@ class UserRepositoryFirestoreTest {
 
     // Act
     userRepositoryFirestore.getUserFriendRequests(
-        user = user,
+        uid = user.uid,
         onSuccess = { fail("Expected onFailure to be called") },
         onFailure = onFailureMock)
 
@@ -1508,8 +1506,8 @@ class UserRepositoryFirestoreTest {
 
     // Call the deleteFriendRequest method
     userRepository.deleteFriendRequest(
-        user,
-        friend,
+        user.uid,
+        friend.uid,
         {
           // Verify the updates to the user document
           verify(userDocumentReference).update("friendRequests", emptyList<String>())
@@ -1580,8 +1578,8 @@ class UserRepositoryFirestoreTest {
 
     // Call the deleteFriendRequest method
     userRepository.deleteFriendRequest(
-        user = user,
-        friend = friend,
+        uid = user.uid,
+        fid = friend.uid,
         onSuccess = { fail("Success callback should not be called") },
         onFailure = { exception ->
           onFailureCalled = true
@@ -1656,8 +1654,8 @@ class UserRepositoryFirestoreTest {
 
     // Call the deleteFriendRequest method
     userRepository.deleteFriendRequest(
-        user = user,
-        friend = friend,
+        uid = user.uid,
+        fid = friend.uid,
         onSuccess = {
           // Success callback
           onSuccessCalled = true
@@ -1729,8 +1727,8 @@ class UserRepositoryFirestoreTest {
 
     // Call the deleteFriendRequest method
     userRepository.deleteFriendRequest(
-        user = user,
-        friend = friend,
+        uid = user.uid,
+        fid = friend.uid,
         onSuccess = { fail("Success callback should not be called") },
         onFailure = { exception ->
           onFailureCalled = true
@@ -1809,7 +1807,7 @@ class UserRepositoryFirestoreTest {
 
     // Call the getRecommendedFriends method
     userRepository.getRecommendedFriends(
-        user,
+        user.uid,
         { recommendedFriends ->
           // Verify the recommended friends list
           assertEquals(1, recommendedFriends.size)
@@ -1883,8 +1881,8 @@ class UserRepositoryFirestoreTest {
 
     // Call the createFriend method
     userRepository.createFriend(
-        user,
-        friend,
+        user.uid,
+        friend.uid,
         {
           // Verify the updates to the user document
           verify(userDocumentReference).update("friendRequests", listOf<String>())
@@ -1953,8 +1951,8 @@ class UserRepositoryFirestoreTest {
 
     // Call the createFriendRequest method
     userRepository.createFriendRequest(
-        user,
-        friend,
+        user.uid,
+        friend.uid,
         {
           // Verify the updates to the friend document
           verify(friendDocumentReference).update("friendRequests", listOf(user.uid))
@@ -1990,7 +1988,9 @@ class UserRepositoryFirestoreTest {
     `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
 
     userRepositoryFirestore.getUserFriends(
-        user = user, onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
+        uid = user.uid,
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
 
     verify(timeout(100)) { (mockUserQuerySnapshot).documents }
   }
@@ -2004,7 +2004,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
     userRepositoryFirestore.setUserFriends(
-        user = user, friendsList = listOf(user), onSuccess = {}, onFailure = {})
+        uid = user.uid, friendsList = listOf(user), onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle()
 
@@ -2021,7 +2021,9 @@ class UserRepositoryFirestoreTest {
     `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
 
     userRepositoryFirestore.getBlockedFriends(
-        user = user, onSuccess = {}, onFailure = { fail("Failure callback should not be called") })
+        uid = user.uid,
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
 
     verify(timeout(100)) { (mockUserQuerySnapshot).documents }
   }
@@ -2035,7 +2037,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
     userRepositoryFirestore.setBlockedFriends(
-        user = user, blockedFriendsList = listOf(user), onSuccess = {}, onFailure = {})
+        uid = user.uid, blockedFriendsList = listOf(user), onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle()
 
@@ -2050,8 +2052,8 @@ class UserRepositoryFirestoreTest {
   fun setLocation_shouldCallFirestoreCollection() {
     `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
-    userRepositoryFirestore.updateLocation(
-        user = user, location = location.value, onSuccess = {}, onFailure = {})
+    userRepositoryFirestore.updateUserLocation(
+        uid = user.uid, location = location.value, onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle()
 
