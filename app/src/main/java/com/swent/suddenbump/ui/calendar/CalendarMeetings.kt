@@ -19,10 +19,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
@@ -153,63 +155,78 @@ fun DayRow(
     meetingViewModel: MeetingViewModel,
     currentUserId: String
 ) {
-  val dayFormat = SimpleDateFormat("EEE, d", Locale.getDefault())
+    val dayFormat = SimpleDateFormat("EEE, d", Locale.getDefault())
 
-  Column(
-      modifier =
-          Modifier.fillMaxWidth()
-              .padding(8.dp)
-              .background(com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium)
-              .padding(8.dp)
-              .testTag("dayRow")) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .background(com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium)
+            .padding(8.dp)
+            .testTag("dayRow")
+    ) {
         Text(
             text = dayFormat.format(day),
             style = MaterialTheme.typography.titleLarge,
             color = Color.White,
-            modifier = Modifier.padding(bottom = 8.dp))
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
 
-        val filteredMeetings =
-            meetings.filter { it.creatorId == currentUserId || it.friendId == currentUserId }
+        val filteredMeetings = meetings.filter { it.creatorId == currentUserId || it.friendId == currentUserId }
 
         if (filteredMeetings.isNotEmpty()) {
-          Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-            filteredMeetings.forEach { meeting ->
-              Card(
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .padding(8.dp)
-                          .clickable {
-                            meetingViewModel.selectMeeting(meeting)
-                            navigationActions.navigateTo(Screen.EDIT_MEETING)
-                          }
-                          .background(
-                              com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium),
-                  colors =
-                      CardDefaults.cardColors(
-                          containerColor = com.swent.suddenbump.ui.theme.Pink40)) {
-                    val friend =
-                        userFriends.find {
-                          it.uid == meeting.friendId || it.uid == meeting.creatorId
+            Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                filteredMeetings.forEach { meeting ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .clickable {
+                                meetingViewModel.selectMeeting(meeting)
+                                navigationActions.navigateTo(Screen.EDIT_MEETING)
+                            }
+                            .background(com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium),
+                        colors = CardDefaults.cardColors(containerColor = com.swent.suddenbump.ui.theme.Pink40)
+                    ) {
+                        val friend = userFriends.find { it.uid == meeting.friendId || it.uid == meeting.creatorId }
+                        val friendName = friend?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown Friend"
+                        val formattedDate = formatDate(meeting.date.toDate())
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            AsyncImage(
+                                model = "https://avatar.iran.liara.run/public/42",
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .width(50.dp)
+                                    .height(50.dp)
+                                    .padding(8.dp)
+                                    .testTag("profileImage")
+                            )
+                            Column {
+                                Text(
+                                    text = "Meet $friendName at ${meeting.location}",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.White,
+                                    modifier = Modifier.testTag("meetText")
+                                )
+                            }
                         }
-                    val friendName =
-                        friend?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown Friend"
-                    val formattedDate = formatDate(meeting.date.toDate())
-                    Text(
-                        text = "Meet $friendName at ${meeting.location}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White,
-                        modifier = Modifier.fillMaxWidth().padding(12.dp).testTag("meetText"))
-                  }
+                    }
+                }
             }
-          }
         } else {
-          Text(
-              text = "No meetings for this day",
-              style = MaterialTheme.typography.bodySmall,
-              modifier = Modifier.padding(start = 8.dp),
-              color = Color.White)
+            Text(
+                text = "No meetings for this day",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 8.dp),
+                color = Color.White
+            )
         }
-      }
+    }
 }
 
 @Composable
