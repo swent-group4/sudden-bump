@@ -85,6 +85,13 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
+  fun blockUser(
+      currentUser: User,
+      blockedUser: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
   fun getBlockedFriends(user: User, onSuccess: (List<User>) -> Unit, onFailure: (Exception) -> Unit)
 
   fun setBlockedFriends(

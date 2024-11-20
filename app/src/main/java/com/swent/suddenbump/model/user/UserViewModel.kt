@@ -341,6 +341,18 @@ open class UserViewModel(
     return _sentFriendRequests.asStateFlow()
   }
 
+    fun blockUser(
+      user: User = _user.value,
+      blockedUser: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit) {
+        _blockedFriends.value = _blockedFriends.value.plus(blockedUser)
+        _userFriends.value = _userFriends.value.minus(blockedUser)
+        _userFriendRequests.value = _userFriendRequests.value.minus(blockedUser)
+        _sentFriendRequests.value = _sentFriendRequests.value.minus(blockedUser)
+        return repository.blockUser(user, blockedUser, onSuccess, onFailure)
+    }
+
   fun getBlockedFriends(): StateFlow<List<User>> {
     return _blockedFriends.asStateFlow()
   }

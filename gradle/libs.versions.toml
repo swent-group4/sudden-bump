@@ -68,8 +68,8 @@ playServicesLocation = "21.3.0"
 lifecycleCommonJvm = "2.8.6"
 firebaseStorageKtx = "21.0.1"
 runtimeLivedata = "1.7.5"
-workRuntimeKtx = "2.7.1"
-workTesting = "2.7.1"
+workRuntimeKtx = "2.10.0"
+workTesting = "2.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

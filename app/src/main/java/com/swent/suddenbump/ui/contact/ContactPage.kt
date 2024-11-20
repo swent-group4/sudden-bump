@@ -77,8 +77,10 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                 var expanded by remember { mutableStateOf(false) }
 
                 IconButton(
-                    onClick = { expanded = false
-                        showDialog = true },
+                    onClick = {
+                        expanded = true
+
+                              },
                     modifier = Modifier.testTag("moreOptionsButton")
                 ) {
                     Icon(
@@ -95,7 +97,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     DropdownMenuItem(
                         onClick = {
                             expanded = false
-                            // Add your block user logic here
+                            showDialog = true
                         },
                         text = { Text("Block User") }
                     )
@@ -251,7 +253,9 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                       Button(
                           onClick = {
                               showDialog = false
-                              // Add your block user logic here
+                              userViewModel.blockUser(user = userViewModel.getCurrentUser().value, blockedUser = user, onSuccess = {
+                                  navigationActions.goBack()
+                              }, onFailure = { println("Error blocking user") })
                           }
                       ) {
                           Text("Yes")

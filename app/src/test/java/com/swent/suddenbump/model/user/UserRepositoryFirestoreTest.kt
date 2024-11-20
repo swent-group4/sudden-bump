@@ -49,6 +49,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import com.google.firebase.firestore.Transaction
 
 @RunWith(RobolectricTestRunner::class)
 class UserRepositoryFirestoreTest {
@@ -67,6 +68,7 @@ class UserRepositoryFirestoreTest {
   @Mock private lateinit var mockFirebaseUser: FirebaseUser
   @Mock private lateinit var firebaseAuthMockStatic: MockedStatic<FirebaseAuth>
   @Mock private lateinit var mockTaskVoid: Task<Void>
+  @Mock private lateinit var transaction: Transaction
 
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
   private val helper = UserRepositoryFirestoreHelper()
@@ -513,44 +515,87 @@ class UserRepositoryFirestoreTest {
 
   @Test
   fun getRecommendedFriends_shouldReturnRecommendedFriends() {
-    val user =
-        User(
-            "1",
-            "Alexandre",
-            "Carel",
-            "+33 6 59 20 70 02",
-            null,
-            "alexandre.carel@epfl.ch",
-            lastKnownLocation = location)
-    val friend =
-        User(
-            "2",
-            "Jane",
-            "Doe",
-            "+41 00 000 00 02",
-            null,
-            "jane.doe@example.com",
-            lastKnownLocation = location)
-    val nonFriend =
-        User(
-            "3",
-            "John",
-            "Smith",
-            "+44 00 000 00 03",
-            null,
-            "john.smith@example.com",
-            lastKnownLocation = location)
+    val user = User(
+        "1",
+        "Alexandre",
+        "Carel",
+        "+33 6 59 20 70 02",
+        null,
+        "alexandre.carel@epfl.ch",
+        lastKnownLocation = location
+    )
+    val friend = User(
+        "2",
+        "Jane",
+        "Doe",
+        "+41 00 000 00 02",
+        null,
+        "jane.doe@example.com",
+        lastKnownLocation = location
+    )
+    val nonFriend = User(
+        "3",
+        "John",
+        "Smith",
+        "+44 00 000 00 03",
+        null,
+        "john.smith@example.com",
+        lastKnownLocation = location
+    )
+    val blockedUser = User(
+        "4",
+        "Blocked",
+        "User",
+        "+44 00 000 00 04",
+        null,
+        "blocked.user@example.com",
+        lastKnownLocation = location
+    )
+    val userWhoBlockedMe = User(
+        "5",
+        "Blocker",
+        "User",
+        "+44 00 000 00 05",
+        null,
+        "blocker.user@example.com",
+        lastKnownLocation = location
+    )
 
     // Mock the Firestore document snapshots
     val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
     val allUsersQuerySnapshot = mock(QuerySnapshot::class.java)
     val friendDocumentSnapshot = mock(DocumentSnapshot::class.java)
     val nonFriendDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val blockedUserDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val userWhoBlockedMeDocumentSnapshot = mock(DocumentSnapshot::class.java)
 
     // Mock the data returned by the document snapshots
-    `when`(userDocumentSnapshot.data).thenReturn(mapOf("friendsList" to listOf(friend.uid)))
-    `when`(friendDocumentSnapshot.data).thenReturn(mapOf("uid" to friend.uid))
-    `when`(nonFriendDocumentSnapshot.data).thenReturn(mapOf("uid" to nonFriend.uid))
+    `when`(userDocumentSnapshot.data).thenReturn(mapOf(
+        "friendsList" to listOf(friend.uid),
+        "blockedList" to listOf(blockedUser.uid)
+    ))
+    `when`(friendDocumentSnapshot.data).thenReturn(mapOf(
+        "uid" to friend.uid,
+        "blockedList" to emptyList<String>()
+    ))
+    `when`(nonFriendDocumentSnapshot.data).thenReturn(mapOf(
+        "uid" to nonFriend.uid,
+        "blockedList" to emptyList<String>()
+    ))
+    `when`(blockedUserDocumentSnapshot.data).thenReturn(mapOf(
+        "uid" to blockedUser.uid,
+        "blockedList" to emptyList<String>()
+    ))
+    `when`(userWhoBlockedMeDocumentSnapshot.data).thenReturn(mapOf(
+        "uid" to userWhoBlockedMe.uid,
+        "blockedList" to listOf(user.uid)
+    ))
+
+    // Set document IDs
+    `when`(friendDocumentSnapshot.id).thenReturn(friend.uid)
+    `when`(nonFriendDocumentSnapshot.id).thenReturn(nonFriend.uid)
+    `when`(blockedUserDocumentSnapshot.id).thenReturn(blockedUser.uid)
+    `when`(userWhoBlockedMeDocumentSnapshot.id).thenReturn(userWhoBlockedMe.uid)
 
     // Mock the Firestore document references
     val userDocumentReference = mock(DocumentReference::class.java)
@@ -564,8 +609,12 @@ class UserRepositoryFirestoreTest {
     // Mock the get() method to return the document snapshots
     `when`(userDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
     `when`(userCollectionReference.get()).thenReturn(Tasks.forResult(allUsersQuerySnapshot))
-    `when`(allUsersQuerySnapshot.documents)
-        .thenReturn(listOf(friendDocumentSnapshot, nonFriendDocumentSnapshot))
+    `when`(allUsersQuerySnapshot.documents).thenReturn(listOf(
+        friendDocumentSnapshot,
+        nonFriendDocumentSnapshot,
+        blockedUserDocumentSnapshot,
+        userWhoBlockedMeDocumentSnapshot
+    ))
 
     // Create the UserRepositoryFirestore instance
     val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
@@ -574,11 +623,18 @@ class UserRepositoryFirestoreTest {
     userRepository.getRecommendedFriends(
         user,
         { recommendedFriends ->
-          // Verify the recommended friends list
-          assertEquals(1, recommendedFriends.size)
-          assertEquals(nonFriend.uid, recommendedFriends[0].uid)
+            // Verify the recommended friends list
+            assertEquals(1, recommendedFriends.size)
+            assertEquals(nonFriend.uid, recommendedFriends[0].uid)
+            
+            // Verify that blocked users and users who blocked me are not in the list
+            assertFalse(recommendedFriends.any { it.uid == blockedUser.uid })
+            assertFalse(recommendedFriends.any { it.uid == userWhoBlockedMe.uid })
+            // Verify that existing friends are not in the list
+            assertFalse(recommendedFriends.any { it.uid == friend.uid })
         },
-        { fail("onFailure should not be called") })
+        { fail("onFailure should not be called") }
+    )
   }
 
   @Test
@@ -773,6 +829,169 @@ class UserRepositoryFirestoreTest {
 
     verify(mockUserDocumentReference).update(anyString(), any())
   }
+
+    @Test
+  fun blockUser_shouldUpdateAllLists() {
+    val currentUser = User(
+        "1",
+        "Alexandre",
+        "Carel",
+        "+33 6 59 20 70 02",
+        null,
+        "alexandre.carel@epfl.ch",
+        lastKnownLocation = location
+    )
+    val blockedUser = User(
+        "2",
+        "Jane",
+        "Doe",
+        "+41 00 000 00 02",
+        null,
+        "jane.doe@example.com",
+        lastKnownLocation = location
+    )
+
+    // Mock the Firestore document snapshots
+    val currentUserSnapshot = mock(DocumentSnapshot::class.java)
+    val blockedUserSnapshot = mock(DocumentSnapshot::class.java)
+
+    // Mock the initial data for both users
+    val currentUserData = mutableMapOf<String, Any>(
+        "blockedList" to listOf<String>(),
+        "friendsList" to listOf(blockedUser.uid),
+        "friendRequests" to listOf<String>(),
+        "sentFriendRequests" to listOf<String>()
+    )
+    val blockedUserData = mutableMapOf<String, Any>(
+        "friendsList" to listOf(currentUser.uid),
+        "friendRequests" to listOf<String>(),
+        "sentFriendRequests" to listOf<String>()
+    )
+
+    `when`(currentUserSnapshot.data).thenReturn(currentUserData)
+    `when`(blockedUserSnapshot.data).thenReturn(blockedUserData)
+
+    // Mock the Firestore document references
+    val currentUserRef = mock(DocumentReference::class.java)
+    val blockedUserRef = mock(DocumentReference::class.java)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(currentUser.uid)).thenReturn(currentUserRef)
+    `when`(userCollectionReference.document(blockedUser.uid)).thenReturn(blockedUserRef)
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock transaction behavior
+    `when`(transaction.get(currentUserRef)).thenReturn(currentUserSnapshot)
+    `when`(transaction.get(blockedUserRef)).thenReturn(blockedUserSnapshot)
+
+    // Mock runTransaction
+    `when`(mockFirestore.runTransaction<Void>(any())).thenAnswer { invocation ->
+        val transactionFunction = invocation.arguments[0]
+        when (transactionFunction) {
+            is com.google.firebase.firestore.Transaction.Function<*> -> {
+                transactionFunction.apply(transaction)
+            }
+        }
+        Tasks.forResult(null)
+    }
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Call blockUser
+    userRepository.blockUser(
+        currentUser,
+        blockedUser,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { onFailureCalled = true }
+    )
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify the transaction updates
+    verify(transaction).update(eq(currentUserRef), eq("blockedList"), eq(listOf(blockedUser.uid)))
+    verify(transaction).update(eq(currentUserRef), eq("friendsList"), eq(emptyList<String>()))
+    verify(transaction).update(eq(currentUserRef), eq("friendRequests"), eq(emptyList<String>()))
+    verify(transaction).update(eq(currentUserRef), eq("sentFriendRequests"), eq(emptyList<String>()))
+
+    verify(transaction).update(eq(blockedUserRef), eq("friendsList"), eq(emptyList<String>()))
+    verify(transaction).update(eq(blockedUserRef), eq("friendRequests"), eq(emptyList<String>()))
+    verify(transaction).update(eq(blockedUserRef), eq("sentFriendRequests"), eq(emptyList<String>()))
+
+    // Verify callbacks
+    assertTrue(onSuccessCalled)
+    assertFalse(onFailureCalled)
+  }
+
+  @Test
+  fun blockUser_whenTransactionFails_shouldCallOnFailure() {
+    val currentUser = User(
+        "1",
+        "Alexandre",
+        "Carel",
+        "+33 6 59 20 70 02",
+        null,
+        "alexandre.carel@epfl.ch",
+        lastKnownLocation = location
+    )
+    val blockedUser = User(
+        "2",
+        "Jane",
+        "Doe",
+        "+41 00 000 00 02",
+        null,
+        "jane.doe@example.com",
+        lastKnownLocation = location
+    )
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(any())).thenReturn(mock(DocumentReference::class.java))
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock runTransaction to fail
+    val exception = Exception("Transaction failed")
+    `when`(mockFirestore.runTransaction<Void>(any())).thenReturn(Tasks.forException(exception))
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Call blockUser
+    userRepository.blockUser(
+        currentUser,
+        blockedUser,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { 
+            onFailureCalled = true
+            failureException = it
+        }
+    )
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify callbacks
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertEquals(exception, failureException)
+  }
+
+    
 
   /**
    * This test verifies that when fetching a User, the Firestore `get()` is called on the collection

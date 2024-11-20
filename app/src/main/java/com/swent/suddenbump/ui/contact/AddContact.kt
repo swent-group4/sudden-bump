@@ -56,8 +56,11 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
 
   val friendRequests = remember { mutableStateOf(req) }
   val sentFriendRequests = userViewModel.getSentFriendRequests().collectAsState().value
+    val blockedUsers = userViewModel.getBlockedFriends().collectAsState().value
 
-  val recommendedUsers = userViewModel.getUserRecommendedFriends().collectAsState().value
+  val recommendedUsers = userViewModel.getUserRecommendedFriends().collectAsState().value.filter {
+    !blockedUsers.map { user: User ->  user.uid}.contains(it.uid)
+  }
 
   val filteredUsers =
       recommendedUsers.filter { user ->
@@ -94,10 +97,6 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                     .padding(horizontal = 16.dp)
                     .testTag("addContactContent"),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                sentFriendRequests.toString(),
-                color = Color.White,
-            )
               TextField(
                   value = searchQuery,
                   onValueChange = { newValue -> searchQuery = newValue },
