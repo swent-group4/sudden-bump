@@ -12,9 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,6 +28,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,8 +49,9 @@ import com.swent.suddenbump.ui.navigation.Screen
 @Composable
 fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val user = userViewModel.getSelectedContact().collectAsState().value
+    var showDialog by remember { mutableStateOf(false) }
 
-  var isFriend =
+    var isFriend =
       userViewModel.getUserFriends().collectAsState().value.map { it.uid }.contains(user.uid)
   var isFriendRequest =
       userViewModel.getUserFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
@@ -63,6 +72,34 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = "Back")
                   }
+            },
+            actions = {
+                var expanded by remember { mutableStateOf(false) }
+
+                IconButton(
+                    onClick = { expanded = false
+                        showDialog = true },
+                    modifier = Modifier.testTag("moreOptionsButton")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "More options",
+                        tint = Color.White
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        onClick = {
+                            expanded = false
+                            // Add your block user logic here
+                        },
+                        text = { Text("Block User") }
+                    )
+                }
             },
             colors =
                 TopAppBarDefaults.topAppBarColors(
@@ -198,11 +235,36 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                       onFailure = { println("Error sending friend request") })
                 }) {
                   Text(
-                      "SendFriendRequest",
+                      "Send Friend Request",
                       color = Color.White,
                   )
                 }
           }
         }
+
+          if (showDialog) {
+              AlertDialog(
+                  onDismissRequest = { showDialog = false },
+                  title = { Text("Block User") },
+                  text = { Text("Are you sure you want to block this user?") },
+                  confirmButton = {
+                      Button(
+                          onClick = {
+                              showDialog = false
+                              // Add your block user logic here
+                          }
+                      ) {
+                          Text("Yes")
+                      }
+                  },
+                  dismissButton = {
+                      Button(
+                          onClick = { showDialog = false }
+                      ) {
+                          Text("No")
+                      }
+                  }
+              )
+          }
       })
 }
