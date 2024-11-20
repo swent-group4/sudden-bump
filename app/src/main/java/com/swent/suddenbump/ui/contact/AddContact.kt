@@ -56,11 +56,12 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
 
   val friendRequests = remember { mutableStateOf(req) }
   val sentFriendRequests = userViewModel.getSentFriendRequests().collectAsState().value
-    val blockedUsers = userViewModel.getBlockedFriends().collectAsState().value
+  val blockedUsers = userViewModel.getBlockedFriends().collectAsState().value
 
-  val recommendedUsers = userViewModel.getUserRecommendedFriends().collectAsState().value.filter {
-    !blockedUsers.map { user: User ->  user.uid}.contains(it.uid)
-  }
+  val recommendedUsers =
+      userViewModel.getUserRecommendedFriends().collectAsState().value.filter {
+        !blockedUsers.map { user: User -> user.uid }.contains(it.uid)
+      }
 
   val filteredUsers =
       recommendedUsers.filter { user ->
@@ -279,7 +280,9 @@ fun UserRecommendedRow(
     friendRequests: List<User>
 ) {
   var showButton by remember {
-    mutableStateOf((!sentFriendRequests.map { user: User ->  user.uid}.contains(user.uid)) && !friendRequests.map { user: User ->  user.uid}.contains(user.uid))
+    mutableStateOf(
+        (!sentFriendRequests.map { user: User -> user.uid }.contains(user.uid)) &&
+            !friendRequests.map { user: User -> user.uid }.contains(user.uid))
   }
   Row(
       modifier =

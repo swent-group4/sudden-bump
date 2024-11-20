@@ -49,9 +49,9 @@ import com.swent.suddenbump.ui.navigation.Screen
 @Composable
 fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val user = userViewModel.getSelectedContact().collectAsState().value
-    var showDialog by remember { mutableStateOf(false) }
+  var showDialog by remember { mutableStateOf(false) }
 
-    var isFriend =
+  var isFriend =
       userViewModel.getUserFriends().collectAsState().value.map { it.uid }.contains(user.uid)
   var isFriendRequest =
       userViewModel.getUserFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
@@ -74,34 +74,24 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                   }
             },
             actions = {
-                var expanded by remember { mutableStateOf(false) }
+              var expanded by remember { mutableStateOf(false) }
 
-                IconButton(
-                    onClick = {
-                        expanded = true
-
-                              },
-                    modifier = Modifier.testTag("moreOptionsButton")
-                ) {
+              IconButton(
+                  onClick = { expanded = true }, modifier = Modifier.testTag("moreOptionsButton")) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "More options",
-                        tint = Color.White
-                    )
-                }
+                        tint = Color.White)
+                  }
 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        onClick = {
-                            expanded = false
-                            showDialog = true
-                        },
-                        text = { Text("Block User") }
-                    )
-                }
+              DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                DropdownMenuItem(
+                    onClick = {
+                      expanded = false
+                      showDialog = true
+                    },
+                    text = { Text("Block User") })
+              }
             },
             colors =
                 TopAppBarDefaults.topAppBarColors(
@@ -244,31 +234,25 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
           }
         }
 
-          if (showDialog) {
-              AlertDialog(
-                  onDismissRequest = { showDialog = false },
-                  title = { Text("Block User") },
-                  text = { Text("Are you sure you want to block this user?") },
-                  confirmButton = {
-                      Button(
-                          onClick = {
-                              showDialog = false
-                              userViewModel.blockUser(user = userViewModel.getCurrentUser().value, blockedUser = user, onSuccess = {
-                                  navigationActions.goBack()
-                              }, onFailure = { println("Error blocking user") })
-                          }
-                      ) {
-                          Text("Yes")
-                      }
-                  },
-                  dismissButton = {
-                      Button(
-                          onClick = { showDialog = false }
-                      ) {
-                          Text("No")
-                      }
-                  }
-              )
-          }
+        if (showDialog) {
+          AlertDialog(
+              onDismissRequest = { showDialog = false },
+              title = { Text("Block User") },
+              text = { Text("Are you sure you want to block this user?") },
+              confirmButton = {
+                Button(
+                    onClick = {
+                      showDialog = false
+                      userViewModel.blockUser(
+                          user = userViewModel.getCurrentUser().value,
+                          blockedUser = user,
+                          onSuccess = { navigationActions.goBack() },
+                          onFailure = { println("Error blocking user") })
+                    }) {
+                      Text("Yes")
+                    }
+              },
+              dismissButton = { Button(onClick = { showDialog = false }) { Text("No") } })
+        }
       })
 }
