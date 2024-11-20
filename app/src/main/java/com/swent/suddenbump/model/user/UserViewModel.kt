@@ -494,6 +494,13 @@ open class UserViewModel(
         }
       }
 
+    fun deleteAllMessages() {
+        viewModelScope.launch {
+            _messages.value = emptyList()
+            chatRepository.deleteAllMessages()
+        }
+    }
+
   // Send a new message and add it to Firestore
   fun sendMessage(messageContent: String, user: User) {
     viewModelScope.launch {

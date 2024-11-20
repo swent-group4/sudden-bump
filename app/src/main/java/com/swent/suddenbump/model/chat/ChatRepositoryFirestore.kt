@@ -15,135 +15,146 @@ import kotlinx.coroutines.tasks.await
 
 class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRepository {
 
-  private val messagesCollection = firestore.collection("messages")
+    private val messagesCollection = firestore.collection("messages")
 
-  override suspend fun fetchMessages(): List<Message> {
-    return try {
-      val querySnapshot =
-          messagesCollection.orderBy("timestamp", Query.Direction.ASCENDING).get().await()
-      querySnapshot.documents.mapNotNull { document -> document.toObject(Message::class.java) }
-    } catch (e: Exception) {
-      emptyList() // Return an empty list on error
-    }
-  }
-
-  override suspend fun getOrCreateChat(friendId: String, userId: String): String {
-    var chatId = ""
-
-    try {
-      val chatQuery =
-          firestore.collection("chats").whereArrayContains("participants", friendId).get().await()
-
-      for (document in chatQuery.documents) {
-        val participants = document.get("participants") as? List<String>
-        if (participants != null && participants.contains(userId)) {
-          chatId = document.id
-          break
+    override suspend fun fetchMessages(): List<Message> {
+        return try {
+            val querySnapshot =
+                messagesCollection.orderBy("timestamp", Query.Direction.ASCENDING).get().await()
+            querySnapshot.documents.mapNotNull { document -> document.toObject(Message::class.java) }
+        } catch (e: Exception) {
+            emptyList() // Return an empty list on error
         }
-      }
-
-      if (chatId.isEmpty()) {
-        val newChatRef = firestore.collection("chats").document()
-        newChatRef.set(
-            mapOf(
-                "participants" to listOf(friendId, userId),
-                "lastMessage" to "",
-                "lastMessageTimestamp" to null))
-        chatId = newChatRef.id
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
     }
 
-    return chatId
-  }
+    override suspend fun getOrCreateChat(friendId: String, userId: String): String {
+        var chatId = ""
 
-  override fun getMessages(chatId: String): Flow<List<Message>> = callbackFlow {
-    var registration: ListenerRegistration? = null
+        try {
+            val chatQuery =
+                firestore.collection("chats").whereArrayContains("participants", friendId).get().await()
 
-    try {
-      registration =
-          firestore
-              .collection("chats")
-              .document(chatId)
-              .collection("messages")
-              .orderBy("timestamp", Query.Direction.DESCENDING)
-              .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                  close(error)
-                  return@addSnapshotListener
+            for (document in chatQuery.documents) {
+                val participants = document.get("participants") as? List<String>
+                if (participants != null && participants.contains(userId)) {
+                    chatId = document.id
+                    break
                 }
-
-                val messages =
-                    snapshot?.documents?.mapNotNull { document ->
-                      document.toObject(Message::class.java)
-                    } ?: emptyList()
-                trySend(messages)
-              }
-    } catch (e: Exception) {
-      close(e)
-    }
-
-    awaitClose { registration?.remove() }
-  }
-
-  override suspend fun sendMessage(chatId: String, messageContent: String, user: User) {
-    val senderId = user.uid
-    val senderName = user.firstName
-    val username = user.lastName
-
-    try {
-      val message =
-          Message(
-              senderId = senderId,
-              content = messageContent,
-              timestamp = Timestamp.now(),
-              isReadBy = listOf(senderId))
-
-      firestore.collection("chats").document(chatId).collection("messages").add(message).await()
-
-      firestore
-          .collection("chats")
-          .document(chatId)
-          .update(
-              mapOf(
-                  "lastMessage" to messageContent,
-                  "lastMessageTimestamp" to FieldValue.serverTimestamp(),
-                  "lastMessageSender" to senderName,
-                  "otherUserName" to username))
-          .await()
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
-  }
-
-  override fun getChatSummaries(userId: String): Flow<List<ChatSummary>> = callbackFlow {
-    val currentUserId = userId
-
-    val registration =
-        firestore
-            .collection("chats")
-            .whereArrayContains("participants", currentUserId)
-            .addSnapshotListener { chatsSnapshot, error ->
-              if (error != null || chatsSnapshot == null) {
-                close(error)
-                return@addSnapshotListener
-              }
-              trySend(
-                  chatsSnapshot.documents
-                      .mapNotNull { it.toObject(ChatSummary::class.java) }
-                      .sortedByDescending { it.lastMessageTimestamp?.toDate()?.time ?: 0 })
             }
-    awaitClose { registration.remove() }
-  }
 
-  override suspend fun getUserAccount(uid: String): User? {
-    return suspendCancellableCoroutine { continuation ->
-      firestore.collection("Users").document(uid).get().addOnCompleteListener {
-        if (it.isSuccessful) {
-          continuation.resume(it.result.toObject(User::class.java))
-        } else continuation.resume(null)
-      }
+            if (chatId.isEmpty()) {
+                val newChatRef = firestore.collection("chats").document()
+                newChatRef.set(
+                    mapOf(
+                        "participants" to listOf(friendId, userId),
+                        "lastMessage" to "",
+                        "lastMessageTimestamp" to null))
+                chatId = newChatRef.id
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return chatId
     }
-  }
+
+    override fun getMessages(chatId: String): Flow<List<Message>> = callbackFlow {
+        var registration: ListenerRegistration? = null
+
+        try {
+            registration =
+                firestore
+                    .collection("chats")
+                    .document(chatId)
+                    .collection("messages")
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            close(error)
+                            return@addSnapshotListener
+                        }
+
+                        val messages =
+                            snapshot?.documents?.mapNotNull { document ->
+                                document.toObject(Message::class.java)
+                            } ?: emptyList()
+                        trySend(messages)
+                    }
+        } catch (e: Exception) {
+            close(e)
+        }
+
+        awaitClose { registration?.remove() }
+    }
+
+    override suspend fun sendMessage(chatId: String, messageContent: String, user: User) {
+        val senderId = user.uid
+        val senderName = user.firstName
+        val username = user.lastName
+
+        try {
+            val message =
+                Message(
+                    senderId = senderId,
+                    content = messageContent,
+                    timestamp = Timestamp.now(),
+                    isReadBy = listOf(senderId))
+
+            firestore.collection("chats").document(chatId).collection("messages").add(message).await()
+
+            firestore
+                .collection("chats")
+                .document(chatId)
+                .update(
+                    mapOf(
+                        "lastMessage" to messageContent,
+                        "lastMessageTimestamp" to FieldValue.serverTimestamp(),
+                        "lastMessageSender" to senderName,
+                        "otherUserName" to username))
+                .await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun getChatSummaries(userId: String): Flow<List<ChatSummary>> = callbackFlow {
+        val currentUserId = userId
+
+        val registration =
+            firestore
+                .collection("chats")
+                .whereArrayContains("participants", currentUserId)
+                .addSnapshotListener { chatsSnapshot, error ->
+                    if (error != null || chatsSnapshot == null) {
+                        close(error)
+                        return@addSnapshotListener
+                    }
+                    trySend(
+                        chatsSnapshot.documents
+                            .mapNotNull { it.toObject(ChatSummary::class.java) }
+                            .sortedByDescending { it.lastMessageTimestamp?.toDate()?.time ?: 0 })
+                }
+        awaitClose { registration.remove() }
+    }
+
+    override suspend fun getUserAccount(uid: String): User? {
+        return suspendCancellableCoroutine { continuation ->
+            firestore.collection("Users").document(uid).get().addOnCompleteListener {
+                if (it.isSuccessful) {
+                    continuation.resume(it.result.toObject(User::class.java))
+                } else continuation.resume(null)
+            }
+        }
+    }
+
+    override suspend fun deleteAllMessages() {
+        try {
+            val messagesSnapshot = messagesCollection.get().await()
+            for (document in messagesSnapshot.documents) {
+                document.reference.delete().await()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
