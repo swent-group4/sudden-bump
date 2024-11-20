@@ -160,7 +160,7 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
         }
       }
     } catch (e: Exception) {
-      e.printStackTrace()
+      throw Exception("Deletion failed", e)
     }
   }
 }
