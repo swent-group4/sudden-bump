@@ -94,6 +94,10 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                     .padding(horizontal = 16.dp)
                     .testTag("addContactContent"),
             horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                sentFriendRequests.toString(),
+                color = Color.White,
+            )
               TextField(
                   value = searchQuery,
                   onValueChange = { newValue -> searchQuery = newValue },
@@ -276,7 +280,7 @@ fun UserRecommendedRow(
     friendRequests: List<User>
 ) {
   var showButton by remember {
-    mutableStateOf(!sentFriendRequests.contains(user) && !friendRequests.contains(user))
+    mutableStateOf((!sentFriendRequests.map { user: User ->  user.uid}.contains(user.uid)) && !friendRequests.map { user: User ->  user.uid}.contains(user.uid))
   }
   Row(
       modifier =
