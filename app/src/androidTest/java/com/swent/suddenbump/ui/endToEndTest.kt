@@ -167,16 +167,16 @@ class EndToEndTest {
     // Step 2: Navigate to user row and send message
     composeTestRule.waitUntil(timeoutMillis = 10_000) {
       try {
-        composeTestRule.onNodeWithTag("userRow").assertExists()
+        composeTestRule.onAllNodesWithTag("userRow").onFirst().assertExists().performClick()
         true
       } catch (e: AssertionError) {
         false
       }
     }
-    composeTestRule.waitForIdle()
     composeTestRule.onAllNodesWithTag("userRow").onFirst().assertExists().performClick()
-
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("sendMessageButton").performClick()
+
     composeTestRule.onNodeWithTag("ChatInputTextBox").performTextInput("Hello, how are you?")
     composeTestRule.onNodeWithTag("SendButton").performClick()
     composeTestRule.waitForIdle()
