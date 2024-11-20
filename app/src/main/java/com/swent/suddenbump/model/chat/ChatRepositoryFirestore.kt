@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.chat
 
+import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -74,6 +75,8 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
                   return@addSnapshotListener
                 }
 
+                Log.d("Chat", "debug snapshot : ${snapshot?.documents}")
+
                 val messages =
                     snapshot?.documents?.mapNotNull { document ->
                       document.toObject(Message::class.java)
@@ -87,10 +90,13 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
     awaitClose { registration?.remove() }
   }
 
-  override suspend fun sendMessage(chatId: String, messageContent: String, user: User) {
-    val senderId = user.uid
-    val senderName = user.firstName
-    val username = user.lastName
+  override suspend fun sendMessage(
+      chatId: String,
+      messageContent: String,
+      userSender: User,
+      userReceiver: User
+  ) {
+    val senderId = userSender.uid
 
     try {
       val message =
@@ -109,8 +115,8 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
               mapOf(
                   "lastMessage" to messageContent,
                   "lastMessageTimestamp" to FieldValue.serverTimestamp(),
-                  "lastMessageSender" to senderName,
-                  "otherUserName" to username))
+                  "lastMessageSenderId" to userSender.uid,
+                  "otherUserId" to userReceiver.uid))
           .await()
     } catch (e: Exception) {
       e.printStackTrace()
@@ -118,12 +124,10 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
   }
 
   override fun getChatSummaries(userId: String): Flow<List<ChatSummary>> = callbackFlow {
-    val currentUserId = userId
-
     val registration =
         firestore
             .collection("chats")
-            .whereArrayContains("participants", currentUserId)
+            .whereArrayContains("participants", userId)
             .addSnapshotListener { chatsSnapshot, error ->
               if (error != null || chatsSnapshot == null) {
                 close(error)

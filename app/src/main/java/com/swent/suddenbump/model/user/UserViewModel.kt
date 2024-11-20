@@ -19,7 +19,6 @@ import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,7 +39,7 @@ open class UserViewModel(
 
   private val logTag = "UserViewModel"
   private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
-  val chatSummaries: Flow<List<ChatSummary>> = _chatSummaries.asStateFlow()
+  val chatSummaries: StateFlow<List<ChatSummary>> = _chatSummaries.asStateFlow()
   private val profilePicture = ImageBitMapIO()
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
@@ -396,10 +395,9 @@ open class UserViewModel(
 
   fun loadFriendsLocations() {
     try {
-      Log.i(logTag, "1: ${_userFriends.value.toString()}")
-      println("1: ${_userFriends.value.toString()}")
-      Log.i(logTag, "2: ${getUserFriends().value.toString()}")
-      println("2: ${getUserFriends().value.toString()}")
+      Log.i(logTag, "--- load Friends Loc ---")
+      Log.i(logTag, "user : ${_user.value}")
+      Log.i(logTag, "friends : ${_userFriends.value}")
       repository.getFriendsLocation(
           _userFriends.value,
           onSuccess = { friendsLoc ->
@@ -444,7 +442,11 @@ open class UserViewModel(
       if (friendLocation != null) {
         Log.d(
             "FriendsRadius",
-            "Friends Locations: ${_user.value.lastKnownLocation.value.distanceTo(friendLocation)}")
+            "Friends Locations: ${
+                        _user.value.lastKnownLocation.value.distanceTo(
+                            friendLocation
+                        )
+                    }")
         if (_user.value.lastKnownLocation.value.distanceTo(friendLocation) <= radius) {
           return true
         }
@@ -474,9 +476,10 @@ open class UserViewModel(
   }
 
   private val _messages = MutableStateFlow<List<Message>>(emptyList())
-  val messages: Flow<List<Message>> = _messages
+  val messages: StateFlow<List<Message>> = _messages
 
   private var chatId: String? = null
+  private var chatFriendId: String? = null
 
   private var isGettingChatId = false
 
@@ -488,16 +491,29 @@ open class UserViewModel(
       viewModelScope.launch {
         if (!isGettingChatId) {
           isGettingChatId = true
+          chatFriendId = friendId
           chatId = chatRepository.getOrCreateChat(friendId, _user.value.uid)
           isGettingChatId = false
           chatRepository.getMessages(chatId!!).collect { messages -> _messages.value = messages }
         }
       }
 
+  fun getChatSummaries() =
+      viewModelScope.launch {
+        chatRepository.getChatSummaries(_user.value.uid).collect { list ->
+          _chatSummaries.value = list
+        }
+      }
+
   // Send a new message and add it to Firestore
   fun sendMessage(messageContent: String, user: User) {
     viewModelScope.launch {
-      if (chatId != null) chatRepository.sendMessage(chatId!!, messageContent, user)
+      if (chatId != null)
+          chatRepository.sendMessage(
+              chatId!!,
+              messageContent,
+              _user.value,
+              _userFriends.value.first { it.uid == chatFriendId })
     }
   }
 
