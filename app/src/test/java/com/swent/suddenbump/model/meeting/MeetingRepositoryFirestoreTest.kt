@@ -41,7 +41,8 @@ class MeetingRepositoryFirestoreTest {
           location = "Cafe",
           date = Timestamp.now(),
           friendId = "friendId",
-          creatorId = "creatorId")
+          creatorId = "creatorId",
+          accepted = false)
 
   @Before
   fun setUp() {
