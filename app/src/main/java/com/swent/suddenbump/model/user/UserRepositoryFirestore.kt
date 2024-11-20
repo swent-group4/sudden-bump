@@ -276,23 +276,21 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               result.data?.get("friendRequests") as? List<String> ?: emptyList()
           if (friendRequestsUidList.isEmpty()) {
             onSuccess(emptyList())
-            return@addOnSuccessListener
+          } else {
+            val tasks =
+                friendRequestsUidList.map { uid ->
+                  db.collection(usersCollectionPath).document(uid).get()
+                }
+            Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
+                .addOnSuccessListener { documents ->
+                  val friendRequestsList =
+                      documents.mapNotNull { document ->
+                        helper.documentSnapshotToUser(document, null)
+                      }
+                  onSuccess(friendRequestsList)
+                }
+                .addOnFailureListener { e -> onFailure(e) }
           }
-
-          val tasks =
-              friendRequestsUidList.map { uid ->
-                db.collection(usersCollectionPath).document(uid).get()
-              }
-
-          Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
-              .addOnSuccessListener { documents ->
-                val friendRequestsList =
-                    documents.mapNotNull { document ->
-                      helper.documentSnapshotToUser(document, null)
-                    }
-                onSuccess(friendRequestsList)
-              }
-              .addOnFailureListener { e -> onFailure(e) }
         }
   }
 
