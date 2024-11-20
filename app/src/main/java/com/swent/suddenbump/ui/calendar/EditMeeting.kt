@@ -35,7 +35,7 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
         } ?: "")
   }
   val context = LocalContext.current
-    var showDatePicker by remember { mutableStateOf(false) }
+  var showDatePicker by remember { mutableStateOf(false) }
 
   Scaffold(
       topBar = {
@@ -62,22 +62,20 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                   label = { Text("Location") },
                   textStyle = LocalTextStyle.current.copy(color = Color.White),
                   modifier = Modifier.fillMaxWidth().testTag("Location"))
-            // Date Field (Non-clickable)
-            OutlinedTextField(
-                value = date,
-                onValueChange = { date = it },
-                label = { Text("Date (dd/MM/yyyy)") },
-                textStyle = TextStyle(color = Color.White),
-                modifier = Modifier
-                    .fillMaxWidth(),
-                trailingIcon = {
+              // Date Field (Non-clickable)
+              OutlinedTextField(
+                  value = date,
+                  onValueChange = { date = it },
+                  label = { Text("Date (dd/MM/yyyy)") },
+                  textStyle = TextStyle(color = Color.White),
+                  modifier = Modifier.fillMaxWidth().testTag("Date"),
+                  trailingIcon = {
                     IconButton(
-                        onClick = { showDatePicker = true }
-                    ) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Pick a date")
-                    }
-                }
-            )
+                        onClick = { showDatePicker = true },
+                        modifier = Modifier.testTag("DateIconButton")) {
+                          Icon(Icons.Filled.Edit, contentDescription = "Pick a date")
+                        }
+                  })
               Spacer(modifier = Modifier.height(16.dp))
               Button(
                   onClick = {
@@ -124,28 +122,32 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                     Text("Delete Meeting")
                   }
 
-            // Show Date Picker Dialog if needed
-            if (showDatePicker) {
+              // Show Date Picker Dialog if needed
+              if (showDatePicker) {
                 val calendar = Calendar.getInstance()
                 val year = calendar.get(Calendar.YEAR)
                 val month = calendar.get(Calendar.MONTH)
                 val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-                val datePickerDialog = android.app.DatePickerDialog(
-                    context,
-                    { _, y, m, d ->
-                        val selectedCalendar = Calendar.getInstance().apply {
-                            set(Calendar.YEAR, y)
-                            set(Calendar.MONTH, m)
-                            set(Calendar.DAY_OF_MONTH, d)
-                        }
-                        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                        date = dateFormat.format(selectedCalendar.time)
-                        showDatePicker = false
-                    }, year, month, day
-                )
+                val datePickerDialog =
+                    android.app.DatePickerDialog(
+                        context,
+                        { _, y, m, d ->
+                          val selectedCalendar =
+                              Calendar.getInstance().apply {
+                                set(Calendar.YEAR, y)
+                                set(Calendar.MONTH, m)
+                                set(Calendar.DAY_OF_MONTH, d)
+                              }
+                          val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                          date = dateFormat.format(selectedCalendar.time)
+                          showDatePicker = false
+                        },
+                        year,
+                        month,
+                        day)
                 datePickerDialog.show()
-            }
+              }
             }
       })
 }
