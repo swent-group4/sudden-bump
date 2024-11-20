@@ -2,6 +2,8 @@ package com.swent.suddenbump.ui
 
 import android.location.Location
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -166,7 +168,7 @@ class EndToEndTest {
 
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag("userRow").assertExists().performClick()
+    composeTestRule.onAllNodesWithTag("userRow").onFirst().assertExists().performClick()
 
     composeTestRule.onNodeWithTag("sendMessageButton").assertExists().performClick()
 
