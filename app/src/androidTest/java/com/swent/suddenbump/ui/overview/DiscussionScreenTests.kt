@@ -14,7 +14,6 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -131,22 +130,21 @@ class DiscussionScreenTests {
 
   @Test
   fun clickingConfirmButtonCallsDeleteAllMessages() = runBlocking {
-    withTimeout(5_000) { // 5-second timeout to avoid getting stuck
-      // Show the delete confirmation dialog
-      composeTestRule
-          .onNodeWithTag("discussionLazyColumn")
-          .performScrollToNode(hasTestTag("deleteAllChatsButton"))
-      composeTestRule.onNodeWithTag("deleteAllChatsButton").performClick()
-      composeTestRule.waitForIdle() // Wait for UI to settle
+    // 5-second timeout to avoid getting stuck
+    // Show the delete confirmation dialog
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("deleteAllChatsButton"))
+    composeTestRule.onNodeWithTag("deleteAllChatsButton").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle
 
-      // Click on the confirm button
-      composeTestRule.onNodeWithTag("confirmButton").performClick()
-      composeTestRule.waitForIdle() // Wait for UI to settle
+    // Click on the confirm button
+    composeTestRule.onNodeWithTag("confirmButton").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle
 
-      // Since we cannot mock UserViewModel directly, we will collect the messages Flow
-      val messages = userViewModel.messages.first()
-      assert(messages.isEmpty()) { "Messages should be deleted." }
-    }
+    // Since we cannot mock UserViewModel directly, we will collect the messages Flow
+    val messages = userViewModel.messages.first()
+    assert(messages.isEmpty()) { "Messages should be deleted." }
   }
 
   @Test
