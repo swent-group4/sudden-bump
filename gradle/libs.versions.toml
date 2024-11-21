@@ -71,6 +71,8 @@ runtimeLivedata = "1.7.5"
 workRuntimeKtx = "2.7.1"
 workTesting = "2.7.1"
 navigationTesting = "2.8.4"
+uiTestAndroid = "1.7.5"
+uiTestJunit4Android = "1.7.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -141,6 +143,8 @@ ucrop = { module = "com.github.yalantis:ucrop", name = "ucrop", version.ref = "u
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 androidx-navigation-testing = { group = "androidx.navigation", name = "navigation-testing", version.ref = "navigationTesting" }
+androidx-ui-test-android = { group = "androidx.compose.ui", name = "ui-test-android", version.ref = "uiTestAndroid" }
+androidx-ui-test-junit4-android = { group = "androidx.compose.ui", name = "ui-test-junit4-android", version.ref = "uiTestJunit4Android" }
 
 
 [plugins]
