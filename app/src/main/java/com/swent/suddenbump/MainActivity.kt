@@ -240,7 +240,8 @@ class MainActivity : ComponentActivity() {
       composable("ConfidentialityScreen") {
         ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
       }
-      composable("DiscussionsScreen") { DiscussionScreen(navigationActions) }
+      composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
+
       composable("StorageAndDataScreen") { StorageAndDataScreen(navigationActions) }
       composable("HelpScreen") { HelpScreen(navigationActions) }
     }
