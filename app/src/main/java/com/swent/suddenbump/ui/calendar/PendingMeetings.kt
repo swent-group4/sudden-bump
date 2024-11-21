@@ -28,6 +28,13 @@ import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 
+/**
+ * Composable function to display the Pending Meetings screen.
+ *
+ * @param navigationActions Actions for navigation.
+ * @param meetingViewModel ViewModel for managing meetings.
+ * @param userViewModel ViewModel for managing user data.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PendingMeetingsScreen(
@@ -79,6 +86,13 @@ fun PendingMeetingsScreen(
       })
 }
 
+/**
+ * Composable function to display a scrollable list of pending meetings.
+ *
+ * @param meetings List of meetings to display.
+ * @param userFriends List of user friends.
+ * @param meetingViewModel ViewModel for managing meetings.
+ */
 @Composable
 fun ScrollablePendingMeetings(
     meetings: List<Meeting>,
@@ -96,6 +110,13 @@ fun ScrollablePendingMeetings(
       }
 }
 
+/**
+ * Composable function to display a single row for a pending meeting.
+ *
+ * @param meeting The meeting data.
+ * @param userFriends List of user friends.
+ * @param meetingViewModel ViewModel for managing meetings.
+ */
 @Composable
 fun PendingMeetingRow(
     meeting: Meeting,
