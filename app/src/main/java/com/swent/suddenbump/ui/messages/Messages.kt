@@ -1,6 +1,5 @@
 package com.swent.suddenbump.ui.messages
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -62,8 +61,6 @@ fun MessagesScreen(viewModel: UserViewModel, navigationActions: NavigationAction
       messages.value.filter { summary ->
         summary.date != "" && summary.sender.contains(search, true)
       }
-
-  Log.d("Chat", viewModel.messages.collectAsState().value.toString())
 
   Scaffold(
       topBar = {

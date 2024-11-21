@@ -1,6 +1,5 @@
 package com.swent.suddenbump.model.chat
 
-import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -74,8 +73,6 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
                   close(error)
                   return@addSnapshotListener
                 }
-
-                Log.d("Chat", "debug snapshot : ${snapshot?.documents}")
 
                 val messages =
                     snapshot?.documents?.mapNotNull { document ->

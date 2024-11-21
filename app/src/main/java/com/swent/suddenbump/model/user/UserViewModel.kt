@@ -37,40 +37,54 @@ open class UserViewModel(
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
+  private val chatSummaryDummy =
+      ChatSummary("1", "message content", "chat456", Timestamp.now(), 0, listOf("1", "2"))
+
   private val logTag = "UserViewModel"
-  private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
+  private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(listOf(chatSummaryDummy))
   val chatSummaries: StateFlow<List<ChatSummary>> = _chatSummaries.asStateFlow()
   private val profilePicture = ImageBitMapIO()
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
   val locationDummy =
       MutableStateFlow(
-          Location("dummy").apply {
+          Location("mock_provider").apply {
             latitude = 0.0 // Set latitude
             longitude = 0.0 // Set longitude
           })
 
-  private val _user: MutableStateFlow<User> =
-      MutableStateFlow(
-          User(
-              "1",
-              "Martin",
-              "Vetterli",
-              "+41 00 000 00 01",
-              null,
-              "martin.vetterli@epfl.ch",
-              locationDummy))
+  val userDummy1 =
+      User(
+          "1",
+          "Martin",
+          "Vetterli",
+          "+41 00 000 00 01",
+          null,
+          "martin.vetterli@epfl.ch",
+          locationDummy)
+
+  val userDummy2 =
+      User(
+          "2",
+          "Martin",
+          "Vetterli",
+          "+41 00 000 00 01",
+          null,
+          "martin.vetterli@epfl.ch",
+          locationDummy)
+
+  private val _user: MutableStateFlow<User> = MutableStateFlow(userDummy2)
 
   private val _userFriendRequests: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(_user.value))
+      MutableStateFlow(listOf(userDummy1))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(_user.value))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+      MutableStateFlow(listOf(userDummy1))
+  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _recommendedFriends: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(_user.value))
-  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+      MutableStateFlow(listOf(userDummy1))
+  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
-  private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
+  private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
 
   // LiveData for verification status
   private val _verificationStatus = MutableLiveData<String>()
@@ -508,6 +522,7 @@ open class UserViewModel(
   // Send a new message and add it to Firestore
   fun sendMessage(messageContent: String, user: User) {
     viewModelScope.launch {
+      Log.d("Chat", "INSIDE FUN")
       if (chatId != null)
           chatRepository.sendMessage(
               chatId!!,

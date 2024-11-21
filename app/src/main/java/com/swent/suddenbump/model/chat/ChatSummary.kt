@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.chat
 
+import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
 import com.swent.suddenbump.model.user.UserViewModel
@@ -27,6 +28,9 @@ fun convertParticipantsUidToDisplay(
     chatSummary: ChatSummary,
     userViewModel: UserViewModel
 ): String {
+  Log.d("Chat", "user Friends : ${userViewModel.getUserFriends().value}")
+  Log.d("Chat", "chatSummary : ${chatSummary.participants}")
+  Log.d("Chat", "currentUser : ${userViewModel.getCurrentUser().value}")
   return chatSummary.participants
       .filter { stringParticipant -> userViewModel.getCurrentUser().value.uid != stringParticipant }
       .map { it2 ->
