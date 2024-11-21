@@ -4,6 +4,9 @@ import android.location.Location
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.*
 import com.swent.suddenbump.model.user.User
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.*
@@ -82,8 +85,14 @@ class ChatSummaryTest {
     val timestamp = Timestamp(seconds = 1729515283, nanoseconds = 0)
     val chatSummary = ChatSummary(participants = participants, lastMessageTimestamp = timestamp)
 
+    val timeZone = TimeZone.getTimeZone("UTC") // Set your desired time zone
+    val dateFormat = SimpleDateFormat("MM/dd/yyyy hh:mm a", Locale.US)
+    dateFormat.timeZone = timeZone
+
     val date = chatSummary.date
-    assertEquals("10/21/2024 02:54 PM", chatSummary.date)
+    assertEquals(
+        dateFormat.format(dateFormat.parse("10/21/2024 02:54 PM")!!),
+        dateFormat.format(dateFormat.parse(chatSummary.date)!!))
   }
 
   @Test
