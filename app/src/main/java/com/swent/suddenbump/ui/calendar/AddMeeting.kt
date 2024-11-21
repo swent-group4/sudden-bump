@@ -38,7 +38,7 @@ fun AddMeetingScreen(
         TopAppBar(
             title = {
               Text(
-                  "Add Meeting with ${userViewModel.user?.firstName?: ""}",
+                  "Ask ${userViewModel.user?.firstName?: ""} to Meet",
                   color = Color.White,
                   modifier = Modifier.testTag("Add New Meeting"))
             },
@@ -101,7 +101,7 @@ fun AddMeetingScreen(
                     }
                   },
                   modifier = Modifier.fillMaxWidth().testTag("Save Meeting")) {
-                    Text("Save Meeting")
+                    Text("Ask to Meet")
                   }
             }
       })

@@ -241,7 +241,8 @@ fun MonthYearHeader(
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("monthYearHeader"),
-      horizontalArrangement = Arrangement.SpaceBetween) {
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = monthYear,
             style = MaterialTheme.typography.headlineSmall,
