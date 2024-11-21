@@ -114,9 +114,11 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-  fun getFriendsLocation(
-      userFriendsList: List<User>,
-      onSuccess: (Map<User, Location?>) -> Unit,
+  fun isFriendsInRadius(
+      userLocation: Location,
+      friends: List<User>,
+      radius: Double,
+      onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
@@ -133,7 +135,7 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-  fun saveLoginStatus(userId: String)
+  fun saveLoginStatus(uid: String)
 
   fun getSavedUid(): String
 

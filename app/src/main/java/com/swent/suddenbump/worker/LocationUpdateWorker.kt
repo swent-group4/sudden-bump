@@ -54,15 +54,11 @@ class LocationUpdateWorker(
         Log.d("WorkerSuddenBump", "Got location: $location")
         val repository = UserRepositoryFirestore(Firebase.firestore, applicationContext)
         val uid = repository.getSavedUid()
-
-        if (uid == null) {
-          Log.d("WorkerSuddenBump", "User ID not found")
-          return@withContext Result.failure()
-        }
+        val radius = 5000.0
 
         Log.d("WorkerSuddenBump", "Got userId: $uid")
 
-        val user = uid?.let { getUserAccountSuspend(repository, it) }
+        val user = getUserAccountSuspend(repository, uid)
         Log.d("WorkerSuddenBump", "Got user: $user")
 
         if (user != null) {
@@ -74,36 +70,27 @@ class LocationUpdateWorker(
               uid = user.uid,
               location = location,
               onSuccess = { /* Handle success */},
-              onFailure = { error -> /* Handle failure */ })
+              onFailure = { /* Handle failure */})
 
           repository.updateTimestamp(
               user.uid,
               timestamp = timestamp,
               onSuccess = { /* Handle success */},
-              onFailure = { error -> /* Handle failure */ })
+              onFailure = { /* Handle failure */})
 
           repository.getUserFriends(
               uid = user.uid,
               onSuccess = { friends ->
-                repository.getFriendsLocation(
-                    userFriendsList = friends,
-                    onSuccess = { friendsLocations ->
-                      friendsLocations.forEach { (_, friendLocation) ->
-                        if (friendLocation != null) {
-                          // Check if friend is nearby
-                          if (location.distanceTo(friendLocation) < 5000) {
-                            // Show notification
-                            showFriendNearbyNotification(applicationContext)
-                          }
-                        }
-                      }
-                    },
-                    onFailure = { error ->
-                      Log.d(
-                          "WorkerSuddenBump", "Retrieval of friends position encountered an issue")
+                repository.isFriendsInRadius(
+                    location,
+                    friends,
+                    radius,
+                    onSuccess = { showFriendNearbyNotification(applicationContext) },
+                    onFailure = {
+                      Log.d("WorkerSuddenBump", "isFriendsInRadius encountered an issue")
                     })
               },
-              onFailure = { error ->
+              onFailure = {
                 Log.d("WorkerSuddenBump", "Retrieval of friends encountered an issue")
               })
 

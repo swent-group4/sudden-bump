@@ -404,29 +404,32 @@ class UserViewModelTest {
   }
 
   @Test
-  fun loadFriendsLocations_success() {
+  fun loadFriends_success() {
+
+    val friendLocation =
+        MutableStateFlow(
+            Location("mock_provider").apply {
+              latitude = 1.0
+              longitude = 1.0
+            })
+
     // Arrange
     val friend =
-        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
-    val friendLocation =
-        Location("mock_provider").apply {
-          latitude = 1.0
-          longitude = 1.0
-        }
-    val friendsMap = mapOf(friend to friendLocation)
+        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", friendLocation)
+    val friendsList = listOf(friend)
 
     // Mock the repository method to call the onSuccess callback with the friendsMap
-    whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
-      val onSuccess = it.getArgument<(Map<User, Location?>) -> Unit>(1)
-      onSuccess(friendsMap)
+    whenever(userRepository.getUserFriends(any(), any(), any())).thenAnswer {
+      val onSuccess = it.getArgument<(List<User>) -> Unit>(1)
+      onSuccess(friendsList)
     }
 
     // Act
-    runBlocking { userViewModel.loadFriendsLocations() }
+    runBlocking { userViewModel.loadFriends() }
 
     // Assert
-    assertThat(userViewModel.friendsLocations.value, `is`(friendsMap))
-    verify(userRepository).getFriendsLocation(any(), any(), any())
+    assertThat(userViewModel.getUserFriends().value, `is`(friendsList))
+    verify(userRepository).getUserFriends(any(), any(), any())
   }
 
   @Test
@@ -438,17 +441,17 @@ class UserViewModelTest {
     userViewModel = UserViewModel(userRepository, chatRepository) // Instantiate the ViewModel
 
     // Mock repository method to simulate a failure
-    whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
+    whenever(userRepository.getUserFriends(any(), any(), any())).thenAnswer {
       val onFailure = it.getArgument<(Exception) -> Unit>(2)
       onFailure(exception)
     }
 
     // Act
-    userViewModel.loadFriendsLocations()
+    userViewModel.loadFriends()
     testDispatcher.scheduler.advanceUntilIdle() // Ensure coroutines complete
 
     // Assert
-    verify(userRepository).getFriendsLocation(any(), any(), any())
+    verify(userRepository).getUserFriends(any(), any(), any())
     // Additional checks can be added to validate that the error state is handled properly
   }
 
@@ -467,7 +470,7 @@ class UserViewModelTest {
     val friendsMap = mapOf(friend to friendLocation.value)
 
     // Mock repository method for loading friend locations
-    whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
+    whenever(userRepository.getUserFriends(any(), any(), any())).thenAnswer {
       val onSuccess = it.getArgument<(Map<User, Location?>) -> Unit>(1)
       onSuccess(friendsMap)
     }

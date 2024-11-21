@@ -1,6 +1,5 @@
 package com.swent.suddenbump.model.user
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.location.LocationManager
@@ -239,7 +238,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Deletes a user account by user ID.
    *
-   * @param id The user ID of the account to delete.
+   * @param uid The user ID of the account to delete.
    * @param onSuccess Called when the account deletion is successful.
    * @param onFailure Called with an exception if deletion fails.
    */
@@ -366,36 +365,40 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
           val mutableFriendsUidList = friendsUidList.toMutableList()
 
-          if (fid in mutableFriendRequestsUidList) {
-            mutableFriendRequestsUidList.remove(fid)
-            mutableFriendsUidList.add(fid)
-            db.collection(usersCollectionPath)
-                .document(uid)
-                .update("friendRequests", mutableFriendRequestsUidList)
-                .addOnFailureListener { e -> onFailure(e) }
-                .addOnSuccessListener {
-                  db.collection(usersCollectionPath)
-                      .document(uid)
-                      .update("friendsList", mutableFriendsUidList)
-                      .addOnFailureListener { e -> onFailure(e) }
-                      .addOnSuccessListener { onSuccess() }
-                }
-          } else if (fid in sentFriendRequestsUidList) {
-            mutableFriendRequestsUidList.remove(fid)
-            mutableFriendsUidList.add(fid)
-            db.collection(usersCollectionPath)
-                .document(uid)
-                .update("sentFriendRequests", mutableFriendRequestsUidList)
-                .addOnFailureListener { e -> onFailure(e) }
-                .addOnSuccessListener {
-                  db.collection(usersCollectionPath)
-                      .document(uid)
-                      .update("friendsList", mutableFriendsUidList)
-                      .addOnFailureListener { e -> onFailure(e) }
-                      .addOnSuccessListener { onSuccess() }
-                }
-          } else {
-            onFailure(Exception("Friend request not found"))
+          when (fid) {
+            in mutableFriendRequestsUidList -> {
+              mutableFriendRequestsUidList.remove(fid)
+              mutableFriendsUidList.add(fid)
+              db.collection(usersCollectionPath)
+                  .document(uid)
+                  .update("friendRequests", mutableFriendRequestsUidList)
+                  .addOnFailureListener { e -> onFailure(e) }
+                  .addOnSuccessListener {
+                    db.collection(usersCollectionPath)
+                        .document(uid)
+                        .update("friendsList", mutableFriendsUidList)
+                        .addOnFailureListener { e -> onFailure(e) }
+                        .addOnSuccessListener { onSuccess() }
+                  }
+            }
+            in sentFriendRequestsUidList -> {
+              mutableFriendRequestsUidList.remove(fid)
+              mutableFriendsUidList.add(fid)
+              db.collection(usersCollectionPath)
+                  .document(uid)
+                  .update("sentFriendRequests", mutableFriendRequestsUidList)
+                  .addOnFailureListener { e -> onFailure(e) }
+                  .addOnSuccessListener {
+                    db.collection(usersCollectionPath)
+                        .document(uid)
+                        .update("friendsList", mutableFriendsUidList)
+                        .addOnFailureListener { e -> onFailure(e) }
+                        .addOnSuccessListener { onSuccess() }
+                  }
+            }
+            else -> {
+              onFailure(Exception("Friend request not found"))
+            }
           }
         }
 
@@ -834,43 +837,22 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
 
-  /**
-   * Retrieves the locations of the specified user's friends.
-   *
-   * @param userFriendsList A list of friends for whom locations are to be retrieved.
-   * @param onSuccess Called with a map of User objects to their last known Location if retrieval
-   *   succeeds.
-   * @param onFailure Called with an exception if retrieval fails.
-   */
-  @SuppressLint("SuspiciousIndentation")
-  override fun getFriendsLocation(
-      userFriendsList: List<User>,
-      onSuccess: (Map<User, Location?>) -> Unit,
+  override fun isFriendsInRadius(
+      userLocation: Location,
+      friends: List<User>,
+      radius: Double,
+      onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    Log.d("FriendsMarkers", "Launched")
-
-    val friendsLocations = mutableMapOf<User, Location?>()
-    runBlocking {
-      try {
-        for (userFriend in userFriendsList) {
-          val documentSnapshot =
-              db.collection(usersCollectionPath).document(userFriend.uid).get().await()
-          Log.d("FriendsMarkers", "Doc SNap $documentSnapshot")
-          if (documentSnapshot.exists()) {
-            val friendSnapshot = documentSnapshot.data
-            val friendLocation =
-                helper.locationParser(friendSnapshot!!["lastKnownLocation"].toString())
-            friendsLocations[userFriend] = friendLocation
-            Log.d("FriendsMarkers", "Succeeded Friends Locations ${userFriend}, ${friendLocation}")
-          }
-        }
-      } catch (e: Exception) {
-        Log.e(logTag, e.toString())
-        onFailure(e)
-      }
+    var inRadius = false
+    friends.forEach { friend ->
+      inRadius = inRadius || userLocation.distanceTo(friend.lastKnownLocation.value) < radius
     }
-    onSuccess(friendsLocations)
+    if (inRadius) {
+      onSuccess()
+    } else {
+      onFailure(Exception("No friends in radius"))
+    }
   }
 
   /**
@@ -1024,7 +1006,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
  * Helper class for UserRepositoryFirestore, providing methods for converting User objects to
  * Firestore data maps, and utilities for parsing and converting location data.
  */
-internal class UserRepositoryFirestoreHelper() {
+internal class UserRepositoryFirestoreHelper {
   /**
    * Converts a User object into a map representation suitable for Firestore.
    *
@@ -1048,8 +1030,8 @@ internal class UserRepositoryFirestoreHelper() {
    * @return The location as a formatted String.
    */
   fun locationToString(lastKnownLocation: Location?): String {
-    if (lastKnownLocation != null) {
-      return "{" +
+    return if (lastKnownLocation != null) {
+      "{" +
           "provider=" +
           lastKnownLocation.provider +
           ", latitude=" +
@@ -1057,7 +1039,7 @@ internal class UserRepositoryFirestoreHelper() {
           ", longitude=" +
           lastKnownLocation.longitude.toString() +
           "}"
-    } else return "{" + "provider= " + "latitude= " + ", " + "longitude= " + "}"
+    } else "{" + "provider= " + "latitude= " + ", " + "longitude= " + "}"
   }
 
   /**

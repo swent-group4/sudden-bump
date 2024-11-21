@@ -3,7 +3,6 @@ package com.swent.suddenbump.model.user
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -42,9 +41,8 @@ open class UserViewModel(
   private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
   val chatSummaries: Flow<List<ChatSummary>> = _chatSummaries.asStateFlow()
   private val profilePicture = ImageBitMapIO()
-  val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
-  val locationDummy =
+  private val locationDummy =
       MutableStateFlow(
           Location("dummy").apply {
             latitude = 0.0 // Set latitude
@@ -394,23 +392,21 @@ open class UserViewModel(
     repository.updateTimestamp(user.uid, timestamp, onSuccess, onFailure)
   }
 
-  fun loadFriendsLocations() {
+  fun loadFriends() {
     try {
-      Log.i(logTag, "1: ${_userFriends.value.toString()}")
-      println("1: ${_userFriends.value.toString()}")
-      Log.i(logTag, "2: ${getUserFriends().value.toString()}")
-      println("2: ${getUserFriends().value.toString()}")
-      repository.getFriendsLocation(
-          _userFriends.value,
-          onSuccess = { friendsLoc ->
+      Log.i(logTag, "1: ${_userFriends.value}")
+      Log.i(logTag, "2: ${getUserFriends().value}")
+      repository.getUserFriends(
+          uid = _user.value.uid,
+          onSuccess = { friends ->
             // Update the state with the locations of friends
-            friendsLocations.value = friendsLoc
-            Log.d("FriendsMarkers", "On success load Friends Locations ${friendsLocations.value}")
-            println("On success load Friends Locations ${friendsLocations.value}")
+            _userFriends.value = friends
+            Log.d("FriendsMarkers", "On success load Friends ${_userFriends.value}")
+            println("On success load Friends $friends")
           },
           onFailure = { error ->
             // Handle the error, e.g., log or show error message
-            Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
+            Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
             println("exception1")
           })
     } catch (e: Exception) {
@@ -429,7 +425,7 @@ open class UserViewModel(
   }
 
   fun getRelativeDistance(friend: User): Float {
-    loadFriendsLocations()
+    loadFriends()
     val userLocation = _user.value.lastKnownLocation.value
     val friendLocation = friend.lastKnownLocation.value
     if ((userLocation == locationDummy.value || friendLocation == locationDummy.value)) {
@@ -439,15 +435,11 @@ open class UserViewModel(
   }
 
   fun isFriendsInRadius(radius: Int): Boolean {
-    loadFriendsLocations()
-    friendsLocations.value.values.forEach { friendLocation ->
-      if (friendLocation != null) {
-        Log.d(
-            "FriendsRadius",
-            "Friends Locations: ${_user.value.lastKnownLocation.value.distanceTo(friendLocation)}")
-        if (_user.value.lastKnownLocation.value.distanceTo(friendLocation) <= radius) {
-          return true
-        }
+    loadFriends()
+    _userFriends.value.forEach { friend ->
+      if (_user.value.lastKnownLocation.value.distanceTo(friend.lastKnownLocation.value) <=
+          radius) {
+        return true
       }
     }
     return false

@@ -6,7 +6,6 @@ import android.location.Location
 import android.os.Looper
 import android.os.Looper.getMainLooper
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.tasks.OnCompleteListener
@@ -2082,7 +2081,7 @@ class UserRepositoryFirestoreTest {
             "friend2@example.com",
             lastKnownLocation = location)
 
-    val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
+    val userFriends = MutableStateFlow<List<User>>(emptyList())
 
     val location1 = mock(Location::class.java)
     val snapshot1 = mock(DocumentSnapshot::class.java)
@@ -2094,22 +2093,22 @@ class UserRepositoryFirestoreTest {
 
     // Mock the user repository to return the snapshots
     val userRepositoryFirestore = mock(UserRepositoryFirestore::class.java)
-    whenever(userRepositoryFirestore.getFriendsLocation(any(), any(), any())).thenAnswer {
-      val onSuccess = it.getArgument<(Map<User, Location?>) -> Unit>(1)
-      val result = mapOf(friend1 to location1, friend2 to null)
+    whenever(userRepositoryFirestore.getUserFriends(any(), any(), any())).thenAnswer {
+      val onSuccess = it.getArgument<(List<User>) -> Unit>(1)
+      val result = listOf(friend1, friend2)
       onSuccess(result)
     }
 
-    // Define the expected map
-    val expectedMap = mapOf(friend1 to location1, friend2 to null)
+    // Define the expected list
+    val expectedList = listOf(friend1, friend2)
 
     // When
-    userRepositoryFirestore.getFriendsLocation(
-        listOf(friend1, friend2),
-        onSuccess = { friendsLoc ->
+    userRepositoryFirestore.getUserFriends(
+        user.uid,
+        onSuccess = { friends ->
           // Update the state with the locations of friends
-          friendsLocations.value = friendsLoc
-          assertEquals(expectedMap, friendsLoc)
+          userFriends.value = friends
+          assertEquals(expectedList, friends)
         },
         onFailure = { error ->
           // Handle the error, e.g., log or show error message
@@ -2125,11 +2124,11 @@ class UserRepositoryFirestoreTest {
     whenever(snapshot2.get("lastKnownLocation")).thenReturn(null)
 
     // When
-    userRepositoryFirestore.getFriendsLocation(
-        listOf(),
-        { friendsLoc ->
+    userRepositoryFirestore.getUserFriends(
+        user.uid,
+        { friends ->
           // Then
-          assert(friendsLoc == emptyMap<User, Location>())
+          assert(friends == emptyList<User>())
         },
         { fail("Failure callback should not be called") })
   }
