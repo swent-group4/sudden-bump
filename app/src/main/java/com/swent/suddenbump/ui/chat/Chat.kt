@@ -56,10 +56,7 @@ import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
-import com.swent.suddenbump.ui.theme.Purple40
 import com.swent.suddenbump.ui.theme.purple
-import com.swent.suddenbump.ui.theme.violetColor
-import com.swent.suddenbump.ui.theme.VibrantPurple
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -175,13 +172,12 @@ fun MessageBubble(data: ListItem.Messages, user: User) {
                 CardDefaults.cardColors(
                     containerColor = if (message.senderId == user.uid) purple else Color.White,
                 ),
-            shape = RoundedCornerShape(
-                topStart = 48f,
-                topEnd = 48f,
-                bottomStart = if (message.senderId == user.uid)  48f else 0f,
-                bottomEnd = if (message.senderId == user.uid)  0f else 48f
-            )
-            ,
+            shape =
+                RoundedCornerShape(
+                    topStart = 48f,
+                    topEnd = 48f,
+                    bottomStart = if (message.senderId == user.uid) 48f else 0f,
+                    bottomEnd = if (message.senderId == user.uid) 0f else 48f),
             border = BorderStroke(1.dp, Color.White)) {
               Text(
                   text = message.content,
