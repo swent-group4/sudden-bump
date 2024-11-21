@@ -140,6 +140,8 @@ buildscript {
 dependencies {
     // Firebase BoM
     implementation(platform(libs.firebase.bom))
+    implementation(libs.androidx.navigation.testing)
+    implementation(libs.androidx.ui.test.android)
     testImplementation(platform(libs.firebase.bom))
     androidTestImplementation(platform(libs.firebase.bom))
 
