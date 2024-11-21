@@ -70,6 +70,8 @@ class EditMeetingScreenTest {
     composeTestRule.onNodeWithTag("Back").assertIsDisplayed()
     // Input location
     composeTestRule.onNodeWithTag("Location").assertIsDisplayed()
+    // Edit date icon button
+    composeTestRule.onNodeWithTag("DateIconButton").assertIsDisplayed()
     // Input date
     composeTestRule.onNodeWithTag("Date").assertIsDisplayed()
     // Click save button
