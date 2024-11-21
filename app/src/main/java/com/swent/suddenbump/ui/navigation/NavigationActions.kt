@@ -32,6 +32,7 @@ object Screen {
   const val CHAT = "Chat Page"
   const val ADD_MEETING = "Add Meeting Screen"
   const val EDIT_MEETING = "Edit Meeting Screen"
+  const val PENDING_MEETINGS = "Pending Meetings Screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)
