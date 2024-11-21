@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.authentication
 
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -71,6 +72,7 @@ class SignUpScreenTest {
 
   @Test
   fun testInputFields_interaction() {
+    Log.d("SignUpDebug", "user last name : ${userViewModel.user?.lastName}")
     // Set the initial content for testing
     composeTestRule.setContent { SignUpScreen(navigationActions, userViewModel) }
 

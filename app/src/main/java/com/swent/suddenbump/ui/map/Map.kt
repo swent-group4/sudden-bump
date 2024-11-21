@@ -20,10 +20,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -42,8 +40,6 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -68,7 +64,6 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
   val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) } // Track if the zoom has been performed
-  val context = LocalContext.current
 
   LaunchedEffect(location) {
     location?.let {
@@ -80,32 +75,8 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
 
         fetchLocationToServer(location, userViewModel)
 
-        if (userViewModel.isFriendsInRadius(8000)) {
-          Log.d("FriendsRadius", "isTriggered")
-          showFriendNearbyNotification(context) // Show notification}
-        }
-
         zoomDone = true // Mark zoom as done
       }
-    }
-  }
-
-  val currentLocation by rememberUpdatedState(location)
-
-  LaunchedEffect(Unit) {
-    while (isActive) {
-      Log.d("CoroutineStatus", "Coroutine is running")
-
-      currentLocation?.let {
-        fetchLocationToServer(currentLocation!!, userViewModel)
-        if (userViewModel.isFriendsInRadius(8000)) {
-          Log.d("FriendsRadius", "isTriggered")
-          showFriendNearbyNotification(context) // Show notification}
-        }
-      } ?: Log.d("LocationUpdate", "Location is null")
-
-      // Delay for 5 minutes (300,000 milliseconds)
-      delay(300_000) // Adjusted back to 5 minutes
     }
   }
 
@@ -128,27 +99,28 @@ fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
 
 @Composable
 fun FriendsMarkers(userViewModel: UserViewModel) {
-  val friendsLocations = remember { mutableStateOf<Map<User, Location?>>(emptyMap()) }
+  val friends = remember { mutableStateOf<List<User>>(emptyList()) }
 
   LaunchedEffect(userViewModel) {
     launch {
-      userViewModel.loadFriendsLocations()
-      friendsLocations.value = userViewModel.friendsLocations.value
+      userViewModel.loadFriends()
+      friends.value = userViewModel.getUserFriends().value
       // Log the friendsLocations
-      Log.d("FriendsMarkers", "Friends Locations: ${friendsLocations}")
+      Log.d("FriendsMarkers", "Friends Locations: $friends")
     }
   }
 
-  friendsLocations.value.let { locations ->
-    locations.forEach { (friend, location) ->
-      location?.let {
-        Marker(
-            state = MarkerState(position = LatLng(it.latitude, it.longitude)),
-            title = friend.firstName,
-            snippet = friend.uid,
-        )
-      }
-    }
+  friends.value.forEach { friend ->
+    Marker(
+        state =
+            MarkerState(
+                position =
+                    LatLng(
+                        friend.lastKnownLocation.value.latitude,
+                        friend.lastKnownLocation.value.longitude)),
+        title = friend.firstName,
+        snippet = friend.uid,
+    )
   }
 }
 

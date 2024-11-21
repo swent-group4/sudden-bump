@@ -3,7 +3,6 @@ package com.swent.suddenbump.model.user
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -42,9 +41,8 @@ open class UserViewModel(
   private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
   val chatSummaries: Flow<List<ChatSummary>> = _chatSummaries.asStateFlow()
   private val profilePicture = ImageBitMapIO()
-  val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
-  val locationDummy =
+  private val locationDummy =
       MutableStateFlow(
           Location("dummy").apply {
             latitude = 0.0 // Set latitude
@@ -120,12 +118,12 @@ open class UserViewModel(
           scheduleLocationUpdateWorker(getApplicationContext(), _user.value.uid)
           Log.d(logTag, "User set 1: ${_user.value}")
           repository.getUserFriends(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { friendsList ->
                 Log.d(logTag, friendsList.toString())
                 _userFriends.value = friendsList
                 repository.getBlockedFriends(
-                    user = _user.value,
+                    uid = _user.value.uid,
                     onSuccess = { blockedFriendsList ->
                       _blockedFriends.value = blockedFriendsList
                     },
@@ -133,15 +131,15 @@ open class UserViewModel(
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getSentFriendRequests(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getUserFriendRequests(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getRecommendedFriends(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { recommendedFriendsList ->
                 _recommendedFriends.value = recommendedFriendsList
               },
@@ -163,12 +161,12 @@ open class UserViewModel(
         onSuccess = {
           _user.value = it
           repository.getUserFriends(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { friendsList ->
                 Log.i(logTag, friendsList.toString())
                 _userFriends.value = friendsList
                 repository.getBlockedFriends(
-                    user = _user.value,
+                    uid = _user.value.uid,
                     onSuccess = { blockedFriendsList ->
                       _blockedFriends.value = blockedFriendsList
                       onSuccess()
@@ -177,15 +175,15 @@ open class UserViewModel(
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getSentFriendRequests(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getUserFriendRequests(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getRecommendedFriends(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { recommendedFriendsList ->
                 _recommendedFriends.value = recommendedFriendsList
               },
@@ -247,7 +245,7 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.createFriend(user, friend, onSuccess, onFailure)
+    repository.createFriend(user.uid, friend.uid, onSuccess, onFailure)
     _userFriendRequests.value = _userFriendRequests.value.minus(friend)
     _userFriends.value = _userFriends.value.plus(friend)
   }
@@ -266,7 +264,7 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.deleteFriendRequest(user, friend, onSuccess, onFailure)
+    repository.deleteFriendRequest(user.uid, friend.uid, onSuccess, onFailure)
     _userFriendRequests.value = _userFriendRequests.value.minus(friend)
   }
 
@@ -284,7 +282,7 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.createFriendRequest(user, friend, onSuccess, onFailure)
+    repository.createFriendRequest(user.uid, friend.uid, onSuccess, onFailure)
     _sentFriendRequests.value = _sentFriendRequests.value.plus(friend)
   }
 
@@ -330,7 +328,7 @@ open class UserViewModel(
       onFailure: (Exception) -> Unit
   ) {
     _userFriends.value = friendsList
-    repository.setUserFriends(user, friendsList, onSuccess, onFailure)
+    repository.setUserFriends(user.uid, friendsList, onSuccess, onFailure)
   }
 
   fun getUserRecommendedFriends(): StateFlow<List<User>> {
@@ -352,7 +350,7 @@ open class UserViewModel(
       onFailure: (Exception) -> Unit
   ) {
     _blockedFriends.value = blockedFriendsList
-    repository.setBlockedFriends(user, blockedFriendsList, onSuccess, onFailure)
+    repository.setBlockedFriends(user.uid, blockedFriendsList, onSuccess, onFailure)
   }
 
   fun getLocation(): StateFlow<Location> {
@@ -374,7 +372,7 @@ open class UserViewModel(
       onFailure: (Exception) -> Unit
   ) {
     _user.value.lastKnownLocation.value = location
-    repository.updateLocation(user, location, onSuccess, onFailure)
+    repository.updateUserLocation(user.uid, location, onSuccess, onFailure)
   }
 
   /**
@@ -391,26 +389,24 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.updateTimestamp(user, timestamp, onSuccess, onFailure)
+    repository.updateTimestamp(user.uid, timestamp, onSuccess, onFailure)
   }
 
-  fun loadFriendsLocations() {
+  fun loadFriends() {
     try {
-      Log.i(logTag, "1: ${_userFriends.value.toString()}")
-      println("1: ${_userFriends.value.toString()}")
-      Log.i(logTag, "2: ${getUserFriends().value.toString()}")
-      println("2: ${getUserFriends().value.toString()}")
-      repository.getFriendsLocation(
-          _userFriends.value,
-          onSuccess = { friendsLoc ->
+      Log.i(logTag, "1: ${_userFriends.value}")
+      Log.i(logTag, "2: ${getUserFriends().value}")
+      repository.getUserFriends(
+          uid = _user.value.uid,
+          onSuccess = { friends ->
             // Update the state with the locations of friends
-            friendsLocations.value = friendsLoc
-            Log.d("FriendsMarkers", "On success load Friends Locations ${friendsLocations.value}")
-            println("On success load Friends Locations ${friendsLocations.value}")
+            _userFriends.value = friends
+            Log.d("FriendsMarkers", "On success load Friends ${_userFriends.value}")
+            println("On success load Friends $friends")
           },
           onFailure = { error ->
             // Handle the error, e.g., log or show error message
-            Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
+            Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
             println("exception1")
           })
     } catch (e: Exception) {
@@ -429,7 +425,7 @@ open class UserViewModel(
   }
 
   fun getRelativeDistance(friend: User): Float {
-    loadFriendsLocations()
+    loadFriends()
     val userLocation = _user.value.lastKnownLocation.value
     val friendLocation = friend.lastKnownLocation.value
     if ((userLocation == locationDummy.value || friendLocation == locationDummy.value)) {
@@ -439,15 +435,11 @@ open class UserViewModel(
   }
 
   fun isFriendsInRadius(radius: Int): Boolean {
-    loadFriendsLocations()
-    friendsLocations.value.values.forEach { friendLocation ->
-      if (friendLocation != null) {
-        Log.d(
-            "FriendsRadius",
-            "Friends Locations: ${_user.value.lastKnownLocation.value.distanceTo(friendLocation)}")
-        if (_user.value.lastKnownLocation.value.distanceTo(friendLocation) <= radius) {
-          return true
-        }
+    loadFriends()
+    _userFriends.value.forEach { friend ->
+      if (_user.value.lastKnownLocation.value.distanceTo(friend.lastKnownLocation.value) <=
+          radius) {
+        return true
       }
     }
     return false
