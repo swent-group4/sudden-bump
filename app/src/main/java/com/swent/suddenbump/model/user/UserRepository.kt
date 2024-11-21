@@ -27,6 +27,16 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
+  fun createFriendHelper(
+      friendRequestsUidList: MutableList<String>,
+      friendsUidList: MutableList<String>,
+      uid: String,
+      fid: String,
+      updateField: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
   fun deleteFriendRequest(
       uid: String,
       fid: String,

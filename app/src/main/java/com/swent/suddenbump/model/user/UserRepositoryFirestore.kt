@@ -367,34 +367,24 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
 
           when (fid) {
             in mutableFriendRequestsUidList -> {
-              mutableFriendRequestsUidList.remove(fid)
-              mutableFriendsUidList.add(fid)
-              db.collection(usersCollectionPath)
-                  .document(uid)
-                  .update("friendRequests", mutableFriendRequestsUidList)
-                  .addOnFailureListener { e -> onFailure(e) }
-                  .addOnSuccessListener {
-                    db.collection(usersCollectionPath)
-                        .document(uid)
-                        .update("friendsList", mutableFriendsUidList)
-                        .addOnFailureListener { e -> onFailure(e) }
-                        .addOnSuccessListener { onSuccess() }
-                  }
+              createFriendHelper(
+                  mutableFriendRequestsUidList,
+                  mutableFriendsUidList,
+                  uid,
+                  fid,
+                  "friendRequests",
+                  onSuccess,
+                  onFailure)
             }
             in sentFriendRequestsUidList -> {
-              mutableFriendRequestsUidList.remove(fid)
-              mutableFriendsUidList.add(fid)
-              db.collection(usersCollectionPath)
-                  .document(uid)
-                  .update("sentFriendRequests", mutableFriendRequestsUidList)
-                  .addOnFailureListener { e -> onFailure(e) }
-                  .addOnSuccessListener {
-                    db.collection(usersCollectionPath)
-                        .document(uid)
-                        .update("friendsList", mutableFriendsUidList)
-                        .addOnFailureListener { e -> onFailure(e) }
-                        .addOnSuccessListener { onSuccess() }
-                  }
+              createFriendHelper(
+                  mutableFriendRequestsUidList,
+                  mutableFriendsUidList,
+                  uid,
+                  fid,
+                  "sentFriendRequests",
+                  onSuccess,
+                  onFailure)
             }
             else -> {
               onFailure(Exception("Friend request not found"))
@@ -444,6 +434,30 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                           }
                     }
               }
+        }
+  }
+
+  override fun createFriendHelper(
+      friendRequestsUidList: MutableList<String>,
+      friendsUidList: MutableList<String>,
+      uid: String,
+      fid: String,
+      updateField: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    friendRequestsUidList.remove(fid)
+    friendsUidList.add(fid)
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .update(updateField, friendRequestsUidList)
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener {
+          db.collection(usersCollectionPath)
+              .document(uid)
+              .update("friendsList", friendsUidList)
+              .addOnFailureListener { e -> onFailure(e) }
+              .addOnSuccessListener { onSuccess() }
         }
   }
 

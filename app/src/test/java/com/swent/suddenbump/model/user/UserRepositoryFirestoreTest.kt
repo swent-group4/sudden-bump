@@ -26,6 +26,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.StorageReference
 import com.swent.suddenbump.model.image.ImageRepository
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
@@ -73,6 +75,8 @@ class UserRepositoryFirestoreTest {
   @Mock private lateinit var firebaseAuthMockStatic: MockedStatic<FirebaseAuth>
   @Mock private lateinit var mockTaskVoid: Task<Void>
   @Mock private lateinit var mockImageRepository: ImageRepository
+  @Mock private lateinit var mockFriendDocumentReference: DocumentReference
+  @Mock private lateinit var mockFriendDocumentSnapshot: DocumentSnapshot
 
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
   private val helper = UserRepositoryFirestoreHelper()
@@ -170,7 +174,8 @@ class UserRepositoryFirestoreTest {
         mockEmailDocumentSnapshot,
         mockFirebaseAuth,
         mockFirebaseUser,
-    )
+        mockFriendDocumentReference,
+        mockFriendDocumentSnapshot)
   }
 
   @Test
@@ -1893,6 +1898,181 @@ class UserRepositoryFirestoreTest {
           verify(friendDocumentReference).update("sentFriendRequests", listOf<String>())
         },
         { fail("onFailure should not be called") })
+  }
+
+  @Test
+  fun createFriend_shouldNotWork() {
+    val user =
+        User(
+            "1",
+            "Alexandre",
+            "Carel",
+            "+33 6 59 20 70 02",
+            null,
+            "alexandre.carel@epfl.ch",
+            lastKnownLocation = location)
+    val friend =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+41 00 000 00 02",
+            null,
+            "jane.doe@example.com",
+            lastKnownLocation = location)
+
+    // Mock the Firestore document snapshots
+    val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val friendDocumentSnapshot = mock(DocumentSnapshot::class.java)
+
+    // Mock the data returned by the document snapshots
+    `when`(userDocumentSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "friendsList" to listOf<String>(),
+                "friendRequests" to listOf(friend.uid),
+                "sentFriendRequests" to listOf<String>()))
+    `when`(friendDocumentSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "friendsList" to listOf<String>(),
+                "friendRequests" to listOf<String>(),
+                "sentFriendRequests" to listOf()))
+
+    // Mock the Firestore document references
+    val userDocumentReference = mock(DocumentReference::class.java)
+    val friendDocumentReference = mock(DocumentReference::class.java)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(user.uid)).thenReturn(userDocumentReference)
+    `when`(userCollectionReference.document(friend.uid)).thenReturn(friendDocumentReference)
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock the get() method to return the document snapshots
+    `when`(userDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
+    `when`(friendDocumentReference.get()).thenReturn(Tasks.forResult(friendDocumentSnapshot))
+
+    // Mock the update() method to return a successful task
+    `when`(userDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+    `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
+
+    // Call the createFriend method
+    userRepository.createFriend(
+        user.uid,
+        friend.uid,
+        {
+          // Verify the updates to the user document
+          verify(userDocumentReference).update("friendRequests", listOf<String>())
+          verify(userDocumentReference).update("friendsList", listOf(friend.uid))
+
+          // Verify the updates to the friend document
+          verify(friendDocumentReference).update("friendsList", listOf(user.uid))
+          verify(friendDocumentReference).update("friendRequests", listOf<String>())
+          verify(friendDocumentReference).update("sentFriendRequests", listOf<String>())
+        },
+        { fail("onFailure should not be called") })
+  }
+
+  @Test
+  fun createFriendFailureWhenGetUserDocumentFails() {
+    val friend =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+41 00 000 00 02",
+            null,
+            "jane.doe@example.com",
+            lastKnownLocation = location)
+    // Arrange
+    val exception = Exception("Failed to get user document")
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forException(exception))
+
+    // Act
+    val latch = CountDownLatch(1)
+    var successCalled = false
+    var failureCalled = false
+    var failureException: Exception? = null
+
+    userRepositoryFirestore.createFriend(
+        user.uid,
+        friend.uid,
+        onSuccess = {
+          successCalled = true
+          latch.countDown()
+        },
+        onFailure = { exception ->
+          failureCalled = true
+          failureException = exception
+          latch.countDown()
+        })
+
+    shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
+
+    // Assert
+    assertFalse(successCalled)
+    assertTrue(failureCalled)
+    assertNotNull(failureException)
+    assertEquals("Failed to get user document", failureException?.message)
+  }
+
+  @Test
+  fun createFriendFailureWhenUpdatingUserDocumentFails() {
+    val friend =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+41 00 000 00 02",
+            null,
+            "jane.doe@example.com",
+            lastKnownLocation = location)
+    // Arrange
+    val exception = Exception("Failed to update user document")
+    val userData =
+        mapOf(
+            "friendsList" to listOf<String>(),
+            "friendRequests" to listOf(friend.uid),
+            "sentFriendRequests" to listOf<String>())
+
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
+    `when`(mockUserDocumentSnapshot.data).thenReturn(userData)
+    `when`(mockUserDocumentReference.update(anyString(), any()))
+        .thenReturn(Tasks.forException(exception))
+
+    // Act
+    val latch = CountDownLatch(1)
+    var successCalled = false
+    var failureCalled = false
+    var failureException: Exception? = null
+
+    userRepositoryFirestore.createFriend(
+        user.uid,
+        friend.uid,
+        onSuccess = {
+          successCalled = true
+          latch.countDown()
+        },
+        onFailure = { exception ->
+          failureCalled = true
+          failureException = exception
+          latch.countDown()
+        })
+
+    shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
+
+    // Assert
+    assertFalse(successCalled)
+    assertTrue(failureCalled)
+    assertNotNull(failureException)
+    assertEquals("Failed to update user document", failureException?.message)
   }
 
   @Test
