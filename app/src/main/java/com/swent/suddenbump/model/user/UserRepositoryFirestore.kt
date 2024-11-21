@@ -770,53 +770,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   }
 
   /**
-   * Gets the last known location of the specified user.
-   *
-   * @param uid The user ID whose location is being retrieved.
-   * @param onSuccess Called with the location when it is successfully retrieved.
-   * @param onFailure Called with an exception if the retrieval fails.
-   */
-  override fun getUserLocation(
-      uid: String,
-      onSuccess: (Location) -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    db.collection(usersCollectionPath)
-        .document(uid)
-        .get()
-        .addOnFailureListener { exception ->
-          // Call onFailure with the exception if there is a failure in fetching the document
-          onFailure(exception)
-        }
-        .addOnCompleteListener { task ->
-          if (task.isSuccessful) {
-            val document = task.result
-            if (document != null && document.exists()) {
-              try {
-                val locationString = document.data?.get("lastKnownLocation")?.toString()
-                if (locationString != null) {
-                  val location = helper.locationParser(locationString)
-                  onSuccess(location) // Call onSuccess with the parsed Location
-                } else {
-                  // Handle the case where the "lastKnownLocation" field is missing or null
-                  onFailure(NullPointerException("Last known location is null"))
-                }
-              } catch (e: Exception) {
-                // Handle any exceptions during parsing
-                onFailure(e)
-              }
-            } else {
-              // Handle the case where the document does not exist
-              onFailure(NullPointerException("User document does not exist"))
-            }
-          } else {
-            // Handle the case where the task was not successful
-            task.exception?.let { onFailure(it) } ?: onFailure(Exception("Unknown error occurred"))
-          }
-        }
-  }
-
-  /**
    * Updates the timestamp for the specified user.
    *
    * @param uid The user id whose timestamp is being updated.

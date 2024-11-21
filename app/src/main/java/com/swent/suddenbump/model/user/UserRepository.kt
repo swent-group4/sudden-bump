@@ -105,8 +105,6 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-  fun getUserLocation(uid: String, onSuccess: (Location) -> Unit, onFailure: (Exception) -> Unit)
-
   fun updateTimestamp(
       uid: String,
       timestamp: Timestamp,
