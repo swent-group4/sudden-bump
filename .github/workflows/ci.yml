@@ -13,6 +13,7 @@ on:
       - 124-connect-google-calendar-to-the-app-to-add-the-meeting-with-your-friends
       - 143-add-and-edit-meetings-on-the-calendar
       - 149-add-ui-improvements
+      - 193-acceptingrejecting-meetings
 
   pull_request:
     types:

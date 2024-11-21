@@ -41,7 +41,7 @@ fun AddMeetingScreen(
         TopAppBar(
             title = {
               Text(
-                  "Add Meeting with ${userViewModel.user?.firstName ?: ""}",
+                  "Ask ${userViewModel.user?.firstName?: ""} to Meet",
                   color = Color.White,
                   modifier = Modifier.testTag("Add New Meeting"))
             },
@@ -104,7 +104,8 @@ fun AddMeetingScreen(
                               friendId = friendId,
                               location = location,
                               date = meetingDate,
-                              creatorId = userViewModel.getCurrentUser().value?.uid ?: "")
+                              creatorId = userViewModel.getCurrentUser().value?.uid ?: "",
+                              accepted = false)
                       meetingViewModel.addMeeting(newMeeting)
                       Toast.makeText(context, "Meeting created successfully", Toast.LENGTH_SHORT)
                           .show()
@@ -115,7 +116,7 @@ fun AddMeetingScreen(
                     }
                   },
                   modifier = Modifier.fillMaxWidth().testTag("Save Meeting")) {
-                    Text("Save Meeting")
+                    Text("Ask to Meet")
                   }
 
               // Show Date Picker Dialog if needed
