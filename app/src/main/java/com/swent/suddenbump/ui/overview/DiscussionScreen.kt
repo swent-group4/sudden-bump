@@ -6,15 +6,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.utils.CustomTopBar
 import com.swent.suddenbump.ui.utils.LabeledButtonSection
@@ -27,8 +25,18 @@ data class SectionData(
 )
 
 @Composable
-fun DiscussionScreen(navigationActions: NavigationActions) {
+fun DiscussionScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val sections = remember { createDiscussionSections() }
+  var showDialog by remember { mutableStateOf(false) }
+
+  if (showDialog) {
+    ConfirmDeleteDialog(
+        onConfirm = {
+          userViewModel.deleteAllMessages()
+          showDialog = false
+        },
+        onDismiss = { showDialog = false })
+  }
 
   Scaffold(
       modifier = Modifier.testTag("discussionScreen").background(Color.Black),
@@ -46,11 +54,35 @@ fun DiscussionScreen(navigationActions: NavigationActions) {
                 LabeledButtonSection(
                     label = section.label,
                     buttonText = section.buttonText,
-                    onClick = { /* TODO: Add logic for each section */},
+                    onClick = {
+                      if (section.buttonTag == "deleteAllChatsButton") {
+                        showDialog = true
+                      }
+                    },
                     labelTag = section.labelTag,
                     buttonTag = section.buttonTag)
               }
             }
+      })
+}
+
+@Composable
+fun ConfirmDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+  AlertDialog(
+      onDismissRequest = onDismiss,
+      title = { Text("Confirm Deletion") },
+      text = {
+        Text("Are you sure you want to delete all messages? This action cannot be undone.")
+      },
+      confirmButton = {
+        TextButton(onClick = onConfirm, modifier = Modifier.testTag("confirmButton")) {
+          Text("Confirm")
+        }
+      },
+      dismissButton = {
+        TextButton(onClick = onDismiss, modifier = Modifier.testTag("cancelButton")) {
+          Text("Cancel")
+        }
       })
 }
 
