@@ -35,46 +35,48 @@ fun PendingMeetingsScreen(
     meetingViewModel: MeetingViewModel,
     userViewModel: UserViewModel
 ) {
-    LaunchedEffect(Unit) { meetingViewModel.getMeetings() }
-    val meetings by meetingViewModel.meetings.collectAsState()
-    val userFriends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
-    val currentUserId = userViewModel.getCurrentUser().value?.uid ?: ""
+  LaunchedEffect(Unit) { meetingViewModel.getMeetings() }
+  val meetings by meetingViewModel.meetings.collectAsState()
+  val userFriends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
+  val currentUserId = userViewModel.getCurrentUser().value?.uid ?: ""
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Pending Meetings", color = Color.White) },
-                navigationIcon = {
-                    IconButton(onClick = { navigationActions.goBack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
-            )
-        },
-        bottomBar = {
-            BottomNavigationMenu(
-                onTabSelect = { route -> navigationActions.navigateTo(route) },
-                tabList = LIST_TOP_LEVEL_DESTINATION,
-                selectedItem = navigationActions.currentRoute(),
-            )
-        },
-        content = { padding ->
-            Column(
-                modifier = Modifier
-                    .padding(padding)
+  Scaffold(
+      topBar = {
+        CenterAlignedTopAppBar(
+            title = {
+              Text(
+                  "Pending Meetings",
+                  color = Color.White,
+                  modifier = Modifier.testTag("Pending Meetings"))
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("Back")) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                  }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black))
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            onTabSelect = { route -> navigationActions.navigateTo(route) },
+            tabList = LIST_TOP_LEVEL_DESTINATION,
+            selectedItem = navigationActions.currentRoute(),
+        )
+      },
+      content = { padding ->
+        Column(
+            modifier =
+                Modifier.padding(padding)
                     .background(Color.Black)
                     .fillMaxSize()
-                    .testTag("pendingMeetingsScreen")
-            ) {
-                ScrollablePendingMeetings(
-                    meetings = meetings.filter { !it.accepted && it.friendId == currentUserId },
-                    userFriends = userFriends,
-                    meetingViewModel = meetingViewModel
-                )
+                    .testTag("pendingMeetingsScreen")) {
+              ScrollablePendingMeetings(
+                  meetings = meetings.filter { !it.accepted && it.friendId == currentUserId },
+                  userFriends = userFriends,
+                  meetingViewModel = meetingViewModel)
             }
-        }
-    )
+      })
 }
 
 @Composable
@@ -83,19 +85,15 @@ fun ScrollablePendingMeetings(
     userFriends: List<User>,
     meetingViewModel: MeetingViewModel,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
+  LazyColumn(
+      modifier = Modifier.fillMaxSize(),
+      contentPadding = PaddingValues(16.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp)) {
         items(meetings) { meeting ->
-            PendingMeetingRow(
-                meeting = meeting,
-                userFriends = userFriends,
-                meetingViewModel = meetingViewModel
-            )
+          PendingMeetingRow(
+              meeting = meeting, userFriends = userFriends, meetingViewModel = meetingViewModel)
         }
-    }
+      }
 }
 
 @Composable
@@ -104,86 +102,75 @@ fun PendingMeetingRow(
     userFriends: List<User>,
     meetingViewModel: MeetingViewModel
 ) {
-    val friend = userFriends.find { it.uid == meeting.friendId || it.uid == meeting.creatorId }
-    val friendName = friend?.let { "${it.firstName} ${it.lastName.first()}." } ?: "Unknown Friend"
-    val formattedDate = formatDate(meeting.date.toDate())
+  val friend = userFriends.find { it.uid == meeting.friendId || it.uid == meeting.creatorId }
+  val friendName = friend?.let { "${it.firstName} ${it.lastName.first()}." } ?: "Unknown Friend"
+  val formattedDate = formatDate(meeting.date.toDate())
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color.White)
-            .padding(16.dp)
-            .testTag("pendingMeetingRow")
-    ) {
+  Column(
+      modifier =
+          Modifier.fillMaxWidth()
+              .clip(RoundedCornerShape(10.dp))
+              .background(Color.White)
+              .padding(16.dp)
+              .testTag("pendingMeetingRow")) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    // Handle row click if needed
+            modifier =
+                Modifier.fillMaxWidth().clickable {
+                  // Handle row click if needed
                 },
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                AsyncImage(
-                    model = "https://avatar.iran.liara.run/public/42",
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(50.dp)
-                        .height(50.dp)
-                        .padding(8.dp)
-                        .testTag("profileImage")
-                )
-                Column {
-                    Text(
-                        text = friendName,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.testTag("userName")
-                    )
-                    Text(
-                        text = "Meet at ${meeting.location} on $formattedDate",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray,
-                        modifier = Modifier.testTag("meetingDetails")
-                    )
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            verticalAlignment = Alignment.CenterVertically) {
+              Row(
+                  horizontalArrangement = Arrangement.spacedBy(8.dp),
+                  verticalAlignment = Alignment.CenterVertically,
+                  modifier = Modifier.weight(1f)) {
+                    AsyncImage(
+                        model = "https://avatar.iran.liara.run/public/42",
+                        contentDescription = null,
+                        modifier =
+                            Modifier.width(50.dp)
+                                .height(50.dp)
+                                .padding(8.dp)
+                                .testTag("profileImage"))
+                    Column {
+                      Text(
+                          text = friendName,
+                          style =
+                              MaterialTheme.typography.titleMedium.copy(
+                                  fontWeight = FontWeight.Bold),
+                          modifier = Modifier.testTag("userName"))
+                      Text(
+                          text = "Meet at ${meeting.location} on $formattedDate",
+                          style = MaterialTheme.typography.bodyMedium,
+                          color = Color.Gray,
+                          modifier = Modifier.testTag("meetingDetails"))
+                    }
+                  }
+              Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = {
-                        val updatedMeeting = meeting.copy(accepted = true)
-                        meetingViewModel.updateMeeting(updatedMeeting)
+                      val updatedMeeting = meeting.copy(accepted = true)
+                      meetingViewModel.updateMeeting(updatedMeeting)
                     },
-                    modifier = Modifier.testTag("acceptButton")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Accept",
-                        tint = Color.Green
-                    )
-                }
+                    modifier = Modifier.testTag("acceptButton")) {
+                      Icon(
+                          imageVector = Icons.Default.Check,
+                          contentDescription = "Accept",
+                          tint = Color.Green)
+                    }
                 IconButton(
                     onClick = { meetingViewModel.deleteMeeting(meeting.meetingId) },
-                    modifier = Modifier.testTag("denyButton")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Decline",
-                        tint = Color.Red
-                    )
-                }
+                    modifier = Modifier.testTag("denyButton")) {
+                      Icon(
+                          imageVector = Icons.Default.Close,
+                          contentDescription = "Decline",
+                          tint = Color.Red)
+                    }
+              }
             }
-        }
         HorizontalDivider(
             color = Color.Gray,
             thickness = 0.5.dp,
-            modifier = Modifier.padding(vertical = 4.dp).testTag("divider")
-        )
-    }
+            modifier = Modifier.padding(vertical = 4.dp).testTag("divider"))
+      }
 }
-

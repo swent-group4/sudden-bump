@@ -46,7 +46,7 @@ fun CalendarMeetingsScreen(
   val meetings by meetingViewModel.meetings.collectAsState()
   val userFriends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
   val currentUserId = userViewModel.getCurrentUser().value?.uid ?: ""
-    val pendingMeetingsCount = meetings.count { !it.accepted && it.friendId == currentUserId }
+  val pendingMeetingsCount = meetings.count { !it.accepted && it.friendId == currentUserId }
 
   // Log the current user ID
   Log.d("CalendarMeetingsScreen", "Current User ID: $currentUserId")
@@ -117,7 +117,10 @@ fun ScrollableInfiniteTimeline(
         }
   }
 
-  MonthYearHeader(monthYear = visibleMonthYear, navigationActions = navigationActions, pendingMeetingsCount = pendingMeetingsCount)
+  MonthYearHeader(
+      monthYear = visibleMonthYear,
+      navigationActions = navigationActions,
+      pendingMeetingsCount = pendingMeetingsCount)
 
   LazyColumn(
       state = listState,
@@ -155,117 +158,114 @@ fun DayRow(
     meetingViewModel: MeetingViewModel,
     currentUserId: String
 ) {
-    val dayFormat = SimpleDateFormat("EEE, d", Locale.getDefault())
+  val dayFormat = SimpleDateFormat("EEE, d", Locale.getDefault())
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .background(com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium)
-            .padding(8.dp)
-            .testTag("dayRow")
-    ) {
+  Column(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(8.dp)
+              .background(com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium)
+              .padding(8.dp)
+              .testTag("dayRow")) {
         Text(
             text = dayFormat.format(day),
             style = MaterialTheme.typography.titleLarge,
             color = Color.White,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+            modifier = Modifier.padding(bottom = 8.dp))
 
-        val filteredMeetings = meetings.filter { it.creatorId == currentUserId || it.friendId == currentUserId }
+        val filteredMeetings =
+            meetings.filter { it.creatorId == currentUserId || it.friendId == currentUserId }
 
         if (filteredMeetings.isNotEmpty()) {
-            Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                filteredMeetings.forEach { meeting ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                            .clickable {
-                                meetingViewModel.selectMeeting(meeting)
-                                navigationActions.navigateTo(Screen.EDIT_MEETING)
-                            }
-                            .background(com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium),
-                        colors = CardDefaults.cardColors(containerColor = com.swent.suddenbump.ui.theme.Pink40)
-                    ) {
-                        val friend = userFriends.find { it.uid == meeting.friendId || it.uid == meeting.creatorId }
-                        val friendName = friend?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown Friend"
-                        val formattedDate = formatDate(meeting.date.toDate())
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(12.dp)
-                        ) {
-                            AsyncImage(
-                                model = "https://avatar.iran.liara.run/public/42",
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .width(50.dp)
-                                    .height(50.dp)
-                                    .padding(8.dp)
-                                    .testTag("profileImage")
-                            )
-                            Column {
-                                Text(
-                                    text = "Meet $friendName at ${meeting.location}",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = Color.White,
-                                    modifier = Modifier.testTag("meetText")
-                                )
-                            }
+          Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+            filteredMeetings.forEach { meeting ->
+              Card(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(8.dp)
+                          .clickable {
+                            meetingViewModel.selectMeeting(meeting)
+                            navigationActions.navigateTo(Screen.EDIT_MEETING)
+                          }
+                          .background(
+                              com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium),
+                  colors =
+                      CardDefaults.cardColors(
+                          containerColor = com.swent.suddenbump.ui.theme.Pink40)) {
+                    val friend =
+                        userFriends.find {
+                          it.uid == meeting.friendId || it.uid == meeting.creatorId
                         }
-                    }
-                }
+                    val friendName =
+                        friend?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown Friend"
+                    val formattedDate = formatDate(meeting.date.toDate())
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(12.dp)) {
+                          AsyncImage(
+                              model = "https://avatar.iran.liara.run/public/42",
+                              contentDescription = null,
+                              modifier =
+                                  Modifier.width(50.dp)
+                                      .height(50.dp)
+                                      .padding(8.dp)
+                                      .testTag("profileImage"))
+                          Column {
+                            Text(
+                                text = "Meet $friendName at ${meeting.location}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White,
+                                modifier = Modifier.testTag("meetText"))
+                          }
+                        }
+                  }
             }
+          }
         } else {
-            Text(
-                text = "No meetings for this day",
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 8.dp),
-                color = Color.White
-            )
+          Text(
+              text = "No meetings for this day",
+              style = MaterialTheme.typography.bodySmall,
+              modifier = Modifier.padding(start = 8.dp),
+              color = Color.White)
         }
-    }
+      }
 }
 
 @Composable
-fun MonthYearHeader(monthYear: String, navigationActions: NavigationActions, pendingMeetingsCount: Int) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-            .testTag("monthYearHeader"),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
+fun MonthYearHeader(
+    monthYear: String,
+    navigationActions: NavigationActions,
+    pendingMeetingsCount: Int
+) {
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("monthYearHeader"),
+      horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = monthYear,
             style = MaterialTheme.typography.headlineSmall,
             color = Color.White,
-            modifier = Modifier.padding(16.dp).testTag("monthYearHeader")
-        )
+            modifier = Modifier.padding(16.dp).testTag("monthYearHeader"))
         BadgedBox(
             badge = {
-                if (pendingMeetingsCount > 0) {
-                    Badge {
-                        Text(
-                            text = pendingMeetingsCount.toString(),
-                            color = Color.White,
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+              if (pendingMeetingsCount > 0) {
+                Badge {
+                  Text(
+                      text = pendingMeetingsCount.toString(),
+                      color = Color.White,
+                      style = MaterialTheme.typography.bodySmall)
                 }
-            }
-        )  {
-            IconButton(onClick = { navigationActions.navigateTo(Screen.PENDING_MEETINGS) }) {
+              }
+            }) {
+              IconButton(onClick = { navigationActions.navigateTo(Screen.PENDING_MEETINGS) }) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "Pending Meetings",
-                    tint = Color.White
-                )
+                    tint = Color.White)
+              }
             }
-        }
-    }
+      }
 }
 
 fun generateDayList(startDate: Calendar, endDate: Calendar): List<Calendar> {

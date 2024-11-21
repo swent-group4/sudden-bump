@@ -94,7 +94,6 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
         "date" to date,
         "friendId" to friendId,
         "creatorId" to creatorId,
-        "accepted" to accepted
-    )
+        "accepted" to accepted)
   }
 }
