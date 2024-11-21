@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -126,7 +127,6 @@ fun MessageItem(
       modifier =
           Modifier.fillMaxWidth()
               .padding(vertical = 8.dp)
-              .testTag("message_item_${message.sender}")
               .clickable {
                 viewModel.user =
                     viewModel.getUserFriends().value.first {
@@ -136,7 +136,8 @@ fun MessageItem(
                               .first()
                     }
                 navigationActions.navigateTo(Screen.CHAT)
-              }) {
+              }
+              .testTag("message_item_${message.sender}")) {
         Image(
             painter = painterResource(R.drawable.profile),
             contentDescription = "Profile Avatar",
@@ -148,7 +149,11 @@ fun MessageItem(
               horizontalArrangement = Arrangement.SpaceBetween,
               modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = convertParticipantsUidToDisplay(message, viewModel),
+                    text =
+                        convertParticipantsUidToDisplay(
+                            message,
+                            viewModel.getCurrentUser().collectAsState().value,
+                            viewModel.getUserFriends().collectAsState().value),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp)
@@ -163,12 +168,12 @@ fun MessageItem(
               horizontalArrangement = Arrangement.SpaceBetween,
               modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "You: ${message.content}",
+                    text = "Display text: ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
-                    maxLines = 1, // Limit text to one line
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.testTag("message_content"))
+                )
 
                 // Notification Badge
                 /*if (message.unreadCount > 0) {

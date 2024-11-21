@@ -41,7 +41,7 @@ open class UserViewModel(
       ChatSummary("1", "message content", "chat456", Timestamp.now(), 0, listOf("1", "2"))
 
   private val logTag = "UserViewModel"
-  private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(listOf(chatSummaryDummy))
+  private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
   val chatSummaries: StateFlow<List<ChatSummary>> = _chatSummaries.asStateFlow()
   private val profilePicture = ImageBitMapIO()
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())

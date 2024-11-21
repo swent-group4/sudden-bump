@@ -1,9 +1,8 @@
 package com.swent.suddenbump.model.chat
 
-import android.util.Log
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
-import com.swent.suddenbump.model.user.UserViewModel
+import com.swent.suddenbump.model.user.User
 
 data class ChatSummary(
     @DocumentId val id: String = "",
@@ -26,15 +25,13 @@ data class ChatSummary(
 /** Helper function to get real names */
 fun convertParticipantsUidToDisplay(
     chatSummary: ChatSummary,
-    userViewModel: UserViewModel
+    currentUser: User,
+    friendsList: List<User>
 ): String {
-  Log.d("Chat", "user Friends : ${userViewModel.getUserFriends().value}")
-  Log.d("Chat", "chatSummary : ${chatSummary.participants}")
-  Log.d("Chat", "currentUser : ${userViewModel.getCurrentUser().value}")
   return chatSummary.participants
-      .filter { stringParticipant -> userViewModel.getCurrentUser().value.uid != stringParticipant }
+      .filter { stringParticipant -> currentUser.uid != stringParticipant }
       .map { it2 ->
-        val correctUser = userViewModel.getUserFriends().value.first { it3 -> it3.uid == it2 }
+        val correctUser = friendsList.first { it3 -> it3.uid == it2 }
         "${correctUser.firstName} ${correctUser.lastName}"
       }
       .joinToString(", ")
