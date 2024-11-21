@@ -21,18 +21,17 @@ import org.mockito.kotlin.verify
 class DiscussionScreenTests {
 
   private lateinit var navigationActions: NavigationActions
+  private lateinit var userViewModel: UserViewModel
 
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
     navigationActions = mock(NavigationActions::class.java)
-    val userViewModel = mock(UserViewModel::class.java) // Add this line
+    userViewModel = mock(UserViewModel::class.java)
 
     composeTestRule.setContent {
-      DiscussionScreen(
-          navigationActions = navigationActions, userViewModel = userViewModel // Add this line
-          )
+      DiscussionScreen(navigationActions = navigationActions, userViewModel = userViewModel)
     }
   }
 
@@ -97,5 +96,67 @@ class DiscussionScreenTests {
         .performScrollToNode(hasTestTag("deleteAllChatsText"))
     composeTestRule.onNodeWithTag("deleteAllChatsText").assertIsDisplayed()
     composeTestRule.onNodeWithTag("deleteAllChatsButton").assertIsDisplayed()
+  }
+
+  @Test
+  fun clickingDeleteAllChatsButtonShowsConfirmDialog() {
+    // Scroll to the "Delete all chats" section and click the delete button
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("deleteAllChatsButton"))
+    composeTestRule.onNodeWithTag("deleteAllChatsButton").performClick()
+
+    // Verify that the confirm delete dialog is displayed
+    composeTestRule.onNodeWithText("Confirm Deletion").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithText(
+            "Are you sure you want to delete all messages? This action cannot be undone.")
+        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag("confirmButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("cancelButton").assertIsDisplayed()
+  }
+
+  @Test
+  fun clickingConfirmButtonCallsDeleteAllMessages() {
+    // Show the delete confirmation dialog
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("deleteAllChatsButton"))
+    composeTestRule.onNodeWithTag("deleteAllChatsButton").performClick()
+
+    // Click on the confirm button
+    composeTestRule.onNodeWithTag("confirmButton").performClick()
+
+    // Verify that deleteAllMessages in userViewModel is called
+    verify(userViewModel).deleteAllMessages()
+  }
+
+  @Test
+  fun clickingCancelButtonDismissesDialog() {
+    // Show the delete confirmation dialog
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("deleteAllChatsButton"))
+    composeTestRule.onNodeWithTag("deleteAllChatsButton").performClick()
+
+    // Click on the cancel button
+    composeTestRule.onNodeWithTag("cancelButton").performClick()
+
+    // Verify that the confirm delete dialog is no longer displayed
+    composeTestRule.onNodeWithText("Confirm Deletion").assertDoesNotExist()
+  }
+
+  @Test
+  fun clickingChangeChatWallpaperButtonTriggersAction() {
+    // Scroll to the "Change chat wallpaper" section and click the button
+    composeTestRule
+        .onNodeWithTag("discussionLazyColumn")
+        .performScrollToNode(hasTestTag("changeChatWallpaperButton"))
+    composeTestRule.onNodeWithTag("changeChatWallpaperButton").performClick()
+
+    // Verify that the action related to changing chat wallpaper would be triggered (this might
+    // involve verifying a method call, navigating, etc.)
+    // Currently, there's no specific method to verify for wallpaper change, this is a placeholder
+    // verify(navigationActions).navigateTo(Screen.CHANGE_WALLPAPER)
   }
 }
