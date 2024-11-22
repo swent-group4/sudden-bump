@@ -57,7 +57,6 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.purple
-import com.swent.suddenbump.ui.theme.violetColor
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -124,12 +123,12 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
                                   CardDefaults.cardColors(
                                       containerColor = Color.White,
                                   ),
-                              shape = RoundedCornerShape(50),
+                              shape = RoundedCornerShape(30),
                               border = BorderStroke(1.dp, Color.White)) {
                                 Text(
                                     text = date,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.sp,
                                     color = purple,
                                     modifier =
                                         Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
@@ -166,13 +165,19 @@ fun MessageBubble(data: ListItem.Messages, user: User) {
             modifier = Modifier.padding(bottom = 4.dp))
 
         // Show the message content
+
         Card(
             modifier = Modifier.widthIn(max = bubbleMaxWidth),
             colors =
                 CardDefaults.cardColors(
-                    containerColor = if (message.senderId == user.uid) violetColor else Color.White,
+                    containerColor = if (message.senderId == user.uid) purple else Color.White,
                 ),
-            shape = RoundedCornerShape(15),
+            shape =
+                RoundedCornerShape(
+                    topStart = 48f,
+                    topEnd = 48f,
+                    bottomStart = if (message.senderId == user.uid) 48f else 0f,
+                    bottomEnd = if (message.senderId == user.uid) 0f else 48f),
             border = BorderStroke(1.dp, Color.White)) {
               Text(
                   text = message.content,
