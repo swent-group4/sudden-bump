@@ -297,8 +297,23 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
               // Button to send verification code
               Button(
                   onClick = {
-                    userViewModel.sendVerificationCode(phoneNumber)
-                    isCodeSent = true
+                    userViewModel.verifyUnusedPhoneNumber(
+                        phoneNumber,
+                        onSuccess = { isUnused ->
+                          if (!isUnused) {
+                            Toast.makeText(
+                                    context, "Phone number already in use", Toast.LENGTH_SHORT)
+                                .show()
+                          } else {
+                            userViewModel.sendVerificationCode(phoneNumber)
+                            isCodeSent = true
+                          }
+                        },
+                        onFailure = {
+                          Toast.makeText(
+                                  context, "Failed to verify phone number", Toast.LENGTH_SHORT)
+                              .show()
+                        })
                   },
                   modifier = Modifier.fillMaxWidth().testTag("sendCodeButton").padding(16.dp),
                   colors =
