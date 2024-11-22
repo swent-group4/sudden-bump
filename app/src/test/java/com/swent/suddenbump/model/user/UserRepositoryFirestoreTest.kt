@@ -8,6 +8,8 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.test.core.app.ApplicationProvider
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.OnFailureListener
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
@@ -57,12 +59,16 @@ class UserRepositoryFirestoreTest {
   @Mock private lateinit var mockFirestore: FirebaseFirestore
   @Mock private lateinit var mockUserCollectionReference: CollectionReference
   @Mock private lateinit var mockEmailCollectionReference: CollectionReference
+  @Mock private lateinit var mockPhoneCollectionReference: CollectionReference
   @Mock private lateinit var mockUserDocumentReference: DocumentReference
   @Mock private lateinit var mockEmailDocumentReference: DocumentReference
+  @Mock private lateinit var mockPhoneDocumentReference: DocumentReference
   @Mock private lateinit var mockUserDocumentSnapshot: DocumentSnapshot
   @Mock private lateinit var mockEmailDocumentSnapshot: DocumentSnapshot
+  @Mock private lateinit var mockPhoneDocumentSnapshot: DocumentSnapshot
   @Mock private lateinit var mockUserQuerySnapshot: QuerySnapshot
   @Mock private lateinit var mockEmailQuerySnapshot: QuerySnapshot
+  @Mock private lateinit var mockPhoneQuerySnapshot: QuerySnapshot
   @Mock private lateinit var mockFirebaseAuth: FirebaseAuth
   @Mock private lateinit var mockFirebaseUser: FirebaseUser
   @Mock private lateinit var firebaseAuthMockStatic: MockedStatic<FirebaseAuth>
@@ -122,7 +128,7 @@ class UserRepositoryFirestoreTest {
                 "uid" to "1",
                 "firstName" to "Alexandre",
                 "lastName" to "Carel",
-                "phoneNumber" to "+33 6 59 20 70 02",
+                "phoneNumber" to "+33659207002",
                 "emailAddress" to "alexandre.carel@epfl.ch"))
 
     `when`(mockFirestore.collection("Emails")).thenReturn(mockEmailCollectionReference)
@@ -130,6 +136,12 @@ class UserRepositoryFirestoreTest {
     `when`(mockEmailCollectionReference.document()).thenReturn(mockEmailDocumentReference)
     `when`(mockEmailDocumentReference.id).thenReturn("alexandre.carel@epfl.ch")
     `when`(mockEmailDocumentSnapshot.data).thenReturn(mapOf("uid" to "1"))
+
+    `when`(mockFirestore.collection("Phones")).thenReturn(mockPhoneCollectionReference)
+    `when`(mockPhoneCollectionReference.document(any())).thenReturn(mockPhoneDocumentReference)
+    `when`(mockPhoneCollectionReference.document()).thenReturn(mockPhoneDocumentReference)
+    `when`(mockPhoneDocumentReference.id).thenReturn("+33659207002")
+    `when`(mockPhoneDocumentSnapshot.data).thenReturn(mapOf("uid" to "1"))
 
     firebaseAuthMockStatic
         .`when`<FirebaseAuth> { FirebaseAuth.getInstance() }
@@ -1043,5 +1055,83 @@ class UserRepositoryFirestoreTest {
 
     // Close the static mock after the test
     phoneAuthProviderMockStatic.close()
+  }
+
+  // inspired by Ilyas's tests for verifyNoAccountExists
+  @Test
+  fun verifyUnusedPhoneNumberCallsDocuments() {
+
+    `when`(mockPhoneCollectionReference.get()).thenReturn(Tasks.forResult(mockPhoneQuerySnapshot))
+    `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
+
+    `when`(mockPhoneDocumentReference.get()).thenReturn(Tasks.forResult(mockPhoneDocumentSnapshot))
+
+    userRepositoryFirestore.verifyUnusedPhoneNumber(
+        user.phoneNumber,
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
+
+    verify(timeout(100)) { (mockUserQuerySnapshot).documents }
+  }
+
+  // inspired by Ilyas's tests for verifyNoAccountExists
+  @Test
+  fun verifyUnusedPhoneNumberSuccessfulWithPhoneNotInResultCallsOnSuccessTrue() {
+    // Arrange
+    val phoneNumber = "+41791234567"
+    val documents = listOf<DocumentSnapshot>() // No emails in the result
+    val mockTask = mock(Task::class.java) as Task<QuerySnapshot>
+    val mockQuerySnapshot = mock(QuerySnapshot::class.java)
+
+    `when`(mockTask.addOnCompleteListener(any())).thenAnswer { invocation ->
+      val listener = invocation.arguments[0] as OnCompleteListener<QuerySnapshot>
+      listener.onComplete(mockTask)
+      mockTask
+    }
+    `when`(mockTask.addOnFailureListener(any())).thenReturn(mockTask)
+    `when`(mockTask.isSuccessful).thenReturn(true)
+    `when`(mockTask.result).thenReturn(mockQuerySnapshot)
+    `when`(mockQuerySnapshot.documents).thenReturn(documents)
+
+    `when`(mockPhoneCollectionReference.get()).thenReturn(mockTask)
+
+    // Act
+    userRepositoryFirestore.verifyUnusedPhoneNumber(
+        phoneNumber = phoneNumber,
+        onSuccess = { result -> assertTrue(result) },
+        onFailure = { fail("Failure callback should not be called") })
+  }
+
+  // inspired by Ilyas's tests for verifyNoAccountExists
+  @Test
+  fun verifyUnusedPhoneNumberFailureCallsOnFailure() {
+    // Arrange
+    val phoneNumber = "+41791234567"
+    val exception = Exception("Query failed")
+    val mockTask = mock(Task::class.java) as Task<QuerySnapshot>
+
+    `when`(mockTask.addOnCompleteListener(any())).thenAnswer { invocation ->
+      val listener = invocation.arguments[0] as OnCompleteListener<QuerySnapshot>
+      listener.onComplete(mockTask)
+      mockTask
+    }
+    `when`(mockTask.addOnFailureListener(any())).thenAnswer { invocation ->
+      val listener = invocation.arguments[0] as OnFailureListener
+      listener.onFailure(exception)
+      mockTask
+    }
+    `when`(mockTask.isSuccessful).thenReturn(false)
+    `when`(mockTask.exception).thenReturn(exception)
+
+    `when`(mockPhoneCollectionReference.get()).thenReturn(mockTask)
+
+    // Act
+    userRepositoryFirestore.verifyUnusedPhoneNumber(
+        phoneNumber = phoneNumber,
+        onSuccess = { fail("Success callback should not be called") },
+        onFailure = { error ->
+          // Assert
+          assertEquals("Query failed", error.message)
+        })
   }
 }

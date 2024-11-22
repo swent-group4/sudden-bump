@@ -42,6 +42,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
 
   private val usersCollectionPath = "Users"
   private val emailCollectionPath = "Emails"
+  private val phoneCollectionPath = "Phones"
 
   private val storage = Firebase.storage("gs://sudden-bump-swent.appspot.com")
   private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
@@ -98,6 +99,32 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   }
 
   /**
+   * Verifies if the given phone number is not associated with any account.
+   *
+   * @param phoneNumber The phone number to verify.
+   * @param onSuccess Called with `true` if the phone number is not associated with any account,
+   *   `false` otherwise.
+   * @param onFailure Called with an exception if the check fails.
+   */
+  override fun verifyUnusedPhoneNumber(
+      phoneNumber: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(phoneCollectionPath)
+        .get()
+        .addOnFailureListener { onFailure(it) }
+        .addOnCompleteListener { result ->
+          if (result.isSuccessful) {
+            val resultPhone = result.result.documents.map { it.id }
+            onSuccess(!resultPhone.contains(phoneNumber))
+          } else {
+            result.exception?.let { onFailure(it) }
+          }
+        }
+  }
+
+  /**
    * Creates a new user account with the given User object and uploads profile picture if available.
    *
    * @param user The User object containing user information.
@@ -131,6 +158,10 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                         onFailure = { e -> onFailure(e) })
                   }
                 }
+            db.collection(phoneCollectionPath)
+                .document(user.phoneNumber)
+                .set(mapOf("uid" to user.uid))
+                .addOnFailureListener { onFailure(it) }
           } else {
             result.exception?.let { onFailure(it) }
           }

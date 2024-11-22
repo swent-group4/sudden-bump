@@ -221,6 +221,14 @@ open class UserViewModel(
     repository.verifyNoAccountExists(emailAddress, onSuccess, onFailure)
   }
 
+  fun verifyUnusedPhoneNumber(
+      phoneNumber: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.verifyUnusedPhoneNumber(phoneNumber, onSuccess, onFailure)
+  }
+
   /**
    * Creates a new user account.
    *

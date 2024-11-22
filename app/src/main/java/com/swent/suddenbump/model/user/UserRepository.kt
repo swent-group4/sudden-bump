@@ -18,6 +18,12 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
+  fun verifyUnusedPhoneNumber(
+      phoneNumber: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
   fun createUserAccount(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun createFriendRequest(

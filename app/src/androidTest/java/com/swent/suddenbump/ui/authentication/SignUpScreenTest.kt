@@ -18,8 +18,11 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.whenever
 
 class SignUpScreenTest {
 
@@ -44,6 +47,22 @@ class SignUpScreenTest {
     firebaseUser = mock(FirebaseUser::class.java)
     `when`(firebaseAuth.currentUser).thenReturn(firebaseUser)
     `when`(firebaseUser.email).thenReturn("test@example.com")
+
+    doAnswer { invocation ->
+          val phoneNumber = invocation.arguments[0] as String
+          val onSuccess = invocation.arguments[1] as (Boolean) -> Unit
+          val onFailure = invocation.arguments[2] as (Exception) -> Unit
+
+          // Simulate a successful call
+          if (phoneNumber == "+41791234567") {
+            onSuccess(false) // Simulate the phone number being used
+          } else {
+            onSuccess(true) // Simulate a failure
+          }
+          null
+        }
+        .whenever(userRepository)
+        .verifyUnusedPhoneNumber(anyOrNull(), anyOrNull(), anyOrNull())
   }
 
   @Test
@@ -118,5 +137,14 @@ class SignUpScreenTest {
 
     // Perform button click
     composeTestRule.onNodeWithTag("profilePictureButton").assertHasClickAction()
+  }
+
+  @Test
+  fun testAlreadyUsedPhoneNumber() {
+
+    composeTestRule.setContent { SignUpScreen(navigationActions, userViewModel) }
+    composeTestRule.onNodeWithTag("phoneField").performTextInput("+41791234567")
+    composeTestRule.onNodeWithTag("sendCodeButton").performClick()
+    composeTestRule.onNodeWithTag("codeField").assertDoesNotExist()
   }
 }

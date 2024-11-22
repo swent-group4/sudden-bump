@@ -668,4 +668,76 @@ class UserViewModelTest {
 
     verify(observer).onChanged("Phone Verified")
   }
+
+  @Test
+  fun verifyUnusedPhoneNumberCallsOnSuccessWhenPhoneNumberIsUnused() {
+    // Arrange
+    val phoneNumber = "+41791234567"
+    val onSuccess = mock<(Boolean) -> Unit>()
+    val onFailure = mock<(Exception) -> Unit>()
+
+    doAnswer { invocation ->
+          val successCallback = invocation.getArgument<(Boolean) -> Unit>(1)
+          successCallback(true) // Simulate that the phone number is unused
+          null
+        }
+        .whenever(userRepository)
+        .verifyUnusedPhoneNumber(eq(phoneNumber), any(), any())
+
+    // Act
+    userViewModel.verifyUnusedPhoneNumber(phoneNumber, onSuccess, onFailure)
+
+    // Assert
+    verify(onSuccess).invoke(true) // Verify onSuccess was called with true
+    verifyNoInteractions(onFailure) // Verify onFailure was not called
+  }
+
+  @Test
+  fun verifyUnusedPhoneNumberInvokesOnSuccessWithFalseWhenPhoneNumberIsInUse() {
+    // Arrange
+    val phoneNumber = "1234567890"
+    val onSuccess = mock<(Boolean) -> Unit>()
+    val onFailure = mock<(Exception) -> Unit>()
+
+    // Mock repository behavior
+    doAnswer { invocation ->
+          val successCallback = invocation.arguments[1] as (Boolean) -> Unit
+          successCallback(false) // Simulate phone number being in use
+          null
+        }
+        .whenever(userRepository)
+        .verifyUnusedPhoneNumber(eq(phoneNumber), any(), any())
+
+    // Act
+    userViewModel.verifyUnusedPhoneNumber(phoneNumber, onSuccess, onFailure)
+
+    // Assert
+    verify(onSuccess).invoke(false) // Verify onSuccess(false) was called
+    verify(onFailure, never()).invoke(any()) // Verify onFailure was never called
+  }
+
+  @Test
+  fun verifyUnusedPhoneNumberInvokesOnFailureWhenAnExceptionOccurs() {
+    // Arrange
+    val phoneNumber = "1234567890"
+    val onSuccess = mock<(Boolean) -> Unit>()
+    val onFailure = mock<(Exception) -> Unit>()
+    val exception = Exception("Test Exception")
+
+    // Mock repository behavior
+    doAnswer { invocation ->
+          val failureCallback = invocation.arguments[2] as (Exception) -> Unit
+          failureCallback(exception) // Simulate an exception
+          null
+        }
+        .whenever(userRepository)
+        .verifyUnusedPhoneNumber(eq(phoneNumber), any(), any())
+
+    // Act
+    userViewModel.verifyUnusedPhoneNumber(phoneNumber, onSuccess, onFailure)
+
+    // Assert
+    verify(onFailure).invoke(exception) // Verify onFailure(exception) was called
+    verify(onSuccess, never()).invoke(any()) // Verify onSuccess was never called
+  }
 }
