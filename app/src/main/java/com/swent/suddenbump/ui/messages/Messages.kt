@@ -168,7 +168,7 @@ fun MessageItem(
               horizontalArrangement = Arrangement.SpaceBetween,
               modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Display text: ${message.content}",
+                    text = "You: ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
                     maxLines = 1,
