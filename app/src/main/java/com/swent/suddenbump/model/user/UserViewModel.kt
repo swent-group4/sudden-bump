@@ -433,7 +433,6 @@ open class UserViewModel(
   }
 
   fun getRelativeDistance(friend: User): Float {
-    loadFriends()
     val userLocation = _user.value.lastKnownLocation.value
     val friendLocation = friend.lastKnownLocation.value
     if ((userLocation == locationDummy.value || friendLocation == locationDummy.value)) {
