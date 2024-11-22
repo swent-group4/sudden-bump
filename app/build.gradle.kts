@@ -12,7 +12,7 @@ plugins {
 
 android {
     namespace = "com.swent.suddenbump"
-    compileSdk = 35
+    compileSdk = 34
 
     // Load the API key from local.properties
     val localProperties = Properties()

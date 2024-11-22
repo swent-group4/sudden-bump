@@ -99,14 +99,14 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { pd ->
-        LazyColumn(
+      content = { pd -> LazyColumn(
             modifier =
                 Modifier.fillMaxHeight()
                     .background(Color.Black)
                     .padding(pd)
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
+
               if (friendsWithin5km.isNotEmpty()) {
                 item { CategoryHeader("Within 5km") }
                 items(friendsWithin5km) { (friend, _) ->
