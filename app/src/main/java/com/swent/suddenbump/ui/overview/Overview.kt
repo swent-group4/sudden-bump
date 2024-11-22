@@ -35,7 +35,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
   val users by userViewModel.getUserFriends().collectAsState()
 
   // Load friends' locations when the screen is composed
-  LaunchedEffect(Unit) { userViewModel.loadFriendsLocations() }
+  LaunchedEffect(Unit) { userViewModel.loadFriends() }
 
   // Compute distances and group friends
   val friendsWithDistances =

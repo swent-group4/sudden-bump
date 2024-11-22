@@ -4,7 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import com.swent.suddenbump.model.LocationGetter
+import com.swent.suddenbump.model.location.LocationGetter
 
 private lateinit var locationGetter: LocationGetter
 
@@ -23,34 +23,6 @@ fun initLocationGetter(context: Context) {
           })
 }
 
-/*fun checkLocationPermissions(context: Context) {
-    val fineLocationGranted =
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED
-
-    val coarseLocationGranted =
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
-                PackageManager.PERMISSION_GRANTED
-
-    lateinit var requestMultiplePermissionsLauncher: ActivityResultLauncher<Array<String>>
-
-    requestMultiplePermissionsLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-                permissions ->
-            handlePermissionResults(permissions)
-        }
-
-    if (fineLocationGranted || coarseLocationGranted) {
-        locationGetter.requestLocationUpdates()
-    } else {
-        // Request permissions
-
-        requestMultiplePermissionsLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
-    }
-}*/
-
 private fun handlePermissionResults(permissions: Map<String, Boolean>) {
   val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
   val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
@@ -65,9 +37,6 @@ private fun handlePermissionResults(permissions: Map<String, Boolean>) {
     }
     backgroundLocationGranted -> {
       locationGetter.requestLocationUpdates()
-    }
-    else -> {
-      // Toast.makeText(this, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
     }
   }
 }

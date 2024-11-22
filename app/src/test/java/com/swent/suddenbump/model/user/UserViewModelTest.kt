@@ -99,10 +99,8 @@ class UserViewModelTest {
         .getUserAccount(any(), any())
 
     doAnswer { invocationOnMock ->
-          val user = invocationOnMock.getArgument<User>(0)
           val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
           val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
-          user
           onSuccess(listOf(user2))
           onFailure(exception)
         }
@@ -110,10 +108,8 @@ class UserViewModelTest {
         .getUserFriends(any(), any(), any())
 
     doAnswer { invocationOnMock ->
-          val user = invocationOnMock.getArgument<User>(0)
           val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
           val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
-          user
           onSuccess(listOf(user2))
           onFailure(exception)
         }
@@ -158,10 +154,8 @@ class UserViewModelTest {
         .getUserAccount(any(), any(), any())
 
     doAnswer { invocationOnMock ->
-          val user = invocationOnMock.getArgument<User>(0)
           val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
           val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
-          user
           onSuccess(listOf(user2))
           onFailure(exception)
         }
@@ -169,10 +163,8 @@ class UserViewModelTest {
         .getUserFriends(any(), any(), any())
 
     doAnswer { invocationOnMock ->
-          val user = invocationOnMock.getArgument<User>(0)
           val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
           val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
-          user
           onSuccess(listOf(user2))
           onFailure(exception)
         }
@@ -278,7 +270,7 @@ class UserViewModelTest {
     userViewModel.acceptFriendRequest(user, friend, {}, {})
 
     // Verify the repository interactions
-    verify(userRepository).createFriend(eq(user), eq(friend), any(), any())
+    verify(userRepository).createFriend(eq(user.uid), eq(friend.uid), any(), any())
 
     // Verify the state updates
     assert(userViewModel.getUserFriends().value.contains(friend))
@@ -319,7 +311,7 @@ class UserViewModelTest {
     userViewModel.declineFriendRequest(user, friend, {}, {})
 
     // Verify the repository interaction
-    verify(userRepository).deleteFriendRequest(eq(user), eq(friend), any(), any())
+    verify(userRepository).deleteFriendRequest(eq(user.uid), eq(friend.uid), any(), any())
 
     // Verify the state update
     assert(!userViewModel.getUserFriendRequests().value.map { it.uid }.contains(friend.uid))
@@ -352,7 +344,7 @@ class UserViewModelTest {
     userViewModel.sendFriendRequest(user, friend, {}, {})
 
     // Verify the repository interactions
-    verify(userRepository).createFriendRequest(eq(user), eq(friend), any(), any())
+    verify(userRepository).createFriendRequest(eq(user.uid), eq(friend.uid), any(), any())
 
     // Verify the state updates
     assert(userViewModel.getSentFriendRequests().value.contains(friend))
@@ -400,7 +392,7 @@ class UserViewModelTest {
     Mockito.`when`(mockLocation.longitude).thenReturn(1.0)
 
     userViewModel.updateLocation(location = mockLocation, onSuccess = {}, onFailure = {})
-    verify(userRepository).updateLocation(any(), any(), any(), any())
+    verify(userRepository).updateUserLocation(any(), any(), any(), any())
     assertThat(userViewModel.getLocation().value.latitude, `is`(1.0))
     assertThat(userViewModel.getLocation().value.longitude, `is`(1.0))
   }
@@ -412,29 +404,32 @@ class UserViewModelTest {
   }
 
   @Test
-  fun loadFriendsLocations_success() {
+  fun loadFriends_success() {
+
+    val friendLocation =
+        MutableStateFlow(
+            Location("mock_provider").apply {
+              latitude = 1.0
+              longitude = 1.0
+            })
+
     // Arrange
     val friend =
-        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
-    val friendLocation =
-        Location("mock_provider").apply {
-          latitude = 1.0
-          longitude = 1.0
-        }
-    val friendsMap = mapOf(friend to friendLocation)
+        User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", friendLocation)
+    val friendsList = listOf(friend)
 
     // Mock the repository method to call the onSuccess callback with the friendsMap
-    whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
-      val onSuccess = it.getArgument<(Map<User, Location?>) -> Unit>(1)
-      onSuccess(friendsMap)
+    whenever(userRepository.getUserFriends(any(), any(), any())).thenAnswer {
+      val onSuccess = it.getArgument<(List<User>) -> Unit>(1)
+      onSuccess(friendsList)
     }
 
     // Act
-    runBlocking { userViewModel.loadFriendsLocations() }
+    runBlocking { userViewModel.loadFriends() }
 
     // Assert
-    assertThat(userViewModel.friendsLocations.value, `is`(friendsMap))
-    verify(userRepository).getFriendsLocation(any(), any(), any())
+    assertThat(userViewModel.getUserFriends().value, `is`(friendsList))
+    verify(userRepository).getUserFriends(any(), any(), any())
   }
 
   @Test
@@ -446,17 +441,17 @@ class UserViewModelTest {
     userViewModel = UserViewModel(userRepository, chatRepository) // Instantiate the ViewModel
 
     // Mock repository method to simulate a failure
-    whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
+    whenever(userRepository.getUserFriends(any(), any(), any())).thenAnswer {
       val onFailure = it.getArgument<(Exception) -> Unit>(2)
       onFailure(exception)
     }
 
     // Act
-    userViewModel.loadFriendsLocations()
+    userViewModel.loadFriends()
     testDispatcher.scheduler.advanceUntilIdle() // Ensure coroutines complete
 
     // Assert
-    verify(userRepository).getFriendsLocation(any(), any(), any())
+    verify(userRepository).getUserFriends(any(), any(), any())
     // Additional checks can be added to validate that the error state is handled properly
   }
 
@@ -475,7 +470,7 @@ class UserViewModelTest {
     val friendsMap = mapOf(friend to friendLocation.value)
 
     // Mock repository method for loading friend locations
-    whenever(userRepository.getFriendsLocation(any(), any(), any())).thenAnswer {
+    whenever(userRepository.getUserFriends(any(), any(), any())).thenAnswer {
       val onSuccess = it.getArgument<(Map<User, Location?>) -> Unit>(1)
       onSuccess(friendsMap)
     }
@@ -525,64 +520,6 @@ class UserViewModelTest {
     // Assert
     assertThat(distance, `is`(Float.MAX_VALUE))
   }
-
-  //    @OptIn(ExperimentalCoroutinesApi::class)
-  //    @Test
-  //    fun test_getOrCreateChat_success() = runTest {
-  //        // Arrange
-  //        val userId = "user123"
-  //        val otherUserId = "user456"
-  //        val chatId = "chat456"
-  //        val messages = listOf(
-  //            Message("msg1", "user123", "Hello", Timestamp(1000, 0), listOf("user123")),
-  //            Message("msg2", "user456", "Hi", Timestamp(1000, 0), listOf("user456"))
-  //        )
-  //
-  //        // Set the user in the ViewModel
-  //        userViewModel.user = User(
-  //            uid = userId,
-  //            firstName = "Test",
-  //            lastName = "User",
-  //            phoneNumber = "",
-  //            profilePicture = null,
-  //            emailAddress = "",
-  //            location
-  //        )
-  //
-  //        // Mock chatRepository.getOrCreateChat to return chatId
-  //        whenever(chatRepository.getOrCreateChat(otherUserId, userId)).thenReturn(chatId)
-  //
-  //        // Use a MutableSharedFlow for messages with replay = 1
-  //        val messagesFlow = MutableSharedFlow<List<Message>>(replay = 1)
-  //        whenever(chatRepository.getMessages(chatId)).thenReturn(messagesFlow)
-  //
-  //        // Start collecting messages from ViewModel before acting
-  //        val collectedMessages = mutableListOf<List<Message>>()
-  //        val job = launch {
-  //            userViewModel.messages.collect {
-  //                collectedMessages.add(it)
-  //                println("Collected messages in ViewModel: $collectedMessages") // Debug log
-  //            }
-  //        }
-  //
-  //        // Act - Start the chat and allow time for ViewModel to call repository methods
-  //        userViewModel.getOrCreateChat(otherUserId)
-  //        advanceTimeBy(1000) // Use manual advance for coroutine timing
-  //
-  //        // Emit messages to the flow
-  //        messagesFlow.emit(messages)
-  //        advanceTimeBy(1000) // Allow time for the emission to propagate
-  //
-  //        // Assert - Check that the emitted messages match
-  //        assertThat(collectedMessages.lastOrNull(), `is`(messages))
-  //
-  //        // Verify that the repository methods were called as expected
-  //        verify(chatRepository).getOrCreateChat(otherUserId, userId)
-  //        verify(chatRepository).getMessages(chatId)
-  //
-  //        // Clean up
-  //        job.cancel()
-  //    }
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test

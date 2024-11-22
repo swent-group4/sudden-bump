@@ -7,6 +7,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.swent.suddenbump.model.location.LocationGetter
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
