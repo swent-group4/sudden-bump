@@ -147,4 +147,21 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
       }
     }
   }
+
+  override suspend fun deleteAllMessages(userId: String) {
+    try {
+      // First, get all chat documents where the current user is a participant
+      val chatSnapshot =
+          firestore.collection("chats").whereArrayContains("participants", userId).get().await()
+      for (chatDocument in chatSnapshot.documents) {
+        // For each chat document, get its "messages" subcollection
+        val messagesSnapshot = chatDocument.reference.collection("messages").get().await()
+        for (messageDocument in messagesSnapshot.documents) {
+          messageDocument.reference.delete().await()
+        }
+      }
+    } catch (e: Exception) {
+      throw Exception("Deletion failed", e)
+    }
+  }
 }

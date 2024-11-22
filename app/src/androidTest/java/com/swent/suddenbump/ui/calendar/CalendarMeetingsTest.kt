@@ -52,7 +52,8 @@ class CalendarMeetingsTest {
   @Test
   fun hasRequiredComponents() {
     composeTestRule.onNodeWithTag("calendarMeetingsScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("monthYearHeader").assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("monthYearHeader")[0].assertIsDisplayed()
+    composeTestRule.onAllNodesWithTag("monthYearHeader")[1].assertIsDisplayed()
     composeTestRule.onAllNodesWithTag("dayRow")[0].assertIsDisplayed()
     composeTestRule.onAllNodesWithTag("dayRow")[1].assertIsDisplayed()
     composeTestRule.onNodeWithTag("bottomNavigationMenu").assertIsDisplayed()

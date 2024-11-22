@@ -20,4 +20,6 @@ interface ChatRepository {
   fun getChatSummaries(userId: String): Flow<List<ChatSummary>>
 
   suspend fun getUserAccount(uid: String): User?
+
+  suspend fun deleteAllMessages(userId: String)
 }

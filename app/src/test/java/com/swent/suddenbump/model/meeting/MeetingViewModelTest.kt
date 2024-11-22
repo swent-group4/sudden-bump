@@ -34,7 +34,8 @@ class MeetingViewModelTest {
           location = "Cafe",
           date = Timestamp(Date(1725494400000)),
           friendId = "FPHuqGkCBo7Iinbo5OO9",
-          creatorId = "P7vuP4bbEQB03OSR3QwJ")
+          creatorId = "P7vuP4bbEQB03OSR3QwJ",
+          accepted = false)
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Before

@@ -7,16 +7,24 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
@@ -38,6 +46,7 @@ fun CalendarMeetingsScreen(
   val meetings by meetingViewModel.meetings.collectAsState()
   val userFriends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
   val currentUserId = userViewModel.getCurrentUser().value?.uid ?: ""
+  val pendingMeetingsCount = meetings.count { !it.accepted && it.friendId == currentUserId }
 
   // Log the current user ID
   Log.d("CalendarMeetingsScreen", "Current User ID: $currentUserId")
@@ -58,11 +67,12 @@ fun CalendarMeetingsScreen(
                     .fillMaxSize()
                     .testTag("calendarMeetingsScreen")) {
               ScrollableInfiniteTimeline(
-                  meetings = meetings,
+                  meetings = meetings.filter { it.accepted },
                   userFriends = userFriends,
                   navigationActions,
                   meetingViewModel,
-                  currentUserId = currentUserId)
+                  currentUserId = currentUserId,
+                  pendingMeetingsCount = pendingMeetingsCount)
             }
       })
 }
@@ -73,7 +83,8 @@ fun ScrollableInfiniteTimeline(
     userFriends: List<User>,
     navigationActions: NavigationActions,
     meetingViewModel: MeetingViewModel,
-    currentUserId: String
+    currentUserId: String,
+    pendingMeetingsCount: Int
 ) {
   val currentDate = Calendar.getInstance()
   val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -106,7 +117,10 @@ fun ScrollableInfiniteTimeline(
         }
   }
 
-  MonthYearHeader(monthYear = visibleMonthYear)
+  MonthYearHeader(
+      monthYear = visibleMonthYear,
+      navigationActions = navigationActions,
+      pendingMeetingsCount = pendingMeetingsCount)
 
   LazyColumn(
       state = listState,
@@ -185,11 +199,27 @@ fun DayRow(
                     val friendName =
                         friend?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown Friend"
                     val formattedDate = formatDate(meeting.date.toDate())
-                    Text(
-                        text = "Meet $friendName at ${meeting.location}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White,
-                        modifier = Modifier.fillMaxWidth().padding(12.dp).testTag("meetText"))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(12.dp)) {
+                          AsyncImage(
+                              model = "https://avatar.iran.liara.run/public/42",
+                              contentDescription = null,
+                              modifier =
+                                  Modifier.width(50.dp)
+                                      .height(50.dp)
+                                      .padding(8.dp)
+                                      .testTag("profileImage"))
+                          Column {
+                            Text(
+                                text = "Meet $friendName at ${meeting.location}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White,
+                                modifier = Modifier.testTag("meetText"))
+                          }
+                        }
                   }
             }
           }
@@ -204,12 +234,39 @@ fun DayRow(
 }
 
 @Composable
-fun MonthYearHeader(monthYear: String) {
-  Text(
-      text = monthYear,
-      style = MaterialTheme.typography.headlineSmall,
-      color = Color.White,
-      modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("monthYearHeader"))
+fun MonthYearHeader(
+    monthYear: String,
+    navigationActions: NavigationActions,
+    pendingMeetingsCount: Int
+) {
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(16.dp).testTag("monthYearHeader"),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = monthYear,
+            style = MaterialTheme.typography.headlineSmall,
+            color = Color.White,
+            modifier = Modifier.padding(16.dp).testTag("monthYearHeader"))
+        BadgedBox(
+            badge = {
+              if (pendingMeetingsCount > 0) {
+                Badge {
+                  Text(
+                      text = pendingMeetingsCount.toString(),
+                      color = Color.White,
+                      style = MaterialTheme.typography.bodySmall)
+                }
+              }
+            }) {
+              IconButton(onClick = { navigationActions.navigateTo(Screen.PENDING_MEETINGS) }) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = "Pending Meetings",
+                    tint = Color.White)
+              }
+            }
+      }
 }
 
 fun generateDayList(startDate: Calendar, endDate: Calendar): List<Calendar> {
