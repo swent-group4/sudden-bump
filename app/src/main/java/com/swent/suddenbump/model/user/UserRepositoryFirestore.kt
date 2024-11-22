@@ -1,6 +1,5 @@
 package com.swent.suddenbump.model.user
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.location.LocationManager
@@ -42,6 +41,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
 
   private val usersCollectionPath = "Users"
   private val emailCollectionPath = "Emails"
+  private val phoneCollectionPath = "Phones"
 
   private val storage = Firebase.storage("gs://sudden-bump-swent.appspot.com")
   private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
@@ -98,6 +98,32 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   }
 
   /**
+   * Verifies if the given phone number is not associated with any account.
+   *
+   * @param phoneNumber The phone number to verify.
+   * @param onSuccess Called with `true` if the phone number is not associated with any account,
+   *   `false` otherwise.
+   * @param onFailure Called with an exception if the check fails.
+   */
+  override fun verifyUnusedPhoneNumber(
+      phoneNumber: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(phoneCollectionPath)
+        .get()
+        .addOnFailureListener { onFailure(it) }
+        .addOnCompleteListener { result ->
+          if (result.isSuccessful) {
+            val resultPhone = result.result.documents.map { it.id }
+            onSuccess(!resultPhone.contains(phoneNumber))
+          } else {
+            result.exception?.let { onFailure(it) }
+          }
+        }
+  }
+
+  /**
    * Creates a new user account with the given User object and uploads profile picture if available.
    *
    * @param user The User object containing user information.
@@ -131,6 +157,10 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                         onFailure = { e -> onFailure(e) })
                   }
                 }
+            db.collection(phoneCollectionPath)
+                .document(user.phoneNumber)
+                .set(mapOf("uid" to user.uid))
+                .addOnFailureListener { onFailure(it) }
           } else {
             result.exception?.let { onFailure(it) }
           }
@@ -239,17 +269,17 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Deletes a user account by user ID.
    *
-   * @param id The user ID of the account to delete.
+   * @param uid The user ID of the account to delete.
    * @param onSuccess Called when the account deletion is successful.
    * @param onFailure Called with an exception if deletion fails.
    */
   override fun deleteUserAccount(
-      id: String,
+      uid: String,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(id)
+        .document(uid)
         .delete()
         .addOnSuccessListener { onSuccess() }
         .addOnFailureListener { e -> onFailure(e) }
@@ -258,17 +288,17 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Retrieves friend requests received by the specified user.
    *
-   * @param user The user whose friend requests are being retrieved.
+   * @param uid The user id whose friend requests are being retrieved.
    * @param onSuccess Called with a list of Users who sent friend requests if retrieval succeeds.
    * @param onFailure Called with an exception if retrieval fails.
    */
   override fun getUserFriendRequests(
-      user: User,
+      uid: String,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
@@ -276,40 +306,38 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               result.data?.get("friendRequests") as? List<String> ?: emptyList()
           if (friendRequestsUidList.isEmpty()) {
             onSuccess(emptyList())
-            return@addOnSuccessListener
+          } else {
+            val tasks =
+                friendRequestsUidList.map { uid ->
+                  db.collection(usersCollectionPath).document(uid).get()
+                }
+            Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
+                .addOnSuccessListener { documents ->
+                  val friendRequestsList =
+                      documents.mapNotNull { document ->
+                        helper.documentSnapshotToUser(document, null)
+                      }
+                  onSuccess(friendRequestsList)
+                }
+                .addOnFailureListener { e -> onFailure(e) }
           }
-
-          val tasks =
-              friendRequestsUidList.map { uid ->
-                db.collection(usersCollectionPath).document(uid).get()
-              }
-
-          Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
-              .addOnSuccessListener { documents ->
-                val friendRequestsList =
-                    documents.mapNotNull { document ->
-                      helper.documentSnapshotToUser(document, null)
-                    }
-                onSuccess(friendRequestsList)
-              }
-              .addOnFailureListener { e -> onFailure(e) }
         }
   }
 
   /**
    * Retrieves friend requests sent by the specified user.
    *
-   * @param user The user who sent the friend requests.
+   * @param uid The user id who sent the friend requests.
    * @param onSuccess Called with a list of Users who received friend requests from the user.
    * @param onFailure Called with an exception if retrieval fails.
    */
   override fun getSentFriendRequests(
-      user: User,
+      uid: String,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
@@ -341,21 +369,21 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    * Adds a friend to the specified user's friend list, removing any pending friend requests between
    * them.
    *
-   * @param user The user who is adding a friend.
-   * @param friend The friend being added.
+   * @param uid The user id who is adding a friend.
+   * @param fid The friend id being added.
    * @param onSuccess Called when the friend addition is successful.
    * @param onFailure Called with an exception if the operation fails.
    */
   override fun createFriend(
-      user: User,
-      friend: User,
+      uid: String,
+      fid: String,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     // Update the user document to remove the friend from the friendRequests or sentFriendRequest
     // list and add them to the friends list
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
@@ -368,42 +396,36 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
           val mutableFriendsUidList = friendsUidList.toMutableList()
 
-          if (friend.uid in mutableFriendRequestsUidList) {
-            mutableFriendRequestsUidList.remove(friend.uid)
-            mutableFriendsUidList.add(friend.uid)
-            db.collection(usersCollectionPath)
-                .document(user.uid)
-                .update("friendRequests", mutableFriendRequestsUidList)
-                .addOnFailureListener { e -> onFailure(e) }
-                .addOnSuccessListener {
-                  db.collection(usersCollectionPath)
-                      .document(user.uid)
-                      .update("friendsList", mutableFriendsUidList)
-                      .addOnFailureListener { e -> onFailure(e) }
-                      .addOnSuccessListener { onSuccess() }
-                }
-          } else if (friend.uid in sentFriendRequestsUidList) {
-            mutableFriendRequestsUidList.remove(friend.uid)
-            mutableFriendsUidList.add(friend.uid)
-            db.collection(usersCollectionPath)
-                .document(user.uid)
-                .update("sentFriendRequests", mutableFriendRequestsUidList)
-                .addOnFailureListener { e -> onFailure(e) }
-                .addOnSuccessListener {
-                  db.collection(usersCollectionPath)
-                      .document(user.uid)
-                      .update("friendsList", mutableFriendsUidList)
-                      .addOnFailureListener { e -> onFailure(e) }
-                      .addOnSuccessListener { onSuccess() }
-                }
-          } else {
-            onFailure(Exception("Friend request not found"))
+          when (fid) {
+            in mutableFriendRequestsUidList -> {
+              createFriendHelper(
+                  mutableFriendRequestsUidList,
+                  mutableFriendsUidList,
+                  uid,
+                  fid,
+                  "friendRequests",
+                  onSuccess,
+                  onFailure)
+            }
+            in sentFriendRequestsUidList -> {
+              createFriendHelper(
+                  mutableFriendRequestsUidList,
+                  mutableFriendsUidList,
+                  uid,
+                  fid,
+                  "sentFriendRequests",
+                  onSuccess,
+                  onFailure)
+            }
+            else -> {
+              onFailure(Exception("Friend request not found"))
+            }
           }
         }
 
     // Update the friend document to add the user to the friends list
     db.collection(usersCollectionPath)
-        .document(friend.uid)
+        .document(fid)
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
@@ -417,26 +439,26 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           val mutableFriendsSentRequestList = friendsSentRequestList.toMutableList()
           val mutableFriendsRequestList = friendsRequestList.toMutableList()
 
-          mutableFriendsUidList.add(user.uid)
-          mutableFriendsRequestList.remove(user.uid)
-          mutableFriendsSentRequestList.remove(user.uid)
+          mutableFriendsUidList.add(uid)
+          mutableFriendsRequestList.remove(uid)
+          mutableFriendsSentRequestList.remove(uid)
           db.collection(usersCollectionPath)
-              .document(friend.uid)
+              .document(fid)
               .update("friendsList", mutableFriendsUidList)
               .addOnFailureListener { e -> onFailure(e) }
               .addOnSuccessListener {
                 db.collection(usersCollectionPath)
-                    .document(friend.uid)
+                    .document(fid)
                     .update("friendRequests", mutableFriendsRequestList)
                     .addOnFailureListener { e -> onFailure(e) }
                     .addOnSuccessListener {
                       db.collection(usersCollectionPath)
-                          .document(friend.uid)
+                          .document(fid)
                           .update("sentFriendRequests", mutableFriendsSentRequestList)
                           .addOnFailureListener { e -> onFailure(e) }
                           .addOnSuccessListener {
                             db.collection(usersCollectionPath)
-                                .document(friend.uid)
+                                .document(fid)
                                 .update("friendsList", mutableFriendsUidList)
                                 .addOnFailureListener { e -> onFailure(e) }
                                 .addOnSuccessListener { onSuccess() }
@@ -446,22 +468,46 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  override fun createFriendHelper(
+      friendRequestsUidList: MutableList<String>,
+      friendsUidList: MutableList<String>,
+      uid: String,
+      fid: String,
+      updateField: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    friendRequestsUidList.remove(fid)
+    friendsUidList.add(fid)
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .update(updateField, friendRequestsUidList)
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener {
+          db.collection(usersCollectionPath)
+              .document(uid)
+              .update("friendsList", friendsUidList)
+              .addOnFailureListener { e -> onFailure(e) }
+              .addOnSuccessListener { onSuccess() }
+        }
+  }
+
   /**
    * Sends a friend request from the specified user to the target friend.
    *
-   * @param user The user sending the friend request.
-   * @param friend The target friend who will receive the request.
+   * @param uid The user id sending the friend request.
+   * @param fid The target friend id who will receive the request.
    * @param onSuccess Called when the friend request is successfully sent.
    * @param onFailure Called with an exception if the request fails.
    */
   override fun createFriendRequest(
-      user: User,
-      friend: User,
+      uid: String,
+      fid: String,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(friend.uid)
+        .document(fid)
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
@@ -469,7 +515,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               result.data?.get("friendRequests") as? List<String> ?: emptyList()
 
           db.collection(usersCollectionPath)
-              .document(user.uid)
+              .document(uid)
               .get()
               .addOnFailureListener { e -> onFailure(e) }
               .addOnSuccessListener { userResult ->
@@ -478,16 +524,16 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                 val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
                 val mutableSentFriendRequestsUidList = sentFriendRequestsUidList.toMutableList()
 
-                if (user.uid !in mutableFriendRequestsUidList) {
-                  mutableFriendRequestsUidList.add(user.uid)
-                  mutableSentFriendRequestsUidList.add(friend.uid)
+                if (uid !in mutableFriendRequestsUidList) {
+                  mutableFriendRequestsUidList.add(uid)
+                  mutableSentFriendRequestsUidList.add(fid)
                   db.collection(usersCollectionPath)
-                      .document(friend.uid)
+                      .document(fid)
                       .update("friendRequests", mutableFriendRequestsUidList)
                       .addOnFailureListener { e -> onFailure(e) }
                       .addOnSuccessListener {
                         db.collection(usersCollectionPath)
-                            .document(user.uid)
+                            .document(uid)
                             .update("sentFriendRequests", mutableSentFriendRequestsUidList)
                             .addOnFailureListener { e -> onFailure(e) }
                             .addOnSuccessListener { onSuccess() }
@@ -502,20 +548,20 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Deletes a friend request from the specified user to the target friend.
    *
-   * @param user The user deleting the friend request.
-   * @param friend The friend whose request is being deleted.
+   * @param uid The user id deleting the friend request.
+   * @param fid The friend id whose request is being deleted.
    * @param onSuccess Called when the friend request is successfully deleted.
    * @param onFailure Called with an exception if deletion fails.
    */
   override fun deleteFriendRequest(
-      user: User,
-      friend: User,
+      uid: String,
+      fid: String,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     // Remove the friendId from the user's friendRequests list
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
@@ -523,16 +569,16 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               result.data?.get("friendRequests") as? List<String> ?: emptyList()
           val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
 
-          if (friend.uid in mutableFriendRequestsUidList) {
-            mutableFriendRequestsUidList.remove(friend.uid)
+          if (fid in mutableFriendRequestsUidList) {
+            mutableFriendRequestsUidList.remove(fid)
             db.collection(usersCollectionPath)
-                .document(user.uid)
+                .document(uid)
                 .update("friendRequests", mutableFriendRequestsUidList)
                 .addOnFailureListener { e -> onFailure(e) }
                 .addOnSuccessListener {
                   // Remove the userId from the friend's sentFriendRequests list
                   db.collection(usersCollectionPath)
-                      .document(friend.uid)
+                      .document(fid)
                       .get()
                       .addOnFailureListener { e -> onFailure(e) }
                       .addOnSuccessListener { friendResult ->
@@ -542,10 +588,10 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                         val mutableSentFriendRequestsUidList =
                             sentFriendRequestsUidList.toMutableList()
 
-                        if (user.uid in mutableSentFriendRequestsUidList) {
-                          mutableSentFriendRequestsUidList.remove(user.uid)
+                        if (uid in mutableSentFriendRequestsUidList) {
+                          mutableSentFriendRequestsUidList.remove(uid)
                           db.collection(usersCollectionPath)
-                              .document(friend.uid)
+                              .document(fid)
                               .update("sentFriendRequests", mutableSentFriendRequestsUidList)
                               .addOnFailureListener { e -> onFailure(e) }
                               .addOnSuccessListener { onSuccess() }
@@ -564,20 +610,20 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Sets the list of sent friend requests for the specified user.
    *
-   * @param user The user whose sent friend requests are being set.
+   * @param uid The user id whose sent friend requests are being set.
    * @param friendRequestsList A list of User objects representing the sent friend requests.
    * @param onSuccess Called when the list is successfully updated.
    * @param onFailure Called with an exception if the update fails.
    */
   override fun setSentFriendRequests(
-      user: User,
+      uid: String,
       friendRequestsList: List<User>,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     val friendRequestsUidList = friendRequestsList.map { it.uid }
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .update("sentFriendRequests", friendRequestsUidList)
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
@@ -586,20 +632,20 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Sets the list of received friend requests for the specified user.
    *
-   * @param user The user whose received friend requests are being set.
+   * @param uid The user id whose received friend requests are being set.
    * @param friendRequestsList A list of User objects representing the received friend requests.
    * @param onSuccess Called when the list is successfully updated.
    * @param onFailure Called with an exception if the update fails.
    */
   override fun setUserFriendRequests(
-      user: User,
+      uid: String,
       friendRequestsList: List<User>,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     val friendRequestsUidList = friendRequestsList.map { it.uid }
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .update("friendRequests", friendRequestsUidList)
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
@@ -608,18 +654,18 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Retrieves a list of friends for the specified user.
    *
-   * @param user The user whose friends are being retrieved.
+   * @param uid The user id whose friends are being retrieved.
    * @param onSuccess Called with a list of User objects representing the user's friends if
    *   retrieval succeeds.
    * @param onFailure Called with an exception if retrieval fails.
    */
   override fun getUserFriends(
-      user: User,
+      uid: String,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
@@ -647,20 +693,20 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Sets the list of friends for the specified user.
    *
-   * @param user The user whose friends list is being set.
+   * @param uid The user id whose friends list is being set.
    * @param friendsList A list of User objects representing the user's friends.
    * @param onSuccess Called when the list is successfully updated.
    * @param onFailure Called with an exception if the update fails.
    */
   override fun setUserFriends(
-      user: User,
+      uid: String,
       friendsList: List<User>,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     val friendsUidList = friendsList.map { it.uid }
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .update("friendsList", friendsUidList)
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
@@ -669,18 +715,18 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Retrieves a list of recommended friends for the specified user, excluding current friends.
    *
-   * @param user The user requesting friend recommendations.
+   * @param uid The user id requesting friend recommendations.
    * @param onSuccess Called with a list of recommended friends if retrieval succeeds.
    * @param onFailure Called with an exception if retrieval fails.
    */
   override fun getRecommendedFriends(
-      user: User,
+      uid: String,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     // Fetch the user's friends list and blocked list from the database
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .get()
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { userDocument ->
@@ -692,17 +738,16 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               .get()
               .addOnFailureListener { onFailure(it) }
               .addOnSuccessListener { result ->
-                val recommendedFriends =
-                    result.documents.mapNotNull { document ->
+                    val recommendedFriends = result.documents.mapNotNull { document ->
                       // Get the other user's blocked list
                       val otherUserBlockedList =
                           document.data?.get("blockedList") as? List<String> ?: emptyList()
 
                       // Only create User object if this user meets our criteria
-                      if (document.id != user.uid &&
+                      if (document.id != uid &&
                           document.id !in friendsUidList &&
                           document.id !in blockedList &&
-                          user.uid !in otherUserBlockedList) {
+                          uid !in otherUserBlockedList) {
                         helper.documentSnapshotToUser(document, null)
                       } else {
                         null
@@ -795,17 +840,17 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Retrieves a list of blocked users for the specified user.
    *
-   * @param user The user whose blocked users list is being retrieved.
+   * @param uid The user id whose blocked users list is being retrieved.
    * @param onSuccess Called with a list of blocked User objects if retrieval succeeds.
    * @param onFailure Called with an exception if retrieval fails.
    */
   override fun getBlockedFriends(
-      user: User,
+      uid: String,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .get()
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { result ->
@@ -821,19 +866,19 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Sets the list of blocked users for the specified user.
    *
-   * @param user The user whose blocked list is being set.
+   * @param uid The user id whose blocked list is being set.
    * @param blockedFriendsList A list of User objects representing blocked users.
    * @param onSuccess Called when the list is successfully updated.
    * @param onFailure Called with an exception if the update fails.
    */
   override fun setBlockedFriends(
-      user: User,
+      uid: String,
       blockedFriendsList: List<User>,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .update("blockedFriendsList", blockedFriendsList)
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
@@ -842,19 +887,19 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Updates the last known location of the specified user.
    *
-   * @param user The user whose location is being updated.
+   * @param uid The user id whose location is being updated.
    * @param location The new Location object to update.
    * @param onSuccess Called when the location is successfully updated.
    * @param onFailure Called with an exception if the update fails.
    */
-  override fun updateLocation(
-      user: User,
+  override fun updateUserLocation(
+      uid: String,
       location: Location,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .update("lastKnownLocation", helper.locationToString(location))
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
@@ -863,61 +908,40 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Updates the timestamp for the specified user.
    *
-   * @param user The user whose timestamp is being updated.
+   * @param uid The user id whose timestamp is being updated.
    * @param timestamp The new Timestamp to update.
    * @param onSuccess Called when the timestamp is successfully updated.
    * @param onFailure Called with an exception if the update fails.
    */
   override fun updateTimestamp(
-      user: User,
+      uid: String,
       timestamp: Timestamp,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     db.collection(usersCollectionPath)
-        .document(user.uid)
+        .document(uid)
         .update("timestamp", timestamp)
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
   }
 
-  /**
-   * Retrieves the locations of the specified user's friends.
-   *
-   * @param userFriendsList A list of friends for whom locations are to be retrieved.
-   * @param onSuccess Called with a map of User objects to their last known Location if retrieval
-   *   succeeds.
-   * @param onFailure Called with an exception if retrieval fails.
-   */
-  @SuppressLint("SuspiciousIndentation")
-  override fun getFriendsLocation(
-      userFriendsList: List<User>,
-      onSuccess: (Map<User, Location?>) -> Unit,
+  override fun isFriendsInRadius(
+      userLocation: Location,
+      friends: List<User>,
+      radius: Double,
+      onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    Log.d("FriendsMarkers", "Launched")
-
-    val friendsLocations = mutableMapOf<User, Location?>()
-    runBlocking {
-      try {
-        for (userFriend in userFriendsList) {
-          val documentSnapshot =
-              db.collection(usersCollectionPath).document(userFriend.uid).get().await()
-          Log.d("FriendsMarkers", "Doc SNap $documentSnapshot")
-          if (documentSnapshot.exists()) {
-            val friendSnapshot = documentSnapshot.data
-            val friendLocation =
-                helper.locationParser(friendSnapshot!!["lastKnownLocation"].toString())
-            friendsLocations[userFriend] = friendLocation
-            Log.d("FriendsMarkers", "Succeeded Friends Locations ${userFriend}, ${friendLocation}")
-          }
-        }
-      } catch (e: Exception) {
-        Log.e(logTag, e.toString())
-        onFailure(e)
-      }
+    var inRadius = false
+    friends.forEach { friend ->
+      inRadius = inRadius || userLocation.distanceTo(friend.lastKnownLocation.value) < radius
     }
-    onSuccess(friendsLocations)
+    if (inRadius) {
+      onSuccess()
+    } else {
+      onFailure(Exception("No friends in radius"))
+    }
   }
 
   /**
@@ -991,12 +1015,12 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   /**
    * Saves the login status of a user in shared preferences.
    *
-   * @param userId The unique identifier of the user to save.
+   * @param uid The unique identifier of the user to save.
    */
-  override fun saveLoginStatus(userId: String) {
+  override fun saveLoginStatus(uid: String) {
     with(sharedPreferences.edit()) {
       putBoolean("isLoggedIn", true)
-      putString("userId", userId)
+      putString("userId", uid)
       apply()
     }
   }
@@ -1071,7 +1095,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
  * Helper class for UserRepositoryFirestore, providing methods for converting User objects to
  * Firestore data maps, and utilities for parsing and converting location data.
  */
-internal class UserRepositoryFirestoreHelper() {
+internal class UserRepositoryFirestoreHelper {
   /**
    * Converts a User object into a map representation suitable for Firestore.
    *
@@ -1095,8 +1119,8 @@ internal class UserRepositoryFirestoreHelper() {
    * @return The location as a formatted String.
    */
   fun locationToString(lastKnownLocation: Location?): String {
-    if (lastKnownLocation != null) {
-      return "{" +
+    return if (lastKnownLocation != null) {
+      "{" +
           "provider=" +
           lastKnownLocation.provider +
           ", latitude=" +
@@ -1104,7 +1128,7 @@ internal class UserRepositoryFirestoreHelper() {
           ", longitude=" +
           lastKnownLocation.longitude.toString() +
           "}"
-    } else return "{" + "provider= " + "latitude= " + ", " + "longitude= " + "}"
+    } else "{" + "provider= " + "latitude= " + ", " + "longitude= " + "}"
   }
 
   /**

@@ -33,7 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import com.swent.suddenbump.model.LocationGetter
+import com.swent.suddenbump.model.location.LocationGetter
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
@@ -42,6 +42,7 @@ import com.swent.suddenbump.ui.authentication.SignUpScreen
 import com.swent.suddenbump.ui.calendar.AddMeetingScreen
 import com.swent.suddenbump.ui.calendar.CalendarMeetingsScreen
 import com.swent.suddenbump.ui.calendar.EditMeetingScreen
+import com.swent.suddenbump.ui.calendar.PendingMeetingsScreen
 import com.swent.suddenbump.ui.chat.ChatScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
@@ -50,10 +51,15 @@ import com.swent.suddenbump.ui.messages.MessagesScreen
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.overview.AccountScreen
+import com.swent.suddenbump.ui.overview.ConfidentialityScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
+import com.swent.suddenbump.ui.overview.DiscussionScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
+import com.swent.suddenbump.ui.overview.HelpScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
-import com.swent.suddenbump.ui.settings.SettingsScreen
+import com.swent.suddenbump.ui.overview.SettingsScreen
+import com.swent.suddenbump.ui.overview.StorageAndDataScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
@@ -92,12 +98,11 @@ class MainActivity : ComponentActivity() {
     FirebaseApp.initializeApp(this)
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
-    /*auth.currentUser?.let {
+    auth.currentUser?.let {
       // Sign out the user if they are already signed in
       // This is useful for testing purposes
       auth.signOut()
-
-    }*/
+    }
 
     setContent {
       SampleAppTheme {
@@ -159,7 +164,7 @@ class MainActivity : ComponentActivity() {
     val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
 
     val startRoute =
-        if (userViewModel.isUserLoggedIn()) {
+        if (!isRunningTest() && userViewModel.isUserLoggedIn()) {
           val uid = userViewModel.getSavedUid()
           Log.d("MainActivity", "User logged in: $uid")
           userViewModel.setCurrentUser(
@@ -168,13 +173,12 @@ class MainActivity : ComponentActivity() {
                 Log.i("MainActivity", "User set: ${userViewModel.getCurrentUser().value}")
               },
               onFailure = { e -> Log.e("MainActivity", e.toString()) })
+          // Schedule the LocationUpdateWorker
           scheduleLocationUpdateWorker(this, uid)
           Route.OVERVIEW
         } else {
           Route.AUTH
         }
-
-    // Schedule the LocationUpdateWorker
 
     NavHost(navController = navController, startDestination = startRoute) {
       navigation(
@@ -197,7 +201,9 @@ class MainActivity : ComponentActivity() {
         composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
-        composable(Screen.SETTINGS) { SettingsScreen(navigationActions) }
+        composable(Screen.SETTINGS) {
+          SettingsScreen(navigationActions, userViewModel, onNotificationsEnabledChange = {})
+        }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
         composable(Screen.ADD_MEETING) {
@@ -212,6 +218,9 @@ class MainActivity : ComponentActivity() {
           CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
         }
         composable(Screen.EDIT_MEETING) { EditMeetingScreen(navigationActions, meetingViewModel) }
+        composable(Screen.PENDING_MEETINGS) {
+          PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+        }
       }
 
       navigation(
@@ -229,6 +238,16 @@ class MainActivity : ComponentActivity() {
       ) {
         composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions) }
       }
+
+      // Add new screens from Settings.kt
+      composable("AccountScreen") { AccountScreen(navigationActions) }
+      composable("ConfidentialityScreen") {
+        ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
+      }
+      composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
+
+      composable("StorageAndDataScreen") { StorageAndDataScreen(navigationActions) }
+      composable("HelpScreen") { HelpScreen(navigationActions) }
     }
   }
 
@@ -246,9 +265,6 @@ class MainActivity : ComponentActivity() {
       }
       backgroundLocationGranted -> {
         locationGetter.requestLocationUpdates()
-      }
-      else -> {
-        // Toast.makeText(this, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
       }
     }
   }

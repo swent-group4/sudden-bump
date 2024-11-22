@@ -3,25 +3,14 @@ package com.swent.suddenbump.ui.overview
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,14 +29,30 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
 
-fun computeRelativeDistance(user1: User, user2: User): Int {
-  return 5
-}
-
 @Composable
 fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
-  val currentUser = userViewModel.getCurrentUser().collectAsState().value
-  val users = userViewModel.getUserFriends().collectAsState().value
+  val currentUser by userViewModel.getCurrentUser().collectAsState()
+  val users by userViewModel.getUserFriends().collectAsState()
+
+  // Load friends' locations when the screen is composed
+  LaunchedEffect(Unit) { userViewModel.loadFriends() }
+
+  // Compute distances and group friends
+  val friendsWithDistances =
+      users.mapNotNull { friend ->
+        val distance = userViewModel.getRelativeDistance(friend)
+        if (distance != Float.MAX_VALUE) {
+          friend to distance
+        } else {
+          null
+        }
+      }
+
+  // Group friends into categories based on distance
+  val friendsWithin5km = friendsWithDistances.filter { it.second <= 5000f }
+  val friendsWithin10km = friendsWithDistances.filter { it.second > 5000f && it.second <= 10000f }
+  val friendsWithin20km = friendsWithDistances.filter { it.second > 10000f && it.second <= 20000f }
+  val friendsFurther = friendsWithDistances.filter { it.second > 20000f }
 
   Scaffold(
       topBar = {
@@ -76,7 +81,6 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                   color = violetColor,
                   fontWeight = FontWeight.Bold,
                   textAlign = TextAlign.Center)
-
               FloatingActionButton(
                   onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
                   modifier = Modifier.testTag("seeFriendsFab"),
@@ -103,68 +107,74 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(pd)
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
-              if (users.isNotEmpty()) {
-                item {
-                  Row(
-                      modifier =
-                          Modifier.fillMaxWidth()
-                              .padding(vertical = 10.dp)
-                              .testTag("distanceTitle"),
-                      horizontalArrangement = Arrangement.spacedBy(8.dp),
-                      verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(modifier = Modifier.size(16.dp)) {
-                          drawCircle(
-                              color = com.swent.suddenbump.ui.theme.Purple40,
-                              radius = size.minDimension / 2)
-                        }
-                        Text(
-                            text = "Within 10km",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = com.swent.suddenbump.ui.theme.Purple40,
-                            modifier = Modifier.padding(start = 8.dp))
-                      }
-                }
-                items(users) { user ->
+              if (friendsWithin5km.isNotEmpty()) {
+                item { CategoryHeader("Within 5km") }
+                items(friendsWithin5km) { (friend, _) ->
                   UserRow(
-                      user = user,
+                      user = friend,
                       navigationActions = navigationActions,
                       userViewModel = userViewModel)
                 }
-                item {
-                  Row(
-                      modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                      horizontalArrangement = Arrangement.spacedBy(8.dp),
-                      verticalAlignment = Alignment.CenterVertically) {
-                        Canvas(modifier = Modifier.size(16.dp)) {
-                          drawCircle(
-                              color = com.swent.suddenbump.ui.theme.Purple40,
-                              radius = size.minDimension / 2)
-                        }
-                        Text(
-                            text = "Within 30km",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = com.swent.suddenbump.ui.theme.Purple40,
-                            modifier = Modifier.padding(start = 8.dp))
-                      }
-                }
-                //                items(users) { user ->
-                //                  UserRow(
-                //                      user = user,
-                //                      navigationActions = navigationActions,
-                //                      userViewModel = userViewModel)
-                //                }
-              } else {
-                item {
-                  Text(
-                      text = "Looks like no friends are nearby",
-                      color = Color.White,
-                      modifier =
-                          Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 8.dp),
-                      style = MaterialTheme.typography.titleLarge)
+              }
+              if (friendsWithin10km.isNotEmpty()) {
+                item { CategoryHeader("Within 10km") }
+                items(friendsWithin10km) { (friend, _) ->
+                  UserRow(
+                      user = friend,
+                      navigationActions = navigationActions,
+                      userViewModel = userViewModel)
                 }
               }
+              if (friendsWithin20km.isNotEmpty()) {
+                item { CategoryHeader("Within 20km") }
+                items(friendsWithin20km) { (friend, _) ->
+                  UserRow(
+                      user = friend,
+                      navigationActions = navigationActions,
+                      userViewModel = userViewModel)
+                }
+              }
+              if (friendsFurther.isNotEmpty()) {
+                item { CategoryHeader("Further") }
+                items(friendsFurther) { (friend, _) ->
+                  UserRow(
+                      user = friend,
+                      navigationActions = navigationActions,
+                      userViewModel = userViewModel)
+                }
+              }
+              /*if (friendsWithDistances.isEmpty()) {
+                  item {
+                      Text(
+                          text = "Looks like no friends are nearby",
+                          color = Color.White,
+                          modifier = Modifier
+                              .testTag("noFriends")
+                              .fillMaxWidth()
+                              .padding(vertical = 8.dp),
+                          style = MaterialTheme.typography.titleLarge
+                      )
+                  }
+              }*/
             }
       })
+}
+
+@Composable
+fun CategoryHeader(title: String) {
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag(title),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalAlignment = Alignment.CenterVertically) {
+        Canvas(modifier = Modifier.size(16.dp)) {
+          drawCircle(color = com.swent.suddenbump.ui.theme.Purple40, radius = size.minDimension / 2)
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            color = com.swent.suddenbump.ui.theme.Purple40,
+            modifier = Modifier.padding(start = 8.dp))
+      }
 }
 
 @Composable
@@ -176,7 +186,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                 userViewModel.setSelectedContact(user)
                 navigationActions.navigateTo(Screen.CONTACT)
               }
-              .testTag("userRow"),
+              .testTag(user.uid),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Row(
@@ -190,18 +200,15 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
               Text(
                   text = "${user.firstName} ${user.lastName.first()}.",
                   style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                  modifier = Modifier.testTag(user.uid),
                   color = Color.White)
               Text(
                   text = "Lausanne, Switzerland",
                   style = MaterialTheme.typography.bodyLarge,
-                  modifier = Modifier.testTag("userName"),
                   color = Color.White)
             }
         Icon(
             imageVector = Icons.Default.Email,
             contentDescription = "Message",
-            tint = com.swent.suddenbump.ui.theme.Purple40 // Set the desired color for the icon
-            )
+            tint = com.swent.suddenbump.ui.theme.Purple40)
       }
 }

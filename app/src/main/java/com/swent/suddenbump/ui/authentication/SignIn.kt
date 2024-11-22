@@ -33,10 +33,10 @@ import androidx.compose.ui.unit.sp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import com.google.firebase.Firebase
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.auth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -80,7 +80,6 @@ fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
             Toast.makeText(context, "Login Failed!", Toast.LENGTH_LONG).show()
           })
   val token = stringResource(R.string.default_web_client_id)
-  // The main container for the screen
 
   Scaffold(
       modifier = Modifier.fillMaxSize(),
@@ -92,31 +91,21 @@ fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
         ) {
           Spacer(modifier = Modifier.height(16.dp))
 
-          // Welcome Text
           Text(
-              modifier =
-                  Modifier.testTag("loginTitle").fillMaxWidth(), // j'ai add fillMaxWidth(0.8f)
+              modifier = Modifier.testTag("loginTitle").fillMaxWidth(),
               text = "SuddenBump!",
               style =
-                  MaterialTheme.typography.headlineLarge.copy(
-                      fontSize = 48.sp, // j'ai changé, c'était 36.sp de base
-                      lineHeight = 64.sp),
+                  MaterialTheme.typography.headlineLarge.copy(fontSize = 48.sp, lineHeight = 64.sp),
               color = violetColor,
               fontWeight = FontWeight.Bold,
-              // center the text
-
               textAlign = TextAlign.Center)
 
-          Spacer(
-              modifier = Modifier.height(24.dp)) // c'était 48 de base, I modified it so that there
-          // is less spacing between the text and the button
+          Spacer(modifier = Modifier.height(24.dp))
 
-          // Authenticate With Google Button
           GoogleSignInButton(
               onSignInClick = {
                 if (isRunningTest() && !isGoogleSignInEnabledForTesting) {
                   Log.e("SignInScreen", "Running tests: ${isRunningTest()}")
-                  // userViewModel.setCurrentUser()
                   navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
                 } else {
                   val gso =
@@ -136,36 +125,25 @@ fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
 fun GoogleSignInButton(onSignInClick: () -> Unit) {
   Button(
       onClick = onSignInClick,
-      colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC3A1E8)), // Button color
-      shape =
-          RoundedCornerShape(
-              8.dp), // (avant y avait juste 50, sans le dp) // Circular edges for the button
+      colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC3A1E8)),
+      shape = RoundedCornerShape(8.dp),
       border = BorderStroke(1.dp, Color.White),
-      modifier =
-          Modifier.padding(16.dp)
-              .height(48.dp) // Adjust height as needed //c'était 48 avant
-              .width(300.dp) // j'ai add cette ligne
-              .testTag("loginButton")) {
+      modifier = Modifier.padding(16.dp).height(48.dp).width(300.dp).testTag("loginButton")) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()) {
-              // Load the Google logo from resources
               Image(
                   painter = painterResource(id = R.drawable.google_logo),
                   contentDescription = "Google Logo",
-                  modifier =
-                      Modifier.size(30.dp) // Size of the Google logo
-                          .padding(end = 8.dp))
-
-              // Text for the button
+                  modifier = Modifier.size(30.dp).padding(end = 8.dp))
               Text(
                   text = "Sign in with Google",
-                  color = Color.White, // Text color
-                  fontSize = 18.sp, // Font size // c'était 16
+                  color = Color.White,
+                  fontSize = 18.sp,
                   fontWeight = FontWeight.SemiBold,
-                  letterSpacing = 1.sp) // c'était medium
-        }
+                  letterSpacing = 1.sp)
+            }
       }
 }
 
@@ -190,11 +168,3 @@ fun rememberFirebaseAuthLauncher(
     }
   }
 }
-
-/*@Preview(showBackground = true)
-@Composable
-fun PreviewSignInScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-  SignInScreen(navigationActions = navigationActions)
-}*/

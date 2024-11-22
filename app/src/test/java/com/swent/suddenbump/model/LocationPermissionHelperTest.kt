@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import com.swent.suddenbump.model.location.LocationPermissionHelper
 import junit.framework.Assert.assertFalse
 import junit.framework.TestCase.assertTrue
 import org.junit.Before

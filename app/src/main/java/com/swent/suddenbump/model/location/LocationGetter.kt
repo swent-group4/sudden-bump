@@ -1,4 +1,4 @@
-package com.swent.suddenbump.model
+package com.swent.suddenbump.model.location
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -17,16 +17,13 @@ import com.google.android.gms.location.Priority
 
 class LocationGetter(private val context: Context, private val listener: LocationListener) {
 
-  private lateinit var fusedLocationClient: FusedLocationProviderClient
+  private var fusedLocationClient: FusedLocationProviderClient =
+      LocationServices.getFusedLocationProviderClient(context)
 
   interface LocationListener {
     fun onLocationResult(location: Location?)
 
     fun onLocationFailure(message: String)
-  }
-
-  init {
-    fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
   }
 
   @SuppressLint("MissingPermission")
