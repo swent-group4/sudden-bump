@@ -76,21 +76,6 @@ class ChatSummaryTest {
     assertEquals("", chatSummary.date)
   }
 
-  //  @Test
-  //  fun dateWorksWithNonNullDate() {
-  //    val timestamp = Timestamp(seconds = 1729515283, nanoseconds = 0)
-  //    val chatSummary = ChatSummary(participants = participants, lastMessageTimestamp = timestamp)
-  //
-  //    val timeZone = TimeZone.getTimeZone("UTC") // Set your desired time zone
-  //    val dateFormat = SimpleDateFormat("MM/dd/yyyy hh:mm a", Locale.US)
-  //    dateFormat.timeZone = timeZone
-  //
-  //    val date = chatSummary.date
-  //    assertEquals(
-  //        dateFormat.format(dateFormat.parse("10/21/2024 02:54 PM")!!),
-  //        dateFormat.format(dateFormat.parse(chatSummary.date)!!))
-  //  }
-
   @Test
   fun convertParticipantsUidToDisplayWorksWithTwoUsers() {
     val chatSummary = ChatSummary(participants = users.map { it.uid })
