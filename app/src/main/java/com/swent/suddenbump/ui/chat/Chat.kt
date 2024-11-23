@@ -48,7 +48,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swent.suddenbump.model.chat.ListItem
 import com.swent.suddenbump.model.chat.generateListItems
 import com.swent.suddenbump.model.chat.toOnlyTimeFormat
