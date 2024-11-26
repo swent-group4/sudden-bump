@@ -4,11 +4,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
@@ -19,10 +15,8 @@ import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 /**
@@ -33,7 +27,7 @@ import kotlinx.coroutines.launch
  * @property repository The UserRepository instance used for managing user data.
  * @property chatRepository The ChatRepository instance used for managing chats and messages.
  */
-open class UserViewModel(
+class UserViewModel(
     private val repository: UserRepository,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
@@ -128,6 +122,8 @@ open class UserViewModel(
                     user = _user.value,
                     onSuccess = { blockedFriendsList ->
                       _blockedFriends.value = blockedFriendsList
+                      // Start updating locations after friends are loaded
+                      startUpdatingFriendsLocations()
                     },
                     onFailure = { e -> Log.e(logTag, e.toString()) })
               },
@@ -333,18 +329,41 @@ open class UserViewModel(
     repository.setUserFriends(user, friendsList, onSuccess, onFailure)
   }
 
+  /**
+   * Retrieves the user's recommended friends as a StateFlow.
+   *
+   * @return A StateFlow containing a list of recommended friends.
+   */
   fun getUserRecommendedFriends(): StateFlow<List<User>> {
     return _recommendedFriends.asStateFlow()
   }
 
+  /**
+   * Retrieves the user's sent friend requests as a StateFlow.
+   *
+   * @return A StateFlow containing a list of sent friend requests.
+   */
   fun getSentFriendRequests(): StateFlow<List<User>> {
     return _sentFriendRequests.asStateFlow()
   }
 
+  /**
+   * Retrieves the user's blocked friends as a StateFlow.
+   *
+   * @return A StateFlow containing a list of blocked friends.
+   */
   fun getBlockedFriends(): StateFlow<List<User>> {
     return _blockedFriends.asStateFlow()
   }
 
+  /**
+   * Updates the user's blocked friends list in the repository.
+   *
+   * @param user The user whose blocked friends list is being updated.
+   * @param blockedFriendsList The updated list of blocked friends.
+   * @param onSuccess Called when the update is successful.
+   * @param onFailure Called with an exception if the update fails.
+   */
   fun setBlockedFriends(
       user: User = _user.value,
       blockedFriendsList: List<User>,
@@ -355,6 +374,11 @@ open class UserViewModel(
     repository.setBlockedFriends(user, blockedFriendsList, onSuccess, onFailure)
   }
 
+  /**
+   * Retrieves the user's location as a StateFlow.
+   *
+   * @return A StateFlow containing the user's last known location.
+   */
   fun getLocation(): StateFlow<Location> {
     return _user.value.lastKnownLocation.asStateFlow()
   }
@@ -394,50 +418,93 @@ open class UserViewModel(
     repository.updateTimestamp(user, timestamp, onSuccess, onFailure)
   }
 
+  // Define DistanceRange enum
+  enum class DistanceRange(val label: String, val minDistance: Float, val maxDistance: Float) {
+    WITHIN_5KM("Within 5km", 0f, 5000f),
+    WITHIN_10KM("Within 10km", 5000f, 10000f),
+    WITHIN_20KM("Within 20km", 10000f, 20000f),
+    FURTHER("Further", 20000f, Float.MAX_VALUE)
+  }
+
+  private val _friendsGroupedByDistance =
+      MutableStateFlow<Map<DistanceRange, List<User>>>(emptyMap())
+  val friendsGroupedByDistance: StateFlow<Map<DistanceRange, List<User>>> =
+      _friendsGroupedByDistance.asStateFlow()
+
+  fun startUpdatingFriendsLocations() {
+    viewModelScope.launch {
+      while (true) {
+        loadFriendsLocations()
+        updateFriendsGroupedByDistance()
+        delay(5000L) // Refresh every 5 seconds
+      }
+    }
+  }
+
+  private fun updateFriendsGroupedByDistance() {
+    val userLocation = _user.value.lastKnownLocation.value
+
+    val groupedFriends =
+        friendsLocations.value
+            .mapNotNull { (friend, location) ->
+              val friendLocation = location
+              if (friendLocation != null && userLocation != locationDummy.value) {
+                val distance = userLocation.distanceTo(friendLocation)
+                friend to distance
+              } else {
+                null
+              }
+            }
+            .groupBy { (_, distance) ->
+              DistanceRange.values().first {
+                distance >= it.minDistance && distance <= it.maxDistance
+              }
+            }
+            .mapValues { entry -> entry.value.map { it.first } }
+
+    _friendsGroupedByDistance.value = groupedFriends
+  }
+
   fun loadFriendsLocations() {
     try {
-      Log.i(logTag, "1: ${_userFriends.value.toString()}")
-      println("1: ${_userFriends.value.toString()}")
-      Log.i(logTag, "2: ${getUserFriends().value.toString()}")
-      println("2: ${getUserFriends().value.toString()}")
       repository.getFriendsLocation(
           _userFriends.value,
           onSuccess = { friendsLoc ->
             // Update the state with the locations of friends
             friendsLocations.value = friendsLoc
             Log.d("FriendsMarkers", "On success load Friends Locations ${friendsLocations.value}")
-            println("On success load Friends Locations ${friendsLocations.value}")
           },
           onFailure = { error ->
             // Handle the error, e.g., log or show error message
             Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
-            println("exception1")
           })
     } catch (e: Exception) {
       Log.e("UserViewModel", e.toString())
-      println("exception2")
     }
-    println("endfunc")
   }
 
-  fun getSelectedContact(): StateFlow<User> {
-    return _selectedContact.asStateFlow()
-  }
-
-  fun setSelectedContact(user: User) {
-    _selectedContact.value = user
-  }
-
+  /**
+   * Calculates the relative distance between the current user and a friend.
+   *
+   * @param friend The friend whose distance is being calculated.
+   * @return The distance in meters, or Float.MAX_VALUE if locations are unavailable.
+   */
   fun getRelativeDistance(friend: User): Float {
-    loadFriendsLocations()
     val userLocation = _user.value.lastKnownLocation.value
-    val friendLocation = friend.lastKnownLocation.value
-    if ((userLocation == locationDummy.value || friendLocation == locationDummy.value)) {
+    val friendLocation = friendsLocations.value[friend]
+
+    if (userLocation == locationDummy.value || friendLocation == null) {
       return Float.MAX_VALUE
     }
     return userLocation.distanceTo(friendLocation)
   }
 
+  /**
+   * Checks if any friends are within a specified radius.
+   *
+   * @param radius The radius in meters.
+   * @return True if any friends are within the radius, false otherwise.
+   */
   fun isFriendsInRadius(radius: Int): Boolean {
     loadFriendsLocations()
     friendsLocations.value.values.forEach { friendLocation ->
@@ -453,22 +520,43 @@ open class UserViewModel(
     return false
   }
 
+  /**
+   * Retrieves a new unique identifier.
+   *
+   * @return A new unique identifier as a String.
+   */
   fun getNewUid(): String {
     return repository.getNewUid()
   }
 
+  /**
+   * Saves the user's login status.
+   *
+   * @param userId The user's unique identifier.
+   */
   fun saveUserLoginStatus(userId: String) {
     repository.saveLoginStatus(userId)
   }
 
+  /**
+   * Retrieves the saved unique identifier.
+   *
+   * @return The saved unique identifier as a String.
+   */
   fun getSavedUid(): String {
     return repository.getSavedUid()
   }
 
+  /**
+   * Checks if the user is logged in.
+   *
+   * @return True if the user is logged in, false otherwise.
+   */
   fun isUserLoggedIn(): Boolean {
     return repository.isUserLoggedIn()
   }
 
+  /** Logs out the current user. */
   fun logout() {
     repository.logoutUser()
   }
@@ -484,6 +572,11 @@ open class UserViewModel(
   private val userId: String?
     get() = user?.uid
 
+  /**
+   * Retrieves or creates a chat with a friend.
+   *
+   * @param friendId The friend's unique identifier.
+   */
   fun getOrCreateChat(friendId: String) =
       viewModelScope.launch {
         if (!isGettingChatId) {
@@ -494,7 +587,12 @@ open class UserViewModel(
         }
       }
 
-  // Send a new message and add it to Firestore
+  /**
+   * Sends a new message to a chat.
+   *
+   * @param messageContent The content of the message.
+   * @param user The user sending the message.
+   */
   fun sendMessage(messageContent: String, user: User) {
     viewModelScope.launch {
       if (chatId != null) chatRepository.sendMessage(chatId!!, messageContent, user)
@@ -533,5 +631,23 @@ open class UserViewModel(
     } else {
       _verificationStatus.postValue("Verification ID is missing.")
     }
+  }
+
+  /**
+   * Retrieves the selected contact as a StateFlow.
+   *
+   * @return A StateFlow containing the selected User object.
+   */
+  fun getSelectedContact(): StateFlow<User> {
+    return _selectedContact.asStateFlow()
+  }
+
+  /**
+   * Sets the selected contact.
+   *
+   * @param user The User object representing the selected contact.
+   */
+  fun setSelectedContact(user: User) {
+    _selectedContact.value = user
   }
 }

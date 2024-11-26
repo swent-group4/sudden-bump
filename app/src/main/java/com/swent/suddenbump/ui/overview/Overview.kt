@@ -32,27 +32,10 @@ import com.swent.suddenbump.ui.theme.violetColor
 @Composable
 fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val currentUser by userViewModel.getCurrentUser().collectAsState()
-  val users by userViewModel.getUserFriends().collectAsState()
+  val friendsGroupedByDistance by userViewModel.friendsGroupedByDistance.collectAsState()
 
-  // Load friends' locations when the screen is composed
-  LaunchedEffect(Unit) { userViewModel.loadFriendsLocations() }
-
-  // Compute distances and group friends
-  val friendsWithDistances =
-      users.mapNotNull { friend ->
-        val distance = userViewModel.getRelativeDistance(friend)
-        if (distance != Float.MAX_VALUE) {
-          friend to distance
-        } else {
-          null
-        }
-      }
-
-  // Group friends into categories based on distance
-  val friendsWithin5km = friendsWithDistances.filter { it.second <= 5000f }
-  val friendsWithin10km = friendsWithDistances.filter { it.second > 5000f && it.second <= 10000f }
-  val friendsWithin20km = friendsWithDistances.filter { it.second > 10000f && it.second <= 20000f }
-  val friendsFurther = friendsWithDistances.filter { it.second > 20000f }
+  // Start updating friends' locations when the screen is composed
+  LaunchedEffect(Unit) { userViewModel.startUpdatingFriendsLocations() }
 
   Scaffold(
       topBar = {
@@ -100,63 +83,35 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
             selectedItem = navigationActions.currentRoute())
       },
       content = { pd ->
-        LazyColumn(
-            modifier =
-                Modifier.fillMaxHeight()
-                    .background(Color.Black)
-                    .padding(pd)
-                    .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-              if (friendsWithin5km.isNotEmpty()) {
-                item { CategoryHeader("Within 5km") }
-                items(friendsWithin5km) { (friend, _) ->
-                  UserRow(
-                      user = friend,
-                      navigationActions = navigationActions,
-                      userViewModel = userViewModel)
-                }
+        if (friendsGroupedByDistance.isEmpty()) {
+          // Display a loading indicator or a message
+          Box(
+              modifier = Modifier.fillMaxSize().background(Color.Black),
+              contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Color.White)
               }
-              if (friendsWithin10km.isNotEmpty()) {
-                item { CategoryHeader("Within 10km") }
-                items(friendsWithin10km) { (friend, _) ->
-                  UserRow(
-                      user = friend,
-                      navigationActions = navigationActions,
-                      userViewModel = userViewModel)
-                }
-              }
-              if (friendsWithin20km.isNotEmpty()) {
-                item { CategoryHeader("Within 20km") }
-                items(friendsWithin20km) { (friend, _) ->
-                  UserRow(
-                      user = friend,
-                      navigationActions = navigationActions,
-                      userViewModel = userViewModel)
-                }
-              }
-              if (friendsFurther.isNotEmpty()) {
-                item { CategoryHeader("Further") }
-                items(friendsFurther) { (friend, _) ->
-                  UserRow(
-                      user = friend,
-                      navigationActions = navigationActions,
-                      userViewModel = userViewModel)
-                }
-              }
-              /*if (friendsWithDistances.isEmpty()) {
-                  item {
-                      Text(
-                          text = "Looks like no friends are nearby",
-                          color = Color.White,
-                          modifier = Modifier
-                              .testTag("noFriends")
-                              .fillMaxWidth()
-                              .padding(vertical = 8.dp),
-                          style = MaterialTheme.typography.titleLarge
-                      )
+        } else {
+          LazyColumn(
+              modifier =
+                  Modifier.fillMaxHeight()
+                      .background(Color.Black)
+                      .padding(pd)
+                      .padding(horizontal = 16.dp),
+              horizontalAlignment = Alignment.CenterHorizontally) {
+                UserViewModel.DistanceRange.values().forEach { distanceRange ->
+                  val friendsInRange = friendsGroupedByDistance[distanceRange] ?: emptyList()
+                  if (friendsInRange.isNotEmpty()) {
+                    item { CategoryHeader(distanceRange.label) }
+                    items(friendsInRange) { friend ->
+                      UserRow(
+                          user = friend,
+                          navigationActions = navigationActions,
+                          userViewModel = userViewModel)
+                    }
                   }
-              }*/
-            }
+                }
+              }
+        }
       })
 }
 
