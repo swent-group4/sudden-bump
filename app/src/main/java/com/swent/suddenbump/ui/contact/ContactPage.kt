@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.contact
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -84,11 +85,19 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
               horizontalAlignment = Alignment.CenterHorizontally,
               verticalArrangement = Arrangement.Top,
           ) {
-            AsyncImage(
-                model = "https://avatar.iran.liara.run/public/42",
-                contentDescription = null,
-                modifier =
-                    Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
+            if (user.profilePicture != null) {
+              Image(
+                  bitmap = user.profilePicture,
+                  contentDescription = null,
+                  modifier =
+                      Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
+            } else {
+              AsyncImage(
+                  model = "https://avatar.iran.liara.run/public/42",
+                  contentDescription = null,
+                  modifier =
+                      Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
+            }
             Column(
                 Modifier.fillMaxWidth().padding(top = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,

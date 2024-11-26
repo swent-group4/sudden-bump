@@ -35,13 +35,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.swent.suddenbump.R
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.convertParticipantsUidToDisplay
 import com.swent.suddenbump.model.user.UserViewModel
@@ -138,10 +135,23 @@ fun MessageItem(
                 navigationActions.navigateTo(Screen.CHAT)
               }
               .testTag("message_item_${message.sender}")) {
-        Image(
-            painter = painterResource(R.drawable.profile),
-            contentDescription = "Profile Avatar",
-            modifier = Modifier.size(40.dp).padding(start = 8.dp))
+        viewModel
+            .getUserFriends()
+            .collectAsState()
+            .value
+            .first {
+              it.uid ==
+                  message.participants
+                      .filterNot { it2 -> it2 == viewModel.getCurrentUser().value.uid }
+                      .first()
+            }
+            .profilePicture
+            ?.let {
+              Image(
+                  bitmap = it,
+                  contentDescription = "Profile Avatar",
+                  modifier = Modifier.size(40.dp).padding(start = 8.dp))
+            }
 
         Column(modifier = Modifier.padding(start = 16.dp).fillMaxWidth()) {
           Row(
