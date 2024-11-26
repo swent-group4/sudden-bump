@@ -7,55 +7,61 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 
 class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : ImageRepository {
 
-  private val imageBitMapIO = ImageBitMapIO()
+    private val profilePicturesPath = "/data/data/com.swent.suddenbump/files/"
 
-  override fun init(onSuccess: () -> Unit) {
-    onSuccess()
-  }
+    private val imageBitMapIO = ImageBitMapIO()
 
-  override fun downloadImage(
-      path: String,
-      onSuccess: (ImageBitmap) -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    val imageRef = storage.reference.child(path)
-    val localFile = File.createTempFile("sudden-bump-", path.substringAfterLast('/'))
-
-    runBlocking {
-      try {
-        val fileDownloadTask = imageRef.getFile(localFile).await()
-        if (fileDownloadTask.task.isCanceled) {
-          onFailure(fileDownloadTask.task.exception!!)
-        } else {
-          val fileInputStream = FileInputStream(localFile)
-          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-          onSuccess(bitmap.asImageBitmap())
-        }
-      } catch (e: Exception) {
-        Log.e("SuddenBump", e.toString())
-      }
+    override fun init(onSuccess: () -> Unit) {
+        onSuccess()
     }
-  }
 
-  override fun uploadImage(
-      imageBitmap: ImageBitmap,
-      path: String,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    val baos = ByteArrayOutputStream()
-    imageBitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 100, baos)
-    val data = baos.toByteArray()
+    override fun downloadImage(
+        path: String,
+        onSuccess: (ImageBitmap) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val imageRef = storage.reference.child(path)
+        Log.d("Image", profilePicturesPath + path.substringAfterLast('/'))
+        val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
 
-    val uploadTask = storage.reference.child(path).putBytes(data)
-    uploadTask.addOnFailureListener { onFailure(it) }.addOnSuccessListener { onSuccess() }
-  }
+        runBlocking {
+            try {
+                val fileDownloadTask = imageRef.getFile(localFile).await()
+                if (fileDownloadTask.task.isCanceled) {
+                    onFailure(fileDownloadTask.task.exception!!)
+                } else {
+                    val fileInputStream = FileInputStream(localFile)
+                    val bitmap =
+                        BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+                    onSuccess(bitmap.asImageBitmap())
+                }
+            } catch (e: Exception) {
+                Log.e("SuddenBump", e.toString())
+            }
+        }
+
+        localFile.renameTo(File(path.substringAfterLast('/')))
+    }
+
+    override fun uploadImage(
+        imageBitmap: ImageBitmap,
+        path: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        val baos = ByteArrayOutputStream()
+        imageBitmap.asAndroidBitmap().compress(Bitmap.CompressFormat.JPEG, 100, baos)
+        val data = baos.toByteArray()
+
+        val uploadTask = storage.reference.child(path).putBytes(data)
+        uploadTask.addOnFailureListener { onFailure(it) }.addOnSuccessListener { onSuccess() }
+    }
 }
