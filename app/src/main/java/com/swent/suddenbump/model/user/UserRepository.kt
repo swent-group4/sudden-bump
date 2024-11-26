@@ -18,23 +18,39 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
+  fun verifyUnusedPhoneNumber(
+      phoneNumber: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
   fun createUserAccount(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun createFriendRequest(
-      user: User,
-      friend: User,
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun createFriendHelper(
+      friendRequestsUidList: MutableList<String>,
+      friendsUidList: MutableList<String>,
+      uid: String,
+      fid: String,
+      updateField: String,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
   fun deleteFriendRequest(
-      user: User,
-      friend: User,
+      uid: String,
+      fid: String,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
-  fun createFriend(user: User, friend: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
+  fun createFriend(uid: String, fid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit)
 
@@ -42,75 +58,81 @@ interface UserRepository {
 
   fun updateUserAccount(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
-  fun deleteUserAccount(id: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
+  fun deleteUserAccount(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun getSentFriendRequests(
-      user: User,
+      uid: String,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   )
 
   fun setSentFriendRequests(
-      user: User,
+      uid: String,
       friendRequestsList: List<User>,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
   fun getUserFriendRequests(
-      user: User,
+      uid: String,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   )
 
   fun setUserFriendRequests(
-      user: User,
+      uid: String,
       friendRequestsList: List<User>,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
-  fun getUserFriends(user: User, onSuccess: (List<User>) -> Unit, onFailure: (Exception) -> Unit)
+  fun getUserFriends(uid: String, onSuccess: (List<User>) -> Unit, onFailure: (Exception) -> Unit)
 
   fun setUserFriends(
-      user: User,
+      uid: String,
       friendsList: List<User>,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
   fun getRecommendedFriends(
-      user: User,
+      uid: String,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   )
 
-  fun getBlockedFriends(user: User, onSuccess: (List<User>) -> Unit, onFailure: (Exception) -> Unit)
+  fun getBlockedFriends(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 
   fun setBlockedFriends(
-      user: User,
+      uid: String,
       blockedFriendsList: List<User>,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
-  fun updateLocation(
-      user: User,
+  fun updateUserLocation(
+      uid: String,
       location: Location,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
   fun updateTimestamp(
-      user: User,
+      uid: String,
       timestamp: Timestamp,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
-  fun getFriendsLocation(
-      userFriendsList: List<User>,
-      onSuccess: (Map<User, Location?>) -> Unit,
+  fun isFriendsInRadius(
+      userLocation: Location,
+      friends: List<User>,
+      radius: Double,
+      onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
@@ -127,7 +149,7 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-  fun saveLoginStatus(userId: String)
+  fun saveLoginStatus(uid: String)
 
   fun getSavedUid(): String
 

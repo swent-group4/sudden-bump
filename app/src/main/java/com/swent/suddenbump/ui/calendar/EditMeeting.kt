@@ -6,12 +6,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.meeting.MeetingViewModel
@@ -33,6 +35,7 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
         } ?: "")
   }
   val context = LocalContext.current
+  var showDatePicker by remember { mutableStateOf(false) }
 
   Scaffold(
       topBar = {
@@ -59,12 +62,20 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                   label = { Text("Location") },
                   textStyle = LocalTextStyle.current.copy(color = Color.White),
                   modifier = Modifier.fillMaxWidth().testTag("Location"))
+              // Date Field (Non-clickable)
               OutlinedTextField(
                   value = date,
                   onValueChange = { date = it },
                   label = { Text("Date (dd/MM/yyyy)") },
-                  textStyle = LocalTextStyle.current.copy(color = Color.White),
-                  modifier = Modifier.fillMaxWidth().testTag("Date"))
+                  textStyle = TextStyle(color = Color.White),
+                  modifier = Modifier.fillMaxWidth().testTag("Date"),
+                  trailingIcon = {
+                    IconButton(
+                        onClick = { showDatePicker = true },
+                        modifier = Modifier.testTag("DateIconButton")) {
+                          Icon(Icons.Filled.Edit, contentDescription = "Pick a date")
+                        }
+                  })
               Spacer(modifier = Modifier.height(16.dp))
               Button(
                   onClick = {
@@ -110,6 +121,33 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                   colors = ButtonDefaults.buttonColors(containerColor = Pink40)) {
                     Text("Delete Meeting")
                   }
+
+              // Show Date Picker Dialog if needed
+              if (showDatePicker) {
+                val calendar = Calendar.getInstance()
+                val year = calendar.get(Calendar.YEAR)
+                val month = calendar.get(Calendar.MONTH)
+                val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+                val datePickerDialog =
+                    android.app.DatePickerDialog(
+                        context,
+                        { _, y, m, d ->
+                          val selectedCalendar =
+                              Calendar.getInstance().apply {
+                                set(Calendar.YEAR, y)
+                                set(Calendar.MONTH, m)
+                                set(Calendar.DAY_OF_MONTH, d)
+                              }
+                          val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                          date = dateFormat.format(selectedCalendar.time)
+                          showDatePicker = false
+                        },
+                        year,
+                        month,
+                        day)
+                datePickerDialog.show()
+              }
             }
       })
 }

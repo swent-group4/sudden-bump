@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,14 +36,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.chat.ChatSummary
+import com.swent.suddenbump.model.chat.convertParticipantsUidToDisplay
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -53,11 +54,14 @@ import com.swent.suddenbump.ui.theme.Purple80
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessagesScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
-  val messages by viewModel.chatSummaries.collectAsStateWithLifecycle(emptyList())
+  viewModel.getChatSummaries()
   var search by remember { mutableStateOf("") }
 
-  var list by remember { mutableStateOf(messages) }
-  list = messages.filter { summary -> summary.date != "" && summary.sender.contains(search, true) }
+  val messages = viewModel.chatSummaries.collectAsState()
+  val list =
+      messages.value.filter { summary ->
+        summary.date != "" && summary.sender.contains(search, true)
+      }
 
   Scaffold(
       topBar = {
@@ -102,7 +106,7 @@ fun MessagesScreen(viewModel: UserViewModel, navigationActions: NavigationAction
           LazyColumn(modifier = Modifier.background(Color.Black).testTag("messages_list")) {
             itemsIndexed(list) { index, message ->
               MessageItem(message, viewModel, navigationActions)
-              if (index < messages.size - 1) {
+              if (index < messages.value.size - 1) {
                 // Ajouter un Divider seulement si ce n'est pas le dernier message
                 Divider(
                     color = Color.Gray, thickness = 1.dp, modifier = Modifier.testTag("divider"))
@@ -123,11 +127,17 @@ fun MessageItem(
       modifier =
           Modifier.fillMaxWidth()
               .padding(vertical = 8.dp)
-              .testTag("message_item_${message.sender}")
               .clickable {
-                viewModel.user = message.otherUser
+                viewModel.user =
+                    viewModel.getUserFriends().value.first {
+                      it.uid ==
+                          message.participants
+                              .filterNot { it2 -> it2 == viewModel.getCurrentUser().value.uid }
+                              .first()
+                    }
                 navigationActions.navigateTo(Screen.CHAT)
-              }) {
+              }
+              .testTag("message_item_${message.sender}")) {
         Image(
             painter = painterResource(R.drawable.profile),
             contentDescription = "Profile Avatar",
@@ -139,7 +149,11 @@ fun MessageItem(
               horizontalArrangement = Arrangement.SpaceBetween,
               modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = message.sender,
+                    text =
+                        convertParticipantsUidToDisplay(
+                            message,
+                            viewModel.getCurrentUser().collectAsState().value,
+                            viewModel.getUserFriends().collectAsState().value),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp)
@@ -157,9 +171,9 @@ fun MessageItem(
                     text = "You: ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
-                    maxLines = 1, // Limit text to one line
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.testTag("message_content"))
+                )
 
                 // Notification Badge
                 /*if (message.unreadCount > 0) {

@@ -33,7 +33,7 @@ import com.swent.suddenbump.ui.theme.violetColor
 fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val currentUser by userViewModel.getCurrentUser().collectAsState()
   val friendsGroupedByDistance by userViewModel.friendsGroupedByDistance.collectAsState()
-
+  
   // Start updating friends' locations when the screen is composed
   LaunchedEffect(Unit) { userViewModel.startUpdatingFriendsLocations() }
 

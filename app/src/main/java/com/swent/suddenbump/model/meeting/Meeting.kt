@@ -7,5 +7,6 @@ data class Meeting(
     val location: String = "",
     val date: Timestamp = Timestamp.now(),
     val friendId: String = "",
-    val creatorId: String = ""
+    val creatorId: String = "",
+    val accepted: Boolean = false
 )

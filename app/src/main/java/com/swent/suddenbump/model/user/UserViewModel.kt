@@ -17,6 +17,9 @@ import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -32,40 +35,54 @@ class UserViewModel(
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
+  private val chatSummaryDummy =
+      ChatSummary("1", "message content", "chat456", Timestamp.now(), 0, listOf("1", "2"))
+
   private val logTag = "UserViewModel"
   private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
-  val chatSummaries: Flow<List<ChatSummary>> = _chatSummaries.asStateFlow()
+  val chatSummaries: StateFlow<List<ChatSummary>> = _chatSummaries.asStateFlow()
   private val profilePicture = ImageBitMapIO()
   val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
-  val locationDummy =
+  private val locationDummy =
       MutableStateFlow(
           Location("dummy").apply {
             latitude = 0.0 // Set latitude
             longitude = 0.0 // Set longitude
           })
 
-  private val _user: MutableStateFlow<User> =
-      MutableStateFlow(
-          User(
-              "1",
-              "Martin",
-              "Vetterli",
-              "+41 00 000 00 01",
-              null,
-              "martin.vetterli@epfl.ch",
-              locationDummy))
+  val userDummy1 =
+      User(
+          "1",
+          "Martin",
+          "Vetterli",
+          "+41 00 000 00 01",
+          null,
+          "martin.vetterli@epfl.ch",
+          locationDummy)
+
+  val userDummy2 =
+      User(
+          "2",
+          "Martin",
+          "Vetterli",
+          "+41 00 000 00 01",
+          null,
+          "martin.vetterli@epfl.ch",
+          locationDummy)
+
+  private val _user: MutableStateFlow<User> = MutableStateFlow(userDummy2)
 
   private val _userFriendRequests: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(_user.value))
+      MutableStateFlow(listOf(userDummy1))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(_user.value))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+      MutableStateFlow(listOf(userDummy1))
+  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _recommendedFriends: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(_user.value))
-  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+      MutableStateFlow(listOf(userDummy1))
+  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
-  private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
+  private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
 
   // LiveData for verification status
   private val _verificationStatus = MutableLiveData<String>()
@@ -114,12 +131,12 @@ class UserViewModel(
           scheduleLocationUpdateWorker(getApplicationContext(), _user.value.uid)
           Log.d(logTag, "User set 1: ${_user.value}")
           repository.getUserFriends(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { friendsList ->
                 Log.d(logTag, friendsList.toString())
                 _userFriends.value = friendsList
                 repository.getBlockedFriends(
-                    user = _user.value,
+                    uid = _user.value.uid,
                     onSuccess = { blockedFriendsList ->
                       _blockedFriends.value = blockedFriendsList
                       // Start updating locations after friends are loaded
@@ -129,15 +146,15 @@ class UserViewModel(
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getSentFriendRequests(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getUserFriendRequests(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getRecommendedFriends(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { recommendedFriendsList ->
                 _recommendedFriends.value = recommendedFriendsList
               },
@@ -159,12 +176,12 @@ class UserViewModel(
         onSuccess = {
           _user.value = it
           repository.getUserFriends(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { friendsList ->
                 Log.i(logTag, friendsList.toString())
                 _userFriends.value = friendsList
                 repository.getBlockedFriends(
-                    user = _user.value,
+                    uid = _user.value.uid,
                     onSuccess = { blockedFriendsList ->
                       _blockedFriends.value = blockedFriendsList
                       onSuccess()
@@ -173,15 +190,15 @@ class UserViewModel(
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getSentFriendRequests(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getUserFriendRequests(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getRecommendedFriends(
-              user = _user.value,
+              uid = _user.value.uid,
               onSuccess = { recommendedFriendsList ->
                 _recommendedFriends.value = recommendedFriendsList
               },
@@ -217,6 +234,14 @@ class UserViewModel(
     repository.verifyNoAccountExists(emailAddress, onSuccess, onFailure)
   }
 
+  fun verifyUnusedPhoneNumber(
+      phoneNumber: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.verifyUnusedPhoneNumber(phoneNumber, onSuccess, onFailure)
+  }
+
   /**
    * Creates a new user account.
    *
@@ -243,7 +268,7 @@ class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.createFriend(user, friend, onSuccess, onFailure)
+    repository.createFriend(user.uid, friend.uid, onSuccess, onFailure)
     _userFriendRequests.value = _userFriendRequests.value.minus(friend)
     _userFriends.value = _userFriends.value.plus(friend)
   }
@@ -262,7 +287,7 @@ class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.deleteFriendRequest(user, friend, onSuccess, onFailure)
+    repository.deleteFriendRequest(user.uid, friend.uid, onSuccess, onFailure)
     _userFriendRequests.value = _userFriendRequests.value.minus(friend)
   }
 
@@ -280,7 +305,7 @@ class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.createFriendRequest(user, friend, onSuccess, onFailure)
+    repository.createFriendRequest(user.uid, friend.uid, onSuccess, onFailure)
     _sentFriendRequests.value = _sentFriendRequests.value.plus(friend)
   }
 
@@ -326,7 +351,7 @@ class UserViewModel(
       onFailure: (Exception) -> Unit
   ) {
     _userFriends.value = friendsList
-    repository.setUserFriends(user, friendsList, onSuccess, onFailure)
+    repository.setUserFriends(user.uid, friendsList, onSuccess, onFailure)
   }
 
   /**
@@ -371,7 +396,7 @@ class UserViewModel(
       onFailure: (Exception) -> Unit
   ) {
     _blockedFriends.value = blockedFriendsList
-    repository.setBlockedFriends(user, blockedFriendsList, onSuccess, onFailure)
+    repository.setBlockedFriends(user.uid, blockedFriendsList, onSuccess, onFailure)
   }
 
   /**
@@ -398,7 +423,7 @@ class UserViewModel(
       onFailure: (Exception) -> Unit
   ) {
     _user.value.lastKnownLocation.value = location
-    repository.updateLocation(user, location, onSuccess, onFailure)
+    repository.updateUserLocation(user.uid, location, onSuccess, onFailure)
   }
 
   /**
@@ -415,9 +440,9 @@ class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.updateTimestamp(user, timestamp, onSuccess, onFailure)
+    repository.updateTimestamp(user.uid, timestamp, onSuccess, onFailure)
   }
-
+  
   // Define DistanceRange enum
   enum class DistanceRange(val label: String, val minDistance: Float, val maxDistance: Float) {
     WITHIN_5KM("Within 5km", 0f, 5000f),
@@ -477,6 +502,7 @@ class UserViewModel(
           onFailure = { error ->
             // Handle the error, e.g., log or show error message
             Log.e("UserViewModel", "Failed to load friends' locations: ${error.message}")
+
           })
     } catch (e: Exception) {
       Log.e("UserViewModel", e.toString())
@@ -506,15 +532,11 @@ class UserViewModel(
    * @return True if any friends are within the radius, false otherwise.
    */
   fun isFriendsInRadius(radius: Int): Boolean {
-    loadFriendsLocations()
-    friendsLocations.value.values.forEach { friendLocation ->
-      if (friendLocation != null) {
-        Log.d(
-            "FriendsRadius",
-            "Friends Locations: ${_user.value.lastKnownLocation.value.distanceTo(friendLocation)}")
-        if (_user.value.lastKnownLocation.value.distanceTo(friendLocation) <= radius) {
-          return true
-        }
+    loadFriends()
+    _userFriends.value.forEach { friend ->
+      if (_user.value.lastKnownLocation.value.distanceTo(friend.lastKnownLocation.value) <=
+          radius) {
+        return true
       }
     }
     return false
@@ -562,9 +584,10 @@ class UserViewModel(
   }
 
   private val _messages = MutableStateFlow<List<Message>>(emptyList())
-  val messages: Flow<List<Message>> = _messages
+  val messages: StateFlow<List<Message>> = _messages
 
   private var chatId: String? = null
+  private var chatFriendId: String? = null
 
   private var isGettingChatId = false
 
@@ -581,6 +604,7 @@ class UserViewModel(
       viewModelScope.launch {
         if (!isGettingChatId) {
           isGettingChatId = true
+          chatFriendId = friendId
           chatId = chatRepository.getOrCreateChat(friendId, _user.value.uid)
           isGettingChatId = false
           chatRepository.getMessages(chatId!!).collect { messages -> _messages.value = messages }
@@ -593,9 +617,34 @@ class UserViewModel(
    * @param messageContent The content of the message.
    * @param user The user sending the message.
    */
+
+  fun getChatSummaries() =
+      viewModelScope.launch {
+        chatRepository.getChatSummaries(_user.value.uid).collect { list ->
+          _chatSummaries.value = list
+        }
+      }
+
+  fun deleteAllMessages() {
+    viewModelScope.launch {
+      chatId?.let {
+        chatRepository.deleteAllMessages(_user.value.uid)
+        _messages.value = emptyList()
+      }
+    }
+  }
+
+  // Send a new message and add it to Firestore
+
   fun sendMessage(messageContent: String, user: User) {
     viewModelScope.launch {
-      if (chatId != null) chatRepository.sendMessage(chatId!!, messageContent, user)
+      Log.d("Chat", "INSIDE FUN")
+      if (chatId != null)
+          chatRepository.sendMessage(
+              chatId!!,
+              messageContent,
+              _user.value,
+              _userFriends.value.first { it.uid == chatFriendId })
     }
   }
 

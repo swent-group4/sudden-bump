@@ -87,10 +87,13 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
     awaitClose { registration?.remove() }
   }
 
-  override suspend fun sendMessage(chatId: String, messageContent: String, user: User) {
-    val senderId = user.uid
-    val senderName = user.firstName
-    val username = user.lastName
+  override suspend fun sendMessage(
+      chatId: String,
+      messageContent: String,
+      userSender: User,
+      userReceiver: User
+  ) {
+    val senderId = userSender.uid
 
     try {
       val message =
@@ -109,8 +112,8 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
               mapOf(
                   "lastMessage" to messageContent,
                   "lastMessageTimestamp" to FieldValue.serverTimestamp(),
-                  "lastMessageSender" to senderName,
-                  "otherUserName" to username))
+                  "lastMessageSenderId" to userSender.uid,
+                  "otherUserId" to userReceiver.uid))
           .await()
     } catch (e: Exception) {
       e.printStackTrace()
@@ -118,12 +121,10 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
   }
 
   override fun getChatSummaries(userId: String): Flow<List<ChatSummary>> = callbackFlow {
-    val currentUserId = userId
-
     val registration =
         firestore
             .collection("chats")
-            .whereArrayContains("participants", currentUserId)
+            .whereArrayContains("participants", userId)
             .addSnapshotListener { chatsSnapshot, error ->
               if (error != null || chatsSnapshot == null) {
                 close(error)
@@ -144,6 +145,23 @@ class ChatRepositoryFirestore(private val firestore: FirebaseFirestore) : ChatRe
           continuation.resume(it.result.toObject(User::class.java))
         } else continuation.resume(null)
       }
+    }
+  }
+
+  override suspend fun deleteAllMessages(userId: String) {
+    try {
+      // First, get all chat documents where the current user is a participant
+      val chatSnapshot =
+          firestore.collection("chats").whereArrayContains("participants", userId).get().await()
+      for (chatDocument in chatSnapshot.documents) {
+        // For each chat document, get its "messages" subcollection
+        val messagesSnapshot = chatDocument.reference.collection("messages").get().await()
+        for (messageDocument in messagesSnapshot.documents) {
+          messageDocument.reference.delete().await()
+        }
+      }
+    } catch (e: Exception) {
+      throw Exception("Deletion failed", e)
     }
   }
 }

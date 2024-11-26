@@ -33,7 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import com.swent.suddenbump.model.LocationGetter
+import com.swent.suddenbump.model.location.LocationGetter
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
@@ -42,6 +42,7 @@ import com.swent.suddenbump.ui.authentication.SignUpScreen
 import com.swent.suddenbump.ui.calendar.AddMeetingScreen
 import com.swent.suddenbump.ui.calendar.CalendarMeetingsScreen
 import com.swent.suddenbump.ui.calendar.EditMeetingScreen
+import com.swent.suddenbump.ui.calendar.PendingMeetingsScreen
 import com.swent.suddenbump.ui.chat.ChatScreen
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.ContactScreen
@@ -97,12 +98,11 @@ class MainActivity : ComponentActivity() {
     FirebaseApp.initializeApp(this)
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
-    /*auth.currentUser?.let {
+    auth.currentUser?.let {
       // Sign out the user if they are already signed in
       // This is useful for testing purposes
       auth.signOut()
-
-    }*/
+    }
 
     setContent {
       SampleAppTheme {
@@ -164,7 +164,7 @@ class MainActivity : ComponentActivity() {
     val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
 
     val startRoute =
-        if (userViewModel.isUserLoggedIn()) {
+        if (!isRunningTest() && userViewModel.isUserLoggedIn()) {
           val uid = userViewModel.getSavedUid()
           Log.d("MainActivity", "User logged in: $uid")
           userViewModel.setCurrentUser(
@@ -173,13 +173,12 @@ class MainActivity : ComponentActivity() {
                 Log.i("MainActivity", "User set: ${userViewModel.getCurrentUser().value}")
               },
               onFailure = { e -> Log.e("MainActivity", e.toString()) })
+          // Schedule the LocationUpdateWorker
           scheduleLocationUpdateWorker(this, uid)
           Route.OVERVIEW
         } else {
           Route.AUTH
         }
-
-    // Schedule the LocationUpdateWorker
 
     NavHost(navController = navController, startDestination = startRoute) {
       navigation(
@@ -219,6 +218,9 @@ class MainActivity : ComponentActivity() {
           CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
         }
         composable(Screen.EDIT_MEETING) { EditMeetingScreen(navigationActions, meetingViewModel) }
+        composable(Screen.PENDING_MEETINGS) {
+          PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+        }
       }
 
       navigation(
@@ -242,7 +244,8 @@ class MainActivity : ComponentActivity() {
       composable("ConfidentialityScreen") {
         ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
       }
-      composable("DiscussionsScreen") { DiscussionScreen(navigationActions) }
+      composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
+
       composable("StorageAndDataScreen") { StorageAndDataScreen(navigationActions) }
       composable("HelpScreen") { HelpScreen(navigationActions) }
     }
@@ -262,9 +265,6 @@ class MainActivity : ComponentActivity() {
       }
       backgroundLocationGranted -> {
         locationGetter.requestLocationUpdates()
-      }
-      else -> {
-        // Toast.makeText(this, "Location Permissions Denied", Toast.LENGTH_SHORT).show()
       }
     }
   }

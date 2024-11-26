@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.location.Location
-import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -19,6 +18,7 @@ import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
+import com.swent.suddenbump.ui.map.showFriendNearbyNotification
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -54,15 +54,11 @@ class LocationUpdateWorker(
         Log.d("WorkerSuddenBump", "Got location: $location")
         val repository = UserRepositoryFirestore(Firebase.firestore, applicationContext)
         val uid = repository.getSavedUid()
-
-        if (uid == null) {
-          Log.d("WorkerSuddenBump", "User ID not found")
-          return@withContext Result.failure()
-        }
+        val radius = 5000.0
 
         Log.d("WorkerSuddenBump", "Got userId: $uid")
 
-        val user = uid?.let { getUserAccountSuspend(repository, it) }
+        val user = getUserAccountSuspend(repository, uid)
         Log.d("WorkerSuddenBump", "Got user: $user")
 
         if (user != null) {
@@ -70,17 +66,33 @@ class LocationUpdateWorker(
 
           val timestamp = Timestamp.now()
 
-          repository.updateLocation(
-              user = user,
+          repository.updateUserLocation(
+              uid = user.uid,
               location = location,
               onSuccess = { /* Handle success */},
-              onFailure = { error -> /* Handle failure */ })
+              onFailure = { /* Handle failure */})
 
           repository.updateTimestamp(
-              user,
+              user.uid,
               timestamp = timestamp,
               onSuccess = { /* Handle success */},
-              onFailure = { error -> /* Handle failure */ })
+              onFailure = { /* Handle failure */})
+
+          repository.getUserFriends(
+              uid = user.uid,
+              onSuccess = { friends ->
+                repository.isFriendsInRadius(
+                    location,
+                    friends,
+                    radius,
+                    onSuccess = { showFriendNearbyNotification(applicationContext) },
+                    onFailure = {
+                      Log.d("WorkerSuddenBump", "isFriendsInRadius encountered an issue")
+                    })
+              },
+              onFailure = {
+                Log.d("WorkerSuddenBump", "Retrieval of friends encountered an issue")
+              })
 
           Result.success()
         } else {
@@ -127,12 +139,10 @@ class LocationUpdateWorker(
     val title = "Location Update"
     val cancel = "Cancel"
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      val channel = NotificationChannel(channelId, title, NotificationManager.IMPORTANCE_DEFAULT)
-      val notificationManager =
-          applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-      notificationManager.createNotificationChannel(channel)
-    }
+    val channel = NotificationChannel(channelId, title, NotificationManager.IMPORTANCE_DEFAULT)
+    val notificationManager =
+        applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    notificationManager.createNotificationChannel(channel)
 
     val notification =
         NotificationCompat.Builder(applicationContext, channelId)
