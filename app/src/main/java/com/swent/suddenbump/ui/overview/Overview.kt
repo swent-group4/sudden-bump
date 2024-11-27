@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.DistanceCategory
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
@@ -92,15 +92,17 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
               if (groupedFriends.isNotEmpty()) {
-                groupedFriends.forEach { (category, friendsList) ->
-                  item { CategoryHeader(category) }
-                  items(friendsList) { (friend, _) ->
-                    UserRow(
-                        user = friend,
-                        navigationActions = navigationActions,
-                        userViewModel = userViewModel)
-                  }
-                }
+                groupedFriends.entries
+                    .sortedBy { it.key.ordinal }
+                    .forEach { (category, friendsList) ->
+                      item { CategoryHeader(category) }
+                      items(friendsList) { (friend, _) ->
+                        UserRow(
+                            user = friend,
+                            navigationActions = navigationActions,
+                            userViewModel = userViewModel)
+                      }
+                    }
               } else {
                 item {
                   Text(
