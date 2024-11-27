@@ -4,11 +4,7 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
@@ -19,19 +15,19 @@ import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel class for managing user-related data and operations. It acts as a bridge between the UI
- * and the underlying UserRepository and ChatRepository, handling tasks such as user authentication,
- * friend management, chat operations, and location updates.
- *
- * @property repository The UserRepository instance used for managing user data.
- * @property chatRepository The ChatRepository instance used for managing chats and messages.
- */
+/** Enumération pour les catégories de distance utilisées pour regrouper les amis. */
+enum class DistanceCategory(val maxDistance: Float, val title: String) {
+  WITHIN_5KM(5000f, "Within 5km"),
+  WITHIN_10KM(10000f, "Within 10km"),
+  WITHIN_20KM(20000f, "Within 20km"),
+  FURTHER(Float.MAX_VALUE, "Further")
+}
+
+/** Classe ViewModel pour gérer les données et opérations liées à l'utilisateur. */
 open class UserViewModel(
     private val repository: UserRepository,
     private val chatRepository: ChatRepository
@@ -49,8 +45,8 @@ open class UserViewModel(
   private val locationDummy =
       MutableStateFlow(
           Location("dummy").apply {
-            latitude = 0.0 // Set latitude
-            longitude = 0.0 // Set longitude
+            latitude = 0.0 // Latitude fictive
+            longitude = 0.0 // Longitude fictive
           })
 
   val userDummy1 =
@@ -86,29 +82,38 @@ open class UserViewModel(
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
 
-  // LiveData for verification status
+  // LiveData pour le statut de vérification
   private val _verificationStatus = MutableLiveData<String>()
   val verificationStatus: LiveData<String> = _verificationStatus
 
-  // LiveData for phone number
+  // LiveData pour le numéro de téléphone
   private val _phoneNumber = MutableLiveData<String>()
   val phoneNumber: LiveData<String> = _phoneNumber
 
-  // LiveData for verification ID
+  // LiveData pour l'ID de vérification
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
-  /** Initializes the ViewModel by setting up the repository. */
+  // Amis groupés par catégorie de distance
+  private val _groupedFriends =
+      MutableStateFlow<Map<DistanceCategory, List<Pair<User, Float>>>>(emptyMap())
+  val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>> =
+      _groupedFriends.asStateFlow()
+
+  /** Initialise le ViewModel en configurant le dépôt. */
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
+
+    // Rafraîchit les amis groupés toutes les 5 secondes
+    viewModelScope.launch {
+      while (true) {
+        computeGroupedFriends()
+        delay(5000) // Rafraîchir toutes les 5 secondes
+      }
+    }
   }
 
-  /**
-   * Factory method for creating a UserViewModel instance with the required dependencies.
-   *
-   * @param context The application context used to initialize the repositories.
-   * @return A ViewModelProvider.Factory for creating UserViewModel instances.
-   */
+  /** Méthode de fabrique pour créer une instance de UserViewModel avec les dépendances requises. */
   companion object {
     fun provideFactory(context: Context): ViewModelProvider.Factory {
       return object : ViewModelProvider.Factory {
@@ -122,8 +127,8 @@ open class UserViewModel(
   }
 
   /**
-   * Sets the current authenticated user in the ViewModel and fetches related data such as friends,
-   * friend requests, and recommendations.
+   * Définit l'utilisateur actuellement authentifié dans le ViewModel et récupère les données
+   * associées.
    */
   fun setCurrentUser() {
     repository.getUserAccount(
@@ -163,13 +168,7 @@ open class UserViewModel(
         onFailure = { e -> Log.e(logTag, e.toString()) })
   }
 
-  /**
-   * Sets the current user by UID and fetches related data.
-   *
-   * @param uid The unique identifier of the user to set.
-   * @param onSuccess Called when the operation succeeds.
-   * @param onFailure Called with an exception if the operation fails.
-   */
+  /** Définit l'utilisateur actuel par UID et récupère les données associées. */
   fun setCurrentUser(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     repository.getUserAccount(
         uid,
@@ -207,25 +206,13 @@ open class UserViewModel(
         onFailure)
   }
 
-  /**
-   * Updates the current user with the given User object.
-   *
-   * @param user The updated User object.
-   * @param onSuccess Called when the update succeeds.
-   * @param onFailure Called with an exception if the update fails.
-   */
+  /** Met à jour l'utilisateur actuel avec l'objet User donné. */
   fun setUser(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     _user.value = user
     repository.updateUserAccount(user, onSuccess, onFailure)
   }
 
-  /**
-   * Verifies if no account exists for the given email address.
-   *
-   * @param emailAddress The email address to verify.
-   * @param onSuccess Called with `true` if no account exists, `false` otherwise.
-   * @param onFailure Called with an exception if the operation fails.
-   */
+  /** Vérifie si aucun compte n'existe pour l'adresse e-mail donnée. */
   fun verifyNoAccountExists(
       emailAddress: String,
       onSuccess: (Boolean) -> Unit,
@@ -242,26 +229,13 @@ open class UserViewModel(
     repository.verifyUnusedPhoneNumber(phoneNumber, onSuccess, onFailure)
   }
 
-  /**
-   * Creates a new user account.
-   *
-   * @param user The User object containing the account details.
-   * @param onSuccess Called when the account is successfully created.
-   * @param onFailure Called with an exception if the operation fails.
-   */
+  /** Crée un nouveau compte utilisateur. */
   fun createUserAccount(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     _user.value = user
     repository.createUserAccount(user, onSuccess, onFailure)
   }
 
-  /**
-   * Accepts a friend request and updates the friend lists.
-   *
-   * @param user The current user accepting the request.
-   * @param friend The user who sent the friend request.
-   * @param onSuccess Called when the operation succeeds.
-   * @param onFailure Called with an exception if the operation fails.
-   */
+  /** Accepte une demande d'ami et met à jour les listes d'amis. */
   fun acceptFriendRequest(
       user: User = _user.value,
       friend: User,
@@ -273,14 +247,7 @@ open class UserViewModel(
     _userFriends.value = _userFriends.value.plus(friend)
   }
 
-  /**
-   * Declines a friend request and removes it from the pending requests.
-   *
-   * @param user The current user declining the request.
-   * @param friend The user whose request is being declined.
-   * @param onSuccess Called when the operation succeeds.
-   * @param onFailure Called with an exception if the operation fails.
-   */
+  /** Refuse une demande d'ami et la supprime des demandes en attente. */
   fun declineFriendRequest(
       user: User = _user.value,
       friend: User,
@@ -291,14 +258,7 @@ open class UserViewModel(
     _userFriendRequests.value = _userFriendRequests.value.minus(friend)
   }
 
-  /**
-   * Sends a friend request to another user.
-   *
-   * @param user The current user sending the request.
-   * @param friend The user receiving the friend request.
-   * @param onSuccess Called when the operation succeeds.
-   * @param onFailure Called with an exception if the operation fails.
-   */
+  /** Envoie une demande d'ami à un autre utilisateur. */
   fun sendFriendRequest(
       user: User = _user.value,
       friend: User,
@@ -309,41 +269,22 @@ open class UserViewModel(
     _sentFriendRequests.value = _sentFriendRequests.value.plus(friend)
   }
 
-  /**
-   * Retrieves the current authenticated user's details as a StateFlow.
-   *
-   * @return A StateFlow containing the current User object.
-   */
+  /** Récupère les détails de l'utilisateur actuellement authentifié sous forme de StateFlow. */
   fun getCurrentUser(): StateFlow<User> {
     return _user.asStateFlow()
   }
 
-  /**
-   * Retrieves the current user's friends as a StateFlow.
-   *
-   * @return A StateFlow containing a list of the user's friends.
-   */
+  /** Récupère les amis de l'utilisateur actuel sous forme de StateFlow. */
   fun getUserFriends(): StateFlow<List<User>> {
     return _userFriends.asStateFlow()
   }
 
-  /**
-   * Retrieves the user's friend requests as a StateFlow.
-   *
-   * @return A StateFlow representing the user's friend requests.
-   */
+  /** Récupère les demandes d'ami de l'utilisateur sous forme de StateFlow. */
   fun getUserFriendRequests(): StateFlow<List<User>> {
     return _userFriendRequests.asStateFlow()
   }
 
-  /**
-   * Updates the user's friends list in the repository.
-   *
-   * @param user The user whose friends list is being updated.
-   * @param friendsList The updated list of friends.
-   * @param onSuccess Called when the update is successful.
-   * @param onFailure Called with an exception if the update fails.
-   */
+  /** Met à jour la liste des amis de l'utilisateur dans le dépôt. */
   fun setUserFriends(
       user: User = _user.value,
       friendsList: List<User>,
@@ -380,14 +321,7 @@ open class UserViewModel(
     return _user.value.lastKnownLocation.asStateFlow()
   }
 
-  /**
-   * Updates the user's location in the repository.
-   *
-   * @param user The user whose location is being updated.
-   * @param location The new location.
-   * @param onSuccess Called when the update is successful.
-   * @param onFailure Called with an exception if the update fails.
-   */
+  /** Met à jour la localisation de l'utilisateur dans le dépôt. */
   fun updateLocation(
       user: User = _user.value,
       location: Location,
@@ -398,14 +332,7 @@ open class UserViewModel(
     repository.updateUserLocation(user.uid, location, onSuccess, onFailure)
   }
 
-  /**
-   * Updates the user's last activity timestamp in the repository.
-   *
-   * @param user The user whose timestamp is being updated.
-   * @param timestamp The new timestamp.
-   * @param onSuccess Called when the update is successful.
-   * @param onFailure Called with an exception if the update fails.
-   */
+  /** Met à jour le timestamp de la dernière activité de l'utilisateur dans le dépôt. */
   fun updateTimestamp(
       user: User = _user.value,
       timestamp: Timestamp,
@@ -422,14 +349,14 @@ open class UserViewModel(
       repository.getUserFriends(
           uid = _user.value.uid,
           onSuccess = { friends ->
-            // Update the state with the locations of friends
+            // Met à jour l'état avec la liste des amis
             _userFriends.value = friends
             Log.d("FriendsMarkers", "On success load Friends ${_userFriends.value}")
             println("On success load Friends $friends")
           },
           onFailure = { error ->
-            // Handle the error, e.g., log or show error message
-            Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
+            // Gère l'erreur
+            Log.e("UserViewModel", "Failed to load friends: ${error.message}")
             println("exception1")
           })
     } catch (e: Exception) {
@@ -450,7 +377,7 @@ open class UserViewModel(
   fun getRelativeDistance(friend: User): Float {
     val userLocation = _user.value.lastKnownLocation.value
     val friendLocation = friend.lastKnownLocation.value
-    if ((userLocation == locationDummy.value || friendLocation == locationDummy.value)) {
+    if (userLocation == locationDummy.value || friendLocation == locationDummy.value) {
       return Float.MAX_VALUE
     }
     return userLocation.distanceTo(friendLocation)
@@ -526,7 +453,7 @@ open class UserViewModel(
     }
   }
 
-  // Send a new message and add it to Firestore
+  // Envoie un nouveau message et l'ajoute à Firestore
   fun sendMessage(messageContent: String, user: User) {
     viewModelScope.launch {
       Log.d("Chat", "INSIDE FUN")
@@ -539,27 +466,19 @@ open class UserViewModel(
     }
   }
 
-  /**
-   * Sends a verification code to the specified phone number.
-   *
-   * @param phoneNumber The phone number to verify.
-   */
+  /** Envoie un code de vérification au numéro de téléphone spécifié. */
   fun sendVerificationCode(phoneNumber: String) {
     _phoneNumber.value = phoneNumber
     repository.sendVerificationCode(
         phoneNumber,
         onSuccess = { verificationId ->
-          _verificationId.postValue(verificationId) // Store the verification ID
+          _verificationId.postValue(verificationId) // Stocke l'ID de vérification
           _verificationStatus.postValue("Code Sent")
         },
         onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })
   }
 
-  /**
-   * Verifies the provided code using the verification ID.
-   *
-   * @param code The verification code to validate.
-   */
+  /** Vérifie le code fourni en utilisant l'ID de vérification. */
   fun verifyCode(code: String) {
     val verificationIdValue = _verificationId.value
     if (verificationIdValue != null) {
@@ -571,5 +490,31 @@ open class UserViewModel(
     } else {
       _verificationStatus.postValue("Verification ID is missing.")
     }
+  }
+
+  /** Calcule et groupe les amis par catégories de distance. */
+  private suspend fun computeGroupedFriends() {
+    val userLocation = _user.value.lastKnownLocation.value
+    val friends = _userFriends.value
+    val friendsWithDistances =
+        friends.mapNotNull { friend ->
+          val distance = getRelativeDistance(friend)
+          if (distance != Float.MAX_VALUE) {
+            friend to distance
+          } else {
+            null
+          }
+        }
+
+    val grouped =
+        friendsWithDistances.groupBy { (_, distance) ->
+          when {
+            distance <= DistanceCategory.WITHIN_5KM.maxDistance -> DistanceCategory.WITHIN_5KM
+            distance <= DistanceCategory.WITHIN_10KM.maxDistance -> DistanceCategory.WITHIN_10KM
+            distance <= DistanceCategory.WITHIN_20KM.maxDistance -> DistanceCategory.WITHIN_20KM
+            else -> DistanceCategory.FURTHER
+          }
+        }
+    _groupedFriends.value = grouped
   }
 }
