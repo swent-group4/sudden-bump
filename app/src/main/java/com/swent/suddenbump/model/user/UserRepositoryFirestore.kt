@@ -956,12 +956,17 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    * Logs out the current user by updating shared preferences to remove login status and user ID.
    */
   override fun logoutUser() {
-    with(sharedPreferences.edit()) {
-      putBoolean("isLoggedIn", false)
-      putString("userId", null)
-      apply()
-    }
+      // Deconnect from Firebase Auth
+      FirebaseAuth.getInstance().signOut()
+
+      // Delete connexion state in SharedPreferences
+      with(sharedPreferences.edit()) {
+          putBoolean("isLoggedIn", false)
+          putString("userId", null)
+          apply()
+      }
   }
+
 
   /**
    * Converts a JSON list of user IDs into a list of User objects by fetching their details from

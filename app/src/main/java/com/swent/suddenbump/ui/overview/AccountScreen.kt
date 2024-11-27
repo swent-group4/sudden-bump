@@ -13,14 +13,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.utils.AccountOption
 import com.swent.suddenbump.ui.utils.CustomTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountScreen(navigationActions: NavigationActions) {
+fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   var selectedLanguage by remember { mutableStateOf("English") }
   var isLanguageMenuExpanded by remember { mutableStateOf(false) }
 
@@ -74,13 +76,17 @@ fun AccountScreen(navigationActions: NavigationActions) {
                     testTag = "deleteAccountSection")
               }
 
-              item {
+            item {
                 AccountOption(
                     label = "Log out",
                     backgroundColor = Pink40,
-                    onClick = { navigationActions.navigateTo("AccountScreen") },
-                    testTag = "logoutSection")
-              }
+                    onClick = {
+                        userViewModel.logout()
+                        navigationActions.navigateTo(Screen.LOGIN)
+                    },
+                    testTag = "logoutSection"
+                )
+            }
 
               item {
                 ChangeSection(

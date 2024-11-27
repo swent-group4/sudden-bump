@@ -37,6 +37,8 @@ open class UserViewModel(
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
+  private val _isLoggedIn = MutableStateFlow(repository.isUserLoggedIn())
+  val isLoggedIn: StateFlow<Boolean> get() = _isLoggedIn
   private val chatSummaryDummy =
       ChatSummary("1", "message content", "chat456", Timestamp.now(), 0, listOf("1", "2"))
 
@@ -483,9 +485,42 @@ open class UserViewModel(
     return repository.isUserLoggedIn()
   }
 
-  fun logout() {
-    repository.logoutUser()
-  }
+    fun logout() {
+        repository.logoutUser()
+
+        // Réinitialiser les variables liées à l'utilisateur
+        _user.value = User(
+            uid = "",
+            firstName = "",
+            lastName = "",
+            phoneNumber = "",
+            profilePicture = null,
+            emailAddress = "",
+            lastKnownLocation = locationDummy
+        )
+        _userFriends.value = emptyList()
+        _userFriendRequests.value = emptyList()
+        _sentFriendRequests.value = emptyList()
+        _recommendedFriends.value = emptyList()
+        _blockedFriends.value = emptyList()
+        _selectedContact.value = User(
+            uid = "",
+            firstName = "",
+            lastName = "",
+            phoneNumber = "",
+            profilePicture = null,
+            emailAddress = "",
+            lastKnownLocation = locationDummy
+        )
+        _chatSummaries.value = emptyList()
+        _messages.value = emptyList()
+        chatId = null
+        chatFriendId = null
+        isGettingChatId = false
+        // Update the login state
+        _isLoggedIn.value = false
+    }
+
 
   private val _messages = MutableStateFlow<List<Message>>(emptyList())
   val messages: StateFlow<List<Message>> = _messages

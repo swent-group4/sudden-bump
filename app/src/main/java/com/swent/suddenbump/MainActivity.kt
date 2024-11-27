@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -162,6 +164,8 @@ class MainActivity : ComponentActivity() {
 
     val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
     val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
+    val isLoggedIn by userViewModel.isLoggedIn.collectAsState()
+    // Observe the login state
 
     val startRoute =
         if (!isRunningTest() && userViewModel.isUserLoggedIn()) {
@@ -179,7 +183,15 @@ class MainActivity : ComponentActivity() {
         } else {
           Route.AUTH
         }
-
+      LaunchedEffect(isLoggedIn) {
+          if (!isLoggedIn) {
+              // Navigate to AUTH route and clear back stack
+              navController.navigate(Route.AUTH) {
+                  popUpTo(0) { inclusive = true }
+                  launchSingleTop = true
+              }
+          }
+      }
     NavHost(navController = navController, startDestination = startRoute) {
       navigation(
           startDestination = Screen.AUTH,
@@ -240,7 +252,7 @@ class MainActivity : ComponentActivity() {
       }
 
       // Add new screens from Settings.kt
-      composable("AccountScreen") { AccountScreen(navigationActions) }
+      composable("AccountScreen") { AccountScreen(navigationActions, userViewModel) }
       composable("ConfidentialityScreen") {
         ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
       }
