@@ -1,0 +1,128 @@
+{
+  "project_info": {
+    "project_number": "309404538142",
+    "firebase_url": "https://sudden-bump-swent-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "sudden-bump-swent",
+    "storage_bucket": "sudden-bump-swent.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:309404538142:android:eb90b400869080aac7a50f",
+        "android_client_info": {
+          "package_name": "com.swent.suddenbump"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "309404538142-10dl9ggq8ilvmboljsjcl46jlu9nldd7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "d5a44f359766c04a9a1df88258a01bf18620f2b1"
+          }
+        },
+        {
+          "client_id": "309404538142-1fvchjildcfp5hd0ueklbp1daekt9271.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "0a48d49c62bdb9dd28ec8ac99d860d150461ca49"
+          }
+        },
+        {
+          "client_id": "309404538142-1l6gfuupcb5qc1druuh4b7jdni2ub4de.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "32d0695a07e97f238186a69895a7a1b4fe2d044a"
+          }
+        },
+        {
+          "client_id": "309404538142-4nletoh7qg9kbbgjvm0p04bsbgfd1tro.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "e7a1b0c0d634a73d4ea25ea546eb4b824bbcd106"
+          }
+        },
+        {
+          "client_id": "309404538142-6qkchnaqa0bapt3bk4kie0o9m2ff7mk1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "e13c59831ee885a19020aefafe00b609b5b3df21"
+          }
+        },
+        {
+          "client_id": "309404538142-g2qumipiuq2estm24astmoe7uuobkihp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "32f325a330b3ea60016d04550980c68d6790f6e6"
+          }
+        },
+        {
+          "client_id": "309404538142-mjl2steopc6mbqrvser3b0aa5g3jfbhk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "8e1be7794e7ac831e66b004bca3f98719cd36b6e"
+          }
+        },
+        {
+          "client_id": "309404538142-name8i5elobiq56th53fe218kapphj4a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "58587a78d972213ef84ba226069dbea837623b17"
+          }
+        },
+        {
+          "client_id": "309404538142-p9pvuqti3p91ajeqls62t665vf8n0u6n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "6afd9c863fc83ece110bd4cfb9da19969c3a91dd"
+          }
+        },
+        {
+          "client_id": "309404538142-s18mh9ogpouo8ffqutiksa2irsibmj4i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "e508f98c6f74a622460bb71237ce73d1ba4f9863"
+          }
+        },
+        {
+          "client_id": "309404538142-usu18g6amftc31p24i3hkmtp9spjst1n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.swent.suddenbump",
+            "certificate_hash": "eb83e1c4bc61edc5bf749bf3712956f141992eef"
+          }
+        },
+        {
+          "client_id": "309404538142-bp43jqg0vol601h45qii4vm0d9a87nj9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXccYDPVOe8G833HoZPKvOBSo27tNDcZA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "309404538142-bp43jqg0vol601h45qii4vm0d9a87nj9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
