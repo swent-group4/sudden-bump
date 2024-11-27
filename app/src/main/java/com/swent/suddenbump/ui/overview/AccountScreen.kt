@@ -82,7 +82,6 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     backgroundColor = Pink40,
                     onClick = {
                         userViewModel.logout()
-                        navigationActions.navigateTo(Screen.LOGIN)
                     },
                     testTag = "logoutSection"
                 )
