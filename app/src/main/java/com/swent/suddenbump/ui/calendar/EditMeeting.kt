@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.meeting.MeetingViewModel
@@ -21,6 +22,9 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
 import java.text.SimpleDateFormat
 import java.util.*
+import com.swent.suddenbump.ui.utils.formatDateString
+import com.swent.suddenbump.ui.utils.DateVisualTransformation
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,12 +32,13 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
   val meeting = meetingViewModel.selectedMeeting.collectAsState().value ?: return
 
   var location by remember { mutableStateOf(meeting.location) }
-  var date by remember {
-    mutableStateOf(
-        meeting.date.toDate()?.let {
-          SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it)
-        } ?: "")
-  }
+    var date by remember {
+        mutableStateOf(
+            meeting.date.toDate().let {
+                TextFieldValue(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it))
+            }
+        )
+    }
   val context = LocalContext.current
   var showDatePicker by remember { mutableStateOf(false) }
 
@@ -65,10 +70,13 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
               // Date Field (Non-clickable)
               OutlinedTextField(
                   value = date,
-                  onValueChange = { date = it },
+                  onValueChange = { newValue ->
+                      date = formatDateString(newValue)
+                  },
                   label = { Text("Date (dd/MM/yyyy)") },
                   textStyle = TextStyle(color = Color.White),
                   modifier = Modifier.fillMaxWidth().testTag("Date"),
+                  visualTransformation = DateVisualTransformation(),
                   trailingIcon = {
                     IconButton(
                         onClick = { showDatePicker = true },
@@ -81,10 +89,13 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                   onClick = {
                     try {
                       val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                      val parsedDate = dateFormat.parse(date)
+                        dateFormat.isLenient = false
+                      val parsedDate = dateFormat.parse(date.text)
                       val calendar =
                           GregorianCalendar().apply {
-                            time = parsedDate
+                            if (parsedDate != null) {
+                                time = parsedDate
+                            }
                             set(Calendar.HOUR_OF_DAY, 0)
                             set(Calendar.MINUTE, 0)
                             set(Calendar.SECOND, 0)
@@ -92,13 +103,11 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                           }
                       val meetingDate = Timestamp(calendar.time)
 
-                      val updatedMeeting = meeting?.copy(location = location, date = meetingDate)
-                      if (updatedMeeting != null) {
+                      val updatedMeeting = meeting.copy(location = location, date = meetingDate)
                         meetingViewModel.updateMeeting(updatedMeeting)
                         Toast.makeText(context, "Meeting updated successfully", Toast.LENGTH_SHORT)
                             .show()
                         navigationActions.goBack()
-                      }
                     } catch (e: Exception) {
                       Log.e("EditMeetingScreen", "Error parsing date", e)
                       Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
@@ -110,7 +119,7 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
               Spacer(modifier = Modifier.height(16.dp))
               Button(
                   onClick = {
-                    meeting?.let {
+                    meeting.let {
                       meetingViewModel.deleteMeeting(it.meetingId)
                       Toast.makeText(context, "Meeting deleted successfully", Toast.LENGTH_SHORT)
                           .show()
@@ -140,7 +149,7 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                                 set(Calendar.DAY_OF_MONTH, d)
                               }
                           val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                          date = dateFormat.format(selectedCalendar.time)
+                          date = TextFieldValue(dateFormat.format(selectedCalendar.time))
                           showDatePicker = false
                         },
                         year,
