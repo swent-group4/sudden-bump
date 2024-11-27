@@ -7,65 +7,86 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 
-
+/**
+ * A utility function to format a date string with slashes.
+ *
+ * @param input The current text field value.
+ * @return The formatted text field value.
+ */
 fun formatDateString(input: TextFieldValue): TextFieldValue {
     val digitsOnly = input.text.filter { it.isDigit() } // Extract only digits
-    val formatted = StringBuilder()
+    val originalCursorIndex = input.selection.start.coerceIn(0, input.text.length)
 
-    // Add slashes at correct positions: after day (2nd digit) and month (4th digit)
+    val formatted = StringBuilder()
+    val slashPositions = listOf(2, 5) // Positions where slashes should be added
+    var digitCount = 0
+    var newCursorIndex = 0
+
+    // Build the formatted string and adjust the cursor
     for (i in digitsOnly.indices) {
+        // Add the current digit
         formatted.append(digitsOnly[i])
-        if ((i == 1 || i == 3) && i < digitsOnly.length - 1) {
+        digitCount++
+
+        // Add slashes at the appropriate positions
+        if (digitCount in slashPositions && digitCount < digitsOnly.length) {
             formatted.append('/')
+        }
+
+        // Adjust the cursor position
+        if (digitCount <= originalCursorIndex) {
+            newCursorIndex = formatted.length
         }
     }
 
-    // Adjust the cursor position for the added slashes
-    val originalCursorPosition = input.selection.start
-    val slashCountBeforeCursor = input.text.take(originalCursorPosition).count { it == '/' }
-    val expectedSlashCount = formatted.count { it == '/' }
+    // Ensure the cursor skips slashes during deletion
+    if (newCursorIndex > 0 && formatted.getOrNull(newCursorIndex - 1) == '/') {
+        newCursorIndex--
+    }
 
-    // Update cursor position based on added/removed slashes
-    var newCursorPosition = originalCursorPosition + (expectedSlashCount - slashCountBeforeCursor)
-    newCursorPosition = newCursorPosition.coerceIn(0, formatted.length)
-
-    return TextFieldValue(formatted.toString(), TextRange(newCursorPosition))
+    return TextFieldValue(
+        text = formatted.toString().take(10), // Limit to "DD/MM/YYYY"
+        selection = TextRange(newCursorIndex)
+    )
 }
 
+
+/**
+ * A visual transformation that formats a date string with slashes.
+ */
 class DateVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
-        val trimmed = text.text.filter { it.isDigit() } // Keep only digits
+        val digitsOnly = text.text.filter { it.isDigit() }
         val formatted = StringBuilder()
 
-        // Build formatted text with slashes
-        for (i in trimmed.indices) {
-            formatted.append(trimmed[i])
-            if ((i == 1 || i == 3) && i < trimmed.length - 1) {
+        // Build the formatted string (DD/MM/YYYY)
+        for (i in digitsOnly.indices) {
+            formatted.append(digitsOnly[i])
+            if (i == 1 || i == 3) {
                 formatted.append('/')
             }
         }
 
-        // Map cursor positions
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
-                return when {
-                    offset <= 1 -> offset
-                    offset <= 3 -> offset + 1
-                    offset <= 6 -> offset + 2
-                    else -> offset + 2
-                }.coerceAtMost(formatted.length)
+                var transformedOffset = offset
+                if (offset > 1) transformedOffset++
+                if (offset > 3) transformedOffset++
+                return transformedOffset.coerceAtMost(formatted.length)
             }
 
             override fun transformedToOriginal(offset: Int): Int {
-                return when {
-                    offset <= 2 -> offset
-                    offset <= 5 -> offset - 1
-                    offset <= 8 -> offset - 2
-                    else -> offset - 2
-                }.coerceAtMost(trimmed.length)
+                var originalOffset = offset
+                if (offset > 2) originalOffset--
+                if (offset > 5) originalOffset--
+                return originalOffset.coerceAtMost(digitsOnly.length)
             }
         }
 
-        return TransformedText(AnnotatedString(formatted.toString()), offsetMapping)
+        return TransformedText(
+            text = AnnotatedString(formatted.toString().take(10)), // Ensure max length is 10
+            offsetMapping = offsetMapping
+        )
     }
 }
+
