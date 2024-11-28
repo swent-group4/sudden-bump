@@ -91,18 +91,35 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(pd)
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
-              if (groupedFriends.isNotEmpty()) {
-                groupedFriends.entries
-                    .sortedBy { it.key.ordinal }
-                    .forEach { (category, friendsList) ->
-                      item { CategoryHeader(category) }
-                      items(friendsList) { (friend, _) ->
-                        UserRow(
-                            user = friend,
-                            navigationActions = navigationActions,
-                            userViewModel = userViewModel)
+              if (groupedFriends?.isNotEmpty() == true) {
+                  groupedFriends!!.entries
+                      .sortedBy { it.key.ordinal }
+                      .forEach { (category, friendsList) ->
+                          item { CategoryHeader(category) }
+                          items(friendsList) { (friend, _) ->
+                              UserRow(
+                                  user = friend,
+                                  navigationActions = navigationActions,
+                                  userViewModel = userViewModel
+                              )
+                          }
                       }
-                    }
+              }else if (groupedFriends == null) {
+
+                  item {
+                      Box(
+                          modifier = Modifier
+                              .fillMaxSize()
+                              .padding(vertical = 8.dp),
+                          contentAlignment = Alignment.Center
+                      ) {
+                          CircularProgressIndicator(
+                              color = Color.White,
+                              modifier = Modifier.testTag("loadingFriends")
+                          )
+                      }
+                  }
+
               } else {
                 item {
                   Text(

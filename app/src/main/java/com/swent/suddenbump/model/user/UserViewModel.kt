@@ -75,7 +75,7 @@ open class UserViewModel(
       MutableStateFlow(listOf(userDummy1))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
+  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
   private val _recommendedFriends: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
@@ -94,23 +94,39 @@ open class UserViewModel(
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
-  // Amis groupés par catégorie de distance
-  private val _groupedFriends =
-      MutableStateFlow<Map<DistanceCategory, List<Pair<User, Float>>>>(emptyMap())
-  val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>> =
-      _groupedFriends.asStateFlow()
+
+// In UserViewModel
+
+    // Change the type to allow null values
+    val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
+        combine(_user, _userFriends) { user, friends ->
+            // Only compute grouped friends if friends are loaded
+            if (friends.isNotEmpty()) {
+                val friendsWithDistances = friends.mapNotNull { friend ->
+                    val distance = getRelativeDistance(friend)
+                    if (distance != Float.MAX_VALUE) {
+                        friend to distance
+                    } else {
+                        null
+                    }
+                }
+
+                friendsWithDistances.groupBy { (_, distance) ->
+                    when {
+                        distance <= DistanceCategory.WITHIN_5KM.maxDistance -> DistanceCategory.WITHIN_5KM
+                        distance <= DistanceCategory.WITHIN_10KM.maxDistance -> DistanceCategory.WITHIN_10KM
+                        distance <= DistanceCategory.WITHIN_20KM.maxDistance -> DistanceCategory.WITHIN_20KM
+                        else -> DistanceCategory.FURTHER
+                    }
+                }
+            } else {
+                null // Indicate that friends are not yet loaded
+            }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
   /** Initialise le ViewModel en configurant le dépôt. */
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
-
-    // Rafraîchit les amis groupés toutes les 5 secondes
-    viewModelScope.launch {
-      while (true) {
-        computeGroupedFriends()
-        delay(5000) // Rafraîchir toutes les 5 secondes
-      }
-    }
   }
 
   /** Méthode de fabrique pour créer une instance de UserViewModel avec les dépendances requises. */
@@ -492,29 +508,4 @@ open class UserViewModel(
     }
   }
 
-  /** Calcule et groupe les amis par catégories de distance. */
-  private suspend fun computeGroupedFriends() {
-    val userLocation = _user.value.lastKnownLocation.value
-    val friends = _userFriends.value
-    val friendsWithDistances =
-        friends.mapNotNull { friend ->
-          val distance = getRelativeDistance(friend)
-          if (distance != Float.MAX_VALUE) {
-            friend to distance
-          } else {
-            null
-          }
-        }
-
-    val grouped =
-        friendsWithDistances.groupBy { (_, distance) ->
-          when {
-            distance <= DistanceCategory.WITHIN_5KM.maxDistance -> DistanceCategory.WITHIN_5KM
-            distance <= DistanceCategory.WITHIN_10KM.maxDistance -> DistanceCategory.WITHIN_10KM
-            distance <= DistanceCategory.WITHIN_20KM.maxDistance -> DistanceCategory.WITHIN_20KM
-            else -> DistanceCategory.FURTHER
-          }
-        }
-    _groupedFriends.value = grouped
-  }
 }
