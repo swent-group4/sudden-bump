@@ -2288,9 +2288,8 @@ class UserRepositoryFirestoreTest {
       doAnswer { invocation ->
             val pathArgument = invocation.getArgument<String>(0)
             val onSuccess = invocation.getArgument<(ImageBitmap) -> Unit>(1)
-            onSuccess(
-                profilePicture) // Simulate the image download success, providing a mocked
-                                // ImageBitmap
+            onSuccess(profilePicture) // Simulate the image download success, providing a mocked
+            // ImageBitmap
             null // No return needed
           }
           .`when`(mockImageRepository)
@@ -2304,9 +2303,8 @@ class UserRepositoryFirestoreTest {
       doAnswer { invocation ->
             val listener = invocation.arguments[0] as OnSuccessListener<List<DocumentSnapshot>>
             listener.onSuccess(
-                listOf(
-                    mockedFriendsDocumentSnapshot)) // Simulate success with a list of friend
-                                                    // documents
+                listOf(mockedFriendsDocumentSnapshot)) // Simulate success with a list of friend
+            // documents
             mockTaskList // Return the mock task list
           }
           .`when`(mockTaskList)
