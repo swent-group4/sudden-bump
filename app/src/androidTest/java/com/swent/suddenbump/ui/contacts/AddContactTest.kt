@@ -6,6 +6,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
+import com.swent.suddenbump.model.user.UserWithFriendsInCommon
 import com.swent.suddenbump.ui.contact.AddContactScreen
 import com.swent.suddenbump.ui.contact.UserRecommendedRow
 import com.swent.suddenbump.ui.contact.UserRequestRow
@@ -46,8 +47,8 @@ class AddContactScreenTest {
                       latitude = 46.5180
                       longitude = 6.5680
                     }))
-    val user1 =
-        User(
+    val user1 = UserWithFriendsInCommon(
+        user = User(
             uid = "1",
             firstName = "John",
             lastName = "Doe",
@@ -57,11 +58,13 @@ class AddContactScreenTest {
             lastKnownLocation =
                 MutableStateFlow(
                     Location("mock_provider").apply {
-                      latitude = 46.5180
-                      longitude = 6.5680
-                    }))
-    val user2 =
-        User(
+                        latitude = 46.5180
+                        longitude = 6.5680
+                    })
+            ),
+            friendsInCommon = 2,
+      )
+    val user2 = User(
             uid = "2",
             firstName = "Jane",
             lastName = "Smith",
@@ -69,16 +72,20 @@ class AddContactScreenTest {
             profilePicture = null,
             emailAddress = "",
             lastKnownLocation =
-                MutableStateFlow(
-                    Location("mock_provider").apply {
-                      latitude = 46.5180
-                      longitude = 6.5681
-                    }))
+            MutableStateFlow(
+                Location("mock_provider").apply {
+                    latitude = 46.5180
+                    longitude = 6.5681
+                })
+    )
+
+
+
     every { navigationActions.currentRoute() } returns (Route.OVERVIEW)
     every { navigationActions.goBack() } returns Unit
 
     every { userViewModel.getCurrentUser() } returns MutableStateFlow(currentUser)
-    every { userViewModel.getUserRecommendedFriends() } returns MutableStateFlow(listOf(user1))
+    every { userViewModel.getUserRecommendedFriends() } returns MutableStateFlow(listOf( user1))
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(listOf(user2))
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getBlockedFriends() } returns MutableStateFlow(emptyList())
@@ -136,7 +143,7 @@ class UserRowsTest {
   private lateinit var navigationActions: NavigationActions
   private lateinit var userViewModel: UserViewModel
   private lateinit var currentUser: User
-  private lateinit var testUser: User
+  private lateinit var testUser: UserWithFriendsInCommon
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -160,8 +167,8 @@ class UserRowsTest {
                       longitude = 6.5680
                     }))
 
-    testUser =
-        User(
+    testUser = UserWithFriendsInCommon(
+        user =  User(
             uid = "1",
             firstName = "John",
             lastName = "Doe",
@@ -169,11 +176,14 @@ class UserRowsTest {
             profilePicture = null,
             emailAddress = "",
             lastKnownLocation =
-                MutableStateFlow(
-                    Location("mock_provider").apply {
-                      latitude = 46.5181
-                      longitude = 6.5681
-                    }))
+            MutableStateFlow(
+                Location("mock_provider").apply {
+                    latitude = 46.5181
+                    longitude = 6.5681
+                })),
+        friendsInCommon = 2,
+    )
+
 
     every { navigationActions.currentRoute() } returns Route.OVERVIEW
     every { userViewModel.setSelectedContact(any()) } returns Unit
@@ -184,7 +194,7 @@ class UserRowsTest {
     composeTestRule.setContent {
       UserRecommendedRow(
           currentUser = currentUser,
-          user = testUser,
+          userWithFriends = testUser,
           navigationActions = navigationActions,
           userViewModel = userViewModel,
           sentFriendRequests = emptyList(),
@@ -192,6 +202,7 @@ class UserRowsTest {
     }
 
     composeTestRule.onNodeWithText("John D.").assertIsDisplayed()
+      composeTestRule.onNodeWithText("${testUser.friendsInCommon} friends in common").assertIsDisplayed()
   }
 
   @Test
@@ -199,7 +210,7 @@ class UserRowsTest {
     composeTestRule.setContent {
       UserRecommendedRow(
           currentUser = currentUser,
-          user = testUser,
+          userWithFriends = testUser,
           navigationActions = navigationActions,
           userViewModel = userViewModel,
           sentFriendRequests = emptyList(),
@@ -207,7 +218,7 @@ class UserRowsTest {
     }
 
     composeTestRule.onRoot().performClick()
-    verify { userViewModel.setSelectedContact(testUser) }
+    verify { userViewModel.setSelectedContact(testUser.user) }
     verify { navigationActions.navigateTo(Screen.CONTACT) }
   }
 
@@ -216,10 +227,10 @@ class UserRowsTest {
     composeTestRule.setContent {
       UserRequestRow(
           currentUser = currentUser,
-          user = testUser,
+          user = testUser.user,
           navigationActions = navigationActions,
           userViewModel = userViewModel,
-          requestList = mutableStateOf(listOf(testUser)))
+          requestList = mutableStateOf(listOf(testUser.user)))
     }
 
     composeTestRule.onNodeWithText("John D.").assertIsDisplayed()
@@ -229,35 +240,35 @@ class UserRowsTest {
 
   @Test
   fun testUserRequestRowAcceptFriend() {
-    val requestList = mutableStateOf(listOf(testUser))
+    val requestList = mutableStateOf(listOf(testUser.user))
 
     composeTestRule.setContent {
       UserRequestRow(
           currentUser = currentUser,
-          user = testUser,
+          user = testUser.user,
           navigationActions = navigationActions,
           userViewModel = userViewModel,
           requestList = requestList)
     }
 
     composeTestRule.onNodeWithTag("acceptButton").performClick()
-    verify { userViewModel.acceptFriendRequest(currentUser, testUser, any(), any()) }
+    verify { userViewModel.acceptFriendRequest(currentUser, testUser.user, any(), any()) }
   }
 
   @Test
   fun testUserRequestRowDeclineFriend() {
-    val requestList = mutableStateOf(listOf(testUser))
+    val requestList = mutableStateOf(listOf(testUser.user))
 
     composeTestRule.setContent {
       UserRequestRow(
           currentUser = currentUser,
-          user = testUser,
+          user = testUser.user,
           navigationActions = navigationActions,
           userViewModel = userViewModel,
           requestList = requestList)
     }
 
     composeTestRule.onNodeWithTag("denyButton").performClick()
-    verify { userViewModel.declineFriendRequest(currentUser, testUser, any(), any()) }
+    verify { userViewModel.declineFriendRequest(currentUser, testUser.user, any(), any()) }
   }
 }
