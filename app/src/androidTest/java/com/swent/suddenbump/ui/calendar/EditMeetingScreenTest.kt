@@ -25,8 +25,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 
@@ -103,7 +105,7 @@ class EditMeetingScreenTest {
     composeTestRule.onNodeWithTag("Location").performTextClearance()
     composeTestRule.onNodeWithTag("Location").performTextInput("New Location")
     composeTestRule.onNodeWithTag("Date").performTextClearance()
-    composeTestRule.onNodeWithTag("Date").performTextInput("05/09/2024")
+    composeTestRule.onNodeWithTag("Date").performTextInput("25/12/2024")
     composeTestRule.onNodeWithTag("Save Changes").performClick()
 
     // Assert
@@ -114,10 +116,12 @@ class EditMeetingScreenTest {
         .updateMeeting(meetingCaptor.capture(), successCaptor.capture(), failureCaptor.capture())
 
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val parsedDate = dateFormat.parse("05/09/2024")
+    val parsedDate = dateFormat.parse("25/12/2024")
     val calendar =
         GregorianCalendar().apply {
-          time = parsedDate
+          if (parsedDate != null) {
+            time = parsedDate
+          }
           set(Calendar.HOUR_OF_DAY, 0)
           set(Calendar.MINUTE, 0)
           set(Calendar.SECOND, 0)
@@ -147,5 +151,41 @@ class EditMeetingScreenTest {
     verify(meetingRepository)
         .deleteMeetingById(
             eq("JhXlhoSvTmbtTFSVpNnA"), successCaptor.capture(), failureCaptor.capture())
+  }
+
+  @Test
+  fun doesNotSubmitWithInvalidDate() {
+    // Arrange
+    meetingViewModel.selectMeeting(meeting)
+    composeTestRule.setContent { EditMeetingScreen(navigationActions, meetingViewModel) }
+
+    // Test case 1: Invalid date format
+    composeTestRule.onNodeWithTag("Date").performTextClearance()
+    composeTestRule.onNodeWithTag("Date").performTextInput("notadate")
+    composeTestRule.onNodeWithTag("Save Changes").performClick()
+
+    verify(meetingRepository, never()).updateMeeting(anyOrNull(), anyOrNull(), anyOrNull())
+
+    // Test case 2: Past date
+    val pastDate = "01/01/2020"
+    composeTestRule.onNodeWithTag("Date").performTextClearance()
+    composeTestRule.onNodeWithTag("Date").performTextInput(pastDate)
+    composeTestRule.onNodeWithTag("Save Changes").performClick()
+
+    verify(meetingRepository, never()).updateMeeting(anyOrNull(), anyOrNull(), anyOrNull())
+
+    // Test case 3: Date format with too few digits
+    composeTestRule.onNodeWithTag("Date").performTextClearance()
+    composeTestRule.onNodeWithTag("Date").performTextInput("12/34/2")
+    composeTestRule.onNodeWithTag("Save Changes").performClick()
+
+    verify(meetingRepository, never()).updateMeeting(anyOrNull(), anyOrNull(), anyOrNull())
+
+    // Test case 4: Non-existent date
+    composeTestRule.onNodeWithTag("Date").performTextClearance()
+    composeTestRule.onNodeWithTag("Date").performTextInput("60/12/2025")
+    composeTestRule.onNodeWithTag("Save Changes").performClick()
+
+    verify(meetingRepository, never()).updateMeeting(anyOrNull(), anyOrNull(), anyOrNull())
   }
 }
