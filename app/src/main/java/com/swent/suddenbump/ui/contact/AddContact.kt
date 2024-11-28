@@ -122,7 +122,8 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                       Modifier.fillMaxWidth()
                           .padding(horizontal = 10.dp, vertical = 10.dp)
                           .testTag("searchTextField"),
-              )
+                  singleLine = true,
+                  maxLines = 1)
               if (friendRequests.value.isNotEmpty() && searchQuery.text.isEmpty()) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
