@@ -12,4 +12,14 @@ data class User(
     val profilePicture: ImageBitmap?,
     val emailAddress: String,
     val lastKnownLocation: MutableStateFlow<Location>,
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is User) return false
+    return uid == other.uid
+  }
+
+  override fun hashCode(): Int {
+    return uid.hashCode()
+  }
+}

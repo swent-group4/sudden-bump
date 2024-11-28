@@ -3,6 +3,7 @@ package com.swent.suddenbump.model.user
 import android.content.Context
 import android.location.Location
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -37,10 +38,14 @@ open class UserViewModel(
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
+  private val chatSummaryDummy =
+      ChatSummary("1", "message content", "chat456", Timestamp.now(), 0, listOf("1", "2"))
+
   private val logTag = "UserViewModel"
   private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
-  val chatSummaries: Flow<List<ChatSummary>> = _chatSummaries.asStateFlow()
+  val chatSummaries: StateFlow<List<ChatSummary>> = _chatSummaries.asStateFlow()
   private val profilePicture = ImageBitMapIO()
+  val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
   private val locationDummy =
       MutableStateFlow(
@@ -49,27 +54,38 @@ open class UserViewModel(
             longitude = 0.0 // Set longitude
           })
 
-  private val _user: MutableStateFlow<User> =
-      MutableStateFlow(
-          User(
-              "1",
-              "Martin",
-              "Vetterli",
-              "+41 00 000 00 01",
-              null,
-              "martin.vetterli@epfl.ch",
-              locationDummy))
+  val userDummy1 =
+      User(
+          "1",
+          "Martin",
+          "Vetterli",
+          "+41 00 000 00 01",
+          null,
+          "martin.vetterli@epfl.ch",
+          locationDummy)
+
+  val userDummy2 =
+      User(
+          "2",
+          "Martin",
+          "Vetterli",
+          "+41 00 000 00 01",
+          null,
+          "martin.vetterli@epfl.ch",
+          locationDummy)
+
+  private val _user: MutableStateFlow<User> = MutableStateFlow(userDummy2)
 
   private val _userFriendRequests: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(_user.value))
+      MutableStateFlow(listOf(userDummy1))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(_user.value))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
-  private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
-      MutableStateFlow(emptyList())
-  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
+      MutableStateFlow(listOf(userDummy1))
+  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
+    private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
+        MutableStateFlow(emptyList())
+  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
-  private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
+  private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
 
   // LiveData for verification status
   private val _verificationStatus = MutableLiveData<String>()
@@ -486,9 +502,10 @@ open class UserViewModel(
   }
 
   private val _messages = MutableStateFlow<List<Message>>(emptyList())
-  val messages: Flow<List<Message>> = _messages
+  val messages: StateFlow<List<Message>> = _messages
 
   private var chatId: String? = null
+  private var chatFriendId: String? = null
 
   private var isGettingChatId = false
 
@@ -500,9 +517,17 @@ open class UserViewModel(
       viewModelScope.launch {
         if (!isGettingChatId) {
           isGettingChatId = true
+          chatFriendId = friendId
           chatId = chatRepository.getOrCreateChat(friendId, _user.value.uid)
           isGettingChatId = false
           chatRepository.getMessages(chatId!!).collect { messages -> _messages.value = messages }
+        }
+      }
+
+  fun getChatSummaries() =
+      viewModelScope.launch {
+        chatRepository.getChatSummaries(_user.value.uid).collect { list ->
+          _chatSummaries.value = list
         }
       }
 
@@ -518,7 +543,13 @@ open class UserViewModel(
   // Send a new message and add it to Firestore
   fun sendMessage(messageContent: String, user: User) {
     viewModelScope.launch {
-      if (chatId != null) chatRepository.sendMessage(chatId!!, messageContent, user)
+      Log.d("Chat", "INSIDE FUN")
+      if (chatId != null)
+          chatRepository.sendMessage(
+              chatId!!,
+              messageContent,
+              _user.value,
+              _userFriends.value.first { it.uid == chatFriendId })
     }
   }
 

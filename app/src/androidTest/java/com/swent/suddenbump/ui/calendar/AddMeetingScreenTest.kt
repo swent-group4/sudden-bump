@@ -70,7 +70,7 @@ class AddMeetingScreenTest {
     composeTestRule.onNodeWithTag("Date").assertIsDisplayed()
     // Edit date icon button
     composeTestRule.onNodeWithTag("DateIconButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("Date").performTextInput("25/12/2024")
+    composeTestRule.onNodeWithTag("Date").performTextInput("25122024")
     // Click save button
     composeTestRule.onNodeWithTag("Save Meeting").assertIsDisplayed()
   }
@@ -81,8 +81,31 @@ class AddMeetingScreenTest {
       AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
     }
 
+    // Test case 1: Invalid date format
     composeTestRule.onNodeWithTag("Date").performTextClearance()
     composeTestRule.onNodeWithTag("Date").performTextInput("notadate")
+    composeTestRule.onNodeWithTag("Save Meeting").performClick()
+
+    verify(meetingRepository, never()).addMeeting(anyOrNull(), anyOrNull(), anyOrNull())
+
+    // Test case 2: Past date
+    val pastDate = "01/01/2020"
+    composeTestRule.onNodeWithTag("Date").performTextClearance()
+    composeTestRule.onNodeWithTag("Date").performTextInput(pastDate)
+    composeTestRule.onNodeWithTag("Save Meeting").performClick()
+
+    verify(meetingRepository, never()).addMeeting(anyOrNull(), anyOrNull(), anyOrNull())
+
+    // Test case 3: Date format with too few digits
+    composeTestRule.onNodeWithTag("Date").performTextClearance()
+    composeTestRule.onNodeWithTag("Date").performTextInput("12/34/2")
+    composeTestRule.onNodeWithTag("Save Meeting").performClick()
+
+    verify(meetingRepository, never()).addMeeting(anyOrNull(), anyOrNull(), anyOrNull())
+
+    // Test case 4: Non-existent date
+    composeTestRule.onNodeWithTag("Date").performTextClearance()
+    composeTestRule.onNodeWithTag("Date").performTextInput("60/12/2025")
     composeTestRule.onNodeWithTag("Save Meeting").performClick()
 
     verify(meetingRepository, never()).addMeeting(anyOrNull(), anyOrNull(), anyOrNull())
@@ -98,7 +121,7 @@ class AddMeetingScreenTest {
 
     // Act
     composeTestRule.onNodeWithTag("Location").performTextInput("Central Park")
-    composeTestRule.onNodeWithTag("Date").performTextInput("05/09/2024")
+    composeTestRule.onNodeWithTag("Date").performTextInput("25122024")
     composeTestRule.onNodeWithTag("Save Meeting").performClick()
     composeTestRule.waitForIdle() // Ensure all actions are processed
 

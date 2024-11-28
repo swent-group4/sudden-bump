@@ -1152,7 +1152,7 @@ internal class UserRepositoryFirestoreHelper {
    * @param mapAttributes The formatted String containing location details.
    * @return The reconstructed Location object.
    */
-  fun locationParser(mapAttributes: String): Location {
+  private fun locationParser(mapAttributes: String): Location {
     val locationMap =
         mapAttributes
             .removeSurrounding("{", "}")
@@ -1162,13 +1162,17 @@ internal class UserRepositoryFirestoreHelper {
 
     // Retrieve required attributes with default fallbacks
     val provider = locationMap["provider"] ?: LocationManager.GPS_PROVIDER
-    val latitude = locationMap["latitude"]!!.toDouble()
-    val longitude = locationMap["longitude"]!!.toDouble()
+    val latitude = locationMap["latitude"]?.toDouble()
+    val longitude = locationMap["longitude"]?.toDouble()
 
     // Create the Location object with the mandatory values
     return Location(provider).apply {
-      this.latitude = latitude
-      this.longitude = longitude
+      if (latitude != null) {
+        this.latitude = latitude
+      }
+      if (longitude != null) {
+        this.longitude = longitude
+      }
 
       // Set optional values if present
       locationMap["altitude"]?.toDoubleOrNull()?.let { this.altitude = it }

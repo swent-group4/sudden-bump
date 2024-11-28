@@ -138,7 +138,7 @@ class UserRepositoryFirestoreTest {
                 "uid" to "1",
                 "firstName" to "Alexandre",
                 "lastName" to "Carel",
-                "phoneNumber" to "+33659207002",
+                "phoneNumber" to "+33 6 59 20 70 02",
                 "emailAddress" to "alexandre.carel@epfl.ch"))
 
     `when`(mockFirestore.collection("Emails")).thenReturn(mockEmailCollectionReference)
@@ -187,7 +187,11 @@ class UserRepositoryFirestoreTest {
         mockFirebaseAuth,
         mockFirebaseUser,
         mockFriendDocumentReference,
-        mockFriendDocumentSnapshot)
+        mockFriendDocumentSnapshot,
+        mockPhoneCollectionReference,
+        mockPhoneDocumentReference,
+        mockPhoneDocumentSnapshot,
+        mockPhoneQuerySnapshot)
   }
 
   @Test
@@ -355,6 +359,10 @@ class UserRepositoryFirestoreTest {
     `when`(mockEmailCollectionReference.document(user.emailAddress).set(any()))
         .thenReturn(mockCompleteTask)
 
+    `when`(mockPhoneDocumentReference.set(any())).thenReturn(mockTask)
+    `when`(mockPhoneCollectionReference.document(user.phoneNumber).set(any()))
+        .thenReturn(mockCompleteTask)
+
     // Act
     userRepositoryFirestore.createUserAccount(
         user = user,
@@ -388,6 +396,10 @@ class UserRepositoryFirestoreTest {
     `when`(mockEmailCollectionReference.document(user.emailAddress).set(any()))
         .thenReturn(mockCompleteTask)
 
+    `when`(mockUserDocumentReference.set(any())).thenReturn(mockTask)
+    `when`(mockPhoneCollectionReference.document(user.phoneNumber).set(any()))
+        .thenReturn(mockCompleteTask)
+
     doAnswer {
           val onFailure = it.getArgument<(Exception) -> Unit>(3)
           onFailure(exception)
@@ -419,6 +431,9 @@ class UserRepositoryFirestoreTest {
 
     `when`(mockUserDocumentReference.set(any())).thenReturn(mockTask)
     `when`(mockEmailCollectionReference.document(user.emailAddress).set(any())).thenReturn(mockTask)
+
+    `when`(mockUserDocumentReference.set(any())).thenReturn(mockTask)
+    `when`(mockPhoneCollectionReference.document(user.phoneNumber).set(any())).thenReturn(mockTask)
 
     // Act
     val userWithoutProfilePicture = user.copy(profilePicture = null)
@@ -479,6 +494,10 @@ class UserRepositoryFirestoreTest {
 
     `when`(mockUserDocumentReference.set(any())).thenReturn(mockTask)
     `when`(mockEmailCollectionReference.document(user.emailAddress).set(any()))
+        .thenReturn(mockCompleteTask)
+
+    `when`(mockUserDocumentReference.set(any())).thenReturn(mockTask)
+    `when`(mockPhoneCollectionReference.document(user.phoneNumber).set(any()))
         .thenReturn(mockCompleteTask)
 
     doAnswer {
@@ -545,6 +564,10 @@ class UserRepositoryFirestoreTest {
     `when`(mockEmailCollectionReference.document(userWithProfilePicture.emailAddress).set(any()))
         .thenReturn(Tasks.forResult(null))
 
+    `when`(mockUserDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
+    `when`(mockPhoneCollectionReference.document(userWithProfilePicture.phoneNumber).set(any()))
+        .thenReturn(Tasks.forResult(null))
+
     // Inject mock ImageRepository into UserRepositoryFirestore via reflection
     val userRepositoryFirestore = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
     val imageRepositoryField =
@@ -601,6 +624,10 @@ class UserRepositoryFirestoreTest {
     // Mock Firestore interactions
     `when`(mockUserDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
     `when`(mockEmailCollectionReference.document(userWithProfilePicture.emailAddress).set(any()))
+        .thenReturn(Tasks.forResult(null))
+
+    `when`(mockUserDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
+    `when`(mockPhoneCollectionReference.document(userWithProfilePicture.phoneNumber).set(any()))
         .thenReturn(Tasks.forResult(null))
 
     // Inject mock ImageRepository into UserRepositoryFirestore via reflection
