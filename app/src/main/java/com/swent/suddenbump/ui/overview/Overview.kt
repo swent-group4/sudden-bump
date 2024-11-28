@@ -160,7 +160,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
 
     LaunchedEffect(user.uid) {
         coroutineScope.launch {
-            val location = userViewModel.getLocation()
+            val location = user.lastKnownLocation
                 locationText = userViewModel.getCityAndCountry(location)
         }
     }
