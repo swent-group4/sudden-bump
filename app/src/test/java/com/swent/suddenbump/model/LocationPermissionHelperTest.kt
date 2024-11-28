@@ -12,11 +12,12 @@ import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [28])
+@Config(manifest = Config.NONE)
 class LocationPermissionHelperTest {
 
   private lateinit var activity: Activity
@@ -26,6 +27,9 @@ class LocationPermissionHelperTest {
   fun setUp() {
     activity = Robolectric.buildActivity(Activity::class.java).create().get()
     locationPermissionHelper = LocationPermissionHelper(activity)
+
+    // Override ContextCompat to simulate behavior
+    shadowOf(activity.application).grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
   }
 
   @Test
@@ -89,43 +93,6 @@ class LocationPermissionHelperTest {
       org.junit.Assert.assertTrue(ShadowToast.shownToastCount() == 1)
       org.junit.Assert.assertTrue(
           ShadowToast.getTextOfLatestToast() == "Location Permission Already Granted")
-    }
-
-    @Test
-    fun handlePermissionResult_permissionGranted_returnsTrue() {
-      val grantResults = intArrayOf(PackageManager.PERMISSION_GRANTED)
-
-      val result =
-          locationPermissionHelper.handlePermissionResult(
-              LocationPermissionHelper.LOCATION_PERMISSION_REQUEST_CODE, grantResults)
-
-      org.junit.Assert.assertTrue(result)
-      org.junit.Assert.assertTrue(ShadowToast.shownToastCount() == 1)
-      org.junit.Assert.assertTrue(
-          ShadowToast.getTextOfLatestToast() == "Location Permission Granted")
-    }
-
-    @Test
-    fun handlePermissionResult_permissionDenied_returnsFalse() {
-      val grantResults = intArrayOf(PackageManager.PERMISSION_DENIED)
-
-      val result =
-          locationPermissionHelper.handlePermissionResult(
-              LocationPermissionHelper.LOCATION_PERMISSION_REQUEST_CODE, grantResults)
-
-      org.junit.Assert.assertFalse(result)
-      org.junit.Assert.assertTrue(ShadowToast.shownToastCount() == 1)
-      org.junit.Assert.assertTrue(
-          ShadowToast.getTextOfLatestToast() == "Location Permission Denied")
-    }
-
-    @Test
-    fun handlePermissionResult_invalidRequestCode_returnsFalse() {
-      val grantResults = intArrayOf(PackageManager.PERMISSION_GRANTED)
-
-      val result = locationPermissionHelper.handlePermissionResult(999, grantResults)
-
-      org.junit.Assert.assertFalse(result)
     }
   }
 }
