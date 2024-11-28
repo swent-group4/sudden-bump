@@ -19,7 +19,6 @@ import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -81,8 +80,8 @@ open class UserViewModel(
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
   private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
-    private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
-        MutableStateFlow(emptyList())
+  private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
+      MutableStateFlow(emptyList())
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
