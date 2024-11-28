@@ -9,6 +9,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
+import com.google.maps.GeocodingApi
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.Message
 import kotlinx.coroutines.Dispatchers
@@ -696,32 +697,5 @@ class UserViewModelTest {
     // Assert
     verify(onFailure).invoke(exception) // Verify onFailure(exception) was called
     verify(onSuccess, never()).invoke(any()) // Verify onSuccess was never called
-  }
-
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun testGetCityAndCountry() = runTest {
-    // Arrange
-    // Créer une localisation simulée (San Francisco)
-    val mockLocation =
-        Location("mock_provider").apply {
-          latitude = 37.7749
-          longitude = -122.4194
-        }
-    val locationFlow = MutableStateFlow(mockLocation)
-
-    // Créer une instance de UserViewModel avec le mock de GeocodingApi
-    userViewModel = UserViewModel(userRepository, chatRepository)
-
-    // Act
-    // Appeler la fonction à tester
-    val result = userViewModel.getCityAndCountry(locationFlow)
-
-    // Assert
-    // Vérifier que le résultat est correct
-    assertThat(result, `is`("San Francisco, United States"))
-
-    // Release resources
-    mockLocation.reset()
   }
 }

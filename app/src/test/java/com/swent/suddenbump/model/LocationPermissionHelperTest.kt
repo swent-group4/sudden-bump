@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
-@Config(manifest = Config.NONE)
+@Config(sdk = [28])
 class LocationPermissionHelperTest {
 
   private lateinit var activity: Activity

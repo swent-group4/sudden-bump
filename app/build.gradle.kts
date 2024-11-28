@@ -235,7 +235,7 @@ dependencies {
     // Image picker
     implementation(libs.ucrop)
 
-    // Google Services and Maps
+    implementation("com.google.maps:google-maps-services:0.18.0")
     implementation(libs.maps.compose)
     implementation(libs.maps.compose.utils)
     implementation(libs.play.services.auth)
