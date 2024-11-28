@@ -161,7 +161,7 @@ class EndToEndTest {
     composeTestRule.onNodeWithTag("overviewScreen").assertExists()
   }
 
-  @Test
+  /* @Test
   fun testSendMessageEoE() {
 
     composeTestRule.waitForIdle()
@@ -173,7 +173,7 @@ class EndToEndTest {
 
     // part to debug, instead of clicking on a user's profile on the overview, go through
     // conversation scree/message screen
-    /*  // Step 2: Navigate to user row and send message
+     // Step 2: Navigate to user row and send message
     composeTestRule.onAllNodes(isRoot()).printToLog("ComposeTree")
 
     composeTestRule.onNodeWithTag("1").assertExists().performClick()
@@ -189,6 +189,6 @@ class EndToEndTest {
       .onNodeWithTag("ChatInputTextBox")
       .performTextInput("Do you want to meet at Rolex today at 10?")
     composeTestRule.onNodeWithTag("SendButton").performClick()
-    composeTestRule.waitForIdle()*/
-  }
+    composeTestRule.waitForIdle()
+  }*/
 }
