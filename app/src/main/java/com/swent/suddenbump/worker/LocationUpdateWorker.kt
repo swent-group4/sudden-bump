@@ -16,8 +16,10 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.R
+import com.swent.suddenbump.model.meeting.MeetingRepositoryFirestore
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
+import com.swent.suddenbump.ui.calendar.showMeetingScheduledNotification
 import com.swent.suddenbump.ui.map.showFriendNearbyNotification
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -53,6 +55,8 @@ class LocationUpdateWorker(
         // Initialize UserRepository
         Log.d("WorkerSuddenBump", "Got location: $location")
         val repository = UserRepositoryFirestore(Firebase.firestore, applicationContext)
+          val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
+
         val uid = repository.getSavedUid()
         val radius = 5000.0
 
@@ -94,7 +98,28 @@ class LocationUpdateWorker(
                 Log.d("WorkerSuddenBump", "Retrieval of friends encountered an issue")
               })
 
-          Result.success()
+            meetingRepository.getMeetings(
+                onSuccess = { meetings ->
+                    val filteredMeetings = meetings.filter {
+                        it.friendId == user.uid && !it.accepted
+                    }
+
+                    if (filteredMeetings.isNotEmpty()) {
+                        filteredMeetings.forEach { meeting ->
+                            showMeetingScheduledNotification(applicationContext, meeting)
+                        }
+                    } else {
+                        Log.d("MeetingCheck", "No new pending meetings found")
+                    }
+                },
+                onFailure = {
+                    Log.d("MeetingCheck", "Retrieval of meetings encountered an issue: ${it.message}")
+                }
+            )
+
+
+
+            Result.success()
         } else {
           Log.d("WorkerSuddenBump", "User not found")
           Result.failure()
