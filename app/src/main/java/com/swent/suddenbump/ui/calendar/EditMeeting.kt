@@ -20,6 +20,7 @@ import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.utils.formatDateString
+import com.swent.suddenbump.ui.utils.showDatePickerDialog
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -171,30 +172,13 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
 
               // Show Date Picker Dialog if needed
               if (showDatePicker) {
-                val calendar = Calendar.getInstance()
-                val year = calendar.get(Calendar.YEAR)
-                val month = calendar.get(Calendar.MONTH)
-                val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-                val datePickerDialog =
-                    android.app.DatePickerDialog(
-                        context,
-                        { _, y, m, d ->
-                          val selectedCalendar =
-                              Calendar.getInstance().apply {
-                                set(Calendar.YEAR, y)
-                                set(Calendar.MONTH, m)
-                                set(Calendar.DAY_OF_MONTH, d)
-                              }
-                          val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                          date = TextFieldValue(dateFormat.format(selectedCalendar.time))
+                  showDatePickerDialog(
+                      context = context,
+                      onDateSelected = { selectedDate ->
+                          date = selectedDate
                           showDatePicker = false
-                        },
-                        year,
-                        month,
-                        day)
-
-                datePickerDialog.show()
+                      }
+                  )
               }
             }
       })

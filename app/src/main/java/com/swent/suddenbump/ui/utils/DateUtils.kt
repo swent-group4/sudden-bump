@@ -2,6 +2,10 @@ package com.swent.suddenbump.ui.utils
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import android.content.Context
+import android.app.DatePickerDialog
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * A utility function to format a date string with slashes.
@@ -38,3 +42,39 @@ fun formatDateString(input: TextFieldValue): TextFieldValue {
 
   return TextFieldValue(text = formatted.toString(), selection = TextRange(newCursorIndex))
 }
+
+/**
+ * Opens a DatePickerDialog and updates the provided date state.
+ *
+ * @param context The context used to show the DatePickerDialog.
+ * @param initialDate The initial date to show in the picker (default is today).
+ * @param onDateSelected Callback to update the selected date.
+ */
+fun showDatePickerDialog(
+    context: Context,
+    initialDate: Calendar = Calendar.getInstance(),
+    onDateSelected: (TextFieldValue) -> Unit
+) {
+    val year = initialDate.get(Calendar.YEAR)
+    val month = initialDate.get(Calendar.MONTH)
+    val day = initialDate.get(Calendar.DAY_OF_MONTH)
+
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, selectedYear, selectedMonth, selectedDay ->
+            val selectedCalendar = Calendar.getInstance().apply {
+                set(Calendar.YEAR, selectedYear)
+                set(Calendar.MONTH, selectedMonth)
+                set(Calendar.DAY_OF_MONTH, selectedDay)
+            }
+            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            onDateSelected(TextFieldValue(dateFormat.format(selectedCalendar.time)))
+        },
+        year,
+        month,
+        day
+    )
+
+    datePickerDialog.show()
+}
+
