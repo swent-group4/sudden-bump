@@ -97,7 +97,10 @@ open class NavigationActions(
 
   /** Navigate back to the previous screen. */
   open fun goBack() {
-    navController.popBackStack()
+    if (!navController.popBackStack()) {
+      navController.navigate(Screen.OVERVIEW)
+    }
+
   }
 
   /**
