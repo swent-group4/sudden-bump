@@ -720,5 +720,8 @@ class UserViewModelTest {
     // Assert
     // Vérifier que le résultat est correct
     assertThat(result, `is`("San Francisco, United States"))
+
+    // Release resources
+    mockLocation.reset()
   }
 }

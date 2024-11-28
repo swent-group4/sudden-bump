@@ -5,8 +5,6 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.swent.suddenbump.model.location.LocationPermissionHelper
-import junit.framework.Assert.assertFalse
-import junit.framework.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,7 +17,7 @@ import org.robolectric.shadows.ShadowToast
 
 @RunWith(RobolectricTestRunner::class)
 @Config(manifest = Config.NONE)
-class LocationPermissionTest {
+class LocationPermissionHelperTest {
 
   private lateinit var activity: Activity
   private lateinit var locationPermissionHelper: LocationPermissionHelper
@@ -41,7 +39,7 @@ class LocationPermissionTest {
       val result = locationPermissionHelper.isLocationPermissionGranted()
 
       // Assert that the permission is granted
-      assertTrue(result)
+      org.junit.Assert.assertTrue(result)
     }
   }
 
@@ -56,7 +54,7 @@ class LocationPermissionTest {
       val result = locationPermissionHelper.isLocationPermissionGranted()
 
       // Assert that the permission is denied
-      assertFalse(result)
+      org.junit.Assert.assertFalse(result)
     }
   }
 
@@ -73,7 +71,7 @@ class LocationPermissionTest {
       // Verify that the permission is still denied
       val permissionStatus =
           ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
-      assertTrue(permissionStatus == PackageManager.PERMISSION_DENIED)
+      org.junit.Assert.assertTrue(permissionStatus == PackageManager.PERMISSION_DENIED)
     }
   }
 
@@ -88,8 +86,9 @@ class LocationPermissionTest {
       locationPermissionHelper.requestLocationPermission()
 
       // Check that a toast was shown
-      assertTrue(ShadowToast.shownToastCount() == 1)
-      assertTrue(ShadowToast.getTextOfLatestToast() == "Location Permission Already Granted")
+      org.junit.Assert.assertTrue(ShadowToast.shownToastCount() == 1)
+      org.junit.Assert.assertTrue(
+          ShadowToast.getTextOfLatestToast() == "Location Permission Already Granted")
     }
 
     @Test
@@ -100,9 +99,10 @@ class LocationPermissionTest {
           locationPermissionHelper.handlePermissionResult(
               LocationPermissionHelper.LOCATION_PERMISSION_REQUEST_CODE, grantResults)
 
-      assertTrue(result)
-      assertTrue(ShadowToast.shownToastCount() == 1)
-      assertTrue(ShadowToast.getTextOfLatestToast() == "Location Permission Granted")
+      org.junit.Assert.assertTrue(result)
+      org.junit.Assert.assertTrue(ShadowToast.shownToastCount() == 1)
+      org.junit.Assert.assertTrue(
+          ShadowToast.getTextOfLatestToast() == "Location Permission Granted")
     }
 
     @Test
@@ -113,9 +113,10 @@ class LocationPermissionTest {
           locationPermissionHelper.handlePermissionResult(
               LocationPermissionHelper.LOCATION_PERMISSION_REQUEST_CODE, grantResults)
 
-      assertFalse(result)
-      assertTrue(ShadowToast.shownToastCount() == 1)
-      assertTrue(ShadowToast.getTextOfLatestToast() == "Location Permission Denied")
+      org.junit.Assert.assertFalse(result)
+      org.junit.Assert.assertTrue(ShadowToast.shownToastCount() == 1)
+      org.junit.Assert.assertTrue(
+          ShadowToast.getTextOfLatestToast() == "Location Permission Denied")
     }
 
     @Test
@@ -124,7 +125,7 @@ class LocationPermissionTest {
 
       val result = locationPermissionHelper.handlePermissionResult(999, grantResults)
 
-      assertFalse(result)
+      org.junit.Assert.assertFalse(result)
     }
   }
 }
