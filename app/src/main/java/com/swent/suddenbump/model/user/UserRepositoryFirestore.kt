@@ -738,7 +738,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               .get()
               .addOnFailureListener { onFailure(it) }
               .addOnSuccessListener { result ->
-                    val recommendedFriends = result.documents.mapNotNull { document ->
+                val recommendedFriends =
+                    result.documents.mapNotNull { document ->
                       // Get the other user's blocked list
                       val otherUserBlockedList =
                           document.data?.get("blockedList") as? List<String> ?: emptyList()

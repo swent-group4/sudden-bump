@@ -111,22 +111,22 @@ class EndToEndTest {
     composeTestRule.onNodeWithTag("addContactScreen").assertExists()
 
     // Step 3: Wait for and navigate to Contact screen
-//    composeTestRule.waitUntil(timeoutMillis = 10_000) {
-//      try {
-//        composeTestRule.onNodeWithTag("userList").assertExists()
-//        true
-//      } catch (e: AssertionError) {
-//        false
-//      }
-//    }
-//    composeTestRule.onNodeWithTag("userList").performClick()
-//    composeTestRule.waitForIdle()
-//    composeTestRule.onNodeWithTag("contactScreen").assertExists()
-//
-//    // Step 4: Navigate back to Overview
-//    composeTestRule.onNodeWithTag("backButton").performClick()
-//    composeTestRule.waitForIdle()
-//    composeTestRule.onNodeWithTag("addContactScreen").assertExists()
+    //    composeTestRule.waitUntil(timeoutMillis = 10_000) {
+    //      try {
+    //        composeTestRule.onNodeWithTag("userList").assertExists()
+    //        true
+    //      } catch (e: AssertionError) {
+    //        false
+    //      }
+    //    }
+    //    composeTestRule.onNodeWithTag("userList").performClick()
+    //    composeTestRule.waitForIdle()
+    //    composeTestRule.onNodeWithTag("contactScreen").assertExists()
+    //
+    //    // Step 4: Navigate back to Overview
+    //    composeTestRule.onNodeWithTag("backButton").performClick()
+    //    composeTestRule.waitForIdle()
+    //    composeTestRule.onNodeWithTag("addContactScreen").assertExists()
     composeTestRule.onNodeWithTag("backButton").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("overviewScreen").assertExists()
