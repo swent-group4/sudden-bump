@@ -65,8 +65,8 @@ open class UserViewModel(
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(_user.value))
   private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
-  private val _recommendedFriends: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(_user.value))
+  private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
+      MutableStateFlow(emptyList())
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(_user.value))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(_user.value)
@@ -339,7 +339,7 @@ open class UserViewModel(
     repository.setUserFriends(user.uid, friendsList, onSuccess, onFailure)
   }
 
-  fun getUserRecommendedFriends(): StateFlow<List<User>> {
+  fun getUserRecommendedFriends(): StateFlow<List<UserWithFriendsInCommon>> {
     return _recommendedFriends.asStateFlow()
   }
 

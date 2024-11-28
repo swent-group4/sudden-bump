@@ -721,7 +721,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    */
   override fun getRecommendedFriends(
       uid: String,
-      onSuccess: (List<User>) -> Unit,
+      onSuccess: (List<UserWithFriendsInCommon>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
     // Fetch the user's friends list and blocked list from the database
@@ -730,32 +730,42 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .get()
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { userDocument ->
-          val friendsUidList = userDocument.data?.get("friendsList") as? List<String> ?: emptyList()
-          val blockedList = userDocument.data?.get("blockedList") as? List<String> ?: emptyList()
+            val currentUserFriendsList = userDocument.data?.get("friendsList") as? List<String> ?: emptyList()
+            val blockedList = userDocument.data?.get("blockedList") as? List<String> ?: emptyList()
 
-          // Fetch all users from the database
-          db.collection(usersCollectionPath)
-              .get()
-              .addOnFailureListener { onFailure(it) }
-              .addOnSuccessListener { result ->
-                val recommendedFriends =
-                    result.documents.mapNotNull { document ->
-                      // Get the other user's blocked list
-                      val otherUserBlockedList =
-                          document.data?.get("blockedList") as? List<String> ?: emptyList()
+            // Fetch all users from the database
+            db.collection(usersCollectionPath)
+                .get()
+                .addOnFailureListener { onFailure(it) }
+                .addOnSuccessListener { result ->
+                    val recommendedFriends = result.documents.mapNotNull { document ->
+                        // Get the other user's blocked list and friends list
+                        val otherUserBlockedList = document.data?.get("blockedList") as? List<String> ?: emptyList()
+                        val otherUserFriendsList = document.data?.get("friendsList") as? List<String> ?: emptyList()
 
-                      // Only create User object if this user meets our criteria
-                      if (document.id != uid &&
-                          document.id !in friendsUidList &&
-                          document.id !in blockedList &&
-                          uid !in otherUserBlockedList) {
-                        helper.documentSnapshotToUser(document, null)
-                      } else {
-                        null
-                      }
+                        // Only create RecommendedFriend object if this user meets our criteria
+                        if (document.id != uid &&
+                            document.id !in currentUserFriendsList &&
+                            document.id !in blockedList &&
+                            uid !in otherUserBlockedList
+                        ) {
+                            // Calculate number of friends in common
+                            val commonFriendsCount = currentUserFriendsList.intersect(otherUserFriendsList.toSet()).size
+                            
+                            // Create RecommendedFriend object with user and common friends count
+                            UserWithFriendsInCommon(
+                                user = helper.documentSnapshotToUser(document, null),
+                                friendsInCommon = commonFriendsCount
+                            )
+                        } else {
+                            null
+                        }
                     }
-                onSuccess(recommendedFriends)
-              }
+                    
+                    // Sort recommendations by number of common friends (descending)
+                    val sortedRecommendations = recommendedFriends.sortedByDescending { it.friendsInCommon }
+                    onSuccess(sortedRecommendations)
+                }
         }
   }
 
