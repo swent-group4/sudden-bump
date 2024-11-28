@@ -23,7 +23,6 @@ import com.swent.suddenbump.ui.theme.Pink40
 import java.text.SimpleDateFormat
 import java.util.*
 import com.swent.suddenbump.ui.utils.formatDateString
-import com.swent.suddenbump.ui.utils.DateVisualTransformation
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,7 +75,6 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                   label = { Text("Date (dd/MM/yyyy)") },
                   textStyle = TextStyle(color = Color.White),
                   modifier = Modifier.fillMaxWidth().testTag("Date"),
-                  visualTransformation = DateVisualTransformation(),
                   trailingIcon = {
                     IconButton(
                         onClick = { showDatePicker = true },
