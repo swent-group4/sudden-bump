@@ -223,9 +223,9 @@ fun ChatInputBox(viewModel: UserViewModel, otherUser: User?, navigationActions: 
             onClick = {
               if (inputText.text.isNotEmpty()) {
                 val name = otherUser?.firstName + " " + otherUser?.lastName
-                  if (otherUser != null) {
-                      viewModel.sendMessage(inputText.text, user = otherUser)
-                  } // Send message through ViewModel
+                if (otherUser != null) {
+                  viewModel.sendMessage(inputText.text, user = otherUser)
+                } // Send message through ViewModel
                 inputText = TextFieldValue() // Clear input field after sending
               }
             },
