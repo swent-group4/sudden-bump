@@ -163,13 +163,12 @@ fun AddMeetingScreen(
 
               // Show Date Picker Dialog if needed
               if (showDatePicker) {
-                  showDatePickerDialog(
-                      context = context,
-                      onDateSelected = { selectedDate ->
-                          date = selectedDate
-                          showDatePicker = false
-                      }
-                  )
+                showDatePickerDialog(
+                    context = context,
+                    onDateSelected = { selectedDate ->
+                      date = selectedDate
+                      showDatePicker = false
+                    })
               }
             }
       })
