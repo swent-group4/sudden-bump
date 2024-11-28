@@ -1893,13 +1893,13 @@ class UserRepositoryFirestoreTest {
         { recommendedFriends ->
           // Verify the recommended friends list
           assertEquals(1, recommendedFriends.size)
-          assertEquals(nonFriend.uid, recommendedFriends[0].uid)
+          assertEquals(nonFriend.uid, recommendedFriends[0].user.uid)
 
           // Verify that blocked users and users who blocked me are not in the list
-          assertFalse(recommendedFriends.any { it.uid == blockedUser.uid })
-          assertFalse(recommendedFriends.any { it.uid == userWhoBlockedMe.uid })
+          assertFalse(recommendedFriends.any { it.user.uid == blockedUser.uid })
+          assertFalse(recommendedFriends.any { it.user.uid == userWhoBlockedMe.uid })
           // Verify that existing friends are not in the list
-          assertFalse(recommendedFriends.any { it.uid == friend.uid })
+          assertFalse(recommendedFriends.any { it.user.uid == friend.uid })
         },
         { fail("onFailure should not be called") })
   }
