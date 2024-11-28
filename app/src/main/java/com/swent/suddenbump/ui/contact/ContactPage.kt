@@ -57,6 +57,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
       userViewModel.getUserFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
   var isFriendRequestSent =
       userViewModel.getSentFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
+
   // a
   Scaffold(
       modifier = Modifier.fillMaxSize().background(Color.Black).testTag("contactScreen"),
@@ -86,6 +87,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
 
               DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 DropdownMenuItem(
+                    modifier = Modifier.testTag("blockUserButton"),
                     onClick = {
                       expanded = false
                       showDialog = true
@@ -168,7 +170,9 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp)) {
               Button(
                   modifier =
-                      Modifier.fillMaxWidth().padding(vertical = 5.dp).testTag("sendMessageButton"),
+                      Modifier.fillMaxWidth()
+                          .padding(vertical = 5.dp)
+                          .testTag("acceptRequestButton"),
                   colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                   onClick = {
                     userViewModel.acceptFriendRequest(
@@ -189,7 +193,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                   modifier =
                       Modifier.fillMaxWidth()
                           .padding(vertical = 10.dp)
-                          .testTag("sendMessageButton"),
+                          .testTag("declineRequestButton"),
                   colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                   onClick = {
                     userViewModel.declineFriendRequest(
@@ -211,6 +215,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
             Text(
                 "Friend request sent",
                 color = Color.White,
+                modifier = Modifier.testTag("friendRequestSentText"),
             )
           } else {
             Button(

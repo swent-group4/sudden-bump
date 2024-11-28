@@ -287,10 +287,12 @@ fun UserRecommendedRow(
   }
   Row(
       modifier =
-          Modifier.fillMaxWidth().clickable {
-            userViewModel.setSelectedContact(user)
-            navigationActions.navigateTo(Screen.CONTACT)
-          },
+          Modifier.fillMaxWidth()
+              .clickable {
+                userViewModel.setSelectedContact(user)
+                navigationActions.navigateTo(Screen.CONTACT)
+              }
+              .testTag("recommendedUserRow"),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Row(
