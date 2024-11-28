@@ -78,7 +78,7 @@ open class UserViewModel(
       MutableStateFlow(listOf(userDummy1))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
+  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
   private val _recommendedFriends: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))

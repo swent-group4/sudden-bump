@@ -1,4 +1,3 @@
-// GeocodingResponse.kt
 package com.swent.suddenbump.model.geocoding
 
 data class GeocodingResponse(val results: List<Result>, val status: String)

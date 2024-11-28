@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
 import com.swent.suddenbump.model.location.LocationPermissionHelper
 import junit.framework.Assert.assertFalse
-import junit.framework.TestCase.assertTrue
+import junit.framework.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,12 +63,18 @@ class LocationPermissionTest {
   @Test
   fun requestLocationPermission_permissionNotGranted_requestsPermission() {
     // Assume permission is not granted
-    locationPermissionHelper.requestLocationPermission()
+    Mockito.mockStatic(ContextCompat::class.java).use { mockedContextCompat ->
+      `when`(ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION))
+          .thenReturn(PackageManager.PERMISSION_DENIED)
 
-    // Verify the request is made (can be improved depending on the app logic)
-    assertTrue(
-        ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_DENIED)
+      // Request location permission
+      locationPermissionHelper.requestLocationPermission()
+
+      // Verify that the permission is still denied
+      val permissionStatus =
+          ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
+      assertTrue(permissionStatus == PackageManager.PERMISSION_DENIED)
+    }
   }
 
   @Test
@@ -85,40 +91,40 @@ class LocationPermissionTest {
       assertTrue(ShadowToast.shownToastCount() == 1)
       assertTrue(ShadowToast.getTextOfLatestToast() == "Location Permission Already Granted")
     }
-  }
 
-  @Test
-  fun handlePermissionResult_permissionGranted_returnsTrue() {
-    val grantResults = intArrayOf(PackageManager.PERMISSION_GRANTED)
+    @Test
+    fun handlePermissionResult_permissionGranted_returnsTrue() {
+      val grantResults = intArrayOf(PackageManager.PERMISSION_GRANTED)
 
-    val result =
-        locationPermissionHelper.handlePermissionResult(
-            LocationPermissionHelper.LOCATION_PERMISSION_REQUEST_CODE, grantResults)
+      val result =
+          locationPermissionHelper.handlePermissionResult(
+              LocationPermissionHelper.LOCATION_PERMISSION_REQUEST_CODE, grantResults)
 
-    assertTrue(result)
-    assertTrue(ShadowToast.shownToastCount() == 1)
-    assertTrue(ShadowToast.getTextOfLatestToast() == "Location Permission Granted")
-  }
+      assertTrue(result)
+      assertTrue(ShadowToast.shownToastCount() == 1)
+      assertTrue(ShadowToast.getTextOfLatestToast() == "Location Permission Granted")
+    }
 
-  @Test
-  fun handlePermissionResult_permissionDenied_returnsFalse() {
-    val grantResults = intArrayOf(PackageManager.PERMISSION_DENIED)
+    @Test
+    fun handlePermissionResult_permissionDenied_returnsFalse() {
+      val grantResults = intArrayOf(PackageManager.PERMISSION_DENIED)
 
-    val result =
-        locationPermissionHelper.handlePermissionResult(
-            LocationPermissionHelper.LOCATION_PERMISSION_REQUEST_CODE, grantResults)
+      val result =
+          locationPermissionHelper.handlePermissionResult(
+              LocationPermissionHelper.LOCATION_PERMISSION_REQUEST_CODE, grantResults)
 
-    assertFalse(result)
-    assertTrue(ShadowToast.shownToastCount() == 1)
-    assertTrue(ShadowToast.getTextOfLatestToast() == "Location Permission Denied")
-  }
+      assertFalse(result)
+      assertTrue(ShadowToast.shownToastCount() == 1)
+      assertTrue(ShadowToast.getTextOfLatestToast() == "Location Permission Denied")
+    }
 
-  @Test
-  fun handlePermissionResult_invalidRequestCode_returnsFalse() {
-    val grantResults = intArrayOf(PackageManager.PERMISSION_GRANTED)
+    @Test
+    fun handlePermissionResult_invalidRequestCode_returnsFalse() {
+      val grantResults = intArrayOf(PackageManager.PERMISSION_GRANTED)
 
-    val result = locationPermissionHelper.handlePermissionResult(999, grantResults)
+      val result = locationPermissionHelper.handlePermissionResult(999, grantResults)
 
-    assertFalse(result)
+      assertFalse(result)
+    }
   }
 }
