@@ -100,7 +100,6 @@ open class NavigationActions(
     if (!navController.popBackStack()) {
       navController.navigate(Screen.OVERVIEW)
     }
-
   }
 
   /**
