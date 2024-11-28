@@ -35,6 +35,7 @@ android {
             useSupportLibrary = true
         }
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
+        buildConfigField("String", "MAPS_API_KEY", "\"${mapsApiKey}\"")
     }
 
     buildTypes {
@@ -268,6 +269,14 @@ dependencies {
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
     implementation(kotlin("test"))
+    implementation(libs.retrofit)
+    // Converter for JSON parsing
+    implementation(libs.retrofit.converter.gson)
+    // Coroutine support for Retrofit
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.okhttp.logging.interceptor)
+    // Optional: Logging interceptor for debugging
+    implementation(libs.retrofit.converter.scalars)
 }
 
 configurations.all {

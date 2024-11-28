@@ -9,15 +9,18 @@ import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.swent.suddenbump.BuildConfig
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
+import com.swent.suddenbump.network.RetrofitInstance
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Enumération pour les catégories de distance utilisées pour regrouper les amis. */
 enum class DistanceCategory(val maxDistance: Float, val title: String) {
@@ -399,6 +402,52 @@ open class UserViewModel(
     return userLocation.distanceTo(friendLocation)
   }
 
+    /** Cache to store fetched locations */
+    private val locationCache = mutableMapOf<String, String>()
+
+    /** Fetches the city and country for a given location */
+    suspend fun getCityAndCountry(location: StateFlow<Location>): String {
+        val latLng = "${location.value.latitude},${location.value.longitude}"
+
+        // Check cache first
+        locationCache[latLng]?.let {
+            return it
+        }
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = RetrofitInstance.geocodingApi.reverseGeocode(
+                    latlng = latLng,
+                    apiKey = BuildConfig.MAPS_API_KEY // Replace with method to securely retrieve API key
+                )
+
+                if (response.status == "OK" && response.results.isNotEmpty()) {
+                    val addressComponents = response.results[0].address_components
+
+                    val city = addressComponents.firstOrNull { component ->
+                        component.types.contains("locality")
+                    }?.long_name
+
+                    val country = addressComponents.firstOrNull { component ->
+                        component.types.contains("country")
+                    }?.long_name
+
+                    val cityCountry = listOfNotNull(city, country).joinToString(", ")
+
+                    // Save to cache
+                    locationCache[latLng] = cityCountry
+
+                    cityCountry
+                } else {
+                    Log.e("UserViewModel", "Geocoding API error: ${response.status}")
+                    "Unknown Location"
+                }
+            } catch (e: Exception) {
+                Log.e("UserViewModel", "Error fetching location: ${e.message}")
+                "Unknown Location"
+            }
+        }
+    }
   fun isFriendsInRadius(radius: Int): Boolean {
     loadFriends()
     _userFriends.value.forEach { friend ->

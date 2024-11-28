@@ -29,6 +29,7 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
+import kotlinx.coroutines.launch
 
 @Composable
 fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
@@ -151,41 +152,60 @@ fun CategoryHeader(category: DistanceCategory) {
             modifier = Modifier.padding(start = 8.dp))
       }
 }
-
+// Modify UserRow to fetch and display city and country
 @Composable
 fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
-  Row(
-      modifier =
-          Modifier.fillMaxWidth()
-              .clickable {
+    val coroutineScope = rememberCoroutineScope()
+    var locationText by remember { mutableStateOf("Loading...") }
+
+    LaunchedEffect(user.uid) {
+        coroutineScope.launch {
+            val location = userViewModel.getLocation()
+                locationText = userViewModel.getCityAndCountry(location)
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
                 userViewModel.setSelectedContact(user)
                 navigationActions.navigateTo(Screen.CONTACT)
-              }
-              .testTag(user.uid),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically) {
+            }
+            .testTag(user.uid),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically) {
-              AsyncImage(
-                  model = "https://avatar.iran.liara.run/public/42",
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
-              Column {
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = "https://avatar.iran.liara.run/public/42",
+                contentDescription = null,
+                modifier = Modifier
+                    .width(50.dp)
+                    .height(50.dp)
+                    .padding(8.dp)
+                    .testTag("profileImage")
+            )
+            Column {
                 Text(
                     text = "${user.firstName} ${user.lastName.first()}.",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White)
+                    color = Color.White
+                )
                 Text(
-                    text = "Lausanne, Switzerland",
+                    text = locationText,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White)
-              }
+                    color = Color.White
+                )
             }
+        }
         Icon(
             imageVector = Icons.Default.Email,
             contentDescription = "Message",
-            tint = com.swent.suddenbump.ui.theme.Purple40)
-      }
+            tint = com.swent.suddenbump.ui.theme.Purple40
+        )
+    }
 }
