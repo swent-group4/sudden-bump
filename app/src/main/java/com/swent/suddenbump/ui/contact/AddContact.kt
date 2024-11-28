@@ -65,12 +65,13 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
       }
 
   val filteredUsers =
-      recommendedUsers.filter { data ->
-        data.user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-            data.user.lastName.contains(searchQuery.text, ignoreCase = true)
-      }
-      .sortedByDescending { it.friendsInCommon }
-      .take(5)
+      recommendedUsers
+          .filter { data ->
+            data.user.firstName.contains(searchQuery.text, ignoreCase = true) ||
+                data.user.lastName.contains(searchQuery.text, ignoreCase = true)
+          }
+          .sortedByDescending { it.friendsInCommon }
+          .take(5)
 
   Scaffold(
       modifier = Modifier.testTag("addContactScreen"),
@@ -306,20 +307,22 @@ fun UserRecommendedRow(
                   modifier =
                       Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
               Text(
-                  text = "${userWithFriends.user.firstName} ${userWithFriends.user.lastName.first()}.",
+                  text =
+                      "${userWithFriends.user.firstName} ${userWithFriends.user.lastName.first()}.",
                   style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                   modifier = Modifier.testTag("userName"))
 
-            Text(
-                text = "${userWithFriends.friendsInCommon} friends in common",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray,
-                modifier = Modifier.testTag("friendsInCommon"))
+              Text(
+                  text = "${userWithFriends.friendsInCommon} friends in common",
+                  style = MaterialTheme.typography.bodyMedium,
+                  color = Color.Gray,
+                  modifier = Modifier.testTag("friendsInCommon"))
             }
         if (showButton) {
           IconButton(
               onClick = {
-                userViewModel.sendFriendRequest(currentUser, userWithFriends.user, { showButton = false }, {})
+                userViewModel.sendFriendRequest(
+                    currentUser, userWithFriends.user, { showButton = false }, {})
               },
               modifier = Modifier.testTag("denyButton")) {
                 Icon(

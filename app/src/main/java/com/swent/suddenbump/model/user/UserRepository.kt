@@ -165,7 +165,4 @@ interface UserRepository {
   fun logoutUser()
 }
 
-data class UserWithFriendsInCommon(
-    val user: User,
-    val friendsInCommon: Int
-)
+data class UserWithFriendsInCommon(val user: User, val friendsInCommon: Int)

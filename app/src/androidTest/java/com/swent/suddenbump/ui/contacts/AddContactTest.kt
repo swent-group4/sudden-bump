@@ -47,24 +47,26 @@ class AddContactScreenTest {
                       latitude = 46.5180
                       longitude = 6.5680
                     }))
-    val user1 = UserWithFriendsInCommon(
-        user = User(
-            uid = "1",
-            firstName = "John",
-            lastName = "Doe",
-            phoneNumber = "+1234567890",
-            profilePicture = null,
-            emailAddress = "",
-            lastKnownLocation =
-                MutableStateFlow(
-                    Location("mock_provider").apply {
-                        latitude = 46.5180
-                        longitude = 6.5680
-                    })
-            ),
+    val user1 =
+        UserWithFriendsInCommon(
+            user =
+                User(
+                    uid = "1",
+                    firstName = "John",
+                    lastName = "Doe",
+                    phoneNumber = "+1234567890",
+                    profilePicture = null,
+                    emailAddress = "",
+                    lastKnownLocation =
+                        MutableStateFlow(
+                            Location("mock_provider").apply {
+                              latitude = 46.5180
+                              longitude = 6.5680
+                            })),
             friendsInCommon = 2,
-      )
-    val user2 = User(
+        )
+    val user2 =
+        User(
             uid = "2",
             firstName = "Jane",
             lastName = "Smith",
@@ -72,20 +74,17 @@ class AddContactScreenTest {
             profilePicture = null,
             emailAddress = "",
             lastKnownLocation =
-            MutableStateFlow(
-                Location("mock_provider").apply {
-                    latitude = 46.5180
-                    longitude = 6.5681
-                })
-    )
-
-
+                MutableStateFlow(
+                    Location("mock_provider").apply {
+                      latitude = 46.5180
+                      longitude = 6.5681
+                    }))
 
     every { navigationActions.currentRoute() } returns (Route.OVERVIEW)
     every { navigationActions.goBack() } returns Unit
 
     every { userViewModel.getCurrentUser() } returns MutableStateFlow(currentUser)
-    every { userViewModel.getUserRecommendedFriends() } returns MutableStateFlow(listOf( user1))
+    every { userViewModel.getUserRecommendedFriends() } returns MutableStateFlow(listOf(user1))
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(listOf(user2))
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getBlockedFriends() } returns MutableStateFlow(emptyList())
@@ -167,23 +166,24 @@ class UserRowsTest {
                       longitude = 6.5680
                     }))
 
-    testUser = UserWithFriendsInCommon(
-        user =  User(
-            uid = "1",
-            firstName = "John",
-            lastName = "Doe",
-            phoneNumber = "+1234567891",
-            profilePicture = null,
-            emailAddress = "",
-            lastKnownLocation =
-            MutableStateFlow(
-                Location("mock_provider").apply {
-                    latitude = 46.5181
-                    longitude = 6.5681
-                })),
-        friendsInCommon = 2,
-    )
-
+    testUser =
+        UserWithFriendsInCommon(
+            user =
+                User(
+                    uid = "1",
+                    firstName = "John",
+                    lastName = "Doe",
+                    phoneNumber = "+1234567891",
+                    profilePicture = null,
+                    emailAddress = "",
+                    lastKnownLocation =
+                        MutableStateFlow(
+                            Location("mock_provider").apply {
+                              latitude = 46.5181
+                              longitude = 6.5681
+                            })),
+            friendsInCommon = 2,
+        )
 
     every { navigationActions.currentRoute() } returns Route.OVERVIEW
     every { userViewModel.setSelectedContact(any()) } returns Unit
@@ -202,7 +202,9 @@ class UserRowsTest {
     }
 
     composeTestRule.onNodeWithText("John D.").assertIsDisplayed()
-      composeTestRule.onNodeWithText("${testUser.friendsInCommon} friends in common").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithText("${testUser.friendsInCommon} friends in common")
+        .assertIsDisplayed()
   }
 
   @Test
