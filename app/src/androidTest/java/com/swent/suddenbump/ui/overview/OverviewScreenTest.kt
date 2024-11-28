@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.overview
 
 import android.location.Location
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.swent.suddenbump.model.user.User
@@ -65,7 +66,7 @@ class OverviewScreenTest {
           firstName = "Alice",
           lastName = "Brown",
           phoneNumber = "+1234567892",
-          profilePicture = null,
+          profilePicture = ImageBitmap(100, 100),
           emailAddress = "alice.brown@example.com",
           lastKnownLocation = MutableStateFlow(location3))
 
@@ -126,5 +127,16 @@ class OverviewScreenTest {
   fun addContactButtonCallsNavActions() {
     composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
     verify { navigationActions.navigateTo(Screen.ADD_CONTACT) }
+  }
+
+  @Test
+  fun havingProfilePictureDisplaysComponent() {
+    // Verify the profile picture image
+    composeTestRule
+        .onNodeWithTag("profileImage_${user2.uid}", useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("profileImageNotNull_${user3.uid}", useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }

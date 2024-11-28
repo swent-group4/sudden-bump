@@ -1,7 +1,11 @@
 package com.swent.suddenbump.ui.contacts
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
@@ -32,11 +36,14 @@ class ContactScreenTest {
     `when`(navigationActions.currentRoute()).thenReturn(Route.OVERVIEW)
 
     // Initialize the content once before all tests
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    //        composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
   }
 
   @Test
   fun testInitialScreenState() {
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
+
     composeTestRule.onNodeWithTag("contactScreen").assertIsDisplayed()
 
     // Verify the top bar title
@@ -60,6 +67,9 @@ class ContactScreenTest {
 
   @Test
   fun testNavigationBackButton() {
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
+
     // Verify the back button is displayed
     composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
 
@@ -72,6 +82,9 @@ class ContactScreenTest {
 
   @Test
   fun testSendMessageButtonClick() {
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
+
     // Verify the send message button is displayed
     composeTestRule.onNodeWithTag("sendMessageButton").assertIsDisplayed()
 
@@ -80,5 +93,19 @@ class ContactScreenTest {
 
     // Verify that navigation to the message screen is triggered
     //    verify(navigationActions).navigateTo(Route.MESSAGE)
+  }
+
+  @Test
+  fun havingProfilePictureDisplaysComponent() {
+    userViewModel.setSelectedContact(
+        userViewModel.getSelectedContact().value.copy(profilePicture = ImageBitmap(30, 30)))
+
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
+
+    // Verify the profile picture image
+    composeTestRule.onNodeWithTag("profileImageNotNull").assertIsDisplayed()
+
+    userViewModel = UserViewModel(userRepository, chatRepository)
   }
 }

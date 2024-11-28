@@ -90,7 +90,10 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                   bitmap = user.profilePicture,
                   contentDescription = null,
                   modifier =
-                      Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
+                      Modifier.width(150.dp)
+                          .height(150.dp)
+                          .padding(8.dp)
+                          .testTag("profileImageNotNull"))
             } else {
               AsyncImage(
                   model = "https://avatar.iran.liara.run/public/42",

@@ -72,9 +72,10 @@ import com.swent.suddenbump.ui.theme.SampleAppTheme
 fun SettingsScreen(
     navigationActions: NavigationActions,
     userViewModel: UserViewModel,
-    onNotificationsEnabledChange: (Boolean) -> Unit
+    onNotificationsEnabledChange: (Boolean) -> Unit,
+    uri: Uri? = null
 ) {
-  val profilePictureUri = remember { mutableStateOf<Uri?>(null) }
+  val profilePictureUri: MutableState<Uri?> = remember { mutableStateOf<Uri?>(uri) }
   var notificationsEnabled by remember { mutableStateOf(true) }
 
   val context = LocalContext.current
@@ -197,6 +198,7 @@ fun ProfileSection(
                 BitmapFactory.decodeStream(
                     context.contentResolver.openInputStream(profilePictureUri.value!!))
             bitmap.let {
+              Log.d("Debug", "LET:!")
               userViewModel.setUser(
                   userViewModel
                       .getCurrentUser()
@@ -204,7 +206,9 @@ fun ProfileSection(
                       .value
                       .copy(profilePicture = bitmap.asImageBitmap()),
                   onSuccess = {
+                    Log.d("Debug", "PERFECT")
                     profilePictureUri.value = null
+                    Log.d("Debug", "PERFECT!!!")
                     Log.i("Firebase", "Status : User updated")
                   },
                   onFailure = {
@@ -216,7 +220,7 @@ fun ProfileSection(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = "Profile Picture",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize())
+                modifier = Modifier.fillMaxSize().testTag("uriProfilePicture"))
           } else {
             if (profilePicture.value.profilePicture != null) {
               userViewModel.getCurrentUser().collectAsState().value.profilePicture?.let {
@@ -224,14 +228,14 @@ fun ProfileSection(
                     bitmap = it,
                     contentDescription = "Profile Picture",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize())
+                    modifier = Modifier.fillMaxSize().testTag("nonNullProfilePicture"))
               }
             } else {
               Image(
                   painter = painterResource(id = R.drawable.settings_user),
                   contentDescription = "Profile Picture",
                   contentScale = ContentScale.Crop,
-                  modifier = Modifier.fillMaxSize())
+                  modifier = Modifier.fillMaxSize().testTag("nullProfilePicture"))
             }
           }
         }

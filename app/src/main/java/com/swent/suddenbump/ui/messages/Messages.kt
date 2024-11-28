@@ -150,7 +150,10 @@ fun MessageItem(
               Image(
                   bitmap = it,
                   contentDescription = "Profile Avatar",
-                  modifier = Modifier.size(40.dp).padding(start = 8.dp))
+                  modifier =
+                      Modifier.size(40.dp)
+                          .padding(start = 8.dp)
+                          .testTag("profile_picture_${message.sender}"))
             }
 
         Column(modifier = Modifier.padding(start = 16.dp).fillMaxWidth()) {

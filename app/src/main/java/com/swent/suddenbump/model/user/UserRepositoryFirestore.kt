@@ -5,6 +5,7 @@ import android.location.Location
 import android.location.LocationManager
 import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
+import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseException
 import com.google.firebase.Timestamp
@@ -21,6 +22,9 @@ import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
@@ -686,7 +690,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                       runBlocking {
                         val path =
                             helper.uidToProfilePicturePath(
-                                document.data!!.get("uid").toString(), profilePicturesRef)
+                                document.data!!["uid"].toString(), profilePicturesRef)
                         imageRepository.downloadImage(
                             path,
                             onSuccess = { pp -> profilePicture = pp },
@@ -698,6 +702,24 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               }
               .addOnFailureListener { e -> onFailure(e) }
         }
+  }
+
+  private suspend fun waitForAllTasksAndMap(
+      tasks: List<Task<DocumentSnapshot>>
+  ): List<DocumentSnapshot> {
+    return coroutineScope {
+      tasks
+          .map { task ->
+            async {
+              try {
+                task.await()
+              } catch (e: Exception) {
+                throw e // Handle exceptions as needed
+              }
+            }
+          }
+          .awaitAll()
+    }
   }
 
   /**

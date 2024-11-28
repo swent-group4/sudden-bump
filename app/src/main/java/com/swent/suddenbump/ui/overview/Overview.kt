@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -201,7 +202,8 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                 userViewModel.setSelectedContact(user)
                 navigationActions.navigateTo(Screen.CONTACT)
               }
-              .testTag(user.uid),
+              .testTag(user.uid)
+              .semantics(mergeDescendants = false) {},
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Row(
@@ -210,15 +212,21 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
               if (user.profilePicture != null) {
                 Image(
                     bitmap = user.profilePicture,
-                    contentDescription = null,
+                    contentDescription = "Existing profile pictures",
                     modifier =
-                        Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
+                        Modifier.width(50.dp)
+                            .height(50.dp)
+                            .padding(8.dp)
+                            .testTag("profileImageNotNull_${user.uid}"))
               } else {
                 AsyncImage(
                     model = "https://avatar.iran.liara.run/public/42",
-                    contentDescription = null,
+                    contentDescription = "Non-Existing profile pictures",
                     modifier =
-                        Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
+                        Modifier.width(50.dp)
+                            .height(50.dp)
+                            .padding(8.dp)
+                            .testTag("profileImage_${user.uid}"))
               }
               Text(
                   text = "${user.firstName} ${user.lastName.first()}.",
