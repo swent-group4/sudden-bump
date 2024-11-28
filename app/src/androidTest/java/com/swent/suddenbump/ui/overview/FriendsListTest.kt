@@ -57,7 +57,6 @@ class FriendsListTest {
     // Verify the list of users is displayed
     composeTestRule.onNodeWithTag("userList").assertIsDisplayed()
   }
-
   //  @Test
   //  fun testSearchFunctionality() {
   //    // Enter a search query

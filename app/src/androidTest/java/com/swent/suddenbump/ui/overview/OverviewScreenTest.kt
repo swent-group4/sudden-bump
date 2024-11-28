@@ -17,137 +17,128 @@ import org.junit.Test
 
 class OverviewScreenTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    private lateinit var navigationActions: NavigationActions
-    private lateinit var userViewModel: UserViewModel
+  private lateinit var navigationActions: NavigationActions
+  private lateinit var userViewModel: UserViewModel
 
-    private val location1 = Location("mock_provider").apply {
+  private val location1 =
+      Location("mock_provider").apply {
         latitude = 37.7749
         longitude = -122.4194 // San Francisco
-    }
+      }
 
-    private val location2 = Location("mock_provider").apply {
+  private val location2 =
+      Location("mock_provider").apply {
         latitude = 40.7128
         longitude = -74.0060 // New York
-    }
+      }
 
-    private val user1 = User(
-        uid = "1",
-        firstName = "John",
-        lastName = "Doe",
-        phoneNumber = "+1234567890",
-        profilePicture = null,
-        emailAddress = "john.doe@example.com",
-        lastKnownLocation = MutableStateFlow(location1)
-    )
+  private val user1 =
+      User(
+          uid = "1",
+          firstName = "John",
+          lastName = "Doe",
+          phoneNumber = "+1234567890",
+          profilePicture = null,
+          emailAddress = "john.doe@example.com",
+          lastKnownLocation = MutableStateFlow(location1))
 
-    private val user2 = User(
-        uid = "2",
-        firstName = "Jane",
-        lastName = "Smith",
-        phoneNumber = "+1234567891",
-        profilePicture = null,
-        emailAddress = "jane.smith@example.com",
-        lastKnownLocation = MutableStateFlow(location2)
-    )
+  private val user2 =
+      User(
+          uid = "2",
+          firstName = "Jane",
+          lastName = "Smith",
+          phoneNumber = "+1234567891",
+          profilePicture = null,
+          emailAddress = "jane.smith@example.com",
+          lastKnownLocation = MutableStateFlow(location2))
 
-    @Before
-    fun setUp() {
-        navigationActions = mockk(relaxed = true)
-        every { navigationActions.currentRoute() } returns Route.OVERVIEW
+  @Before
+  fun setUp() {
+    navigationActions = mockk(relaxed = true)
+    every { navigationActions.currentRoute() } returns Route.OVERVIEW
 
-        userViewModel = mockk(relaxed = true)
+    userViewModel = mockk(relaxed = true)
 
-        // Mock user and friends
-        every { userViewModel.getCurrentUser() } returns MutableStateFlow(user1)
-        every { userViewModel.groupedFriends } returns MutableStateFlow(
+    // Mock user and friends
+    every { userViewModel.getCurrentUser() } returns MutableStateFlow(user1)
+    every { userViewModel.groupedFriends } returns
+        MutableStateFlow(
             mapOf(
                 DistanceCategory.WITHIN_5KM to listOf(user1 to 1000f),
-                DistanceCategory.WITHIN_10KM to listOf(user2 to 8000f)
-            )
-        )
+                DistanceCategory.WITHIN_10KM to listOf(user2 to 8000f)))
 
-        // Mock location fetching
-        coEvery { userViewModel.getCityAndCountry(any()) } returns "San Francisco, USA" andThen "New York, USA"
-    }
-    @Test
-    fun testRequiredComponentsAreDisplayed() {
-        composeTestRule.setContent {
-            OverviewScreen(navigationActions, userViewModel)
-        }
-        composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("settingsFab").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("seeFriendsFab").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("appName").assertIsDisplayed()
-    }
+    // Mock location fetching
+    coEvery { userViewModel.getCityAndCountry(any()) } returns
+        "San Francisco, USA" andThen
+        "New York, USA"
+  }
 
-    @Test
-    fun testDisplaysFriendsWithinCategories() {
-        composeTestRule.setContent {
-            OverviewScreen(navigationActions, userViewModel)
-        }
-        composeTestRule.onNodeWithTag("Within 5km").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("Within 10km").assertIsDisplayed()
+  @Test
+  fun testRequiredComponentsAreDisplayed() {
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+    composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("settingsFab").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("seeFriendsFab").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("appName").assertIsDisplayed()
+  }
 
-        composeTestRule.onNodeWithTag(user1.uid).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(user2.uid).assertIsDisplayed()
+  @Test
+  fun testDisplaysFriendsWithinCategories() {
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+    composeTestRule.onNodeWithTag("Within 5km").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("Within 10km").assertIsDisplayed()
 
-        composeTestRule.onNodeWithText("San Francisco, USA").assertIsDisplayed()
-        composeTestRule.onNodeWithText("New York, USA").assertIsDisplayed()
-    }
+    composeTestRule.onNodeWithTag(user1.uid).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(user2.uid).assertIsDisplayed()
 
-    @Test
-    fun testLoadingState() {
-        // Simulate loading state
-        every { userViewModel.groupedFriends } returns MutableStateFlow(null)
+    composeTestRule.onNodeWithText("San Francisco, USA").assertIsDisplayed()
+    composeTestRule.onNodeWithText("New York, USA").assertIsDisplayed()
+  }
 
-        composeTestRule.setContent {
-            OverviewScreen(navigationActions, userViewModel)
-        }
+  @Test
+  fun testLoadingState() {
+    // Simulate loading state
+    every { userViewModel.groupedFriends } returns MutableStateFlow(null)
 
-        composeTestRule.onNodeWithTag("loadingFriends").assertIsDisplayed()
-    }
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
-    @Test
-    fun testEmptyState() {
-        // Simulate empty state
-        every { userViewModel.groupedFriends } returns MutableStateFlow(emptyMap())
+    composeTestRule.onNodeWithTag("loadingFriends").assertIsDisplayed()
+  }
 
-        composeTestRule.setContent {
-            OverviewScreen(navigationActions, userViewModel)
-        }
+  @Test
+  fun testEmptyState() {
+    // Simulate empty state
+    every { userViewModel.groupedFriends } returns MutableStateFlow(emptyMap())
 
-        composeTestRule.onNodeWithTag("noFriends").assertIsDisplayed()
-        composeTestRule.onNodeWithText("No friends nearby, add friends to see their location").assertIsDisplayed()
-    }
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
-    @Test
-    fun testSettingsButtonNavigatesToSettings() {
-        composeTestRule.setContent {
-            OverviewScreen(navigationActions, userViewModel)
-        }
-        composeTestRule.onNodeWithTag("settingsFab").performClick()
-        verify { navigationActions.navigateTo(Screen.SETTINGS) }
-    }
+    composeTestRule.onNodeWithTag("noFriends").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithText("No friends nearby, add friends to see their location")
+        .assertIsDisplayed()
+  }
 
-    @Test
-    fun testAddContactButtonNavigatesToAddContact() {
-        composeTestRule.setContent {
-            OverviewScreen(navigationActions, userViewModel)
-        }
-        composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
-        verify { navigationActions.navigateTo(Screen.ADD_CONTACT) }
-    }
+  @Test
+  fun testSettingsButtonNavigatesToSettings() {
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+    composeTestRule.onNodeWithTag("settingsFab").performClick()
+    verify { navigationActions.navigateTo(Screen.SETTINGS) }
+  }
 
-    @Test
-    fun testUserRowClickNavigatesToContact() {
-        composeTestRule.setContent {
-            OverviewScreen(navigationActions, userViewModel)
-        }
-        composeTestRule.onNodeWithTag(user1.uid).performClick()
-        verify { navigationActions.navigateTo(Screen.CONTACT) }
-        verify { userViewModel.setSelectedContact(user1) }
-    }
+  @Test
+  fun testAddContactButtonNavigatesToAddContact() {
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+    composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
+    verify { navigationActions.navigateTo(Screen.ADD_CONTACT) }
+  }
+
+  @Test
+  fun testUserRowClickNavigatesToContact() {
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+    composeTestRule.onNodeWithTag(user1.uid).performClick()
+    verify { navigationActions.navigateTo(Screen.CONTACT) }
+    verify { userViewModel.setSelectedContact(user1) }
+  }
 }

@@ -533,46 +533,56 @@ class UserViewModelTest {
   @Test
   fun test_sendMessage_success() = runTest {
     // Arrange
-    val userId = "2"
+    val currentUser =
+        User(
+            uid = "currentUserId",
+            firstName = "Current",
+            lastName = "User",
+            phoneNumber = "+41 00 000 00 01",
+            profilePicture = null,
+            emailAddress = "current.user@example.com",
+            lastKnownLocation = location)
+
+    val friend =
+        User(
+            uid = "friendUserId",
+            firstName = "Friend",
+            lastName = "User",
+            phoneNumber = "+41 00 000 00 02",
+            profilePicture = null,
+            emailAddress = "friend.user@example.com",
+            lastKnownLocation = location)
+
     val chatId = "chat456"
     val messageContent = "Hello"
-    val username = "Test User"
 
     val messagesFlow = MutableSharedFlow<List<Message>>()
 
-    // Set the user in the viewModel
-    userViewModel.user =
-        User(
-            "1",
-            "Martin",
-            "Vetterli",
-            "+41 00 000 00 01",
-            null,
-            "martin.vetterli@epfl.ch",
-            location)
+    // Initialiser le userViewModel avec le currentUser
+    userViewModel.setUser(currentUser, {}, {})
 
-    // Mock chatRepository.getOrCreateChat to return chatId
-    whenever(chatRepository.getOrCreateChat(userId, "1")).thenReturn(chatId)
+    // Définir les amis de l'utilisateur
+    userViewModel.setUserFriends(friendsList = listOf(friend), onSuccess = {}, onFailure = {})
 
-    // Mock chatRepository.getOrCreateChat to return chatId
-    whenever(chatRepository.getOrCreateChat("1", userId)).thenReturn(chatId)
+    // Mock chatRepository.getOrCreateChat pour retourner chatId
+    whenever(chatRepository.getOrCreateChat(friend.uid, currentUser.uid)).thenReturn(chatId)
 
-    // Mock chatRepository.getMessages to return Flow<List<Message>>
+    // Mock chatRepository.getMessages pour retourner un Flow
     whenever(chatRepository.getMessages(chatId)).thenReturn(messagesFlow)
 
-    // Mock chatRepository.sendMessage to do nothing
-    whenever(chatRepository.sendMessage(chatId, messageContent, user, userViewModel.user!!))
+    // Mock chatRepository.sendMessage
+    whenever(chatRepository.sendMessage(chatId, messageContent, currentUser, friend))
         .thenReturn(Unit)
 
     // Act
-    userViewModel.getOrCreateChat("1")
+    userViewModel.getOrCreateChat(friend.uid)
     advanceUntilIdle()
 
-    userViewModel.sendMessage(messageContent, userViewModel.user!!)
+    userViewModel.sendMessage(messageContent)
     advanceUntilIdle()
 
     // Assert
-    verify(chatRepository).sendMessage(chatId, messageContent, user, userViewModel.user!!)
+    verify(chatRepository).sendMessage(chatId, messageContent, currentUser, friend)
   }
 
   @Test
@@ -686,5 +696,29 @@ class UserViewModelTest {
     // Assert
     verify(onFailure).invoke(exception) // Verify onFailure(exception) was called
     verify(onSuccess, never()).invoke(any()) // Verify onSuccess was never called
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun testGetCityAndCountry() = runTest {
+    // Arrange
+    // Créer une localisation simulée (San Francisco)
+    val mockLocation =
+        Location("mock_provider").apply {
+          latitude = 37.7749
+          longitude = -122.4194
+        }
+    val locationFlow = MutableStateFlow(mockLocation)
+
+    // Créer une instance de UserViewModel avec le mock de GeocodingApi
+    userViewModel = UserViewModel(userRepository, chatRepository)
+
+    // Act
+    // Appeler la fonction à tester
+    val result = userViewModel.getCityAndCountry(locationFlow)
+
+    // Assert
+    // Vérifier que le résultat est correct
+    assertThat(result, `is`("San Francisco, United States"))
   }
 }

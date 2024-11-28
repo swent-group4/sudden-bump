@@ -93,34 +93,28 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
               if (groupedFriends?.isNotEmpty() == true) {
-                  groupedFriends!!.entries
-                      .sortedBy { it.key.ordinal }
-                      .forEach { (category, friendsList) ->
-                          item { CategoryHeader(category) }
-                          items(friendsList) { (friend, _) ->
-                              UserRow(
-                                  user = friend,
-                                  navigationActions = navigationActions,
-                                  userViewModel = userViewModel
-                              )
-                          }
+                groupedFriends!!
+                    .entries
+                    .sortedBy { it.key.ordinal }
+                    .forEach { (category, friendsList) ->
+                      item { CategoryHeader(category) }
+                      items(friendsList) { (friend, _) ->
+                        UserRow(
+                            user = friend,
+                            navigationActions = navigationActions,
+                            userViewModel = userViewModel)
                       }
-              }else if (groupedFriends == null) {
+                    }
+              } else if (groupedFriends == null) {
 
-                  item {
-                      Box(
-                          modifier = Modifier
-                              .fillMaxSize()
-                              .padding(vertical = 8.dp),
-                          contentAlignment = Alignment.Center
-                      ) {
-                          CircularProgressIndicator(
-                              color = Color.White,
-                              modifier = Modifier.testTag("loadingFriends")
-                          )
+                item {
+                  Box(
+                      modifier = Modifier.fillMaxSize().padding(vertical = 8.dp),
+                      contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            color = Color.White, modifier = Modifier.testTag("loadingFriends"))
                       }
-                  }
-
+                }
               } else {
                 item {
                   Text(
@@ -155,57 +149,48 @@ fun CategoryHeader(category: DistanceCategory) {
 // Modify UserRow to fetch and display city and country
 @Composable
 fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
-    val coroutineScope = rememberCoroutineScope()
-    var locationText by remember { mutableStateOf("Loading...") }
+  val coroutineScope = rememberCoroutineScope()
+  var locationText by remember { mutableStateOf("Loading...") }
 
-    LaunchedEffect(user.uid) {
-        coroutineScope.launch {
-            val location = user.lastKnownLocation
-                locationText = userViewModel.getCityAndCountry(location)
-        }
+  LaunchedEffect(user.uid) {
+    coroutineScope.launch {
+      val location = user.lastKnownLocation
+      locationText = userViewModel.getCityAndCountry(location)
     }
+  }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .clickable {
                 userViewModel.setSelectedContact(user)
                 navigationActions.navigateTo(Screen.CONTACT)
-            }
-            .testTag(user.uid),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+              }
+              .testTag(user.uid),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = "https://avatar.iran.liara.run/public/42",
-                contentDescription = null,
-                modifier = Modifier
-                    .width(50.dp)
-                    .height(50.dp)
-                    .padding(8.dp)
-                    .testTag("profileImage")
-            )
-            Column {
+            verticalAlignment = Alignment.CenterVertically) {
+              AsyncImage(
+                  model = "https://avatar.iran.liara.run/public/42",
+                  contentDescription = null,
+                  modifier =
+                      Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
+              Column {
                 Text(
                     text = "${user.firstName} ${user.lastName.first()}.",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
-                )
+                    color = Color.White)
                 Text(
                     text = locationText,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White
-                )
+                    color = Color.White)
+              }
             }
-        }
         Icon(
             imageVector = Icons.Default.Email,
             contentDescription = "Message",
-            tint = com.swent.suddenbump.ui.theme.Purple40
-        )
-    }
+            tint = com.swent.suddenbump.ui.theme.Purple40)
+      }
 }

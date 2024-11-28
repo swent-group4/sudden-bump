@@ -1,10 +1,7 @@
 // GeocodingResponse.kt
 package com.swent.suddenbump.model.geocoding
 
-data class GeocodingResponse(
-    val results: List<Result>,
-    val status: String
-)
+data class GeocodingResponse(val results: List<Result>, val status: String)
 
 data class Result(
     val address_components: List<AddressComponent>,
@@ -13,8 +10,4 @@ data class Result(
     val types: List<String>
 )
 
-data class AddressComponent(
-    val long_name: String,
-    val short_name: String,
-    val types: List<String>
-)
+data class AddressComponent(val long_name: String, val short_name: String, val types: List<String>)

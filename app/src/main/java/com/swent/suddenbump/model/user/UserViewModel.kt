@@ -78,7 +78,7 @@ open class UserViewModel(
       MutableStateFlow(listOf(userDummy1))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
+  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _recommendedFriends: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
@@ -97,35 +97,38 @@ open class UserViewModel(
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
+  // In UserViewModel
 
-// In UserViewModel
-
-    // Change the type to allow null values
-    val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
-        combine(_user, _userFriends) { user, friends ->
+  // Change the type to allow null values
+  val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
+      combine(_user, _userFriends) { user, friends ->
             // Only compute grouped friends if friends are loaded
             if (friends.isNotEmpty()) {
-                val friendsWithDistances = friends.mapNotNull { friend ->
+              val friendsWithDistances =
+                  friends.mapNotNull { friend ->
                     val distance = getRelativeDistance(friend)
                     if (distance != Float.MAX_VALUE) {
-                        friend to distance
+                      friend to distance
                     } else {
-                        null
+                      null
                     }
-                }
+                  }
 
-                friendsWithDistances.groupBy { (_, distance) ->
-                    when {
-                        distance <= DistanceCategory.WITHIN_5KM.maxDistance -> DistanceCategory.WITHIN_5KM
-                        distance <= DistanceCategory.WITHIN_10KM.maxDistance -> DistanceCategory.WITHIN_10KM
-                        distance <= DistanceCategory.WITHIN_20KM.maxDistance -> DistanceCategory.WITHIN_20KM
-                        else -> DistanceCategory.FURTHER
-                    }
+              friendsWithDistances.groupBy { (_, distance) ->
+                when {
+                  distance <= DistanceCategory.WITHIN_5KM.maxDistance -> DistanceCategory.WITHIN_5KM
+                  distance <= DistanceCategory.WITHIN_10KM.maxDistance ->
+                      DistanceCategory.WITHIN_10KM
+                  distance <= DistanceCategory.WITHIN_20KM.maxDistance ->
+                      DistanceCategory.WITHIN_20KM
+                  else -> DistanceCategory.FURTHER
                 }
+              }
             } else {
-                null // Indicate that friends are not yet loaded
+              null // Indicate that friends are not yet loaded
             }
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+          }
+          .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
   /** Initialise le ViewModel en configurant le dépôt. */
   init {
@@ -402,52 +405,57 @@ open class UserViewModel(
     return userLocation.distanceTo(friendLocation)
   }
 
-    /** Cache to store fetched locations */
-    private val locationCache = mutableMapOf<String, String>()
+  /** Cache to store fetched locations */
+  private val locationCache = mutableMapOf<String, String>()
 
-    /** Fetches the city and country for a given location */
-    suspend fun getCityAndCountry(location: StateFlow<Location>): String {
-        val latLng = "${location.value.latitude},${location.value.longitude}"
+  /** Fetches the city and country for a given location */
+  suspend fun getCityAndCountry(location: StateFlow<Location>): String {
+    val latLng = "${location.value.latitude},${location.value.longitude}"
 
-        // Check cache first
-        locationCache[latLng]?.let {
-            return it
-        }
+    // Check cache first
+    locationCache[latLng]?.let {
+      return it
+    }
 
-        return withContext(Dispatchers.IO) {
-            try {
-                val response = RetrofitInstance.geocodingApi.reverseGeocode(
-                    latlng = latLng,
-                    apiKey = BuildConfig.MAPS_API_KEY // Replace with method to securely retrieve API key
+    return withContext(Dispatchers.IO) {
+      try {
+        val response =
+            RetrofitInstance.geocodingApi.reverseGeocode(
+                latlng = latLng,
+                apiKey =
+                    BuildConfig.MAPS_API_KEY // Replace with method to securely retrieve API key
                 )
 
-                if (response.status == "OK" && response.results.isNotEmpty()) {
-                    val addressComponents = response.results[0].address_components
+        if (response.status == "OK" && response.results.isNotEmpty()) {
+          val addressComponents = response.results[0].address_components
 
-                    val city = addressComponents.firstOrNull { component ->
-                        component.types.contains("locality")
-                    }?.long_name
+          val city =
+              addressComponents
+                  .firstOrNull { component -> component.types.contains("locality") }
+                  ?.long_name
 
-                    val country = addressComponents.firstOrNull { component ->
-                        component.types.contains("country")
-                    }?.long_name
+          val country =
+              addressComponents
+                  .firstOrNull { component -> component.types.contains("country") }
+                  ?.long_name
 
-                    val cityCountry = listOfNotNull(city, country).joinToString(", ")
+          val cityCountry = listOfNotNull(city, country).joinToString(", ")
 
-                    // Save to cache
-                    locationCache[latLng] = cityCountry
+          // Save to cache
+          locationCache[latLng] = cityCountry
 
-                    cityCountry
-                } else {
-                    Log.e("UserViewModel", "Geocoding API error: ${response.status}")
-                    "Unknown Location"
-                }
-            } catch (e: Exception) {
-                Log.e("UserViewModel", "Error fetching location: ${e.message}")
-                "Unknown Location"
-            }
+          cityCountry
+        } else {
+          Log.e("UserViewModel", "Geocoding API error: ${response.status}")
+          "Unknown Location"
         }
+      } catch (e: Exception) {
+        Log.e("UserViewModel", "Error fetching location: ${e.message}")
+        "Unknown Location"
+      }
     }
+  }
+
   fun isFriendsInRadius(radius: Int): Boolean {
     loadFriends()
     _userFriends.value.forEach { friend ->
@@ -519,7 +527,7 @@ open class UserViewModel(
   }
 
   // Envoie un nouveau message et l'ajoute à Firestore
-  fun sendMessage(messageContent: String, user: User) {
+  fun sendMessage(messageContent: String) {
     viewModelScope.launch {
       Log.d("Chat", "INSIDE FUN")
       if (chatId != null)
@@ -556,5 +564,4 @@ open class UserViewModel(
       _verificationStatus.postValue("Verification ID is missing.")
     }
   }
-
 }
