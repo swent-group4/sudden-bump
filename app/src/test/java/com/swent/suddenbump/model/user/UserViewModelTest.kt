@@ -9,7 +9,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
-import com.google.maps.GeocodingApi
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.Message
 import kotlinx.coroutines.Dispatchers
