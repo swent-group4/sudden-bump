@@ -7,15 +7,21 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.utils.ToastMatcher
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -147,6 +153,10 @@ class SignUpScreenTest {
     composeTestRule.setContent { SignUpScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("phoneField").performTextInput("+41791234567")
     composeTestRule.onNodeWithTag("sendCodeButton").performClick()
+
+    /*onView(withText("Phone number already in use"))
+      .inRoot(ToastMatcher()) // Use the custom ToastMatcher
+      .check(matches(isDisplayed()))*/
     composeTestRule.onNodeWithTag("codeField").assertDoesNotExist()
   }
 }
