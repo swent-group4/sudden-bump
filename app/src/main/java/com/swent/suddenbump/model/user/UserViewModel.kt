@@ -417,26 +417,20 @@ open class UserViewModel(
 
   fun loadFriends() {
     try {
-      Log.i(logTag, "1: ${_userFriends.value}")
-      Log.i(logTag, "2: ${getUserFriends().value}")
       repository.getUserFriends(
           uid = _user.value.uid,
           onSuccess = { friends ->
             // Update the state with the locations of friends
             _userFriends.value = friends
             Log.d("FriendsMarkers", "On success load Friends ${_userFriends.value}")
-            println("On success load Friends $friends")
           },
           onFailure = { error ->
             // Handle the error, e.g., log or show error message
             Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
-            println("exception1")
           })
     } catch (e: Exception) {
       Log.e("UserViewModel", e.toString())
-      println("exception2")
     }
-    println("endfunc")
   }
 
   fun getSelectedContact(): StateFlow<User> {
