@@ -58,18 +58,21 @@ fun MapScreen(navigationActions: NavigationActions, userViewModel: UserViewModel
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun SimpleMap(userViewModel: UserViewModel) {
-  val user = userViewModel.getCurrentUser().value
   val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) } // Track if the zoom has been performed
-  val loc = user.lastKnownLocation.value
 
-  val latLng = LatLng(loc.latitude, loc.longitude)
-  markerState.position = latLng
-  if (!zoomDone) {
-    // Perform zoom only the first time the location is set
-    cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
-    zoomDone = true // Mark zoom as done
+  LaunchedEffect(userViewModel.getLocation()) {
+    userViewModel.getLocation().let {
+      val latLng = LatLng(it.value.latitude, it.value.longitude)
+      markerState.position = LatLng(it.value.latitude, it.value.longitude)
+      if (!zoomDone) {
+        // Perform zoom only the first time the location is set
+        cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
+        fetchLocationToServer(it.value, userViewModel)
+        zoomDone = true // Mark zoom as done
+      }
+    }
   }
 
   Box(modifier = Modifier.fillMaxSize().testTag("mapView")) {

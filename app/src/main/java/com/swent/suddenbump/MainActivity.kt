@@ -72,11 +72,11 @@ class MainActivity : ComponentActivity() {
   private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
   private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
   private lateinit var locationGetter: LocationGetter
+  private var newLocation by mutableStateOf<Location?>(null)
 
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    var newLocation by mutableStateOf<Location?>(null)
 
     locationGetter =
         LocationGetter(
@@ -115,13 +115,6 @@ class MainActivity : ComponentActivity() {
             Log.e("Permissions", "Notification permission denied")
           }
         }
-
-    // Start permission requests
-    checkLocationPermissions {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        checkNotificationPermission()
-      }
-    }
 
     val notificationChannel =
         NotificationChannel("1", "FriendsNear", NotificationManager.IMPORTANCE_HIGH)
@@ -173,7 +166,6 @@ class MainActivity : ComponentActivity() {
     }
   }
 
-  @SuppressLint("UnrememberedMutableState")
   @Composable
   fun SuddenBumpApp() {
     val navController = rememberNavController()
@@ -181,6 +173,10 @@ class MainActivity : ComponentActivity() {
 
     val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
     val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
+
+    newLocation?.let { it1 ->
+      userViewModel.updateLocation(location = it1, onSuccess = {}, onFailure = {})
+    }
 
     val startRoute =
         if (!isRunningTest() && userViewModel.isUserLoggedIn()) {
@@ -211,7 +207,18 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.OVERVIEW,
           route = Route.OVERVIEW,
       ) {
-        composable(Screen.OVERVIEW) { OverviewScreen(navigationActions, userViewModel) }
+        composable(Screen.OVERVIEW) {
+          // Start permission requests
+          checkLocationPermissions {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+              checkNotificationPermission()
+            }
+          }
+          newLocation?.let { it1 ->
+            userViewModel.updateLocation(location = it1, onSuccess = {}, onFailure = {})
+          }
+          OverviewScreen(navigationActions, userViewModel)
+        }
         composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
