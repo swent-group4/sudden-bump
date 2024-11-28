@@ -164,6 +164,7 @@ fun AddMeetingScreen(
                             Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
                         }
                     },
+                    colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                     modifier = Modifier.fillMaxWidth().testTag("Save Meeting")
                 ) {
                     Text("Ask to Meet")

@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.theme.Pink40
 import java.text.SimpleDateFormat
 import java.util.*
 import com.swent.suddenbump.ui.utils.formatDateString
@@ -158,6 +157,7 @@ fun EditMeetingScreen(
                             Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
                         }
                     },
+                    colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                     modifier = Modifier.fillMaxWidth().testTag("Save Changes")
                 ) {
                     Text("Save Changes")
@@ -175,7 +175,7 @@ fun EditMeetingScreen(
                         }
                     },
                     modifier = Modifier.fillMaxWidth().testTag("Delete Meeting"),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Pink40),
                 ) {
                     Text("Delete Meeting")
                 }
