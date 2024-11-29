@@ -56,10 +56,8 @@ import com.swent.suddenbump.ui.overview.ConfidentialityScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.DiscussionScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
-import com.swent.suddenbump.ui.overview.HelpScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.overview.SettingsScreen
-import com.swent.suddenbump.ui.overview.StorageAndDataScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
@@ -245,9 +243,6 @@ class MainActivity : ComponentActivity() {
         ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
       }
       composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
-
-      composable("StorageAndDataScreen") { StorageAndDataScreen(navigationActions) }
-      composable("HelpScreen") { HelpScreen(navigationActions) }
     }
   }
 

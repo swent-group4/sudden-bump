@@ -4,18 +4,23 @@ package com.swent.suddenbump.ui.overview
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.utils.CustomTopBar
-import com.swent.suddenbump.ui.utils.LabeledButtonSection
 
 data class SectionData(
     val label: String,
@@ -26,62 +31,112 @@ data class SectionData(
 
 @Composable
 fun DiscussionScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
-  val sections = remember { createDiscussionSections() }
+  // State variable to track whether the delete confirmation dialog should be shown
   var showDialog by remember { mutableStateOf(false) }
 
+  // Display the confirmation dialog when the user clicks the "Delete all chats" button
   if (showDialog) {
     ConfirmDeleteDialog(
         onConfirm = {
+          // When confirmed, delete all messages and close the dialog
           userViewModel.deleteAllMessages()
           showDialog = false
         },
-        onDismiss = { showDialog = false })
+        onDismiss = {
+          // Close the dialog without taking any action
+          showDialog = false
+        })
   }
 
+  // Scaffold to define the screen layout
   Scaffold(
       modifier = Modifier.testTag("discussionScreen").background(Color.Black),
-      topBar = { createTopBar(navigationActions) },
+      topBar = {
+        CenterAlignedTopAppBar(
+            title = { Text("Discussions", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Go back")
+                  }
+            },
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Black,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White))
+      },
       content = { paddingValues ->
-        LazyColumn(
+        Column(
             modifier =
-                Modifier.fillMaxSize()
-                    .background(Color.Black)
-                    .padding(paddingValues)
-                    .padding(16.dp)
-                    .testTag("discussionLazyColumn"),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              itemsWithDividers(sections) { section ->
-                LabeledButtonSection(
-                    label = section.label,
-                    buttonText = section.buttonText,
-                    onClick = {
-                      if (section.buttonTag == "deleteAllChatsButton") {
-                        showDialog = true
-                      }
-                    },
-                    labelTag = section.labelTag,
-                    buttonTag = section.buttonTag)
-              }
+                Modifier.fillMaxSize() // Fill the entire screen
+                    .background(Color.Black) // Black background for the screen
+                    .padding(paddingValues) // Handle padding for content under the top bar
+                    .padding(16.dp), // Additional padding for spacing
+            verticalArrangement = Arrangement.spacedBy(16.dp), // Space between items in the column
+            horizontalAlignment =
+                Alignment.CenterHorizontally // Center align all content horizontally
+            ) {
+              // Button to delete all chats
+              Button(
+                  onClick = { showDialog = true }, // Show the confirmation dialog when clicked
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = Pink40, // Background color of the button
+                          contentColor = Color.White // Text color of the button
+                          ),
+                  shape =
+                      RoundedCornerShape(8.dp), // Match the less-rounded style of "Delete Account"
+                  modifier =
+                      Modifier.fillMaxWidth() // Make the button span the full width of the column
+                          .testTag("deleteAllChatsButton") // Tag for testing this button
+                          .padding(horizontal = 16.dp) // Padding to keep space on the sides
+                  ) {
+                    // Text displayed on the button
+                    Text(
+                        text = "Delete all chats",
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Bold // Bold font for emphasis
+                                ))
+                  }
             }
       })
 }
 
+/**
+ * Confirmation dialog to ask the user for confirmation before deleting all messages.
+ *
+ * @param onConfirm Action to perform when the user confirms the deletion.
+ * @param onDismiss Action to perform when the user dismisses the dialog.
+ */
 @Composable
 fun ConfirmDeleteDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
   AlertDialog(
-      onDismissRequest = onDismiss,
-      title = { Text("Confirm Deletion") },
+      onDismissRequest = onDismiss, // Triggered when the user clicks outside the dialog
+      title = {
+        Text("Confirm Deletion") // Title of the dialog
+      },
       text = {
         Text("Are you sure you want to delete all messages? This action cannot be undone.")
       },
       confirmButton = {
-        TextButton(onClick = onConfirm, modifier = Modifier.testTag("confirmButton")) {
-          Text("Confirm")
+        TextButton(
+            onClick = onConfirm, // Trigger the confirm action
+            modifier = Modifier.testTag("confirmButton") // Tag for testing the confirm button
+            ) {
+              Text("Confirm") // Label for the confirm button
         }
       },
       dismissButton = {
-        TextButton(onClick = onDismiss, modifier = Modifier.testTag("cancelButton")) {
-          Text("Cancel")
+        TextButton(
+            onClick = onDismiss, // Trigger the dismiss action
+            modifier = Modifier.testTag("cancelButton") // Tag for testing the cancel button
+            ) {
+              Text("Cancel") // Label for the cancel button
         }
       })
 }
@@ -100,19 +155,6 @@ fun createTopBar(navigationActions: NavigationActions) {
 fun createDiscussionSections(): List<SectionData> =
     listOf(
         createSectionData(
-            "Chat wallpaper",
-            "Change chat wallpaper",
-            "chatWallpaperText",
-            "changeChatWallpaperButton"),
-        createSectionData("Export chat", "Export chat", "exportChatText", "exportChatButton"),
-        createSectionData(
-            "Archive all chats",
-            "Archive all chats",
-            "archiveAllChatsText",
-            "archiveAllChatsButton"),
-        createSectionData(
-            "Clear all chats", "Clear all chats", "clearAllChatsText", "clearAllChatsButton"),
-        createSectionData(
             "Delete all chats", "Delete all chats", "deleteAllChatsText", "deleteAllChatsButton"))
 
 /** Helper function to create a SectionData instance */
@@ -129,9 +171,9 @@ inline fun <T> LazyListScope.itemsWithDividers(
       content(item)
 
       if (index != items.lastIndex) {
-        Divider(
-            color = Color.White,
-            modifier = Modifier.padding(vertical = 8.dp).testTag("divider_$index"))
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 8.dp).testTag("divider_$index"),
+            color = Color.White)
       }
     }
   }

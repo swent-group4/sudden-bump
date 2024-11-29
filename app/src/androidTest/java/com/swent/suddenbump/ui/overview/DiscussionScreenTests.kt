@@ -71,36 +71,6 @@ class DiscussionScreenTests {
   }
 
   @Test
-  fun displaysExportChatSection() {
-    // Scroll to the "Export chat" section before verifying
-    composeTestRule
-        .onNodeWithTag("discussionLazyColumn")
-        .performScrollToNode(hasTestTag("exportChatText"))
-    composeTestRule.onNodeWithTag("exportChatText").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("exportChatButton").assertIsDisplayed()
-  }
-
-  @Test
-  fun displaysArchiveAllChatsSection() {
-    // Scroll to the "Archive all chats" section before verifying
-    composeTestRule
-        .onNodeWithTag("discussionLazyColumn")
-        .performScrollToNode(hasTestTag("archiveAllChatsText"))
-    composeTestRule.onNodeWithTag("archiveAllChatsText").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("archiveAllChatsButton").assertIsDisplayed()
-  }
-
-  @Test
-  fun displaysClearAllChatsSection() {
-    // Scroll to the "Clear all chats" section before verifying
-    composeTestRule
-        .onNodeWithTag("discussionLazyColumn")
-        .performScrollToNode(hasTestTag("clearAllChatsText"))
-    composeTestRule.onNodeWithTag("clearAllChatsText").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("clearAllChatsButton").assertIsDisplayed()
-  }
-
-  @Test
   fun displaysDeleteAllChatsSection() {
     // Scroll to the "Delete all chats" section before verifying
     composeTestRule
@@ -164,20 +134,5 @@ class DiscussionScreenTests {
 
     // Verify that the confirm delete dialog is no longer displayed
     composeTestRule.onNodeWithText("Confirm Deletion").assertDoesNotExist()
-  }
-
-  @Test
-  fun clickingChangeChatWallpaperButtonTriggersAction() {
-    // Scroll to the "Change chat wallpaper" section and click the button
-    composeTestRule
-        .onNodeWithTag("discussionLazyColumn")
-        .performScrollToNode(hasTestTag("changeChatWallpaperButton"))
-    composeTestRule.onNodeWithTag("changeChatWallpaperButton").performClick()
-    composeTestRule.waitForIdle() // Wait for UI to settle
-
-    // Verify that the action related to changing chat wallpaper would be triggered (this might
-    // involve verifying a method call, navigating, etc.)
-    // Currently, there's no specific method to verify for wallpaper change, this is a placeholder
-    // verify(navigationActions).navigateTo(Screen.CHANGE_WALLPAPER)
   }
 }
