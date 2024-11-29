@@ -31,12 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.swent.suddenbump.R
-import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
-import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
@@ -228,21 +223,4 @@ fun NotificationsSwitch(
                     uncheckedThumbColor = Color.Gray,
                     uncheckedTrackColor = Color.DarkGray))
       }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewSettingsScreen() {
-  val navController = rememberNavController()
-  val navigationActions = NavigationActions(navController)
-
-  val firestoreInstance = FirebaseFirestore.getInstance()
-  val authInstance = FirebaseAuth.getInstance()
-
-  val userRepository =
-      UserRepositoryFirestore(db = firestoreInstance, context = LocalContext.current)
-  val chatRepository = ChatRepositoryFirestore(firestore = firestoreInstance)
-
-  val userViewModel = UserViewModel(userRepository, chatRepository)
-  SettingsScreen(navigationActions, userViewModel, onNotificationsEnabledChange = {})
 }

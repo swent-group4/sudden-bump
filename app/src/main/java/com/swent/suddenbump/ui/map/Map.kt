@@ -44,11 +44,7 @@ import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MapScreen(
-    navigationActions: NavigationActions,
-    location: Location?,
-    userViewModel: UserViewModel
-) {
+fun MapScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   Scaffold(
       bottomBar = {
         BottomNavigationMenu(
@@ -56,25 +52,24 @@ fun MapScreen(
             tabList = LIST_TOP_LEVEL_DESTINATION,
             selectedItem = navigationActions.currentRoute())
       },
-      content = { _ -> SimpleMap(location, userViewModel) })
+      content = { _ -> SimpleMap(userViewModel) })
 }
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun SimpleMap(location: Location?, userViewModel: UserViewModel) {
+fun SimpleMap(userViewModel: UserViewModel) {
   val markerState = rememberMarkerState(position = LatLng(1000.0, 1000.0))
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) } // Track if the zoom has been performed
 
-  LaunchedEffect(location) {
-    location?.let {
-      val latLng = LatLng(it.latitude, it.longitude)
-      markerState.position = LatLng(it.latitude, it.longitude)
+  LaunchedEffect(userViewModel.getLocation()) {
+    userViewModel.getLocation().let {
+      val latLng = LatLng(it.value.latitude, it.value.longitude)
+      markerState.position = LatLng(it.value.latitude, it.value.longitude)
       if (!zoomDone) {
         // Perform zoom only the first time the location is set
         cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
-
-        fetchLocationToServer(location, userViewModel)
-
+        fetchLocationToServer(it.value, userViewModel)
         zoomDone = true // Mark zoom as done
       }
     }
