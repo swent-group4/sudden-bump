@@ -1,14 +1,10 @@
 package com.swent.suddenbump.worker
 
 import android.annotation.SuppressLint
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
-import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -50,23 +46,17 @@ class LocationUpdateWorker(
     return withContext(Dispatchers.IO) {
       try {
         // Get the current location
-        Log.d("WorkerSuddenBump", "Starting doWork")
         val location: Location = getCurrentLocation()
         // Initialize UserRepository
-        Log.d("WorkerSuddenBump", "Got location: $location")
         val repository = UserRepositoryFirestore(Firebase.firestore, applicationContext)
         val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
 
         val uid = repository.getSavedUid()
         val radius = 5000.0
 
-        Log.d("WorkerSuddenBump", "Got userId: $uid")
-
         val user = getUserAccountSuspend(repository, uid)
-        Log.d("WorkerSuddenBump", "Got user: $user")
 
         if (user != null) {
-          Log.d("WorkerSuddenBump", "User $user")
 
           val timestamp = Timestamp.now()
 
@@ -90,9 +80,7 @@ class LocationUpdateWorker(
                     friends,
                     radius,
                     onSuccess = { showFriendNearbyNotification(applicationContext) },
-                    onFailure = {
-                      Log.d("WorkerSuddenBump", "isFriendsInRadius encountered an issue")
-                    })
+                    onFailure = { Log.d("WorkerSuddenBump", "No friends in radius") })
               },
               onFailure = {
                 Log.d("WorkerSuddenBump", "Retrieval of friends encountered an issue")
@@ -147,33 +135,6 @@ class LocationUpdateWorker(
           Log.e("WorkerSuddenBump", "getUserAccount failure", error)
           cont.resumeWithException(error)
         })
-  }
-
-  /**
-   * Creates the foreground notification for the worker.
-   *
-   * @return The ForegroundInfo containing the notification.
-   */
-  private fun createForegroundInfo(): ForegroundInfo {
-    val channelId = "LocationUpdateWorkerChannel"
-    val title = "Location Update"
-    val cancel = "Cancel"
-
-    val channel = NotificationChannel(channelId, title, NotificationManager.IMPORTANCE_DEFAULT)
-    val notificationManager =
-        applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    notificationManager.createNotificationChannel(channel)
-
-    val notification =
-        NotificationCompat.Builder(applicationContext, channelId)
-            .setContentTitle(title)
-            .setTicker(title)
-            .setContentText("Updating location in the background")
-            .setSmallIcon(R.drawable.app_logo)
-            .setOngoing(true)
-            .build()
-
-    return ForegroundInfo(1, notification)
   }
 
   /**

@@ -71,6 +71,9 @@ runtimeLivedata = "1.7.5"
 workRuntimeKtx = "2.7.1"
 workTesting = "2.7.1"
 navigationTesting = "2.8.4"
+retrofit = "2.10.0"
+okhttpLoggingInterceptor = "4.9.1"
+kotlinxCoroutinesAndroid = "1.6.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -141,6 +144,16 @@ ucrop = { module = "com.github.yalantis:ucrop", name = "ucrop", version.ref = "u
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 androidx-navigation-testing = { group = "androidx.navigation", name = "navigation-testing", version.ref = "navigationTesting" }
+# Retrofit for network requests
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+# Converter for JSON parsing
+retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+# Coroutine support for Retrofit (if needed)
+retrofit-converter-scalars = { group = "com.squareup.retrofit2", name = "converter-scalars", version.ref = "retrofit" }
+# Kotlin coroutines support
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+# Optional: Logging interceptor for debugging
+okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttpLoggingInterceptor" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

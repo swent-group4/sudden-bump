@@ -7,17 +7,19 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
-import com.swent.suddenbump.ui.utils.CustomTopBar
 import com.swent.suddenbump.ui.utils.LabeledButtonSection
 
 data class ConfidentialityOption(
@@ -33,34 +35,27 @@ fun ConfidentialityScreen(navigationActions: NavigationActions, userViewModel: U
   val confidentialityOptions =
       listOf(
           ConfidentialityOption(
-              "Who can see my last time online",
-              listOf("No one", "Friends", "Everyone"),
-              "onlinePresenceOptions"),
-          ConfidentialityOption(
-              "Who can see when I am online",
-              listOf("No one", "Friends", "Everyone"),
-              "whenOnlineOptions"),
-          ConfidentialityOption(
-              "Who can see my profile photo",
-              listOf("No one", "Friends", "Everyone"),
-              "profilePhotoOptions"),
-          ConfidentialityOption(
-              "Who can see my info", listOf("No one", "Friends", "Everyone"), "myInfoOptions"),
-          ConfidentialityOption(
-              "Who can add me to groups", listOf("No one", "Friends", "Everyone"), "groupsOptions"),
-          ConfidentialityOption(
-              "Who can see my status", listOf("No one", "Friends", "Everyone"), "statusOptions"),
-          ConfidentialityOption(
               "Location Status", listOf("Enabled", "Disabled"), "locationStatusOptions"))
 
   Scaffold(
-      modifier = Modifier.testTag("confidentialityScreen").background(Color.Black),
+      modifier = Modifier.testTag("confidentialityScreen"),
       topBar = {
-        CustomTopBar(
-            title = "Confidentiality Settings",
-            navigationActions = navigationActions,
-            titleTag = "confidentialityTitle",
-            backButtonTag = "backButton")
+        CenterAlignedTopAppBar(
+            title = { Text("Confidentiality", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Go back")
+                  }
+            },
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Black,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White))
       },
       content = { paddingValues ->
         Column(
@@ -76,7 +71,7 @@ fun ConfidentialityScreen(navigationActions: NavigationActions, userViewModel: U
                     question = option.question,
                     options = option.options,
                     modifier = Modifier.testTag(option.testTag))
-                Divider(color = Color.White, modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color.White)
               }
 
               Spacer(modifier = Modifier.height(16.dp))

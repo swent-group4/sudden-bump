@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,12 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.utils.AccountOption
-import com.swent.suddenbump.ui.utils.CustomTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,13 +27,24 @@ fun AccountScreen(navigationActions: NavigationActions) {
   var isLanguageMenuExpanded by remember { mutableStateOf(false) }
 
   Scaffold(
-      modifier = Modifier.background(Color.Black).testTag("AccountScreen"),
+      modifier = Modifier.testTag("accountScreen"),
       topBar = {
-        CustomTopBar(
-            title = "Account",
-            navigationActions = navigationActions,
-            titleTag = "accountTitle",
-            backButtonTag = "backButton")
+        CenterAlignedTopAppBar(
+            title = { Text("Account", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Go back")
+                  }
+            },
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Black,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White))
       },
       content = { paddingValues ->
         LazyColumn(
@@ -80,24 +93,6 @@ fun AccountScreen(navigationActions: NavigationActions) {
                     backgroundColor = Pink40,
                     onClick = { navigationActions.navigateTo("AccountScreen") },
                     testTag = "logoutSection")
-              }
-
-              item {
-                ChangeSection(
-                    title = "Change Password",
-                    placeholder = "Enter new password",
-                    sectionTag = "passwordChangeSection",
-                    placeholderTag = "passwordPlaceholder",
-                    buttonTag = "passwordChangeButton")
-              }
-
-              item {
-                ChangeSection(
-                    title = "Change Email",
-                    placeholder = "Enter new email",
-                    sectionTag = "emailChangeSection",
-                    placeholderTag = "emailPlaceholder",
-                    buttonTag = "emailChangeButton")
               }
             }
       })
