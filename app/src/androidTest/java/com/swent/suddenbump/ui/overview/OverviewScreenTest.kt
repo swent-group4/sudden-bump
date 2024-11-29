@@ -2,23 +2,15 @@ package com.swent.suddenbump.ui.overview
 
 import android.location.Location
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.printToLog
 import com.swent.suddenbump.model.user.DistanceCategory
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
@@ -43,12 +35,6 @@ class OverviewScreenTest {
         longitude = -74.0060 // New York
       }
 
-  private val location3 =
-      Location("mock_provider").apply {
-        latitude = 46.5190
-        longitude = 6.5680
-      }
-
   private val user1 =
       User(
           uid = "1",
@@ -65,19 +51,9 @@ class OverviewScreenTest {
           firstName = "Jane",
           lastName = "Smith",
           phoneNumber = "+1234567891",
-          profilePicture = null,
+          profilePicture = ImageBitmap(100, 100),
           emailAddress = "jane.smith@example.com",
           lastKnownLocation = MutableStateFlow(location2))
-
-  private val user3 =
-      User(
-          uid = "3",
-          firstName = "Alice",
-          lastName = "Brown",
-          phoneNumber = "+1234567892",
-          profilePicture = ImageBitmap(100, 100),
-          emailAddress = "alice.brown@example.com",
-          lastKnownLocation = MutableStateFlow(location3))
 
   @Before
   fun setUp() {
@@ -112,10 +88,6 @@ class OverviewScreenTest {
   @Test
   fun testDisplaysFriendsWithinCategories() {
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
-    composeTestRule.waitForIdle()
-
-    composeTestRule.onRoot(useUnmergedTree = true).printToLog("Debug")
-
     composeTestRule.onNodeWithTag("Within 5km").assertIsDisplayed()
     composeTestRule.onNodeWithTag("Within 10km").assertIsDisplayed()
 
@@ -164,31 +136,24 @@ class OverviewScreenTest {
   }
 
   @Test
-  fun havingProfilePictureDisplaysComponent() {
-    every { userViewModel.groupedFriends } returns
-        MutableStateFlow(
-            mapOf(
-                DistanceCategory.WITHIN_5KM to listOf(user1 to 1000f),
-                DistanceCategory.WITHIN_10KM to listOf(user2 to 8000f),
-                DistanceCategory.FURTHER to listOf(user3 to 150000f)))
-
-    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
-    composeTestRule.waitForIdle()
-
-    // Verify the profile picture image
-    composeTestRule
-        .onNodeWithTag("profileImage_${user2.uid}", useUnmergedTree = true)
-        .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag("profileImageNotNull_${user3.uid}", useUnmergedTree = true)
-        .assertIsDisplayed()
-  }
-
-  @Test
   fun testUserRowClickNavigatesToContact() {
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag(user1.uid).performClick()
     verify { navigationActions.navigateTo(Screen.CONTACT) }
     verify { userViewModel.setSelectedContact(user1) }
+  }
+
+  @Test
+  fun havingProfilePictureDisplaysComponent() {
+
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+
+    // Verify the profile picture image
+    composeTestRule
+        .onNodeWithTag("profileImage_${user1.uid}", useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("profileImageNotNull_${user2.uid}", useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }
