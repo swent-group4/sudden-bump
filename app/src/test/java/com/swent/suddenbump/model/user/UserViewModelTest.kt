@@ -622,7 +622,7 @@ class UserViewModelTest {
     userViewModel.getOrCreateChat(friend.uid)
     advanceUntilIdle()
 
-    userViewModel.sendMessage(messageContent)
+    userViewModel.sendMessage(messageContent, user=friend)
     advanceUntilIdle()
 
     // Assert
