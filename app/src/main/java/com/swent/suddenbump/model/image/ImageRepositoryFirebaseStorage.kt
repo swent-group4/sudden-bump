@@ -15,6 +15,8 @@ import kotlinx.coroutines.tasks.await
 
 class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : ImageRepository {
 
+  private val profilePicturesPath = "/data/data/com.swent.suddenbump/files/"
+
   private val imageBitMapIO = ImageBitMapIO()
 
   override fun init(onSuccess: () -> Unit) {
@@ -27,7 +29,7 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
       onFailure: (Exception) -> Unit
   ) {
     val imageRef = storage.reference.child(path)
-    val localFile = File.createTempFile("sudden-bump-", path.substringAfterLast('/'))
+    val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
 
     runBlocking {
       try {
@@ -37,12 +39,15 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
         } else {
           val fileInputStream = FileInputStream(localFile)
           val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+          Log.d("Image", "finished : ${profilePicturesPath + path.substringAfterLast('/')}")
           onSuccess(bitmap.asImageBitmap())
         }
       } catch (e: Exception) {
         Log.e("SuddenBump", e.toString())
       }
     }
+
+    localFile.renameTo(File(path.substringAfterLast('/')))
   }
 
   override fun uploadImage(

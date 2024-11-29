@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
+import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
@@ -28,7 +29,6 @@ import com.google.firebase.firestore.Transaction
 import com.google.firebase.storage.StorageReference
 import com.swent.suddenbump.model.image.ImageRepository
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
@@ -53,7 +53,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
 import org.mockito.kotlin.timeout
-import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
@@ -63,24 +62,45 @@ import org.robolectric.Shadows.shadowOf
 class UserRepositoryFirestoreTest {
 
   @Mock private lateinit var mockFirestore: FirebaseFirestore
+
   @Mock private lateinit var mockUserCollectionReference: CollectionReference
+
   @Mock private lateinit var mockEmailCollectionReference: CollectionReference
+
   @Mock private lateinit var mockPhoneCollectionReference: CollectionReference
+
   @Mock private lateinit var mockUserDocumentReference: DocumentReference
+
   @Mock private lateinit var mockEmailDocumentReference: DocumentReference
+
   @Mock private lateinit var mockPhoneDocumentReference: DocumentReference
+
   @Mock private lateinit var mockUserDocumentSnapshot: DocumentSnapshot
+
   @Mock private lateinit var mockEmailDocumentSnapshot: DocumentSnapshot
+
   @Mock private lateinit var mockPhoneDocumentSnapshot: DocumentSnapshot
+
+  @Mock private lateinit var mockedFriendsDocumentSnapshot: DocumentSnapshot
+
   @Mock private lateinit var mockUserQuerySnapshot: QuerySnapshot
+
   @Mock private lateinit var mockEmailQuerySnapshot: QuerySnapshot
+
   @Mock private lateinit var mockPhoneQuerySnapshot: QuerySnapshot
+
   @Mock private lateinit var mockFirebaseAuth: FirebaseAuth
+
   @Mock private lateinit var mockFirebaseUser: FirebaseUser
+
   @Mock private lateinit var firebaseAuthMockStatic: MockedStatic<FirebaseAuth>
+
   @Mock private lateinit var mockTaskVoid: Task<Void>
+
   @Mock private lateinit var mockImageRepository: ImageRepository
+
   @Mock private lateinit var mockFriendDocumentReference: DocumentReference
+
   @Mock private lateinit var mockFriendDocumentSnapshot: DocumentSnapshot
   @Mock private lateinit var transaction: Transaction
 
@@ -130,6 +150,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
     `when`(mockUserCollectionReference.document()).thenReturn(mockUserDocumentReference)
     `when`(mockUserDocumentReference.set(any())).thenReturn(mockTaskVoid)
+    `when`(mockUserDocumentReference.update(any())).thenReturn(mockTaskVoid)
     `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
     `when`(mockUserDocumentReference.id).thenReturn("1")
     `when`(mockUserDocumentSnapshot.data)
@@ -1103,7 +1124,7 @@ class UserRepositoryFirestoreTest {
 
     shadowOf(Looper.getMainLooper()).idle()
 
-    verify(mockUserDocumentReference).set(any())
+    verify(mockUserDocumentReference).update(any())
   }
 
   @Test
@@ -1124,7 +1145,7 @@ class UserRepositoryFirestoreTest {
     }
     whenever(failingTask.addOnCompleteListener(any())).thenReturn(failingTask)
 
-    whenever(mockUserDocumentReference.set(any())).thenReturn(failingTask)
+    whenever(mockUserDocumentReference.update(any())).thenReturn(failingTask)
 
     val onFailureMock = mock<(Exception) -> Unit>()
 
@@ -1156,7 +1177,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockCompleteTask.addOnFailureListener(any())).thenReturn(mockCompleteTask)
     `when`(mockCompleteTask.addOnSuccessListener(any())).thenReturn(mockCompleteTask)
 
-    `when`(mockUserDocumentReference.set(any())).thenReturn(mockTask)
+    `when`(mockUserDocumentReference.update(any())).thenReturn(mockTask)
     `when`(mockEmailCollectionReference.document(user.emailAddress).set(any()))
         .thenReturn(mockCompleteTask)
 
@@ -1220,7 +1241,7 @@ class UserRepositoryFirestoreTest {
         .uploadImage(any(), eq(profilePicturePath), any(), any())
 
     // Mock Firestore interactions
-    `when`(mockUserDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
+    `when`(mockUserDocumentReference.update(any())).thenReturn(Tasks.forResult(null))
     `when`(mockEmailCollectionReference.document(userWithProfilePicture.emailAddress).set(any()))
         .thenReturn(Tasks.forResult(null))
 
@@ -1278,7 +1299,7 @@ class UserRepositoryFirestoreTest {
         .uploadImage(any(), eq(profilePicturePath), any(), any())
 
     // Mock Firestore interactions
-    `when`(mockUserDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
+    `when`(mockUserDocumentReference.update(any())).thenReturn(Tasks.forResult(null))
     `when`(mockEmailCollectionReference.document(userWithProfilePicture.emailAddress).set(any()))
         .thenReturn(Tasks.forResult(null))
 
@@ -1328,7 +1349,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockTask.exception).thenReturn(exception) // Provide the exception
 
     // Stub Firestore call to return the mocked task
-    `when`(mockUserDocumentReference.set(any())).thenReturn(mockTask)
+    `when`(mockUserDocumentReference.update(any())).thenReturn(mockTask)
 
     // Act
     userRepositoryFirestore.updateUserAccount(
@@ -2239,6 +2260,124 @@ class UserRepositoryFirestoreTest {
     shadowOf(Looper.getMainLooper()).idle() // Ensure all asynchronous operations complete
 
     verify(mockUserDocumentReference).delete()
+  }
+
+  /**
+   * This test validates the `getUserFriends` function of `UserRepositoryFirestore`. It ensures that
+   * when the user's friends are fetched, the appropriate image repository function
+   * (`downloadImage`) is called.
+   *
+   * We are mocking Firestore calls, the Task API, and the ImageBitmap repository to simulate the
+   * entire flow without requiring actual network or database calls.
+   */
+  @Test
+  fun getUserFriends_callsImageRepository() {
+    mockStatic(Tasks::class.java).use { mockedStatic ->
+      // The UID of the friend we are testing for
+      val friendUid = "123"
+
+      // Mocking Firestore references
+      val mockedFriendsDocumentReference = mock(DocumentReference::class.java)
+
+      // Simulating the path of the profile picture of the user
+      val profilePicturePath = "gs://sudden-bump-swent.appspot.com/profilePictures/${user.uid}.jpeg"
+      val profilePicture = mock(ImageBitmap::class.java) // Mocking the ImageBitmap object
+      val mockTask =
+          mock(Task::class.java) as Task<DocumentSnapshot> // Mock task for fetching user document
+      val mockTaskFriends =
+          mock(Task::class.java)
+              as Task<DocumentSnapshot> // Mock task for fetching friend's document
+      val mockTaskList =
+          mock(Task::class.java)
+              as Task<List<DocumentSnapshot>> // Mock task for fetching a list of documents
+
+      // Setting up mocks for Firestore interactions
+      `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+      `when`(mockUserCollectionReference.document(user.uid)).thenReturn(mockUserDocumentReference)
+      `when`(mockUserCollectionReference.document(friendUid))
+          .thenReturn(mockedFriendsDocumentReference)
+      `when`(mockUserDocumentReference.get()).thenReturn(mockTask) // Fetch the user's document
+      `when`(mockTask.isSuccessful).thenReturn(true) // Simulate a successful task
+      `when`(mockTask.result)
+          .thenReturn(mockUserDocumentSnapshot) // Return a mocked snapshot of the user document
+      `when`(mockTask.addOnFailureListener(any()))
+          .thenReturn(mockTask) // Add failure listener (we won’t use it)
+      `when`(mockUserDocumentSnapshot.data)
+          .thenReturn(mapOf("friendsList" to listOf(friendUid))) // Mocking the friends list data
+
+      // Setting up mock for fetching the friend's document
+      `when`(mockedFriendsDocumentReference.get()).thenReturn(mockTaskFriends)
+      `when`(mockTaskFriends.isSuccessful).thenReturn(true) // Simulate a successful task for friend
+      `when`(mockTaskFriends.result)
+          .thenReturn(mockedFriendsDocumentSnapshot) // Return a mocked snapshot for friend document
+
+      // Mock the data of the friend's document
+      `when`(mockedFriendsDocumentSnapshot.data)
+          .thenReturn(
+              mapOf(
+                  "uid" to user.uid,
+                  "firstName" to user.firstName,
+                  "lastName" to user.lastName,
+                  "phoneNumber" to user.phoneNumber,
+                  "emailAddress" to user.emailAddress))
+
+      // Answering the call to addOnSuccessListener and simulating success with the mock data
+      doAnswer { invocation ->
+            val listener = invocation.arguments[0] as OnSuccessListener<DocumentSnapshot>
+            listener.onSuccess(
+                mockUserDocumentSnapshot) // Call onSuccess with the mock user document snapshot
+            mockTask // Return the mock task
+          }
+          .`when`(mockTask)
+          .addOnSuccessListener(any()) // Mocking the success listener being added for this task
+
+      // Mocking the downloadImage function in the image repository
+      doAnswer { invocation ->
+            val pathArgument = invocation.getArgument<String>(0)
+            val onSuccess = invocation.getArgument<(ImageBitmap) -> Unit>(1)
+            onSuccess(profilePicture) // Simulate the image download success, providing a mocked
+            // ImageBitmap
+            null // No return needed
+          }
+          .`when`(mockImageRepository)
+          .downloadImage(eq(profilePicturePath), any(), any())
+
+      // Mocking Tasks.whenAllSuccess to handle multiple tasks
+      `when`(Tasks.whenAllSuccess<DocumentSnapshot>(any<List<Task<DocumentSnapshot>>>()))
+          .thenReturn(mockTaskList)
+
+      // Answering the call to addOnSuccessListener on the list of tasks (for friends)
+      doAnswer { invocation ->
+            val listener = invocation.arguments[0] as OnSuccessListener<List<DocumentSnapshot>>
+            listener.onSuccess(
+                listOf(mockedFriendsDocumentSnapshot)) // Simulate success with a list of friend
+            // documents
+            mockTaskList // Return the mock task list
+          }
+          .`when`(mockTaskList)
+          .addOnSuccessListener(any()) // Mock the success listener for this task list
+
+      // Simulate no failure listener being called for the mockTaskList
+      doAnswer { mockTaskList }.`when`(mockTaskList).addOnFailureListener(any())
+
+      // Access the private field for imageRepository in the UserRepositoryFirestore class
+      val imageRepositoryField =
+          UserRepositoryFirestore::class.java.getDeclaredField("imageRepository")
+      imageRepositoryField.isAccessible = true // Make the field accessible
+      imageRepositoryField.set(
+          userRepositoryFirestore, mockImageRepository) // Inject the mock image repository
+
+      // Call the method under test: getUserFriends
+      userRepositoryFirestore.getUserFriends(
+          uid = user.uid,
+          onSuccess = {}, // Simulate success callback
+          onFailure = {
+            fail("Failure callback should not be called")
+          }) // Fail if the failure callback is called
+
+      // Verify that the image repository's downloadImage function was called
+      verify(mockImageRepository).downloadImage(any(), any(), any())
+    }
   }
 
   /**

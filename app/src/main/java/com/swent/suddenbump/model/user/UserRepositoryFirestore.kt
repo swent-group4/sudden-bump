@@ -246,7 +246,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   ) {
     db.collection(usersCollectionPath)
         .document(user.uid)
-        .set(helper.userToMapOf(user))
+        .update(helper.userToMapOf(user))
         .addOnFailureListener { exception ->
           Log.e(logTag, exception.toString())
           onFailure(exception)
@@ -682,7 +682,17 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               .addOnSuccessListener { documents ->
                 val friendsList =
                     documents.mapNotNull { document ->
-                      helper.documentSnapshotToUser(document, null)
+                      var profilePicture: ImageBitmap? = null
+                      runBlocking {
+                        val path =
+                            helper.uidToProfilePicturePath(
+                                document.data!!["uid"].toString(), profilePicturesRef)
+                        imageRepository.downloadImage(
+                            path,
+                            onSuccess = { pp -> profilePicture = pp },
+                            onFailure = { e -> onFailure(e) })
+                      }
+                      helper.documentSnapshotToUser(document, profilePicture)
                     }
                 onSuccess(friendsList)
               }

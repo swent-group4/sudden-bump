@@ -2,6 +2,7 @@ package com.swent.suddenbump.ui.overview
 
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,7 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,14 +40,15 @@ import com.swent.suddenbump.ui.theme.Purple40
 fun SettingsScreen(
     navigationActions: NavigationActions,
     userViewModel: UserViewModel,
-    onNotificationsEnabledChange: (Boolean) -> Unit
+    onNotificationsEnabledChange: (Boolean) -> Unit,
+    uri: Uri? = null
 ) {
-  var profilePictureUri by remember { mutableStateOf<Uri?>(null) }
+  var profilePictureUri = remember { mutableStateOf<Uri?>(uri) }
   var notificationsEnabled by remember { mutableStateOf(true) }
 
   val launcher =
       rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        profilePictureUri = uri
+        profilePictureUri.value = uri
       }
 
   Scaffold(
@@ -115,12 +116,14 @@ fun SettingsScreen(
 
 @Composable
 fun ProfileSection(
-    profilePictureUri: Uri?,
+    profilePictureUri: MutableState<Uri?>,
     launcher: ActivityResultLauncher<String>,
     userViewModel: UserViewModel
 ) {
   val context = LocalContext.current
   val userName = userViewModel.getCurrentUser().collectAsState().value.firstName
+
+  val profilePicture = userViewModel.getCurrentUser().collectAsState()
 
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     Spacer(modifier = Modifier.height(16.dp)) // Additional space above the photo
@@ -138,19 +141,48 @@ fun ProfileSection(
                 .clip(CircleShape)
                 .background(Color.Gray)
                 .testTag("profilePicture")) {
-          profilePictureUri?.let {
-            val bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(it))
+          if (profilePictureUri.value != null) {
+            val bitmap =
+                BitmapFactory.decodeStream(
+                    context.contentResolver.openInputStream(profilePictureUri.value!!))
+            bitmap.let {
+              userViewModel.setUser(
+                  userViewModel
+                      .getCurrentUser()
+                      .collectAsState()
+                      .value
+                      .copy(profilePicture = bitmap.asImageBitmap()),
+                  onSuccess = {
+                    profilePictureUri.value = null
+                    Log.i("Firebase", "Status : User updated")
+                  },
+                  onFailure = {
+                    profilePictureUri.value = null
+                    Log.i("Firebase", "Status : User update failed")
+                  })
+            }
             Image(
                 bitmap = bitmap.asImageBitmap(),
                 contentDescription = "Profile Picture",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize())
-          }
-              ?: Image(
+                modifier = Modifier.fillMaxSize().testTag("uriProfilePicture"))
+          } else {
+            if (profilePicture.value.profilePicture != null) {
+              userViewModel.getCurrentUser().collectAsState().value.profilePicture?.let {
+                Image(
+                    bitmap = it,
+                    contentDescription = "Profile Picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().testTag("nonNullProfilePicture"))
+              }
+            } else {
+              Image(
                   painter = painterResource(id = R.drawable.settings_user),
                   contentDescription = "Profile Picture",
                   contentScale = ContentScale.Crop,
-                  modifier = Modifier.fillMaxSize())
+                  modifier = Modifier.fillMaxSize().testTag("nullProfilePicture"))
+            }
+          }
         }
     Spacer(modifier = Modifier.height(16.dp)) // Additional space below the photo
     Button(

@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.messages
 
 import android.location.Location
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -42,7 +43,7 @@ class MessagesScreenTest {
           "Martin",
           "Vetterli",
           "+41 00 000 00 01",
-          null,
+          ImageBitmap(30, 30),
           "martin.vetterli@epfl.ch",
           locationDummy)
   private val userDummy2 =
@@ -51,7 +52,7 @@ class MessagesScreenTest {
           "Martin",
           "Vetterli",
           "+41 00 000 00 01",
-          null,
+          ImageBitmap(30, 30),
           "martin.vetterli@epfl.ch",
           locationDummy)
   private val userDummy3 =
@@ -60,7 +61,7 @@ class MessagesScreenTest {
           "Martine ",
           "Veto early",
           "+41 00 000 00 01",
-          null,
+          ImageBitmap(1500, 1500),
           "martin.vetterli@epfl.ch",
           locationDummy)
 
@@ -91,6 +92,7 @@ class MessagesScreenTest {
     userViewModel = UserViewModel(repository = repository, chatRepository = chatRepository)
     flowMock = flowOf(listOf(chatSummaryDummy, chatSummaryDummy2))
 
+    userViewModel.setUser(userDummy2, {}, {})
     userViewModel.setUserFriends(userDummy2, listOf(userDummy1, userDummy3), {}, {})
 
     `when`(navigationActions.currentRoute()).thenReturn(Route.MESS)

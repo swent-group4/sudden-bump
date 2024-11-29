@@ -16,7 +16,7 @@ data class User(
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is User) return false
-    return uid == other.uid
+    return uid == other.uid && profilePicture == other.profilePicture
   }
 
   override fun hashCode(): Int {

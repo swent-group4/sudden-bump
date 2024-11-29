@@ -1,8 +1,13 @@
 package com.swent.suddenbump.ui.contacts
 
 import android.location.Location
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.contact.ContactScreen
@@ -59,6 +64,8 @@ class ContactScreenTest {
     navigationActions = mockk(relaxed = true)
     userViewModel = mockk(relaxed = true)
 
+    // Initialize the content once before all tests
+    //        composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
     every { navigationActions.currentRoute() } returns Route.OVERVIEW
 
     // By default in test user is a friend
@@ -72,6 +79,7 @@ class ContactScreenTest {
   @Test
   fun testInitialScreenState() {
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag("contactScreen").assertIsDisplayed()
 
@@ -91,7 +99,9 @@ class ContactScreenTest {
   @Test
   fun testNavigationBackButton() {
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
 
+    // Verify the back button is displayed
     composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("backButton").performClick()
 
@@ -101,7 +111,9 @@ class ContactScreenTest {
   @Test
   fun testSendMessageButtonClick() {
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
 
+    // Verify the send message button is displayed
     composeTestRule.onNodeWithTag("sendMessageButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("sendMessageButton").performClick()
 
@@ -174,5 +186,20 @@ class ContactScreenTest {
 
     // Verify dialog is dismissed
     composeTestRule.onNodeWithText("Block User").assertDoesNotExist()
+  }
+
+  @Test
+  fun havingProfilePictureDisplaysComponent() {
+    val userCopied =
+        userViewModel.getSelectedContact().value.copy(profilePicture = ImageBitmap(30, 30))
+    val userCopiedFlow = MutableStateFlow(userCopied)
+
+    every { userViewModel.getSelectedContact() } returns userCopiedFlow
+
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
+
+    // Verify the profile picture image
+    composeTestRule.onNodeWithTag("profileImageNotNull").assertIsDisplayed()
   }
 }

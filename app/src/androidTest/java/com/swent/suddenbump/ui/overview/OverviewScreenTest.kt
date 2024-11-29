@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.overview
 
 import android.location.Location
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.swent.suddenbump.model.user.DistanceCategory
@@ -50,7 +51,7 @@ class OverviewScreenTest {
           firstName = "Jane",
           lastName = "Smith",
           phoneNumber = "+1234567891",
-          profilePicture = null,
+          profilePicture = ImageBitmap(100, 100),
           emailAddress = "jane.smith@example.com",
           lastKnownLocation = MutableStateFlow(location2))
 
@@ -87,6 +88,9 @@ class OverviewScreenTest {
   @Test
   fun testDisplaysFriendsWithinCategories() {
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+
+    composeTestRule.waitForIdle()
+
     composeTestRule.onNodeWithTag("Within 5km").assertIsDisplayed()
     composeTestRule.onNodeWithTag("Within 10km").assertIsDisplayed()
 
@@ -140,5 +144,19 @@ class OverviewScreenTest {
     composeTestRule.onNodeWithTag(user1.uid).performClick()
     verify { navigationActions.navigateTo(Screen.CONTACT) }
     verify { userViewModel.setSelectedContact(user1) }
+  }
+
+  @Test
+  fun havingProfilePictureDisplaysComponent() {
+
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+
+    // Verify the profile picture image
+    composeTestRule
+        .onNodeWithTag("profileImage_${user1.uid}", useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("profileImageNotNull_${user2.uid}", useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }
