@@ -1,5 +1,10 @@
 package com.swent.suddenbump.ui.calendar
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -16,7 +21,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.Timestamp
+import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
@@ -172,4 +180,46 @@ fun AddMeetingScreen(
               }
             }
       })
+}
+
+fun showMeetingScheduledNotification(context: Context, meeting: Meeting) {
+  val channelId = "meeting_scheduled_channel"
+  val channelName = "Meeting Scheduled Notifications"
+  val notificationId = 2
+
+  val notificationChannel =
+      NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
+  val notificationManager = context.getSystemService(NotificationManager::class.java)
+  notificationManager?.createNotificationChannel(notificationChannel)
+
+  // Intent to navigate to the meeting details screen
+  val intent =
+      Intent(context, MainActivity::class.java).apply {
+        putExtra("destination", "Screen.PENDING_MEETINGS")
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+      }
+
+  val pendingIntent: PendingIntent =
+      PendingIntent.getActivity(
+          context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+  val notificationBuilder =
+      NotificationCompat.Builder(context, channelId)
+          .setSmallIcon(android.R.drawable.ic_dialog_info)
+          .setContentTitle("New Meeting Request")
+          .setContentText(
+              "You have a new meeting request at ${meeting.location} on ${
+                    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(meeting.date.toDate())
+                }.")
+          .setPriority(NotificationCompat.PRIORITY_HIGH)
+          .setContentIntent(pendingIntent)
+          .setAutoCancel(true)
+
+  try {
+    with(NotificationManagerCompat.from(context)) {
+      notify(notificationId, notificationBuilder.build())
+    }
+  } catch (e: SecurityException) {
+    Log.e("NotificationError", "Notification permission not granted", e)
+  }
 }
