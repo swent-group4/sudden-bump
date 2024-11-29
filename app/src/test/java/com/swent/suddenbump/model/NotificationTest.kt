@@ -9,18 +9,17 @@ import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.ui.calendar.showMeetingScheduledNotification
 import com.swent.suddenbump.ui.map.showFriendNearbyNotification
+import java.security.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.GregorianCalendar
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
-import java.security.Timestamp
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.GregorianCalendar
-import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [29])
@@ -63,37 +62,38 @@ class NotificationTest {
   fun testShowMeetingScheduledNotification() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val notificationManager =
-      context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val parsedDate = dateFormat.parse("25/12/2024")
     val calendar =
-      GregorianCalendar().apply {
-        if (parsedDate != null) {
-          time = parsedDate
+        GregorianCalendar().apply {
+          if (parsedDate != null) {
+            time = parsedDate
+          }
+          set(Calendar.HOUR_OF_DAY, 0)
+          set(Calendar.MINUTE, 0)
+          set(Calendar.SECOND, 0)
+          set(Calendar.MILLISECOND, 0)
         }
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-      }
     val meetingDate = com.google.firebase.Timestamp(calendar.time)
 
     // Create a sample meeting object
-    val meeting = Meeting(
-      meetingId = "123",
-      location = "Ikea",
-      date = meetingDate,
-      friendId = "friend",
-      creatorId = "creator",
-      accepted = false
-    )
+    val meeting =
+        Meeting(
+            meetingId = "123",
+            location = "Ikea",
+            date = meetingDate,
+            friendId = "friend",
+            creatorId = "creator",
+            accepted = false)
 
     // Call the function to show the notification
     showMeetingScheduledNotification(context, meeting)
 
     // Verify that the NotificationChannel was created
-    val notificationChannel = notificationManager.getNotificationChannel("meeting_scheduled_channel")
+    val notificationChannel =
+        notificationManager.getNotificationChannel("meeting_scheduled_channel")
     assertEquals("Meeting Scheduled Notifications", notificationChannel?.name)
     assertEquals(NotificationManager.IMPORTANCE_HIGH, notificationChannel?.importance)
 
@@ -103,7 +103,9 @@ class NotificationTest {
 
     // Verify notification content
     assertEquals("New Meeting Request", notification.extras.getString(Notification.EXTRA_TITLE))
-    assertEquals("You have a new meeting request at Ikea on 25/12/2024.", notification.extras.getString(Notification.EXTRA_TEXT))
+    assertEquals(
+        "You have a new meeting request at Ikea on 25/12/2024.",
+        notification.extras.getString(Notification.EXTRA_TEXT))
 
     // Verify the PendingIntent destination
     val pendingIntent = notification.contentIntent
@@ -111,8 +113,7 @@ class NotificationTest {
     val actualIntent = shadowPendingIntent.savedIntent
     assertEquals(MainActivity::class.java.name, actualIntent.component?.className)
     assertEquals("Screen.PENDING_MEETINGS", actualIntent.getStringExtra("destination"))
-    assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK, actualIntent.flags)
+    assertEquals(
+        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK, actualIntent.flags)
   }
 }
-
-

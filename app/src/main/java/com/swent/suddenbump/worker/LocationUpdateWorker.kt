@@ -55,7 +55,7 @@ class LocationUpdateWorker(
         // Initialize UserRepository
         Log.d("WorkerSuddenBump", "Got location: $location")
         val repository = UserRepositoryFirestore(Firebase.firestore, applicationContext)
-          val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
+        val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
 
         val uid = repository.getSavedUid()
         val radius = 5000.0
@@ -98,28 +98,23 @@ class LocationUpdateWorker(
                 Log.d("WorkerSuddenBump", "Retrieval of friends encountered an issue")
               })
 
-            meetingRepository.getMeetings(
-                onSuccess = { meetings ->
-                    val filteredMeetings = meetings.filter {
-                        it.friendId == user.uid && !it.accepted
-                    }
+          meetingRepository.getMeetings(
+              onSuccess = { meetings ->
+                val filteredMeetings = meetings.filter { it.friendId == user.uid && !it.accepted }
 
-                    if (filteredMeetings.isNotEmpty()) {
-                        filteredMeetings.forEach { meeting ->
-                            showMeetingScheduledNotification(applicationContext, meeting)
-                        }
-                    } else {
-                        Log.d("MeetingCheck", "No new pending meetings found")
-                    }
-                },
-                onFailure = {
-                    Log.d("MeetingCheck", "Retrieval of meetings encountered an issue: ${it.message}")
+                if (filteredMeetings.isNotEmpty()) {
+                  filteredMeetings.forEach { meeting ->
+                    showMeetingScheduledNotification(applicationContext, meeting)
+                  }
+                } else {
+                  Log.d("MeetingCheck", "No new pending meetings found")
                 }
-            )
+              },
+              onFailure = {
+                Log.d("MeetingCheck", "Retrieval of meetings encountered an issue: ${it.message}")
+              })
 
-
-
-            Result.success()
+          Result.success()
         } else {
           Log.d("WorkerSuddenBump", "User not found")
           Result.failure()
