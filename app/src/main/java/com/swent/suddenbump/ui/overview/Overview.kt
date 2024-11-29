@@ -221,11 +221,6 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                   text = "Lausanne, Switzerland",
                   style = MaterialTheme.typography.bodyLarge,
                   color = Color.White)
-              AsyncImage(
-                  model = "https://avatar.iran.liara.run/public/42",
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
               Column {
                 Text(
                     text = "${user.firstName} ${user.lastName.first()}.",

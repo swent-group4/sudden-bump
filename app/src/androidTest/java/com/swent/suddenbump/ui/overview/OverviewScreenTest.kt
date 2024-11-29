@@ -6,7 +6,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.printToLog
 import com.swent.suddenbump.model.user.DistanceCategory
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
@@ -110,6 +112,10 @@ class OverviewScreenTest {
   @Test
   fun testDisplaysFriendsWithinCategories() {
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onRoot(useUnmergedTree = true).printToLog("Debug")
+
     composeTestRule.onNodeWithTag("Within 5km").assertIsDisplayed()
     composeTestRule.onNodeWithTag("Within 10km").assertIsDisplayed()
 
