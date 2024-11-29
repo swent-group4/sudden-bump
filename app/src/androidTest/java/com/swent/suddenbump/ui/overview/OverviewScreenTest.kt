@@ -88,6 +88,9 @@ class OverviewScreenTest {
   @Test
   fun testDisplaysFriendsWithinCategories() {
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+
+    composeTestRule.waitForIdle()
+
     composeTestRule.onNodeWithTag("Within 5km").assertIsDisplayed()
     composeTestRule.onNodeWithTag("Within 10km").assertIsDisplayed()
 

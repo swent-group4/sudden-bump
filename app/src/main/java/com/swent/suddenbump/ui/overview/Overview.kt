@@ -39,11 +39,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
+import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.DistanceCategory
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
@@ -204,8 +205,8 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                             .padding(8.dp)
                             .testTag("profileImageNotNull_${user.uid}"))
               } else {
-                AsyncImage(
-                    model = "https://avatar.iran.liara.run/public/42",
+                Image(
+                    painter = painterResource(R.drawable.profile),
                     contentDescription = "Non-Existing profile pictures",
                     modifier =
                         Modifier.width(50.dp)
@@ -213,14 +214,6 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                             .padding(8.dp)
                             .testTag("profileImage_${user.uid}"))
               }
-              Text(
-                  text = "${user.firstName} ${user.lastName.first()}.",
-                  style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                  color = Color.White)
-              Text(
-                  text = "Lausanne, Switzerland",
-                  style = MaterialTheme.typography.bodyLarge,
-                  color = Color.White)
               Column {
                 Text(
                     text = "${user.firstName} ${user.lastName.first()}.",
