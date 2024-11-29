@@ -14,6 +14,7 @@ android {
     namespace = "com.swent.suddenbump"
     compileSdk = 34
 
+
     // Load the API key from local.properties
     val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")

@@ -79,21 +79,21 @@ open class UserViewModel(
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
   private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
-  private val _recommendedFriends: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(userDummy1))
+  private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
+      MutableStateFlow(emptyList())
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
 
-  // LiveData pour le statut de vérification
+  // LiveData for verification status
   private val _verificationStatus = MutableLiveData<String>()
   val verificationStatus: LiveData<String> = _verificationStatus
 
-  // LiveData pour le numéro de téléphone
+  // LiveData for phone number
   private val _phoneNumber = MutableLiveData<String>()
   val phoneNumber: LiveData<String> = _phoneNumber
 
-  // LiveData pour l'ID de vérification
+  // LiveData for verification ID
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
@@ -135,7 +135,12 @@ open class UserViewModel(
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
   }
 
-  /** Méthode de fabrique pour créer une instance de UserViewModel avec les dépendances requises. */
+  /**
+   * Factory method for creating a UserViewModel instance with the required dependencies.
+   *
+   * @param context The application context used to initialize the repositories.
+   * @return A ViewModelProvider.Factory for creating UserViewModel instances.
+   */
   companion object {
     fun provideFactory(context: Context): ViewModelProvider.Factory {
       return object : ViewModelProvider.Factory {
@@ -149,8 +154,8 @@ open class UserViewModel(
   }
 
   /**
-   * Définit l'utilisateur actuellement authentifié dans le ViewModel et récupère les données
-   * associées.
+   * Sets the current authenticated user in the ViewModel and fetches related data such as friends,
+   * friend requests, and recommendations.
    */
   fun setCurrentUser() {
     repository.getUserAccount(
@@ -190,7 +195,13 @@ open class UserViewModel(
         onFailure = { e -> Log.e(logTag, e.toString()) })
   }
 
-  /** Définit l'utilisateur actuel par UID et récupère les données associées. */
+  /**
+   * Sets the current user by UID and fetches related data.
+   *
+   * @param uid The unique identifier of the user to set.
+   * @param onSuccess Called when the operation succeeds.
+   * @param onFailure Called with an exception if the operation fails.
+   */
   fun setCurrentUser(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     repository.getUserAccount(
         uid,
@@ -228,13 +239,25 @@ open class UserViewModel(
         onFailure)
   }
 
-  /** Met à jour l'utilisateur actuel avec l'objet User donné. */
+  /**
+   * Updates the current user with the given User object.
+   *
+   * @param user The updated User object.
+   * @param onSuccess Called when the update succeeds.
+   * @param onFailure Called with an exception if the update fails.
+   */
   fun setUser(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     _user.value = user
     repository.updateUserAccount(user, onSuccess, onFailure)
   }
 
-  /** Vérifie si aucun compte n'existe pour l'adresse e-mail donnée. */
+  /**
+   * Verifies if no account exists for the given email address.
+   *
+   * @param emailAddress The email address to verify.
+   * @param onSuccess Called with `true` if no account exists, `false` otherwise.
+   * @param onFailure Called with an exception if the operation fails.
+   */
   fun verifyNoAccountExists(
       emailAddress: String,
       onSuccess: (Boolean) -> Unit,
@@ -251,13 +274,26 @@ open class UserViewModel(
     repository.verifyUnusedPhoneNumber(phoneNumber, onSuccess, onFailure)
   }
 
-  /** Crée un nouveau compte utilisateur. */
+  /**
+   * Creates a new user account.
+   *
+   * @param user The User object containing the account details.
+   * @param onSuccess Called when the account is successfully created.
+   * @param onFailure Called with an exception if the operation fails.
+   */
   fun createUserAccount(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     _user.value = user
     repository.createUserAccount(user, onSuccess, onFailure)
   }
 
-  /** Accepte une demande d'ami et met à jour les listes d'amis. */
+  /**
+   * Accepts a friend request and updates the friend lists.
+   *
+   * @param user The current user accepting the request.
+   * @param friend The user who sent the friend request.
+   * @param onSuccess Called when the operation succeeds.
+   * @param onFailure Called with an exception if the operation fails.
+   */
   fun acceptFriendRequest(
       user: User = _user.value,
       friend: User,
@@ -269,7 +305,14 @@ open class UserViewModel(
     _userFriends.value = _userFriends.value.plus(friend)
   }
 
-  /** Refuse une demande d'ami et la supprime des demandes en attente. */
+  /**
+   * Declines a friend request and removes it from the pending requests.
+   *
+   * @param user The current user declining the request.
+   * @param friend The user whose request is being declined.
+   * @param onSuccess Called when the operation succeeds.
+   * @param onFailure Called with an exception if the operation fails.
+   */
   fun declineFriendRequest(
       user: User = _user.value,
       friend: User,
@@ -280,7 +323,14 @@ open class UserViewModel(
     _userFriendRequests.value = _userFriendRequests.value.minus(friend)
   }
 
-  /** Envoie une demande d'ami à un autre utilisateur. */
+  /**
+   * Sends a friend request to another user.
+   *
+   * @param user The current user sending the request.
+   * @param friend The user receiving the friend request.
+   * @param onSuccess Called when the operation succeeds.
+   * @param onFailure Called with an exception if the operation fails.
+   */
   fun sendFriendRequest(
       user: User = _user.value,
       friend: User,
@@ -291,22 +341,41 @@ open class UserViewModel(
     _sentFriendRequests.value = _sentFriendRequests.value.plus(friend)
   }
 
-  /** Récupère les détails de l'utilisateur actuellement authentifié sous forme de StateFlow. */
+  /**
+   * Retrieves the current authenticated user's details as a StateFlow.
+   *
+   * @return A StateFlow containing the current User object.
+   */
   fun getCurrentUser(): StateFlow<User> {
     return _user.asStateFlow()
   }
 
-  /** Récupère les amis de l'utilisateur actuel sous forme de StateFlow. */
+  /**
+   * Retrieves the current user's friends as a StateFlow.
+   *
+   * @return A StateFlow containing a list of the user's friends.
+   */
   fun getUserFriends(): StateFlow<List<User>> {
     return _userFriends.asStateFlow()
   }
 
-  /** Récupère les demandes d'ami de l'utilisateur sous forme de StateFlow. */
+  /**
+   * Retrieves the user's friend requests as a StateFlow.
+   *
+   * @return A StateFlow representing the user's friend requests.
+   */
   fun getUserFriendRequests(): StateFlow<List<User>> {
     return _userFriendRequests.asStateFlow()
   }
 
-  /** Met à jour la liste des amis de l'utilisateur dans le dépôt. */
+  /**
+   * Updates the user's friends list in the repository.
+   *
+   * @param user The user whose friends list is being updated.
+   * @param friendsList The updated list of friends.
+   * @param onSuccess Called when the update is successful.
+   * @param onFailure Called with an exception if the update fails.
+   */
   fun setUserFriends(
       user: User = _user.value,
       friendsList: List<User>,
@@ -317,12 +386,25 @@ open class UserViewModel(
     repository.setUserFriends(user.uid, friendsList, onSuccess, onFailure)
   }
 
-  fun getUserRecommendedFriends(): StateFlow<List<User>> {
+  fun getUserRecommendedFriends(): StateFlow<List<UserWithFriendsInCommon>> {
     return _recommendedFriends.asStateFlow()
   }
 
   fun getSentFriendRequests(): StateFlow<List<User>> {
     return _sentFriendRequests.asStateFlow()
+  }
+
+  fun blockUser(
+      user: User = _user.value,
+      blockedUser: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _blockedFriends.value = _blockedFriends.value.plus(blockedUser)
+    _userFriends.value = _userFriends.value.minus(blockedUser)
+    _userFriendRequests.value = _userFriendRequests.value.minus(blockedUser)
+    _sentFriendRequests.value = _sentFriendRequests.value.minus(blockedUser)
+    return repository.blockUser(user, blockedUser, onSuccess, onFailure)
   }
 
   fun getBlockedFriends(): StateFlow<List<User>> {
@@ -343,7 +425,14 @@ open class UserViewModel(
     return _user.value.lastKnownLocation.asStateFlow()
   }
 
-  /** Met à jour la localisation de l'utilisateur dans le dépôt. */
+  /**
+   * Updates the user's location in the repository.
+   *
+   * @param user The user whose location is being updated.
+   * @param location The new location.
+   * @param onSuccess Called when the update is successful.
+   * @param onFailure Called with an exception if the update fails.
+   */
   fun updateLocation(
       user: User = _user.value,
       location: Location,
@@ -354,7 +443,14 @@ open class UserViewModel(
     repository.updateUserLocation(user.uid, location, onSuccess, onFailure)
   }
 
-  /** Met à jour le timestamp de la dernière activité de l'utilisateur dans le dépôt. */
+  /**
+   * Updates the user's last activity timestamp in the repository.
+   *
+   * @param user The user whose timestamp is being updated.
+   * @param timestamp The new timestamp.
+   * @param onSuccess Called when the update is successful.
+   * @param onFailure Called with an exception if the update fails.
+   */
   fun updateTimestamp(
       user: User = _user.value,
       timestamp: Timestamp,
@@ -371,14 +467,14 @@ open class UserViewModel(
       repository.getUserFriends(
           uid = _user.value.uid,
           onSuccess = { friends ->
-            // Met à jour l'état avec la liste des amis
+            // Update the state with the locations of friends
             _userFriends.value = friends
             Log.d("FriendsMarkers", "On success load Friends ${_userFriends.value}")
             println("On success load Friends $friends")
           },
           onFailure = { error ->
-            // Gère l'erreur
-            Log.e("UserViewModel", "Failed to load friends: ${error.message}")
+            // Handle the error, e.g., log or show error message
+            Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
             println("exception1")
           })
     } catch (e: Exception) {
@@ -526,8 +622,8 @@ open class UserViewModel(
     }
   }
 
-  // Envoie un nouveau message et l'ajoute à Firestore
-  fun sendMessage(messageContent: String) {
+  // Send a new message and add it to Firestore
+  fun sendMessage(messageContent: String, user: User) {
     viewModelScope.launch {
       Log.d("Chat", "INSIDE FUN")
       if (chatId != null)
@@ -539,7 +635,11 @@ open class UserViewModel(
     }
   }
 
-  /** Envoie un code de vérification au numéro de téléphone spécifié. */
+  /**
+   * Sends a verification code to the specified phone number.
+   *
+   * @param phoneNumber The phone number to verify.
+   */
   fun sendVerificationCode(phoneNumber: String) {
     _phoneNumber.value = phoneNumber
     repository.sendVerificationCode(
@@ -551,7 +651,11 @@ open class UserViewModel(
         onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })
   }
 
-  /** Vérifie le code fourni en utilisant l'ID de vérification. */
+  /**
+   * Verifies the provided code using the verification ID.
+   *
+   * @param code The verification code to validate.
+   */
   fun verifyCode(code: String) {
     val verificationIdValue = _verificationId.value
     if (verificationIdValue != null) {

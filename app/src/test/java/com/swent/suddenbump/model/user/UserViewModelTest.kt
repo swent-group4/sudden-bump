@@ -357,6 +357,50 @@ class UserViewModelTest {
   }
 
   @Test
+  fun testBlockUser() = runTest {
+    val user =
+        User(
+            "1",
+            "John",
+            "Doe",
+            "+1234567890",
+            null,
+            "john.doe@example.com",
+            MutableStateFlow(Location("mock_provider")))
+    val blockedUser =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+0987654321",
+            null,
+            "jane.doe@example.com",
+            MutableStateFlow(Location("mock_provider")))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    doAnswer {
+          val onSuccess = it.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .`when`(userRepository)
+        .blockUser(any(), any(), any(), any())
+
+    userViewModel.blockUser(
+        user, blockedUser, { onSuccessCalled = true }, { onFailureCalled = true })
+
+    verify(userRepository).blockUser(eq(user), eq(blockedUser), any(), any())
+    assert(onSuccessCalled)
+    assert(!onFailureCalled)
+    assert(userViewModel.getBlockedFriends().value.contains(blockedUser))
+    assert(!userViewModel.getUserFriends().value.contains(blockedUser))
+    assert(!userViewModel.getUserFriendRequests().value.contains(blockedUser))
+    assert(!userViewModel.getSentFriendRequests().value.contains(blockedUser))
+  }
+
+  @Test
   fun setBlockedFriends() {
     val user2 =
         User(
@@ -578,7 +622,7 @@ class UserViewModelTest {
     userViewModel.getOrCreateChat(friend.uid)
     advanceUntilIdle()
 
-    userViewModel.sendMessage(messageContent)
+    userViewModel.sendMessage(messageContent, user = friend)
     advanceUntilIdle()
 
     // Assert
