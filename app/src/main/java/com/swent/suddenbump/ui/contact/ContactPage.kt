@@ -157,10 +157,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     )
                   }
               Button(
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .padding(vertical = 10.dp)
-                          .testTag("sendMessageButton"),
+                  modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
                   colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                   onClick = {
                     userViewModel.declineFriendRequest(
