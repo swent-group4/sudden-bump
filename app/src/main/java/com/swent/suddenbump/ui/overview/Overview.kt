@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.swent.suddenbump.model.user.DistanceCategory
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
@@ -28,31 +29,15 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
+import kotlinx.coroutines.launch
 
 @Composable
 fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val currentUser by userViewModel.getCurrentUser().collectAsState()
-  val users by userViewModel.getUserFriends().collectAsState()
+  val groupedFriends by userViewModel.groupedFriends.collectAsState()
 
-  // Load friends' locations when the screen is composed
+  // Charge les emplacements des amis lorsque l'écran est composé
   LaunchedEffect(Unit) { userViewModel.loadFriends() }
-
-  // Compute distances and group friends
-  val friendsWithDistances =
-      users.mapNotNull { friend ->
-        val distance = userViewModel.getRelativeDistance(friend)
-        if (distance != Float.MAX_VALUE) {
-          friend to distance
-        } else {
-          null
-        }
-      }
-
-  // Group friends into categories based on distance
-  val friendsWithin5km = friendsWithDistances.filter { it.second <= 5000f }
-  val friendsWithin10km = friendsWithDistances.filter { it.second > 5000f && it.second <= 10000f }
-  val friendsWithin20km = friendsWithDistances.filter { it.second > 10000f && it.second <= 20000f }
-  val friendsFurther = friendsWithDistances.filter { it.second > 20000f }
 
   Scaffold(
       topBar = {
@@ -107,78 +92,73 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(pd)
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
-              if (friendsWithin5km.isNotEmpty()) {
-                item { CategoryHeader("Within 5km") }
-                items(friendsWithin5km) { (friend, _) ->
-                  UserRow(
-                      user = friend,
-                      navigationActions = navigationActions,
-                      userViewModel = userViewModel)
+              if (groupedFriends?.isNotEmpty() == true) {
+                groupedFriends!!
+                    .entries
+                    .sortedBy { it.key.ordinal }
+                    .forEach { (category, friendsList) ->
+                      item { CategoryHeader(category) }
+                      items(friendsList) { (friend, _) ->
+                        UserRow(
+                            user = friend,
+                            navigationActions = navigationActions,
+                            userViewModel = userViewModel)
+                      }
+                    }
+              } else if (groupedFriends == null) {
+
+                item {
+                  Box(
+                      modifier = Modifier.fillMaxSize().padding(vertical = 8.dp),
+                      contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            color = Color.White, modifier = Modifier.testTag("loadingFriends"))
+                      }
+                }
+              } else {
+                item {
+                  Text(
+                      text = "No friends nearby, add friends to see their location",
+                      color = Color.White,
+                      modifier =
+                          Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 8.dp),
+                      style = MaterialTheme.typography.titleLarge,
+                      textAlign = TextAlign.Center)
                 }
               }
-              if (friendsWithin10km.isNotEmpty()) {
-                item { CategoryHeader("Within 10km") }
-                items(friendsWithin10km) { (friend, _) ->
-                  UserRow(
-                      user = friend,
-                      navigationActions = navigationActions,
-                      userViewModel = userViewModel)
-                }
-              }
-              if (friendsWithin20km.isNotEmpty()) {
-                item { CategoryHeader("Within 20km") }
-                items(friendsWithin20km) { (friend, _) ->
-                  UserRow(
-                      user = friend,
-                      navigationActions = navigationActions,
-                      userViewModel = userViewModel)
-                }
-              }
-              if (friendsFurther.isNotEmpty()) {
-                item { CategoryHeader("Further") }
-                items(friendsFurther) { (friend, _) ->
-                  UserRow(
-                      user = friend,
-                      navigationActions = navigationActions,
-                      userViewModel = userViewModel)
-                }
-              }
-              /*if (friendsWithDistances.isEmpty()) {
-                  item {
-                      Text(
-                          text = "Looks like no friends are nearby",
-                          color = Color.White,
-                          modifier = Modifier
-                              .testTag("noFriends")
-                              .fillMaxWidth()
-                              .padding(vertical = 8.dp),
-                          style = MaterialTheme.typography.titleLarge
-                      )
-                  }
-              }*/
             }
       })
 }
 
 @Composable
-fun CategoryHeader(title: String) {
+fun CategoryHeader(category: DistanceCategory) {
   Row(
-      modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag(title),
+      modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp).testTag(category.title),
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically) {
         Canvas(modifier = Modifier.size(16.dp)) {
           drawCircle(color = com.swent.suddenbump.ui.theme.Purple40, radius = size.minDimension / 2)
         }
         Text(
-            text = title,
+            text = category.title,
             style = MaterialTheme.typography.headlineSmall,
             color = com.swent.suddenbump.ui.theme.Purple40,
             modifier = Modifier.padding(start = 8.dp))
       }
 }
-
+// Modify UserRow to fetch and display city and country
 @Composable
 fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
+  val coroutineScope = rememberCoroutineScope()
+  var locationText by remember { mutableStateOf("Loading...") }
+
+  LaunchedEffect(user.uid) {
+    coroutineScope.launch {
+      val location = user.lastKnownLocation
+      locationText = userViewModel.getCityAndCountry(location)
+    }
+  }
+
   Row(
       modifier =
           Modifier.fillMaxWidth()
@@ -197,14 +177,16 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                   contentDescription = null,
                   modifier =
                       Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
-              Text(
-                  text = "${user.firstName} ${user.lastName.first()}.",
-                  style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                  color = Color.White)
-              Text(
-                  text = "Lausanne, Switzerland",
-                  style = MaterialTheme.typography.bodyLarge,
-                  color = Color.White)
+              Column {
+                Text(
+                    text = "${user.firstName} ${user.lastName.first()}.",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = Color.White)
+                Text(
+                    text = locationText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White)
+              }
             }
         Icon(
             imageVector = Icons.Default.Email,

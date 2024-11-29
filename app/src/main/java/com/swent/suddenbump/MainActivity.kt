@@ -124,10 +124,12 @@ class MainActivity : ComponentActivity() {
     FirebaseApp.initializeApp(this)
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
-    auth.currentUser?.let {
-      // Sign out the user if they are already signed in
-      // This is useful for testing purposes
-      auth.signOut()
+    if (isRunningTest()) {
+      auth.currentUser?.let {
+        // Sign out the user if they are already signed in
+        // This is useful for testing purposes
+        auth.signOut()
+      }
     }
 
     setContent {
