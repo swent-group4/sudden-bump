@@ -9,41 +9,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,7 +43,7 @@ fun SettingsScreen(
     onNotificationsEnabledChange: (Boolean) -> Unit,
     uri: Uri? = null
 ) {
-  val profilePictureUri: MutableState<Uri?> = remember { mutableStateOf<Uri?>(uri) }
+  var profilePictureUri = remember { mutableStateOf<Uri?>(uri) }
   var notificationsEnabled by remember { mutableStateOf(true) }
 
   val launcher =
@@ -149,6 +122,7 @@ fun ProfileSection(
 ) {
   val context = LocalContext.current
   val userName = userViewModel.getCurrentUser().collectAsState().value.firstName
+
   val profilePicture = userViewModel.getCurrentUser().collectAsState()
 
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -172,7 +146,6 @@ fun ProfileSection(
                 BitmapFactory.decodeStream(
                     context.contentResolver.openInputStream(profilePictureUri.value!!))
             bitmap.let {
-              Log.d("Debug", "LET:!")
               userViewModel.setUser(
                   userViewModel
                       .getCurrentUser()
@@ -180,9 +153,7 @@ fun ProfileSection(
                       .value
                       .copy(profilePicture = bitmap.asImageBitmap()),
                   onSuccess = {
-                    Log.d("Debug", "PERFECT")
                     profilePictureUri.value = null
-                    Log.d("Debug", "PERFECT!!!")
                     Log.i("Firebase", "Status : User updated")
                   },
                   onFailure = {

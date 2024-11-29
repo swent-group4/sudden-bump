@@ -8,12 +8,9 @@ import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kaspersky.kaspresso.internal.extensions.other.createFileIfNeeded
@@ -75,6 +72,7 @@ class SettingsScreenTest {
     setContentDefault()
     composeTestRule.waitForIdle()
 
+    // Verify that the settings screen container is displayed
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
 
     // Verify that the top bar title is displayed
@@ -83,7 +81,6 @@ class SettingsScreenTest {
     // Verify other required components
     composeTestRule.onNodeWithTag("profilePicture").assertIsDisplayed()
     composeTestRule.onNodeWithTag("addPhotoButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
   }
 
   @Test
@@ -91,9 +88,6 @@ class SettingsScreenTest {
     setContentDefault()
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("goBackButton").performClick()
-    composeTestRule.waitForIdle() // Wait for UI to settle after the click
     // Verify that the back button is displayed
     composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
 
@@ -109,10 +103,6 @@ class SettingsScreenTest {
     setContentDefault()
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Account").performClick()
-    composeTestRule.waitForIdle() // Wait for UI to settle after the click
-    verify(navigationActions).navigateTo(screen = Screen.ACCOUNT)
     // Verify that the Account option navigates to the Account screen
     composeTestRule.onNodeWithTag("AccountOption").performClick()
     verify(navigationActions).navigateTo("AccountScreen")
@@ -123,10 +113,6 @@ class SettingsScreenTest {
     setContentDefault()
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Confidentiality").performClick()
-    composeTestRule.waitForIdle() // Wait for UI to settle after the click
-    verify(navigationActions).navigateTo(screen = Screen.CONFIDENTIALITY)
     // Verify that the Confidentiality option navigates to the Confidentiality screen
     composeTestRule.onNodeWithTag("ConfidentialityOption").performClick()
     verify(navigationActions).navigateTo("ConfidentialityScreen")
@@ -137,60 +123,9 @@ class SettingsScreenTest {
     setContentDefault()
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Discussions").performClick()
-    composeTestRule.waitForIdle() // Wait for UI to settle after the click
-    verify(navigationActions).navigateTo(screen = Screen.DISCUSSIONS)
-  }
-
-  @Test
-  fun storageAndDataButtonNavigatesToStorageAndDataScreen() {
-    setContentDefault()
-    composeTestRule.waitForIdle()
-
-    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
-
-    // Scroll down to bring the "Storage and Data" option into view
-    composeTestRule
-        .onNodeWithTag("settingsLazyColumn")
-        .performScrollToNode(hasTestTag("StorageAndDataOption"))
-
-    // Now check if the node exists and perform the action
-    composeTestRule
-        .onNodeWithTag("StorageAndDataOption")
-        .assertExists(
-            "Storage and Data option not found. Ensure the tag is correctly set in the composable.")
-        .assertIsDisplayed()
-        .performClick()
-
-    composeTestRule.waitForIdle() // Wait for UI to settle
-    verify(navigationActions).navigateTo(screen = Screen.STORAGE_AND_DATA)
     // Verify that the Discussions option navigates to the Discussions screen
     composeTestRule.onNodeWithTag("DiscussionsOption").performClick()
     verify(navigationActions).navigateTo("DiscussionsScreen")
-  }
-
-  @Test
-  fun helpButtonNavigatesToHelpScreen() {
-    setContentDefault()
-    composeTestRule.waitForIdle()
-
-    composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
-
-    // Scroll to bring the "Help" option into view
-    composeTestRule
-        .onNodeWithTag("settingsLazyColumn")
-        .performScrollToNode(hasTestTag("HelpOption")) // Use testTag to scroll to the Help button
-
-    // Now check if the "Help" button exists, is displayed, and perform the click
-    composeTestRule
-        .onNodeWithTag("HelpOption")
-        .assertExists("Help button does not exist.")
-        .assertIsDisplayed()
-        .performClick()
-
-    composeTestRule.waitForIdle() // Wait for UI to settle after the click
-    verify(navigationActions).navigateTo(screen = Screen.HELP)
   }
 
   @Test

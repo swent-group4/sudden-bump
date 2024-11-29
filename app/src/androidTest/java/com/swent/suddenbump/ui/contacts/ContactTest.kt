@@ -1,15 +1,13 @@
 package com.swent.suddenbump.ui.contacts
 
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.test.assertIsDisplayed
 import android.location.Location
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.swent.suddenbump.model.chat.ChatRepository
-import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.contact.ContactScreen
@@ -192,8 +190,11 @@ class ContactScreenTest {
 
   @Test
   fun havingProfilePictureDisplaysComponent() {
-    userViewModel.setSelectedContact(
-        userViewModel.getSelectedContact().value.copy(profilePicture = ImageBitmap(30, 30)))
+    val userCopied =
+        userViewModel.getSelectedContact().value.copy(profilePicture = ImageBitmap(30, 30))
+    val userCopiedFlow = MutableStateFlow(userCopied)
+
+    every { userViewModel.getSelectedContact() } returns userCopiedFlow
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
     composeTestRule.waitForIdle()
