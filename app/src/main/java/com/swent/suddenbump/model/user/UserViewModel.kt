@@ -86,6 +86,8 @@ open class UserViewModel(
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
 
+    private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
+
   // LiveData for verification status
   private val _verificationStatus = MutableLiveData<String>()
   val verificationStatus: LiveData<String> = _verificationStatus
@@ -566,4 +568,9 @@ open class UserViewModel(
       _verificationStatus.postValue("Verification ID is missing.")
     }
   }
+
+    fun shareLocationWithFriend(uid: String, friend: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        _locationSharedWith.value = _locationSharedWith.value.plus(friend) // does this include userDummy?
+        repository.shareLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
+    }
 }
