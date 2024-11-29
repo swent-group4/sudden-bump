@@ -2376,7 +2376,7 @@ class UserRepositoryFirestoreTest {
           }) // Fail if the failure callback is called
 
       // Verify that the image repository's downloadImage function was called
-      verify(mockImageRepository).downloadImage(any(), any(), any())
+      verify(mockImageRepository).downloadImageAsync(any(), any(), any())
     }
   }
 
