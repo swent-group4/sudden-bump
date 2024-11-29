@@ -1,11 +1,9 @@
 package com.swent.suddenbump.ui
 
 import android.location.Location
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
@@ -135,30 +133,6 @@ class EndToEndTest {
     composeTestRule.onNodeWithTag("settingsFab").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("settingsScreen").assertExists()
-
-    // Step 6: Scroll and navigate to Storage and Data screen
-    composeTestRule
-        .onNodeWithTag("settingsLazyColumn")
-        .performScrollToNode(hasTestTag("StorageAndDataOption")) // Scroll to make option visible
-    composeTestRule.onNodeWithTag("StorageAndDataOption").performClick()
-    composeTestRule.waitUntil(timeoutMillis = 10_000) {
-      try {
-        composeTestRule.onNodeWithTag("storageAndDataScreen").assertExists()
-        true
-      } catch (e: AssertionError) {
-        false
-      }
-    }
-    composeTestRule.onNodeWithTag("storageAndDataScreen").assertExists()
-
-    // Step 7: Navigate back to Overview
-    composeTestRule.onNodeWithTag("backButton").performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("settingsScreen").assertExists()
-
-    composeTestRule.onNodeWithTag("goBackButton").performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("overviewScreen").assertExists()
   }
 
   /* @Test

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,13 +27,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
-import com.swent.suddenbump.ui.theme.SampleAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,87 +50,67 @@ fun SettingsScreen(
         profilePictureUri = uri
       }
 
-  SampleAppTheme(darkTheme = true) {
-    Scaffold(
-        modifier = Modifier.testTag("settingsScreen"),
-        topBar = {
-          TopAppBar(
-              title = {
-                Text(
-                    "Settings",
-                    style =
-                        MaterialTheme.typography.headlineMedium.copy(
-                            fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.White),
-                    modifier = Modifier.testTag("settingsTitle"))
-              },
-              navigationIcon = {
-                IconButton(
-                    onClick = { navigationActions.goBack() }, Modifier.testTag("goBackButton")) {
-                      Icon(
-                          imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                          contentDescription = "Back",
-                          tint = Color.White)
-                    }
-              },
-              colors = TopAppBarDefaults.topAppBarColors(containerColor = Purple40))
-        },
-        content = { paddingValues ->
-          LazyColumn(
-              modifier =
-                  Modifier.fillMaxSize()
-                      .padding(paddingValues)
-                      .padding(16.dp)
-                      .background(Color.Black)
-                      .testTag("settingsLazyColumn"),
-              verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                item { ProfileSection(profilePictureUri, launcher, userViewModel) }
-                item {
-                  SettingsOption(
-                      label = "Account",
-                      backgroundColor = Color.White,
-                      onClick = { navigationActions.navigateTo("AccountScreen") },
-                      modifier = Modifier.testTag("AccountOption"))
-                }
-                item {
-                  SettingsOption(
-                      label = "Confidentiality",
-                      backgroundColor = Color.White,
-                      onClick = { navigationActions.navigateTo("ConfidentialityScreen") },
-                      modifier = Modifier.testTag("ConfidentialityOption"))
-                }
-                item {
-                  SettingsOption(
-                      label = "Discussions",
-                      backgroundColor = Color.White,
-                      onClick = { navigationActions.navigateTo("DiscussionsScreen") },
-                      modifier = Modifier.testTag("DiscussionsOption"))
-                }
-                item {
-                  NotificationsSwitch(
-                      notificationsEnabled = notificationsEnabled,
-                      onCheckedChange = {
-                        notificationsEnabled = it
-                        onNotificationsEnabledChange(it)
-                      },
-                      modifier = Modifier.testTag("NotificationsSwitch"))
-                }
-                item {
-                  SettingsOption(
-                      label = "Storage and Data",
-                      backgroundColor = Color.White,
-                      onClick = { navigationActions.navigateTo("StorageAndDataScreen") },
-                      modifier = Modifier.testTag("StorageAndDataOption"))
-                }
-                item {
-                  SettingsOption(
-                      label = "Help",
-                      backgroundColor = Color.White,
-                      onClick = { navigationActions.navigateTo("HelpScreen") },
-                      modifier = Modifier.testTag("HelpOption"))
-                }
+  Scaffold(
+      modifier = Modifier.testTag("settingsScreen"),
+      topBar = {
+        CenterAlignedTopAppBar(
+            title = { Text("Settings", maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier = Modifier.testTag("backButton")) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Go back")
+                  }
+            },
+            colors =
+                TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Black,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White))
+      },
+      content = { paddingValues ->
+        LazyColumn(
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp)
+                    .testTag("settingsLazyColumn"),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+              item { ProfileSection(profilePictureUri, launcher, userViewModel) }
+              item {
+                SettingsOption(
+                    label = "Account",
+                    backgroundColor = Color.White,
+                    onClick = { navigationActions.navigateTo("AccountScreen") },
+                    modifier = Modifier.testTag("AccountOption"))
               }
-        })
-  }
+              item {
+                SettingsOption(
+                    label = "Confidentiality",
+                    backgroundColor = Color.White,
+                    onClick = { navigationActions.navigateTo("ConfidentialityScreen") },
+                    modifier = Modifier.testTag("ConfidentialityOption"))
+              }
+              item {
+                SettingsOption(
+                    label = "Discussions",
+                    backgroundColor = Color.White,
+                    onClick = { navigationActions.navigateTo("DiscussionsScreen") },
+                    modifier = Modifier.testTag("DiscussionsOption"))
+              }
+              item {
+                NotificationsSwitch(
+                    notificationsEnabled = notificationsEnabled,
+                    onCheckedChange = {
+                      notificationsEnabled = it
+                      onNotificationsEnabledChange(it)
+                    },
+                    modifier = Modifier.testTag("NotificationsSwitch"))
+              }
+            }
+      })
 }
 
 @Composable

@@ -10,6 +10,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 
 object Route {
+  const val SETTINGS = "Settings"
   const val OVERVIEW = "Overview"
   const val MAP = "Map"
   const val AUTH = "Auth"
