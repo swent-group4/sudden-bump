@@ -13,9 +13,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +29,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +50,7 @@ import com.swent.suddenbump.ui.navigation.Screen
 @Composable
 fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val user = userViewModel.getSelectedContact().collectAsState().value
+  var showDialog by remember { mutableStateOf(false) }
 
   var isFriend =
       userViewModel.getUserFriends().collectAsState().value.map { it.uid }.contains(user.uid)
@@ -49,6 +58,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
       userViewModel.getUserFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
   var isFriendRequestSent =
       userViewModel.getSentFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
+
   // a
   Scaffold(
       modifier = Modifier.fillMaxSize().background(Color.Black).testTag("contactScreen"),
@@ -64,6 +74,27 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                         contentDescription = "Back")
                   }
+            },
+            actions = {
+              var expanded by remember { mutableStateOf(false) }
+
+              IconButton(
+                  onClick = { expanded = true }, modifier = Modifier.testTag("moreOptionsButton")) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "More options",
+                        tint = Color.White)
+                  }
+
+              DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                DropdownMenuItem(
+                    modifier = Modifier.testTag("blockUserButton"),
+                    onClick = {
+                      expanded = false
+                      showDialog = true
+                    },
+                    text = { Text("Block User") })
+              }
             },
             colors =
                 TopAppBarDefaults.topAppBarColors(
@@ -151,7 +182,9 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp)) {
               Button(
                   modifier =
-                      Modifier.fillMaxWidth().padding(vertical = 5.dp).testTag("sendMessageButton"),
+                      Modifier.fillMaxWidth()
+                          .padding(vertical = 5.dp)
+                          .testTag("acceptRequestButton"),
                   colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                   onClick = {
                     userViewModel.acceptFriendRequest(
@@ -172,7 +205,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                   modifier =
                       Modifier.fillMaxWidth()
                           .padding(vertical = 10.dp)
-                          .testTag("sendMessageButton"),
+                          .testTag("declineRequestButton"),
                   colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                   onClick = {
                     userViewModel.declineFriendRequest(
@@ -194,6 +227,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
             Text(
                 "Friend request sent",
                 color = Color.White,
+                modifier = Modifier.testTag("friendRequestSentText"),
             )
           } else {
             Button(
@@ -210,11 +244,32 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                       onFailure = { println("Error sending friend request") })
                 }) {
                   Text(
-                      "SendFriendRequest",
+                      "Send Friend Request",
                       color = Color.White,
                   )
                 }
           }
+        }
+
+        if (showDialog) {
+          AlertDialog(
+              onDismissRequest = { showDialog = false },
+              title = { Text("Block User") },
+              text = { Text("Are you sure you want to block this user?") },
+              confirmButton = {
+                Button(
+                    onClick = {
+                      showDialog = false
+                      userViewModel.blockUser(
+                          user = userViewModel.getCurrentUser().value,
+                          blockedUser = user,
+                          onSuccess = { navigationActions.goBack() },
+                          onFailure = { println("Error blocking user") })
+                    }) {
+                      Text("Yes")
+                    }
+              },
+              dismissButton = { Button(onClick = { showDialog = false }) { Text("No") } })
         }
       })
 }

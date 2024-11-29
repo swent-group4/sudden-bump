@@ -38,6 +38,7 @@ import org.mockito.kotlin.verify
 
 @RunWith(AndroidJUnit4::class)
 class SettingsScreenTest {
+
   private lateinit var navigationActions: NavigationActions
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
@@ -75,7 +76,11 @@ class SettingsScreenTest {
     composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("settingsTitle").assertIsDisplayed()
+
+    // Verify that the top bar title is displayed
+    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+
+    // Verify other required components
     composeTestRule.onNodeWithTag("profilePicture").assertIsDisplayed()
     composeTestRule.onNodeWithTag("addPhotoButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
@@ -89,6 +94,13 @@ class SettingsScreenTest {
     composeTestRule.onNodeWithTag("goBackButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("goBackButton").performClick()
     composeTestRule.waitForIdle() // Wait for UI to settle after the click
+    // Verify that the back button is displayed
+    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+
+    // Perform click on the back button
+    composeTestRule.onNodeWithTag("backButton").performClick()
+
+    // Verify the goBack action is triggered
     verify(navigationActions).goBack()
   }
 
@@ -101,6 +113,9 @@ class SettingsScreenTest {
     composeTestRule.onNodeWithText("Account").performClick()
     composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).navigateTo(screen = Screen.ACCOUNT)
+    // Verify that the Account option navigates to the Account screen
+    composeTestRule.onNodeWithTag("AccountOption").performClick()
+    verify(navigationActions).navigateTo("AccountScreen")
   }
 
   @Test
@@ -112,6 +127,9 @@ class SettingsScreenTest {
     composeTestRule.onNodeWithText("Confidentiality").performClick()
     composeTestRule.waitForIdle() // Wait for UI to settle after the click
     verify(navigationActions).navigateTo(screen = Screen.CONFIDENTIALITY)
+    // Verify that the Confidentiality option navigates to the Confidentiality screen
+    composeTestRule.onNodeWithTag("ConfidentialityOption").performClick()
+    verify(navigationActions).navigateTo("ConfidentialityScreen")
   }
 
   @Test
@@ -147,6 +165,9 @@ class SettingsScreenTest {
 
     composeTestRule.waitForIdle() // Wait for UI to settle
     verify(navigationActions).navigateTo(screen = Screen.STORAGE_AND_DATA)
+    // Verify that the Discussions option navigates to the Discussions screen
+    composeTestRule.onNodeWithTag("DiscussionsOption").performClick()
+    verify(navigationActions).navigateTo("DiscussionsScreen")
   }
 
   @Test

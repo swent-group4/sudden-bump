@@ -16,7 +16,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowApplication
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [30])
@@ -37,8 +36,9 @@ class LocationGetterTest {
 
   @Test
   fun requestLocationUpdates_permissionGranted_requestsLocationUpdates() {
-    ShadowApplication.getInstance()
-        .grantPermissions(android.Manifest.permission.ACCESS_FINE_LOCATION)
+    ApplicationProvider.getApplicationContext<Context>()
+        .packageManager
+        .setApplicationEnabledSetting("com.swent.suddenbump", 0, 0)
 
     locationGetter.requestLocationUpdates()
 

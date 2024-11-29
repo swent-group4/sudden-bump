@@ -357,6 +357,50 @@ class UserViewModelTest {
   }
 
   @Test
+  fun testBlockUser() = runTest {
+    val user =
+        User(
+            "1",
+            "John",
+            "Doe",
+            "+1234567890",
+            null,
+            "john.doe@example.com",
+            MutableStateFlow(Location("mock_provider")))
+    val blockedUser =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+0987654321",
+            null,
+            "jane.doe@example.com",
+            MutableStateFlow(Location("mock_provider")))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    doAnswer {
+          val onSuccess = it.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .`when`(userRepository)
+        .blockUser(any(), any(), any(), any())
+
+    userViewModel.blockUser(
+        user, blockedUser, { onSuccessCalled = true }, { onFailureCalled = true })
+
+    verify(userRepository).blockUser(eq(user), eq(blockedUser), any(), any())
+    assert(onSuccessCalled)
+    assert(!onFailureCalled)
+    assert(userViewModel.getBlockedFriends().value.contains(blockedUser))
+    assert(!userViewModel.getUserFriends().value.contains(blockedUser))
+    assert(!userViewModel.getUserFriendRequests().value.contains(blockedUser))
+    assert(!userViewModel.getSentFriendRequests().value.contains(blockedUser))
+  }
+
+  @Test
   fun setBlockedFriends() {
     val user2 =
         User(
@@ -533,46 +577,56 @@ class UserViewModelTest {
   @Test
   fun test_sendMessage_success() = runTest {
     // Arrange
-    val userId = "2"
+    val currentUser =
+        User(
+            uid = "currentUserId",
+            firstName = "Current",
+            lastName = "User",
+            phoneNumber = "+41 00 000 00 01",
+            profilePicture = null,
+            emailAddress = "current.user@example.com",
+            lastKnownLocation = location)
+
+    val friend =
+        User(
+            uid = "friendUserId",
+            firstName = "Friend",
+            lastName = "User",
+            phoneNumber = "+41 00 000 00 02",
+            profilePicture = null,
+            emailAddress = "friend.user@example.com",
+            lastKnownLocation = location)
+
     val chatId = "chat456"
     val messageContent = "Hello"
-    val username = "Test User"
 
     val messagesFlow = MutableSharedFlow<List<Message>>()
 
-    // Set the user in the viewModel
-    userViewModel.user =
-        User(
-            "1",
-            "Martin",
-            "Vetterli",
-            "+41 00 000 00 01",
-            null,
-            "martin.vetterli@epfl.ch",
-            location)
+    // Initialiser le userViewModel avec le currentUser
+    userViewModel.setUser(currentUser, {}, {})
 
-    // Mock chatRepository.getOrCreateChat to return chatId
-    whenever(chatRepository.getOrCreateChat(userId, "1")).thenReturn(chatId)
+    // Définir les amis de l'utilisateur
+    userViewModel.setUserFriends(friendsList = listOf(friend), onSuccess = {}, onFailure = {})
 
-    // Mock chatRepository.getOrCreateChat to return chatId
-    whenever(chatRepository.getOrCreateChat("1", userId)).thenReturn(chatId)
+    // Mock chatRepository.getOrCreateChat pour retourner chatId
+    whenever(chatRepository.getOrCreateChat(friend.uid, currentUser.uid)).thenReturn(chatId)
 
-    // Mock chatRepository.getMessages to return Flow<List<Message>>
+    // Mock chatRepository.getMessages pour retourner un Flow
     whenever(chatRepository.getMessages(chatId)).thenReturn(messagesFlow)
 
-    // Mock chatRepository.sendMessage to do nothing
-    whenever(chatRepository.sendMessage(chatId, messageContent, user, userViewModel.user!!))
+    // Mock chatRepository.sendMessage
+    whenever(chatRepository.sendMessage(chatId, messageContent, currentUser, friend))
         .thenReturn(Unit)
 
     // Act
-    userViewModel.getOrCreateChat("1")
+    userViewModel.getOrCreateChat(friend.uid)
     advanceUntilIdle()
 
-    userViewModel.sendMessage(messageContent, userViewModel.user!!)
+    userViewModel.sendMessage(messageContent, user = friend)
     advanceUntilIdle()
 
     // Assert
-    verify(chatRepository).sendMessage(chatId, messageContent, user, userViewModel.user!!)
+    verify(chatRepository).sendMessage(chatId, messageContent, currentUser, friend)
   }
 
   @Test

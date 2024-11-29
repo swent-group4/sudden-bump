@@ -32,7 +32,7 @@ class LocationGetter(private val context: Context, private val listener: Locatio
         PackageManager.PERMISSION_GRANTED &&
         ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED) {
-      Log.e("CREATED", "requestLocationUpdates, Pas de pot")
+      Log.e("LocationGetter", "requestLocationUpdates, permissions not granted")
       return
     }
 

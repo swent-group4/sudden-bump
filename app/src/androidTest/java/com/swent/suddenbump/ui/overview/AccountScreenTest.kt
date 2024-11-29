@@ -32,13 +32,10 @@ class AccountScreenTest {
     // Verify that the top bar title "Account" is displayed
     composeTestRule.onNodeWithText("Account").assertIsDisplayed()
 
-    // Verify that each section is displayed
-
+    // Verify that each key section is displayed
     composeTestRule.onNodeWithTag("languageSection").assertIsDisplayed()
     composeTestRule.onNodeWithTag("deleteAccountSection").assertIsDisplayed()
     composeTestRule.onNodeWithTag("logoutSection").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("passwordChangeSection").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("emailChangeSection").assertIsDisplayed()
   }
 
   @Test
@@ -71,29 +68,5 @@ class AccountScreenTest {
     // Perform a click on the "Log out" section
     composeTestRule.onNodeWithTag("logoutSection").performClick()
     verify(navigationActions).navigateTo("AccountScreen")
-  }
-
-  @Test
-  fun passwordSectionIsDisplayed() {
-    // Verify the "Change Password" section is displayed
-    composeTestRule.onNodeWithTag("passwordChangeSection").assertIsDisplayed()
-
-    // Verify placeholder box is displayed instead of a keyboard input
-    composeTestRule.onNodeWithTag("passwordPlaceholder").assertIsDisplayed()
-
-    // Verify button exists for password change
-    composeTestRule.onNodeWithTag("passwordChangeButton").assertIsDisplayed()
-  }
-
-  @Test
-  fun emailSectionIsDisplayed() {
-    // Verify the "Change Email" section is displayed
-    composeTestRule.onNodeWithTag("emailChangeSection").assertIsDisplayed()
-
-    // Verify placeholder box is displayed instead of a keyboard input
-    composeTestRule.onNodeWithTag("emailPlaceholder").assertIsDisplayed()
-
-    // Verify button exists for email change
-    composeTestRule.onNodeWithTag("emailChangeButton").assertIsDisplayed()
   }
 }

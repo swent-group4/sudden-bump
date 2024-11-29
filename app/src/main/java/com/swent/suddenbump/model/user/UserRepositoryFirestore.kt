@@ -731,29 +731,135 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    */
   override fun getRecommendedFriends(
       uid: String,
-      onSuccess: (List<User>) -> Unit,
+      onSuccess: (List<UserWithFriendsInCommon>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    // Fetch the user's friends list from the database
+    // Fetch the user's friends list and blocked list from the database
     db.collection(usersCollectionPath)
         .document(uid)
         .get()
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { userDocument ->
-          val friendsUidList = userDocument.data?.get("friendsList") as? List<String> ?: emptyList()
+          val currentUserFriendsList =
+              userDocument.data?.get("friendsList") as? List<String> ?: emptyList()
+          val blockedList = userDocument.data?.get("blockedList") as? List<String> ?: emptyList()
 
           // Fetch all users from the database
           db.collection(usersCollectionPath)
               .get()
               .addOnFailureListener { onFailure(it) }
               .addOnSuccessListener { result ->
-                val allUsers =
-                    result.documents.mapNotNull { helper.documentSnapshotToUser(it, null) }
                 val recommendedFriends =
-                    allUsers.filter { it.uid !in friendsUidList && it.uid != uid }
-                onSuccess(recommendedFriends)
+                    result.documents.mapNotNull { document ->
+                      // Get the other user's blocked list and friends list
+                      val otherUserBlockedList =
+                          document.data?.get("blockedList") as? List<String> ?: emptyList()
+                      val otherUserFriendsList =
+                          document.data?.get("friendsList") as? List<String> ?: emptyList()
+
+                      // Only create RecommendedFriend object if this user meets our criteria
+                      if (document.id != uid &&
+                          document.id !in currentUserFriendsList &&
+                          document.id !in blockedList &&
+                          uid !in otherUserBlockedList) {
+                        // Calculate number of friends in common
+                        val commonFriendsCount =
+                            currentUserFriendsList.intersect(otherUserFriendsList.toSet()).size
+
+                        // Create RecommendedFriend object with user and common friends count
+                        UserWithFriendsInCommon(
+                            user = helper.documentSnapshotToUser(document, null),
+                            friendsInCommon = commonFriendsCount)
+                      } else {
+                        null
+                      }
+                    }
+
+                // Sort recommendations by number of common friends (descending)
+                val sortedRecommendations =
+                    recommendedFriends.sortedByDescending { it.friendsInCommon }
+                onSuccess(sortedRecommendations)
               }
         }
+  }
+
+  /**
+   * Blocks a specific user by deleting him from all the current user lists i.e. friends,
+   * sentRequests and requests. Adds the user to the blocked list.
+   *
+   * @param user The user who takes the blocking action is being retrieved.
+   * @param blockedUser The user who is being blocked.
+   * @param onSuccess Called with a list of blocked User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  override fun blockUser(
+      currentUser: User,
+      blockedUser: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    val currentUserRef = db.collection(usersCollectionPath).document(currentUser.uid)
+    val blockedUserRef = db.collection(usersCollectionPath).document(blockedUser.uid)
+
+    db.runTransaction { transaction ->
+          val currentUserSnapshot = transaction.get(currentUserRef)
+          val blockedUserSnapshot = transaction.get(blockedUserRef)
+
+          val currentUserData =
+              currentUserSnapshot.data ?: throw Exception("Current user not found")
+          val blockedUserData =
+              blockedUserSnapshot.data ?: throw Exception("Blocked user not found")
+
+          val currentUserBlockedList =
+              (currentUserData["blockedList"] as? List<String>)?.toMutableList() ?: mutableListOf()
+          val currentUserFriendsList =
+              (currentUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
+          val currentUserFriendRequests =
+              (currentUserData["friendRequests"] as? List<String>)?.toMutableList()
+                  ?: mutableListOf()
+          val currentUserSentRequests =
+              (currentUserData["sentFriendRequests"] as? List<String>)?.toMutableList()
+                  ?: mutableListOf()
+
+          val blockedUserFriendsList =
+              (blockedUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
+          val blockedUserFriendRequests =
+              (blockedUserData["friendRequests"] as? List<String>)?.toMutableList()
+                  ?: mutableListOf()
+          val blockedUserSentRequests =
+              (blockedUserData["sentFriendRequests"] as? List<String>)?.toMutableList()
+                  ?: mutableListOf()
+
+          // Add blocked user to current user's blocked list
+          if (!currentUserBlockedList.contains(blockedUser.uid)) {
+            currentUserBlockedList.add(blockedUser.uid)
+          }
+
+          // Remove blocked user from current user's friends, friend requests, and sent requests
+          // lists
+          currentUserFriendsList.remove(blockedUser.uid)
+          currentUserFriendRequests.remove(blockedUser.uid)
+          currentUserSentRequests.remove(blockedUser.uid)
+
+          // Remove current user from blocked user's friends, friend requests, and sent requests
+          // lists
+          blockedUserFriendsList.remove(currentUser.uid)
+          blockedUserFriendRequests.remove(currentUser.uid)
+          blockedUserSentRequests.remove(currentUser.uid)
+
+          // Update current user data
+          transaction.update(currentUserRef, "blockedList", currentUserBlockedList)
+          transaction.update(currentUserRef, "friendsList", currentUserFriendsList)
+          transaction.update(currentUserRef, "friendRequests", currentUserFriendRequests)
+          transaction.update(currentUserRef, "sentFriendRequests", currentUserSentRequests)
+
+          // Update blocked user data
+          transaction.update(blockedUserRef, "friendsList", blockedUserFriendsList)
+          transaction.update(blockedUserRef, "friendRequests", blockedUserFriendRequests)
+          transaction.update(blockedUserRef, "sentFriendRequests", blockedUserSentRequests)
+        }
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { exception -> onFailure(exception) }
   }
 
   /**
@@ -1056,7 +1162,7 @@ internal class UserRepositoryFirestoreHelper {
    * @param mapAttributes The formatted String containing location details.
    * @return The reconstructed Location object.
    */
-  fun locationParser(mapAttributes: String): Location {
+  private fun locationParser(mapAttributes: String): Location {
     val locationMap =
         mapAttributes
             .removeSurrounding("{", "}")
@@ -1066,13 +1172,17 @@ internal class UserRepositoryFirestoreHelper {
 
     // Retrieve required attributes with default fallbacks
     val provider = locationMap["provider"] ?: LocationManager.GPS_PROVIDER
-    val latitude = locationMap["latitude"]!!.toDouble()
-    val longitude = locationMap["longitude"]!!.toDouble()
+    val latitude = locationMap["latitude"]?.toDouble()
+    val longitude = locationMap["longitude"]?.toDouble()
 
     // Create the Location object with the mandatory values
     return Location(provider).apply {
-      this.latitude = latitude
-      this.longitude = longitude
+      if (latitude != null) {
+        this.latitude = latitude
+      }
+      if (longitude != null) {
+        this.longitude = longitude
+      }
 
       // Set optional values if present
       locationMap["altitude"]?.toDoubleOrNull()?.let { this.altitude = it }
