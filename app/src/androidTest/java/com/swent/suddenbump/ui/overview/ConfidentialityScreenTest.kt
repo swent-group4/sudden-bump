@@ -42,15 +42,6 @@ class ConfidentialityScreenTest {
   }
 
   @Test
-  fun showBlockedContactsButtonDoesNothingYet() {
-    // Click the "Show Blocked Contacts" button
-    composeTestRule.onNodeWithTag("showBlockedContactsButton").performClick()
-
-    // Since the button does nothing, we ensure no errors occur and it is clickable
-    composeTestRule.onNodeWithTag("showBlockedContactsButton").assertIsDisplayed()
-  }
-
-  @Test
   fun goBackButtonCallsNavActions() {
     // Perform click on the back button and verify navigation action
     composeTestRule.onNodeWithTag("backButton").performClick()

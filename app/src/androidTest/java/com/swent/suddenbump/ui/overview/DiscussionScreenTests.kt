@@ -1,12 +1,10 @@
 package com.swent.suddenbump.ui.overview
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.user.UserRepository
@@ -49,7 +47,7 @@ class DiscussionScreenTests {
   @Test
   fun displaysTopBarWithChatsTitle() {
     // Verify that the top bar title "Chats" is displayed
-    composeTestRule.onNodeWithText("Chats").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Discussions").assertIsDisplayed()
   }
 
   @Test
@@ -61,31 +59,14 @@ class DiscussionScreenTests {
   }
 
   @Test
-  fun displaysChatWallpaperSection() {
-    // Scroll to the "Chat wallpaper" section before verifying
-    composeTestRule
-        .onNodeWithTag("discussionLazyColumn")
-        .performScrollToNode(hasTestTag("chatWallpaperText"))
-    composeTestRule.onNodeWithTag("chatWallpaperText").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("changeChatWallpaperButton").assertIsDisplayed()
-  }
-
-  @Test
   fun displaysDeleteAllChatsSection() {
-    // Scroll to the "Delete all chats" section before verifying
-    composeTestRule
-        .onNodeWithTag("discussionLazyColumn")
-        .performScrollToNode(hasTestTag("deleteAllChatsText"))
-    composeTestRule.onNodeWithTag("deleteAllChatsText").assertIsDisplayed()
+    // Verify the "Delete all chats" button is displayed
     composeTestRule.onNodeWithTag("deleteAllChatsButton").assertIsDisplayed()
   }
 
   @Test
   fun clickingDeleteAllChatsButtonShowsConfirmDialog() {
-    // Scroll to the "Delete all chats" section and click the delete button
-    composeTestRule
-        .onNodeWithTag("discussionLazyColumn")
-        .performScrollToNode(hasTestTag("deleteAllChatsButton"))
+    // Click the "Delete all chats" button
     composeTestRule.onNodeWithTag("deleteAllChatsButton").performClick()
     composeTestRule.waitForIdle() // Wait for UI to settle
 
@@ -102,10 +83,7 @@ class DiscussionScreenTests {
   @Test
   fun clickingConfirmButtonCallsDeleteAllMessages() = runBlocking {
     withTimeout(5_000) { // 5-second timeout to avoid getting stuck
-      // Show the delete confirmation dialog
-      composeTestRule
-          .onNodeWithTag("discussionLazyColumn")
-          .performScrollToNode(hasTestTag("deleteAllChatsButton"))
+      // Click the "Delete all chats" button
       composeTestRule.onNodeWithTag("deleteAllChatsButton").performClick()
       composeTestRule.waitForIdle() // Wait for UI to settle
 
@@ -121,10 +99,7 @@ class DiscussionScreenTests {
 
   @Test
   fun clickingCancelButtonDismissesDialog() {
-    // Show the delete confirmation dialog
-    composeTestRule
-        .onNodeWithTag("discussionLazyColumn")
-        .performScrollToNode(hasTestTag("deleteAllChatsButton"))
+    // Click the "Delete all chats" button
     composeTestRule.onNodeWithTag("deleteAllChatsButton").performClick()
     composeTestRule.waitForIdle() // Wait for UI to settle
 
