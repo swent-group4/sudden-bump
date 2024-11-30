@@ -687,4 +687,44 @@ class UserViewModelTest {
     verify(onFailure).invoke(exception) // Verify onFailure(exception) was called
     verify(onSuccess, never()).invoke(any()) // Verify onSuccess was never called
   }
+
+  @Test
+  fun shareLocationWithFriendSuccessfullySharesLocation() {
+    val uid = "user123"
+    val friend =
+        User("friend123", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
+
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .shareLocationWithFriend(eq(uid), eq(friend.uid), any(), any())
+
+    userViewModel.shareLocationWithFriend(uid, friend, {}, {})
+
+    verify(userRepository).shareLocationWithFriend(eq(uid), eq(friend.uid), any(), any())
+    assert(userViewModel.locationSharedWith.value.contains(friend))
+  }
+
+  @Test
+  fun stopSharingLocationWithFriendSuccessfullyStopsSharing() {
+    val uid = "user123"
+    val friend =
+        User("friend123", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
+
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .stopSharingLocationWithFriend(eq(uid), eq(friend.uid), any(), any())
+
+    userViewModel.stopSharingLocationWithFriend(uid, friend, {}, {})
+
+    verify(userRepository).stopSharingLocationWithFriend(eq(uid), eq(friend.uid), any(), any())
+    assert(!userViewModel.locationSharedWith.value.contains(friend))
+  }
 }

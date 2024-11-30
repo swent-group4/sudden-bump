@@ -86,7 +86,9 @@ open class UserViewModel(
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
 
-    private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
+  private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
+
+  val locationSharedWith: StateFlow<List<User>> = _locationSharedWith.asStateFlow()
 
   // LiveData for verification status
   private val _verificationStatus = MutableLiveData<String>()
@@ -569,8 +571,31 @@ open class UserViewModel(
     }
   }
 
-    fun shareLocationWithFriend(uid: String, friend: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-        _locationSharedWith.value = _locationSharedWith.value.plus(friend) // does this include userDummy?
-        repository.shareLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
-    }
+  fun shareLocationWithFriend(
+      uid: String,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _locationSharedWith.value = _locationSharedWith.value.plus(friend)
+    repository.shareLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
+  }
+
+  fun stopSharingLocationWithFriend(
+      uid: String,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _locationSharedWith.value = _locationSharedWith.value.minus(friend)
+    repository.stopSharingLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
+  }
+
+  fun getLocationSharedBy(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.getSharedByFriends(uid, onSuccess, onFailure)
+  }
 }
