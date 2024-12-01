@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
+import com.swent.suddenbump.model.user.UserWithFriendsInCommon
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 
@@ -56,14 +57,21 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
 
   val friendRequests = remember { mutableStateOf(req) }
   val sentFriendRequests = userViewModel.getSentFriendRequests().collectAsState().value
+  val blockedUsers = userViewModel.getBlockedFriends().collectAsState().value
 
-  val recommendedUsers = userViewModel.getUserRecommendedFriends().collectAsState().value
+  val recommendedUsers =
+      userViewModel.getUserRecommendedFriends().collectAsState().value.filter {
+        !blockedUsers.map { user: User -> user.uid }.contains(it.user.uid)
+      }
 
   val filteredUsers =
-      recommendedUsers.filter { user ->
-        user.firstName.contains(searchQuery.text, ignoreCase = true) ||
-            user.lastName.contains(searchQuery.text, ignoreCase = true)
-      }
+      recommendedUsers
+          .filter { data ->
+            data.user.firstName.contains(searchQuery.text, ignoreCase = true) ||
+                data.user.lastName.contains(searchQuery.text, ignoreCase = true)
+          }
+          .sortedByDescending { it.friendsInCommon }
+          .take(5)
 
   Scaffold(
       modifier = Modifier.testTag("addContactScreen"),
@@ -171,9 +179,9 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                             .background(Color.White)
                             .padding(16.dp)
                             .testTag("userList")) {
-                      itemsIndexed(filteredUsers) { index, user ->
+                      itemsIndexed(filteredUsers) { index, data ->
                         UserRecommendedRow(
-                            user = user,
+                            userWithFriends = data,
                             navigationActions = navigationActions,
                             userViewModel = userViewModel,
                             currentUser = userViewModel.getCurrentUser().collectAsState().value,
@@ -269,21 +277,25 @@ fun UserRequestRow(
 @Composable
 fun UserRecommendedRow(
     currentUser: User,
-    user: User,
+    userWithFriends: UserWithFriendsInCommon,
     navigationActions: NavigationActions,
     userViewModel: UserViewModel,
     sentFriendRequests: List<User>,
     friendRequests: List<User>
 ) {
   var showButton by remember {
-    mutableStateOf(!sentFriendRequests.contains(user) && !friendRequests.contains(user))
+    mutableStateOf(
+        (!sentFriendRequests.map { user: User -> user.uid }.contains(userWithFriends.user.uid)) &&
+            !friendRequests.map { user: User -> user.uid }.contains(userWithFriends.user.uid))
   }
   Row(
       modifier =
-          Modifier.fillMaxWidth().clickable {
-            userViewModel.setSelectedContact(user)
-            navigationActions.navigateTo(Screen.CONTACT)
-          },
+          Modifier.fillMaxWidth()
+              .clickable {
+                userViewModel.setSelectedContact(userWithFriends.user)
+                navigationActions.navigateTo(Screen.CONTACT)
+              }
+              .testTag("recommendedUserRow"),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Row(
@@ -295,14 +307,22 @@ fun UserRecommendedRow(
                   modifier =
                       Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
               Text(
-                  text = "${user.firstName} ${user.lastName.first()}.",
+                  text =
+                      "${userWithFriends.user.firstName} ${userWithFriends.user.lastName.first()}.",
                   style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                   modifier = Modifier.testTag("userName"))
+
+              Text(
+                  text = "${userWithFriends.friendsInCommon} friends in common",
+                  style = MaterialTheme.typography.bodyMedium,
+                  color = Color.Gray,
+                  modifier = Modifier.testTag("friendsInCommon"))
             }
         if (showButton) {
           IconButton(
               onClick = {
-                userViewModel.sendFriendRequest(currentUser, user, { showButton = false }, {})
+                userViewModel.sendFriendRequest(
+                    currentUser, userWithFriends.user, { showButton = false }, {})
               },
               modifier = Modifier.testTag("denyButton")) {
                 Icon(

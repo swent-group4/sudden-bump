@@ -55,14 +55,8 @@ class MapScreenTest {
       // Create NavigationActions with the real NavHostController
       val navigationActions = NavigationActions(navController)
 
-      // Mock Location object
-      val mockLocation = mock(Location::class.java)
-
       // Set the content for testing
-      MapScreen(
-          navigationActions = navigationActions,
-          location = mockLocation,
-          userViewModel = userViewModel)
+      MapScreen(navigationActions = navigationActions, userViewModel = userViewModel)
     }
 
     // Verify that the bottom navigation is displayed
@@ -92,15 +86,9 @@ class MapScreenTest {
     // Ensure that currentRoute returns a valid, non-null route
     Mockito.`when`(mockNavigationActions.currentRoute()).thenReturn("Overview")
 
-    // Mock Location (if needed)
-    val mockLocation = mock(Location::class.java)
-
     // Set the content for testing
     composeTestRule.setContent {
-      MapScreen(
-          navigationActions = mockNavigationActions,
-          location = mockLocation,
-          userViewModel = userViewModel)
+      MapScreen(navigationActions = mockNavigationActions, userViewModel = userViewModel)
     }
 
     // Simulate a click on the "Map" tab (or any other tab based on your setup)

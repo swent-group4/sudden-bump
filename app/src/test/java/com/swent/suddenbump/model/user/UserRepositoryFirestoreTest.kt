@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.test.core.app.ApplicationProvider
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.gms.tasks.OnFailureListener
+import com.google.android.gms.tasks.OnSuccessListener
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
@@ -24,10 +25,10 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.Transaction
 import com.google.firebase.storage.StorageReference
 import com.swent.suddenbump.model.image.ImageRepository
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
@@ -52,7 +53,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
 import org.mockito.kotlin.timeout
-import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
@@ -62,25 +62,47 @@ import org.robolectric.Shadows.shadowOf
 class UserRepositoryFirestoreTest {
 
   @Mock private lateinit var mockFirestore: FirebaseFirestore
+
   @Mock private lateinit var mockUserCollectionReference: CollectionReference
+
   @Mock private lateinit var mockEmailCollectionReference: CollectionReference
+
   @Mock private lateinit var mockPhoneCollectionReference: CollectionReference
+
   @Mock private lateinit var mockUserDocumentReference: DocumentReference
+
   @Mock private lateinit var mockEmailDocumentReference: DocumentReference
+
   @Mock private lateinit var mockPhoneDocumentReference: DocumentReference
+
   @Mock private lateinit var mockUserDocumentSnapshot: DocumentSnapshot
+
   @Mock private lateinit var mockEmailDocumentSnapshot: DocumentSnapshot
+
   @Mock private lateinit var mockPhoneDocumentSnapshot: DocumentSnapshot
+
+  @Mock private lateinit var mockedFriendsDocumentSnapshot: DocumentSnapshot
+
   @Mock private lateinit var mockUserQuerySnapshot: QuerySnapshot
+
   @Mock private lateinit var mockEmailQuerySnapshot: QuerySnapshot
+
   @Mock private lateinit var mockPhoneQuerySnapshot: QuerySnapshot
+
   @Mock private lateinit var mockFirebaseAuth: FirebaseAuth
+
   @Mock private lateinit var mockFirebaseUser: FirebaseUser
+
   @Mock private lateinit var firebaseAuthMockStatic: MockedStatic<FirebaseAuth>
+
   @Mock private lateinit var mockTaskVoid: Task<Void>
+
   @Mock private lateinit var mockImageRepository: ImageRepository
+
   @Mock private lateinit var mockFriendDocumentReference: DocumentReference
+
   @Mock private lateinit var mockFriendDocumentSnapshot: DocumentSnapshot
+  @Mock private lateinit var transaction: Transaction
 
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
   private val helper = UserRepositoryFirestoreHelper()
@@ -128,6 +150,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
     `when`(mockUserCollectionReference.document()).thenReturn(mockUserDocumentReference)
     `when`(mockUserDocumentReference.set(any())).thenReturn(mockTaskVoid)
+    `when`(mockUserDocumentReference.update(any())).thenReturn(mockTaskVoid)
     `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
     `when`(mockUserDocumentReference.id).thenReturn("1")
     `when`(mockUserDocumentSnapshot.data)
@@ -1101,7 +1124,7 @@ class UserRepositoryFirestoreTest {
 
     shadowOf(Looper.getMainLooper()).idle()
 
-    verify(mockUserDocumentReference).set(any())
+    verify(mockUserDocumentReference).update(any())
   }
 
   @Test
@@ -1122,7 +1145,7 @@ class UserRepositoryFirestoreTest {
     }
     whenever(failingTask.addOnCompleteListener(any())).thenReturn(failingTask)
 
-    whenever(mockUserDocumentReference.set(any())).thenReturn(failingTask)
+    whenever(mockUserDocumentReference.update(any())).thenReturn(failingTask)
 
     val onFailureMock = mock<(Exception) -> Unit>()
 
@@ -1154,7 +1177,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockCompleteTask.addOnFailureListener(any())).thenReturn(mockCompleteTask)
     `when`(mockCompleteTask.addOnSuccessListener(any())).thenReturn(mockCompleteTask)
 
-    `when`(mockUserDocumentReference.set(any())).thenReturn(mockTask)
+    `when`(mockUserDocumentReference.update(any())).thenReturn(mockTask)
     `when`(mockEmailCollectionReference.document(user.emailAddress).set(any()))
         .thenReturn(mockCompleteTask)
 
@@ -1218,7 +1241,7 @@ class UserRepositoryFirestoreTest {
         .uploadImage(any(), eq(profilePicturePath), any(), any())
 
     // Mock Firestore interactions
-    `when`(mockUserDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
+    `when`(mockUserDocumentReference.update(any())).thenReturn(Tasks.forResult(null))
     `when`(mockEmailCollectionReference.document(userWithProfilePicture.emailAddress).set(any()))
         .thenReturn(Tasks.forResult(null))
 
@@ -1276,7 +1299,7 @@ class UserRepositoryFirestoreTest {
         .uploadImage(any(), eq(profilePicturePath), any(), any())
 
     // Mock Firestore interactions
-    `when`(mockUserDocumentReference.set(any())).thenReturn(Tasks.forResult(null))
+    `when`(mockUserDocumentReference.update(any())).thenReturn(Tasks.forResult(null))
     `when`(mockEmailCollectionReference.document(userWithProfilePicture.emailAddress).set(any()))
         .thenReturn(Tasks.forResult(null))
 
@@ -1326,7 +1349,7 @@ class UserRepositoryFirestoreTest {
     `when`(mockTask.exception).thenReturn(exception) // Provide the exception
 
     // Stub Firestore call to return the mocked task
-    `when`(mockUserDocumentReference.set(any())).thenReturn(mockTask)
+    `when`(mockUserDocumentReference.update(any())).thenReturn(mockTask)
 
     // Act
     userRepositoryFirestore.updateUserAccount(
@@ -1816,17 +1839,51 @@ class UserRepositoryFirestoreTest {
             null,
             "john.smith@example.com",
             lastKnownLocation = location)
+    val blockedUser =
+        User(
+            "4",
+            "Blocked",
+            "User",
+            "+44 00 000 00 04",
+            null,
+            "blocked.user@example.com",
+            lastKnownLocation = location)
+    val userWhoBlockedMe =
+        User(
+            "5",
+            "Blocker",
+            "User",
+            "+44 00 000 00 05",
+            null,
+            "blocker.user@example.com",
+            lastKnownLocation = location)
 
     // Mock the Firestore document snapshots
     val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
     val allUsersQuerySnapshot = mock(QuerySnapshot::class.java)
     val friendDocumentSnapshot = mock(DocumentSnapshot::class.java)
     val nonFriendDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val blockedUserDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val userWhoBlockedMeDocumentSnapshot = mock(DocumentSnapshot::class.java)
 
     // Mock the data returned by the document snapshots
-    `when`(userDocumentSnapshot.data).thenReturn(mapOf("friendsList" to listOf(friend.uid)))
-    `when`(friendDocumentSnapshot.data).thenReturn(mapOf("uid" to friend.uid))
-    `when`(nonFriendDocumentSnapshot.data).thenReturn(mapOf("uid" to nonFriend.uid))
+    `when`(userDocumentSnapshot.data)
+        .thenReturn(
+            mapOf("friendsList" to listOf(friend.uid), "blockedList" to listOf(blockedUser.uid)))
+    `when`(friendDocumentSnapshot.data)
+        .thenReturn(mapOf("uid" to friend.uid, "blockedList" to emptyList<String>()))
+    `when`(nonFriendDocumentSnapshot.data)
+        .thenReturn(mapOf("uid" to nonFriend.uid, "blockedList" to emptyList<String>()))
+    `when`(blockedUserDocumentSnapshot.data)
+        .thenReturn(mapOf("uid" to blockedUser.uid, "blockedList" to emptyList<String>()))
+    `when`(userWhoBlockedMeDocumentSnapshot.data)
+        .thenReturn(mapOf("uid" to userWhoBlockedMe.uid, "blockedList" to listOf(user.uid)))
+
+    // Set document IDs
+    `when`(friendDocumentSnapshot.id).thenReturn(friend.uid)
+    `when`(nonFriendDocumentSnapshot.id).thenReturn(nonFriend.uid)
+    `when`(blockedUserDocumentSnapshot.id).thenReturn(blockedUser.uid)
+    `when`(userWhoBlockedMeDocumentSnapshot.id).thenReturn(userWhoBlockedMe.uid)
 
     // Mock the Firestore document references
     val userDocumentReference = mock(DocumentReference::class.java)
@@ -1841,7 +1898,12 @@ class UserRepositoryFirestoreTest {
     `when`(userDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
     `when`(userCollectionReference.get()).thenReturn(Tasks.forResult(allUsersQuerySnapshot))
     `when`(allUsersQuerySnapshot.documents)
-        .thenReturn(listOf(friendDocumentSnapshot, nonFriendDocumentSnapshot))
+        .thenReturn(
+            listOf(
+                friendDocumentSnapshot,
+                nonFriendDocumentSnapshot,
+                blockedUserDocumentSnapshot,
+                userWhoBlockedMeDocumentSnapshot))
 
     // Create the UserRepositoryFirestore instance
     val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
@@ -1852,7 +1914,13 @@ class UserRepositoryFirestoreTest {
         { recommendedFriends ->
           // Verify the recommended friends list
           assertEquals(1, recommendedFriends.size)
-          assertEquals(nonFriend.uid, recommendedFriends[0].uid)
+          assertEquals(nonFriend.uid, recommendedFriends[0].user.uid)
+
+          // Verify that blocked users and users who blocked me are not in the list
+          assertFalse(recommendedFriends.any { it.user.uid == blockedUser.uid })
+          assertFalse(recommendedFriends.any { it.user.uid == userWhoBlockedMe.uid })
+          // Verify that existing friends are not in the list
+          assertFalse(recommendedFriends.any { it.user.uid == friend.uid })
         },
         { fail("onFailure should not be called") })
   }
@@ -2195,6 +2263,124 @@ class UserRepositoryFirestoreTest {
   }
 
   /**
+   * This test validates the `getUserFriends` function of `UserRepositoryFirestore`. It ensures that
+   * when the user's friends are fetched, the appropriate image repository function
+   * (`downloadImage`) is called.
+   *
+   * We are mocking Firestore calls, the Task API, and the ImageBitmap repository to simulate the
+   * entire flow without requiring actual network or database calls.
+   */
+  @Test
+  fun getUserFriends_callsImageRepository() {
+    mockStatic(Tasks::class.java).use { mockedStatic ->
+      // The UID of the friend we are testing for
+      val friendUid = "123"
+
+      // Mocking Firestore references
+      val mockedFriendsDocumentReference = mock(DocumentReference::class.java)
+
+      // Simulating the path of the profile picture of the user
+      val profilePicturePath = "gs://sudden-bump-swent.appspot.com/profilePictures/${user.uid}.jpeg"
+      val profilePicture = mock(ImageBitmap::class.java) // Mocking the ImageBitmap object
+      val mockTask =
+          mock(Task::class.java) as Task<DocumentSnapshot> // Mock task for fetching user document
+      val mockTaskFriends =
+          mock(Task::class.java)
+              as Task<DocumentSnapshot> // Mock task for fetching friend's document
+      val mockTaskList =
+          mock(Task::class.java)
+              as Task<List<DocumentSnapshot>> // Mock task for fetching a list of documents
+
+      // Setting up mocks for Firestore interactions
+      `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+      `when`(mockUserCollectionReference.document(user.uid)).thenReturn(mockUserDocumentReference)
+      `when`(mockUserCollectionReference.document(friendUid))
+          .thenReturn(mockedFriendsDocumentReference)
+      `when`(mockUserDocumentReference.get()).thenReturn(mockTask) // Fetch the user's document
+      `when`(mockTask.isSuccessful).thenReturn(true) // Simulate a successful task
+      `when`(mockTask.result)
+          .thenReturn(mockUserDocumentSnapshot) // Return a mocked snapshot of the user document
+      `when`(mockTask.addOnFailureListener(any()))
+          .thenReturn(mockTask) // Add failure listener (we won’t use it)
+      `when`(mockUserDocumentSnapshot.data)
+          .thenReturn(mapOf("friendsList" to listOf(friendUid))) // Mocking the friends list data
+
+      // Setting up mock for fetching the friend's document
+      `when`(mockedFriendsDocumentReference.get()).thenReturn(mockTaskFriends)
+      `when`(mockTaskFriends.isSuccessful).thenReturn(true) // Simulate a successful task for friend
+      `when`(mockTaskFriends.result)
+          .thenReturn(mockedFriendsDocumentSnapshot) // Return a mocked snapshot for friend document
+
+      // Mock the data of the friend's document
+      `when`(mockedFriendsDocumentSnapshot.data)
+          .thenReturn(
+              mapOf(
+                  "uid" to user.uid,
+                  "firstName" to user.firstName,
+                  "lastName" to user.lastName,
+                  "phoneNumber" to user.phoneNumber,
+                  "emailAddress" to user.emailAddress))
+
+      // Answering the call to addOnSuccessListener and simulating success with the mock data
+      doAnswer { invocation ->
+            val listener = invocation.arguments[0] as OnSuccessListener<DocumentSnapshot>
+            listener.onSuccess(
+                mockUserDocumentSnapshot) // Call onSuccess with the mock user document snapshot
+            mockTask // Return the mock task
+          }
+          .`when`(mockTask)
+          .addOnSuccessListener(any()) // Mocking the success listener being added for this task
+
+      // Mocking the downloadImage function in the image repository
+      doAnswer { invocation ->
+            val pathArgument = invocation.getArgument<String>(0)
+            val onSuccess = invocation.getArgument<(ImageBitmap) -> Unit>(1)
+            onSuccess(profilePicture) // Simulate the image download success, providing a mocked
+            // ImageBitmap
+            null // No return needed
+          }
+          .`when`(mockImageRepository)
+          .downloadImage(eq(profilePicturePath), any(), any())
+
+      // Mocking Tasks.whenAllSuccess to handle multiple tasks
+      `when`(Tasks.whenAllSuccess<DocumentSnapshot>(any<List<Task<DocumentSnapshot>>>()))
+          .thenReturn(mockTaskList)
+
+      // Answering the call to addOnSuccessListener on the list of tasks (for friends)
+      doAnswer { invocation ->
+            val listener = invocation.arguments[0] as OnSuccessListener<List<DocumentSnapshot>>
+            listener.onSuccess(
+                listOf(mockedFriendsDocumentSnapshot)) // Simulate success with a list of friend
+            // documents
+            mockTaskList // Return the mock task list
+          }
+          .`when`(mockTaskList)
+          .addOnSuccessListener(any()) // Mock the success listener for this task list
+
+      // Simulate no failure listener being called for the mockTaskList
+      doAnswer { mockTaskList }.`when`(mockTaskList).addOnFailureListener(any())
+
+      // Access the private field for imageRepository in the UserRepositoryFirestore class
+      val imageRepositoryField =
+          UserRepositoryFirestore::class.java.getDeclaredField("imageRepository")
+      imageRepositoryField.isAccessible = true // Make the field accessible
+      imageRepositoryField.set(
+          userRepositoryFirestore, mockImageRepository) // Inject the mock image repository
+
+      // Call the method under test: getUserFriends
+      userRepositoryFirestore.getUserFriends(
+          uid = user.uid,
+          onSuccess = {}, // Simulate success callback
+          onFailure = {
+            fail("Failure callback should not be called")
+          }) // Fail if the failure callback is called
+
+      // Verify that the image repository's downloadImage function was called
+      verify(mockImageRepository).downloadImage(any(), any(), any())
+    }
+  }
+
+  /**
    * This test verifies that when fetching a User, the Firestore `get()` is called on the collection
    * reference and not the document reference.
    */
@@ -2225,6 +2411,167 @@ class UserRepositoryFirestoreTest {
     shadowOf(Looper.getMainLooper()).idle()
 
     verify(mockUserDocumentReference).update(anyString(), any())
+  }
+
+  @Test
+  fun blockUser_shouldUpdateAllLists() {
+    val currentUser =
+        User(
+            "1",
+            "Alexandre",
+            "Carel",
+            "+33 6 59 20 70 02",
+            null,
+            "alexandre.carel@epfl.ch",
+            lastKnownLocation = location)
+    val blockedUser =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+41 00 000 00 02",
+            null,
+            "jane.doe@example.com",
+            lastKnownLocation = location)
+
+    // Mock the Firestore document snapshots
+    val currentUserSnapshot = mock(DocumentSnapshot::class.java)
+    val blockedUserSnapshot = mock(DocumentSnapshot::class.java)
+
+    // Mock the initial data for both users
+    val currentUserData =
+        mutableMapOf<String, Any>(
+            "blockedList" to listOf<String>(),
+            "friendsList" to listOf(blockedUser.uid),
+            "friendRequests" to listOf<String>(),
+            "sentFriendRequests" to listOf<String>())
+    val blockedUserData =
+        mutableMapOf<String, Any>(
+            "friendsList" to listOf(currentUser.uid),
+            "friendRequests" to listOf<String>(),
+            "sentFriendRequests" to listOf<String>())
+
+    `when`(currentUserSnapshot.data).thenReturn(currentUserData)
+    `when`(blockedUserSnapshot.data).thenReturn(blockedUserData)
+
+    // Mock the Firestore document references
+    val currentUserRef = mock(DocumentReference::class.java)
+    val blockedUserRef = mock(DocumentReference::class.java)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(currentUser.uid)).thenReturn(currentUserRef)
+    `when`(userCollectionReference.document(blockedUser.uid)).thenReturn(blockedUserRef)
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock transaction behavior
+    `when`(transaction.get(currentUserRef)).thenReturn(currentUserSnapshot)
+    `when`(transaction.get(blockedUserRef)).thenReturn(blockedUserSnapshot)
+
+    // Mock runTransaction
+    `when`(mockFirestore.runTransaction<Void>(any())).thenAnswer { invocation ->
+      val transactionFunction = invocation.arguments[0]
+      when (transactionFunction) {
+        is com.google.firebase.firestore.Transaction.Function<*> -> {
+          transactionFunction.apply(transaction)
+        }
+      }
+      Tasks.forResult(null)
+    }
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Call blockUser
+    userRepository.blockUser(
+        currentUser,
+        blockedUser,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { onFailureCalled = true })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify the transaction updates
+    verify(transaction).update(eq(currentUserRef), eq("blockedList"), eq(listOf(blockedUser.uid)))
+    verify(transaction).update(eq(currentUserRef), eq("friendsList"), eq(emptyList<String>()))
+    verify(transaction).update(eq(currentUserRef), eq("friendRequests"), eq(emptyList<String>()))
+    verify(transaction)
+        .update(eq(currentUserRef), eq("sentFriendRequests"), eq(emptyList<String>()))
+
+    verify(transaction).update(eq(blockedUserRef), eq("friendsList"), eq(emptyList<String>()))
+    verify(transaction).update(eq(blockedUserRef), eq("friendRequests"), eq(emptyList<String>()))
+    verify(transaction)
+        .update(eq(blockedUserRef), eq("sentFriendRequests"), eq(emptyList<String>()))
+
+    // Verify callbacks
+    assertTrue(onSuccessCalled)
+    assertFalse(onFailureCalled)
+  }
+
+  @Test
+  fun blockUser_whenTransactionFails_shouldCallOnFailure() {
+    val currentUser =
+        User(
+            "1",
+            "Alexandre",
+            "Carel",
+            "+33 6 59 20 70 02",
+            null,
+            "alexandre.carel@epfl.ch",
+            lastKnownLocation = location)
+    val blockedUser =
+        User(
+            "2",
+            "Jane",
+            "Doe",
+            "+41 00 000 00 02",
+            null,
+            "jane.doe@example.com",
+            lastKnownLocation = location)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(any())).thenReturn(mock(DocumentReference::class.java))
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock runTransaction to fail
+    val exception = Exception("Transaction failed")
+    `when`(mockFirestore.runTransaction<Void>(any())).thenReturn(Tasks.forException(exception))
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Call blockUser
+    userRepository.blockUser(
+        currentUser,
+        blockedUser,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = {
+          onFailureCalled = true
+          failureException = it
+        })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify callbacks
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertEquals(exception, failureException)
   }
 
   /**

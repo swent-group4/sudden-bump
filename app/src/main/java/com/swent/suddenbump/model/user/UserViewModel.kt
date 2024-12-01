@@ -4,34 +4,33 @@ import android.content.Context
 import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.swent.suddenbump.BuildConfig
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
+import com.swent.suddenbump.network.RetrofitInstance
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-/**
- * ViewModel class for managing user-related data and operations. It acts as a bridge between the UI
- * and the underlying UserRepository and ChatRepository, handling tasks such as user authentication,
- * friend management, chat operations, and location updates.
- *
- * @property repository The UserRepository instance used for managing user data.
- * @property chatRepository The ChatRepository instance used for managing chats and messages.
- */
+/** Enumération pour les catégories de distance utilisées pour regrouper les amis. */
+enum class DistanceCategory(val maxDistance: Float, val title: String) {
+  WITHIN_5KM(5000f, "Within 5km"),
+  WITHIN_10KM(10000f, "Within 10km"),
+  WITHIN_20KM(20000f, "Within 20km"),
+  FURTHER(Float.MAX_VALUE, "Further")
+}
+
+/** Classe ViewModel pour gérer les données et opérations liées à l'utilisateur. */
 open class UserViewModel(
     private val repository: UserRepository,
     private val chatRepository: ChatRepository
@@ -49,8 +48,8 @@ open class UserViewModel(
   private val locationDummy =
       MutableStateFlow(
           Location("dummy").apply {
-            latitude = 0.0 // Set latitude
-            longitude = 0.0 // Set longitude
+            latitude = 0.0 // Latitude fictive
+            longitude = 0.0 // Longitude fictive
           })
 
   val userDummy1 =
@@ -79,9 +78,9 @@ open class UserViewModel(
       MutableStateFlow(listOf(userDummy1))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
-  private val _recommendedFriends: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(userDummy1))
+  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
+  private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
+      MutableStateFlow(emptyList())
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
@@ -102,7 +101,40 @@ open class UserViewModel(
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
-  /** Initializes the ViewModel by setting up the repository. */
+  // In UserViewModel
+
+  // Change the type to allow null values
+  val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
+      combine(_user, _userFriends) { user, friends ->
+            // Only compute grouped friends if friends are loaded
+            if (friends.isNotEmpty()) {
+              val friendsWithDistances =
+                  friends.mapNotNull { friend ->
+                    val distance = getRelativeDistance(friend)
+                    if (distance != Float.MAX_VALUE) {
+                      friend to distance
+                    } else {
+                      null
+                    }
+                  }
+
+              friendsWithDistances.groupBy { (_, distance) ->
+                when {
+                  distance <= DistanceCategory.WITHIN_5KM.maxDistance -> DistanceCategory.WITHIN_5KM
+                  distance <= DistanceCategory.WITHIN_10KM.maxDistance ->
+                      DistanceCategory.WITHIN_10KM
+                  distance <= DistanceCategory.WITHIN_20KM.maxDistance ->
+                      DistanceCategory.WITHIN_20KM
+                  else -> DistanceCategory.FURTHER
+                }
+              }
+            } else {
+              null // Indicate that friends are not yet loaded
+            }
+          }
+          .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+  /** Initialise le ViewModel en configurant le dépôt. */
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
   }
@@ -358,12 +390,25 @@ open class UserViewModel(
     repository.setUserFriends(user.uid, friendsList, onSuccess, onFailure)
   }
 
-  fun getUserRecommendedFriends(): StateFlow<List<User>> {
+  fun getUserRecommendedFriends(): StateFlow<List<UserWithFriendsInCommon>> {
     return _recommendedFriends.asStateFlow()
   }
 
   fun getSentFriendRequests(): StateFlow<List<User>> {
     return _sentFriendRequests.asStateFlow()
+  }
+
+  fun blockUser(
+      user: User = _user.value,
+      blockedUser: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _blockedFriends.value = _blockedFriends.value.plus(blockedUser)
+    _userFriends.value = _userFriends.value.minus(blockedUser)
+    _userFriendRequests.value = _userFriendRequests.value.minus(blockedUser)
+    _sentFriendRequests.value = _sentFriendRequests.value.minus(blockedUser)
+    return repository.blockUser(user, blockedUser, onSuccess, onFailure)
   }
 
   fun getBlockedFriends(): StateFlow<List<User>> {
@@ -448,10 +493,61 @@ open class UserViewModel(
   fun getRelativeDistance(friend: User): Float {
     val userLocation = _user.value.lastKnownLocation.value
     val friendLocation = friend.lastKnownLocation.value
-    if ((userLocation == locationDummy.value || friendLocation == locationDummy.value)) {
+    if (userLocation == locationDummy.value || friendLocation == locationDummy.value) {
       return Float.MAX_VALUE
     }
     return userLocation.distanceTo(friendLocation)
+  }
+
+  /** Cache to store fetched locations */
+  private val locationCache = mutableMapOf<String, String>()
+
+  /** Fetches the city and country for a given location */
+  suspend fun getCityAndCountry(location: StateFlow<Location>): String {
+    val latLng = "${location.value.latitude},${location.value.longitude}"
+
+    // Check cache first
+    locationCache[latLng]?.let {
+      return it
+    }
+
+    return withContext(Dispatchers.IO) {
+      try {
+        val response =
+            RetrofitInstance.geocodingApi.reverseGeocode(
+                latlng = latLng,
+                apiKey =
+                    BuildConfig.MAPS_API_KEY // Replace with method to securely retrieve API key
+                )
+
+        if (response.status == "OK" && response.results.isNotEmpty()) {
+          val addressComponents = response.results[0].address_components
+
+          val city =
+              addressComponents
+                  .firstOrNull { component -> component.types.contains("locality") }
+                  ?.long_name
+
+          val country =
+              addressComponents
+                  .firstOrNull { component -> component.types.contains("country") }
+                  ?.long_name
+
+          val cityCountry = listOfNotNull(city, country).joinToString(", ")
+
+          // Save to cache
+          locationCache[latLng] = cityCountry
+
+          cityCountry
+        } else {
+          Log.e("UserViewModel", "Geocoding API error: ${response.status}")
+          "Unknown Location"
+        }
+      } catch (e: Exception) {
+        Log.e("UserViewModel", "Error fetching location: ${e.message}")
+        "Unknown Location"
+      }
+    }
   }
 
   fun isFriendsInRadius(radius: Int): Boolean {
@@ -547,7 +643,7 @@ open class UserViewModel(
     repository.sendVerificationCode(
         phoneNumber,
         onSuccess = { verificationId ->
-          _verificationId.postValue(verificationId) // Store the verification ID
+          _verificationId.postValue(verificationId) // Stocke l'ID de vérification
           _verificationStatus.postValue("Code Sent")
         },
         onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })
