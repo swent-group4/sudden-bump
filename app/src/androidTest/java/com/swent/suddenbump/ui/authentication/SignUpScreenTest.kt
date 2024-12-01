@@ -147,6 +147,10 @@ class SignUpScreenTest {
     composeTestRule.setContent { SignUpScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("phoneField").performTextInput("+41791234567")
     composeTestRule.onNodeWithTag("sendCodeButton").performClick()
+
+    /*onView(withText("Phone number already in use"))
+    .inRoot(ToastMatcher()) // Use the custom ToastMatcher
+    .check(matches(isDisplayed()))*/
     composeTestRule.onNodeWithTag("codeField").assertDoesNotExist()
   }
 }
