@@ -667,6 +667,14 @@ open class UserViewModel(
     }
   }
 
+  /**
+   * Shares the user's location with a friend.
+   *
+   * @param uid The user ID of the person sharing their location.
+   * @param friend The User object representing the friend with whom the location is being shared.
+   * @param onSuccess Called when the location is successfully shared.
+   * @param onFailure Called with an exception if the sharing fails.
+   */
   fun shareLocationWithFriend(
       uid: String,
       friend: User,
@@ -677,6 +685,15 @@ open class UserViewModel(
     repository.shareLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
   }
 
+  /**
+   * Stops sharing the user's location with a friend.
+   *
+   * @param uid The user ID of the person stopping the sharing.
+   * @param friend The User object representing the friend with whom the location sharing is being
+   *   stopped.
+   * @param onSuccess Called when the location sharing is successfully stopped.
+   * @param onFailure Called with an exception if the stopping fails.
+   */
   fun stopSharingLocationWithFriend(
       uid: String,
       friend: User,
@@ -687,6 +704,13 @@ open class UserViewModel(
     repository.stopSharingLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
   }
 
+  /**
+   * Retrieves the list of friends who have shared their location with the user.
+   *
+   * @param uid The user ID of the person retrieving the list.
+   * @param onSuccess Called with a list of User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   fun getLocationSharedBy(
       uid: String,
       onSuccess: (List<User>) -> Unit,

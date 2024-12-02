@@ -1079,6 +1079,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     }
   }
 
+  /**
+   * Shares the user's location with a friend.
+   *
+   * @param uid The user ID of the person sharing their location.
+   * @param fid The friend ID of the person with whom the location is being shared.
+   * @param onSuccess Called when the location is successfully shared.
+   * @param onFailure Called with an exception if the sharing fails.
+   */
   override fun shareLocationWithFriend(
       uid: String,
       fid: String,
@@ -1127,6 +1135,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Stops sharing the user's location with a friend.
+   *
+   * @param uid The user ID of the person stopping the sharing.
+   * @param fid The friend ID of the person with whom the location sharing is being stopped.
+   * @param onSuccess Called when the location sharing is successfully stopped.
+   * @param onFailure Called with an exception if the stopping fails.
+   */
   override fun stopSharingLocationWithFriend(
       uid: String,
       fid: String,
@@ -1175,6 +1191,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Retrieves the list of friends who have shared their location with the user.
+   *
+   * @param uid The user ID of the person retrieving the list.
+   * @param onSuccess Called with a list of User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getSharedByFriends(
       uid: String,
       onSuccess: (List<User>) -> Unit,
@@ -1197,6 +1220,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         }
   }
 
+  /**
+   * Retrieves the list of friends with whom the user has shared their location.
+   *
+   * @param uid The user ID of the person retrieving the list.
+   * @param onSuccess Called with a list of User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getSharedWithFriends(
       uid: String,
       onSuccess: (List<User>) -> Unit,
