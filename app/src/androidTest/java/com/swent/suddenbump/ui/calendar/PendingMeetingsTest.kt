@@ -5,22 +5,21 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.firebase.Timestamp
-import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
-import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.navigation.Screen
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.*
+import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
 class PendingMeetingsScreenTest {
@@ -32,71 +31,34 @@ class PendingMeetingsScreenTest {
   private lateinit var meetingViewModel: MeetingViewModel
   private lateinit var meetingRepository: MeetingRepository
 
-  private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
-  private lateinit var chatRepository: ChatRepository
 
   @Before
   fun setUp() {
-    meetingRepository = mock(MeetingRepository::class.java)
-    userRepository = mock(UserRepository::class.java)
-    chatRepository = mock(ChatRepository::class.java)
-    navigationActions = mock(NavigationActions::class.java)
-    meetingViewModel = MeetingViewModel(meetingRepository)
-    userViewModel = UserViewModel(userRepository, chatRepository)
+      navigationActions = mockk(relaxed = true)
+      userViewModel = mockk(relaxed = true)
+      meetingRepository = mockk(relaxed = true)
+      meetingViewModel = MeetingViewModel(meetingRepository)
 
-    // Mock StateFlow data for meetings
-    val meetingsFlow =
-        MutableStateFlow(
-            listOf(
-                Meeting("1", "Central Park", Timestamp.now(), "friend1", "creator1", false),
-                Meeting("2", "City Square", Timestamp.now(), "friend1", "creator2", false)))
-    val mockStateFlow = mock(StateFlow::class.java) as StateFlow<List<Meeting>>
-    //        `when`(meetingViewModel.meetings).thenReturn(mockStateFlow)
-    // doReturn(mockStateFlow).`when`(meetingViewModel.meetings)
-    /* `when`(mockStateFlow.value).thenReturn(listOf(
-        Meeting("1", "Central Park", Timestamp.now(), "friend1", "creator1", false),
-        Meeting("2", "City Square", Timestamp.now(), "friend1", "creator2", false)
-    ))*/
-    //        `when`(meetingViewModel.meetings).thenReturn(meetingsFlow)
+      // Mock meetings
+      val meeting1 = Meeting("1", "Central Park", Timestamp(Date(1735403269000)), "currentUserId", "creator1", false)
+      val meeting2 = Meeting("2", "City Square", Timestamp(Date(1735403269000)), "currentUserId", "creator2", true)
 
-    // Mock StateFlow data for user friends
-    val userFriendsFlow =
-        MutableStateFlow(
-            listOf(
-                User(
-                    "creator1",
-                    "Mike",
-                    "Tyson",
-                    "12345678",
-                    null,
-                    "user@email.com",
-                    MutableStateFlow(Location("default"))),
-                User(
-                    "creator2",
-                    "Joe",
-                    "Biden",
-                    "12345678",
-                    null,
-                    "user@email.com",
-                    MutableStateFlow(Location("default")))))
-    // `when`(userViewModel.getUserFriends()).thenReturn(userFriendsFlow)
+      val mockMeetings = listOf(meeting1, meeting2)
 
-    // Mock StateFlow data for current user
-    val currentUserFlow =
-        MutableStateFlow(
-            User(
-                "friend1",
-                "John",
-                "Doe",
-                "12345678",
-                null,
-                "user@email.com",
-                MutableStateFlow(Location("default"))))
-    // `when`(userViewModel.getCurrentUser()).thenReturn(currentUserFlow)
+      every { meetingRepository.getMeetings(any(), any()) } answers {
+          val onSuccess = firstArg<(List<Meeting>) -> Unit>()
+          onSuccess(mockMeetings)
+      }
 
-    // Mock navigation actions
-    `when`(navigationActions.currentRoute()).thenReturn(Screen.PENDING_MEETINGS)
+      // Mock user friends and current user
+      val user1 = User("creator1", "Mike", "Tyson", "+12345678", null, "user1@email.com", MutableStateFlow(Location("mock_provider")))
+      val user2 = User("creator2", "Joe", "Biden", "+123456789", null, "user2@email.com", MutableStateFlow(Location("mock_provider")))
+
+      every { userViewModel.getUserFriends() } returns MutableStateFlow(listOf(user1, user2))
+      every { userViewModel.getCurrentUser() } returns MutableStateFlow(
+          User("currentUserId", "Jake", "Paul", "+1234567890", null, "current@gmail.com", MutableStateFlow(Location("mock_provider")))
+      )
   }
 
   @Test
@@ -113,57 +75,80 @@ class PendingMeetingsScreenTest {
     composeTestRule.onNodeWithTag("pendingMeetingsScreen").assertIsDisplayed()
 
     // Verify meetings list
-    // composeTestRule.onAllNodesWithTag("pendingMeetingRow").assertCountEquals(2)
-  }
-  /*
-  @Test
-  fun acceptMeeting_callsUpdateMeeting() {
-      composeTestRule.setContent {
-          PendingMeetingsScreen(
-              navigationActions = navigationActions,
-              meetingViewModel = meetingViewModel,
-              userViewModel = userViewModel
-          )
-      }
-
-      // Click accept button
-      composeTestRule.onAllNodesWithTag("acceptButton")[0].performClick()
-
-      // Verify updateMeeting called with correct arguments
-      verify(meetingViewModel).updateMeeting(any())
+    composeTestRule.onNodeWithTag("pendingMeetingRow").assertIsDisplayed()
   }
 
-  @Test
-  fun declineMeeting_callsDeleteMeeting() {
-      composeTestRule.setContent {
-          PendingMeetingsScreen(
-              navigationActions = navigationActions,
-              meetingViewModel = meetingViewModel,
-              userViewModel = userViewModel
-          )
-      }
+    @Test
+    fun acceptMeeting_callsUpdateMeeting() {
+        val meetingAccepted = Meeting("1", "Central Park", Timestamp(Date(1735403269000)), "currentUserId", "creator1", true)
 
-      // Click decline button
-      composeTestRule.onAllNodesWithTag("denyButton")[0].performClick()
+        composeTestRule.setContent {
+            PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+        }
+        // Verify accept button is displayed
+        composeTestRule.onNodeWithTag("acceptButton").assertIsDisplayed()
 
-      // Verify deleteMeeting called with correct arguments
-      verify(meetingViewModel).deleteMeeting(anyOrNull())
-  }
+        // Simulate clicking the accept button
+        composeTestRule.onNodeWithTag("acceptButton").performClick()
 
-  @Test
-  fun backButton_callsNavigationGoBack() {
-      composeTestRule.setContent {
-          PendingMeetingsScreen(
-              navigationActions = navigationActions,
-              meetingViewModel = meetingViewModel,
-              userViewModel = userViewModel
-          )
-      }
+        // Verify that updateMeeting was called with the correct arguments
+        verify { meetingRepository.updateMeeting(eq(meetingAccepted), any(), any()) }
+    }
 
-      // Click back button
-      composeTestRule.onNodeWithContentDescription("Back").performClick()
+    @Test
+    fun declineMeeting_callsDeleteMeeting() {
+        composeTestRule.setContent {
+            PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+        }
+        // Verify deny button is displayed
+        composeTestRule.onNodeWithTag("denyButton").assertIsDisplayed()
 
-      // Verify goBack called
-      verify(navigationActions).goBack()
-  }*/
+        // Simulate clicking the decline button
+        composeTestRule.onNodeWithTag("denyButton").performClick()
+
+        // Verify that deleteMeeting was called with the correct ID
+        verify { meetingRepository.deleteMeetingById(eq("1"), any(), any()) }
+    }
+
+    @Test
+    fun backButton_callsNavigationGoBack() {
+        composeTestRule.setContent {
+            PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+        }
+
+        // Simulate clicking the back button
+        composeTestRule.onNodeWithContentDescription("Back").performClick()
+
+        // Verify that navigationActions.goBack() was called
+        verify { navigationActions.goBack() }
+    }
+
+    @Test
+    fun pendingMeetingRow_displaysCorrectDetails() {
+        composeTestRule.setContent {
+            PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+        }
+
+        // Verify the userName text field
+        composeTestRule.onNodeWithTag("userName", useUnmergedTree = true)
+            .assertExists()
+            .assertTextEquals("Mike T.")
+            .assertIsDisplayed()
+
+        // Verify the meetingDetails text field
+        composeTestRule.onNodeWithTag("meetingDetails", useUnmergedTree = true)
+            .assertExists()
+            .assertTextEquals("Meet at Central Park on 2024-12-28")
+            .assertIsDisplayed()
+
+        // Verify the profile image
+        composeTestRule.onNodeWithTag("profileImage", useUnmergedTree = true)
+            .assertExists()
+            .assertIsDisplayed()
+
+        // Verify the divider
+        composeTestRule.onNodeWithTag("divider", useUnmergedTree = true)
+            .assertExists()
+            .assertIsDisplayed()
+    }
 }
