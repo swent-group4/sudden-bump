@@ -37,7 +37,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
-  private val helper = UserRepositoryFirestoreHelper()
+  val helper = UserRepositoryFirestoreHelper()
 
   private val usersCollectionPath = "Users"
   private val emailCollectionPath = "Emails"
@@ -695,14 +695,14 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                         friendsListMutable = friendsListMutable + userFriend
 
                         counterFriend++
-                        if (counterFriend.equals(documents.size)) {
+                        if (counterFriend == documents.size) {
                           onSuccess(friendsListMutable)
                         }
                       },
                       onFailure = {
                         Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
                         counterFriend++
-                        if (counterFriend.equals(documents.size)) {
+                        if (counterFriend == documents.size) {
                           onSuccess(friendsListMutable)
                         }
                       })
@@ -1132,7 +1132,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
  * Helper class for UserRepositoryFirestore, providing methods for converting User objects to
  * Firestore data maps, and utilities for parsing and converting location data.
  */
-internal class UserRepositoryFirestoreHelper {
+class UserRepositoryFirestoreHelper {
   /**
    * Converts a User object into a map representation suitable for Firestore.
    *
