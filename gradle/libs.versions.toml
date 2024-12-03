@@ -44,6 +44,8 @@ mockitoInline = "5.2.0"
 mockitoKotlin = "5.4.0"
 mockk = "1.13.13"
 core-testing = "2.1.0"
+hilt = "2.48"
+
 
 # Testing UI
 espressoCore = "3.6.1"
@@ -141,6 +143,10 @@ ucrop = { module = "com.github.yalantis:ucrop", name = "ucrop", version.ref = "u
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 androidx-navigation-testing = { group = "androidx.navigation", name = "navigation-testing", version.ref = "navigationTesting" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
+hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
