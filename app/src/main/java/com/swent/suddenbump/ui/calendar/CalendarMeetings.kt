@@ -247,7 +247,7 @@ fun MonthYearHeader(
             text = monthYear,
             style = MaterialTheme.typography.headlineSmall,
             color = Color.White,
-            modifier = Modifier.padding(16.dp).testTag("monthYearHeader"))
+            modifier = Modifier.padding(16.dp).testTag("monthYearHeaderText"))
         BadgedBox(
             badge = {
               if (pendingMeetingsCount > 0) {
