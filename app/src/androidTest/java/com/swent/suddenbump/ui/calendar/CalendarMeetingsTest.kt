@@ -5,7 +5,6 @@ import androidx.compose.ui.test.assertAny
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasText
-import com.google.firebase.Timestamp
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -14,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
@@ -39,8 +39,7 @@ class CalendarMeetingsScreenTest {
   private lateinit var userViewModel: UserViewModel
   private lateinit var meetingRepository: MeetingRepository
 
-  @get:Rule
-  val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
@@ -50,47 +49,46 @@ class CalendarMeetingsScreenTest {
     meetingViewModel = MeetingViewModel(meetingRepository)
 
     // Mock user data
-    val currentUser = User(
-      uid = "currentUserId",
-      firstName = "Jake",
-      lastName = "Paul",
-      phoneNumber = "+1234567890",
-      profilePicture = null,
-      emailAddress = "current@gmail.com",
-      lastKnownLocation = MutableStateFlow(Location("mock_provider"))
-    )
-    val userFriends = listOf(
-      User(
-        "friendId1",
-        "Mike",
-        "Tyson",
-        "+12345678",
-        null,
-        "mike@example.com",
-        MutableStateFlow(Location("mock_provider"))
-      ),
-      User(
-        "friendId2",
-        "Joe",
-        "Biden",
-        "+123456789",
-        null,
-        "joe@example.com",
-        MutableStateFlow(Location("mock_provider"))
-      )
-    )
+    val currentUser =
+        User(
+            uid = "currentUserId",
+            firstName = "Jake",
+            lastName = "Paul",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "current@gmail.com",
+            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+    val userFriends =
+        listOf(
+            User(
+                "friendId1",
+                "Mike",
+                "Tyson",
+                "+12345678",
+                null,
+                "mike@example.com",
+                MutableStateFlow(Location("mock_provider"))),
+            User(
+                "friendId2",
+                "Joe",
+                "Biden",
+                "+123456789",
+                null,
+                "joe@example.com",
+                MutableStateFlow(Location("mock_provider"))))
 
     every { userViewModel.getUserFriends() } returns MutableStateFlow(userFriends)
     every { userViewModel.getCurrentUser() } returns MutableStateFlow(currentUser)
     // Mock meeting data
-    val meetings = listOf(
-      Meeting("1", "Central Park", Timestamp.now(), "currentUserId", "friendId1", false),
-      Meeting("2", "City Square", Timestamp.now(), "currentUserId", "friendId2", true)
-    )
-    every { meetingRepository.getMeetings(any(), any()) } answers {
-      val onSuccess = firstArg<(List<Meeting>) -> Unit>()
-      onSuccess(meetings)
-    }
+    val meetings =
+        listOf(
+            Meeting("1", "Central Park", Timestamp.now(), "currentUserId", "friendId1", false),
+            Meeting("2", "City Square", Timestamp.now(), "currentUserId", "friendId2", true))
+    every { meetingRepository.getMeetings(any(), any()) } answers
+        {
+          val onSuccess = firstArg<(List<Meeting>) -> Unit>()
+          onSuccess(meetings)
+        }
 
     // Mock navigation actions
     every { navigationActions.currentRoute() } returns (Route.OVERVIEW)
@@ -119,10 +117,9 @@ class CalendarMeetingsScreenTest {
   fun dayRowDisplaysNoMeetingsMessage() {
     composeTestRule.onAllNodesWithTag("dayRow")[1].assertIsDisplayed()
     composeTestRule
-      .onAllNodesWithText("No meetings for this day")
-      .assertAny(hasText("No meetings for this day"))
+        .onAllNodesWithText("No meetings for this day")
+        .assertAny(hasText("No meetings for this day"))
   }
-
 
   @Test
   fun displaysMeetingsForSpecificDay() {
@@ -130,11 +127,11 @@ class CalendarMeetingsScreenTest {
     composeTestRule.onAllNodesWithTag("dayRow").onFirst().assertIsDisplayed()
 
     // Use `useUnmergedTree` to find the node with `meetText`
-    composeTestRule.onNodeWithTag("meetText", useUnmergedTree = true)
-      .assertIsDisplayed()
-      .assertTextContains("Meet Joe Biden at City Square")
+    composeTestRule
+        .onNodeWithTag("meetText", useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextContains("Meet Joe Biden at City Square")
   }
-
 
   @Test
   fun clickingMeetingNavigatesToEditMeeting() {
@@ -145,11 +142,8 @@ class CalendarMeetingsScreenTest {
     verify(exactly = 1) { navigationActions.navigateTo(Screen.EDIT_MEETING) }
   }
 
-
-
   @Test
-    fun asyncImageIsDisplayedForMeeting() {
-      composeTestRule.onNodeWithTag("profileImage", useUnmergedTree = true).assertIsDisplayed()
-    }
+  fun asyncImageIsDisplayedForMeeting() {
+    composeTestRule.onNodeWithTag("profileImage", useUnmergedTree = true).assertIsDisplayed()
+  }
 }
-

@@ -88,22 +88,22 @@ class MeetingViewModelTest {
   @Test
   fun deleteExpiredMeetings_deletesOnlyExpiredMeetings() = runTest {
     // Create mock meetings: one expired and one not expired
-    val expiredMeeting = Meeting(
-      meetingId = "expiredMeetingId",
-      location = "Park",
-      date = Timestamp(Date(System.currentTimeMillis() - 10000)), // 10 seconds ago
-      friendId = "Friend1",
-      creatorId = "Creator1",
-      accepted = true
-    )
-    val upcomingMeeting = Meeting(
-      meetingId = "upcomingMeetingId",
-      location = "Library",
-      date = Timestamp(Date(System.currentTimeMillis() + 100000)), // 100 seconds ahead
-      friendId = "Friend2",
-      creatorId = "Creator2",
-      accepted = false
-    )
+    val expiredMeeting =
+        Meeting(
+            meetingId = "expiredMeetingId",
+            location = "Park",
+            date = Timestamp(Date(System.currentTimeMillis() - 10000)), // 10 seconds ago
+            friendId = "Friend1",
+            creatorId = "Creator1",
+            accepted = true)
+    val upcomingMeeting =
+        Meeting(
+            meetingId = "upcomingMeetingId",
+            location = "Library",
+            date = Timestamp(Date(System.currentTimeMillis() + 100000)), // 100 seconds ahead
+            friendId = "Friend2",
+            creatorId = "Creator2",
+            accepted = false)
 
     // Mock the repository's meetings retrieval
     val mockMeetings = listOf(expiredMeeting, upcomingMeeting)
@@ -127,5 +127,4 @@ class MeetingViewModelTest {
     // Verify the non-expired meeting is not deleted
     verify(meetingRepository, never()).deleteMeetingById(eq("upcomingMeetingId"), any(), any())
   }
-
 }
