@@ -700,6 +700,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                         }
                       },
                       onFailure = {
+                        Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
                         counterFriend++
                         if (counterFriend.equals(documents.size)) {
                           onSuccess(friendsListMutable)

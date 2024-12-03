@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -15,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : ImageRepository {
 
@@ -62,22 +64,9 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
   ) {
     val imageRef = storage.reference.child(path)
     val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
+    localFile.createNewFile()
 
-    runBlocking {
-      try {
-        val fileDownloadTask = imageRef.getFile(localFile).await()
-        if (fileDownloadTask.task.isCanceled) {
-          onFailure(fileDownloadTask.task.exception!!)
-        } else {
-          val fileInputStream = FileInputStream(localFile)
-          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-          Log.d("Image", "finished : ${profilePicturesPath + path.substringAfterLast('/')}")
-          onSuccess(bitmap.asImageBitmap())
-        }
-      } catch (e: Exception) {
-        Log.e("SuddenBump", e.toString())
-      }
-    }
+    runBlocking { downloadImageFactory(path, imageRef, localFile, onSuccess, onFailure) }
   }
 
   /**
@@ -116,22 +105,10 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
   ) {
     val imageRef = storage.reference.child(path)
     val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
+    localFile.createNewFile()
 
     CoroutineScope(Dispatchers.IO).launch {
-      try {
-        val fileDownloadTask = imageRef.getFile(localFile).await()
-        if (fileDownloadTask.task.isCanceled) {
-          onFailure(fileDownloadTask.task.exception!!)
-        } else {
-          val fileInputStream = FileInputStream(localFile)
-          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-          Log.d("Image", "finished : ${profilePicturesPath + path.substringAfterLast('/')}")
-          onSuccess(bitmap.asImageBitmap())
-        }
-      } catch (e: Exception) {
-        Log.e("FirebaseDownload", "Failed to download file", e)
-        onFailure(e)
-      }
+      downloadImageFactory(path, imageRef, localFile, onSuccess, onFailure)
     }
   }
 
@@ -179,5 +156,28 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
 
     val uploadTask = storage.reference.child(path).putBytes(data)
     uploadTask.addOnFailureListener { onFailure(it) }.addOnSuccessListener { onSuccess() }
+  }
+
+  private suspend fun downloadImageFactory(
+      path: String,
+      imageRef: StorageReference,
+      localFile: File,
+      onSuccess: (ImageBitmap) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    try {
+      val fileDownloadTask = imageRef.getFile(localFile).await()
+      if (fileDownloadTask.task.isCanceled) {
+        onFailure(fileDownloadTask.task.exception!!)
+      } else {
+        val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
+        val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+        Log.d("Image", "finished : ${profilePicturesPath + path.substringAfterLast('/')}")
+        onSuccess(bitmap.asImageBitmap())
+      }
+    } catch (e: Exception) {
+      Log.e("FirebaseDownload", "Failed to download file", e)
+      onFailure(e)
+    }
   }
 }
