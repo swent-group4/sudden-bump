@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 /**
  * ViewModel for managing meetings.
@@ -116,4 +117,16 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
   fun selectMeeting(meeting: Meeting) {
     selectedMeeting.value = meeting
   }
+
+    /**
+     * Deletes all expired meetings from the repository.
+     */
+    fun deleteExpiredMeetings() {
+        val currentDate = Calendar.getInstance().time
+        meetings.value.forEach { meeting ->
+            if (meeting.date.toDate().before(currentDate)) {
+                deleteMeeting(meeting.meetingId)
+            }
+        }
+    }
 }
