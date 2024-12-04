@@ -42,10 +42,13 @@ fun CalendarMeetingsScreen(
     meetingViewModel: MeetingViewModel,
     userViewModel: UserViewModel
 ) {
-  LaunchedEffect(Unit) { meetingViewModel.getMeetings() }
+  LaunchedEffect(Unit) {
+    meetingViewModel.getMeetings()
+    meetingViewModel.deleteExpiredMeetings()
+  }
   val meetings by meetingViewModel.meetings.collectAsState()
   val userFriends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
-  val currentUserId = userViewModel.getCurrentUser().value?.uid ?: ""
+  val currentUserId = userViewModel.getCurrentUser().value.uid ?: ""
   val pendingMeetingsCount = meetings.count { !it.accepted && it.friendId == currentUserId }
 
   // Log the current user ID
@@ -198,7 +201,6 @@ fun DayRow(
                         }
                     val friendName =
                         friend?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown Friend"
-                    val formattedDate = formatDate(meeting.date.toDate())
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
