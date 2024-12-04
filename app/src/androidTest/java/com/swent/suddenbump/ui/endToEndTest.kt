@@ -1,75 +1,59 @@
 package com.swent.suddenbump.ui
 
 import android.location.Location
-import androidx.compose.ui.test.hasTestTag
+import android.util.Log
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.gms.tasks.Tasks
-import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
-import com.swent.suddenbump.model.chat.Message
+import com.swent.suddenbump.model.meeting.MeetingRepositoryFirestore
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.model.user.UserViewModel
+import com.swent.suddenbump.ui.authentication.SignInScreen
+import com.swent.suddenbump.ui.authentication.SignUpScreen
+import com.swent.suddenbump.ui.calendar.AddMeetingScreen
+import com.swent.suddenbump.ui.calendar.CalendarMeetingsScreen
+import com.swent.suddenbump.ui.calendar.EditMeetingScreen
+import com.swent.suddenbump.ui.calendar.PendingMeetingsScreen
+import com.swent.suddenbump.ui.chat.ChatScreen
+import com.swent.suddenbump.ui.contact.AddContactScreen
+import com.swent.suddenbump.ui.contact.ContactScreen
+import com.swent.suddenbump.ui.map.MapScreen
+import com.swent.suddenbump.ui.messages.MessagesScreen
+import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Route
+import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.overview.AccountScreen
+import com.swent.suddenbump.ui.overview.ConfidentialityScreen
+import com.swent.suddenbump.ui.overview.ConversationScreen
+import com.swent.suddenbump.ui.overview.DiscussionScreen
+import com.swent.suddenbump.ui.overview.FriendsListScreen
+import com.swent.suddenbump.ui.overview.OverviewScreen
+import com.swent.suddenbump.ui.overview.SettingsScreen
 import io.mockk.every
+import io.mockk.invoke
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import javax.inject.Inject
 
 @RunWith(AndroidJUnit4::class)
-class EndToEndTest {
+class EndToEndTest1 {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<MainActivity>()
-
-  private lateinit var mockFirestore: UserRepositoryFirestore
-  private lateinit var mockAuth: FirebaseAuth
-  private lateinit var mockChatRepository: ChatRepositoryFirestore
-  private lateinit var mockMessagesCollection: CollectionReference
-  private lateinit var mockMessageDocument: DocumentReference
-  private lateinit var mockQuery: Query
-  private lateinit var mockUserViewModel: UserViewModel
-
-  private val location =
-      Location("mockProvider").apply {
-        latitude = 37.7749
-        longitude = -122.4194
-      }
-
-  @Before
-  fun setUp() {
-    // Mock Firestore, FirebaseAuth, and other dependencies
-    mockFirestore = mockk(relaxed = true)
-    mockAuth = mockk(relaxed = true)
-    mockChatRepository = mockk(relaxed = true)
-    mockQuery = mockk(relaxed = true)
-
-    mockUserViewModel = UserViewModel(mockFirestore, mockChatRepository)
-
-    val currentUserId = "user2"
-    val friendId = "1"
-    val chatId = "chat789"
-    val mockQuerySnapshot = mockk<QuerySnapshot>(relaxed = true)
-    val mockChatQuerySnapshot = mockk<QuerySnapshot>(relaxed = true)
-    val mockChatDocumentSnapshot = mockk<DocumentSnapshot>(relaxed = true)
-    val mockDocumentSnapshot1 = mockk<DocumentSnapshot>(relaxed = true)
-    val mockDocumentSnapshot2 = mockk<DocumentSnapshot>(relaxed = true)
-
-
-  }
-
-
 
   @Test
   fun fullAppNavigationTest() {
@@ -82,20 +66,13 @@ class EndToEndTest {
 
     // Step 2: Navigate to Friends List
     composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
+
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("addContactScreen").assertExists()
 
-    // Step 3: Navigate to Contact screen
-    composeTestRule.onNodeWithTag("userList").assertExists()
-
-    composeTestRule.onNodeWithTag("userList").performClick()
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("contactScreen").assertExists()
 
-    // Step 4: Navigate back to Overview
-    composeTestRule.onNodeWithTag("backButton").performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("addContactScreen").assertExists()
+    // Step 3: Navigate back to Overview
     composeTestRule.onNodeWithTag("backButton").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("overviewScreen").assertExists()
@@ -105,19 +82,175 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("settingsScreen").assertExists()
 
+    composeTestRule.onNodeWithTag("ConfidentialityOption").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("confidentialityScreen").assertExists()
+
+    composeTestRule.onNodeWithTag("backButton").performClick()
+
+    composeTestRule.onNodeWithTag("settingsScreen").assertExists()
     // Step 6: Navigate back to Overview
     composeTestRule.onNodeWithTag("backButton").performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("settingsScreen").assertExists()
 
-    composeTestRule.onNodeWithTag("goBackButton").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("overviewScreen").assertExists()
+
+    composeTestRule.onNodeWithTag("Calendar").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("calendarMeetingsScreen").assertExists()
+    composeTestRule.onNodeWithTag("pendingMeetingsButton").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("pendingMeetingsScreen").assertExists()
+    composeTestRule.onNodeWithTag("Back").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("calendarMeetingsScreen").assertExists()
+    composeTestRule.onNodeWithTag("Overview").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("overviewScreen").assertExists()
   }
+}
 
+@RunWith(AndroidJUnit4::class)
+class EndToEndTest2 {
+
+  @get:Rule val composeTestRule = createComposeRule()
+
+  private lateinit var mockFirestore: UserRepositoryFirestore
+  private lateinit var mockChatRepository: ChatRepositoryFirestore
+  private lateinit var mockQuery: Query
+  private lateinit var userViewModel: UserViewModel
+  private lateinit var meetingViewModel: MeetingViewModel
+  private lateinit var mockMeetingRepositoryFirestore: MeetingRepositoryFirestore
+
+  @Before
+  fun setUp() {
+    // Mock Firestore, FirebaseAuth, and other dependencies
+    mockFirestore = mockk(relaxed = true)
+    mockChatRepository = mockk(relaxed = true)
+    mockQuery = mockk(relaxed = true)
+    mockMeetingRepositoryFirestore = mockk(relaxed = true)
+    meetingViewModel = MeetingViewModel(mockMeetingRepositoryFirestore)
+
+    userViewModel = UserViewModel(mockFirestore, mockChatRepository)
+
+    // Define mock user and friend
+    val userLocation =
+        Location("provider").apply {
+          latitude = 37.7749 // San Francisco
+          longitude = -122.4194
+        }
+    val friendLocation =
+        Location("provider").apply {
+          latitude = 37.7849 // Nearby in San Francisco
+          longitude = -122.4094
+        }
+
+    val user =
+        User(
+            uid = "user1",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "1234567890",
+            profilePicture = null,
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(userLocation))
+
+    val friend =
+        User(
+            uid = "1",
+            firstName = "Friend",
+            lastName = "User",
+            phoneNumber = "0987654321",
+            profilePicture = null,
+            emailAddress = "friend.user@example.com",
+            lastKnownLocation = MutableStateFlow(friendLocation))
+
+    // Mock getUserFriends to return a single friend
+    every { mockFirestore.getUserFriends(any(), captureLambda(), any()) } answers
+        {
+          lambda<(List<User>) -> Unit>().invoke(listOf(friend))
+        }
+
+    // Mock getUserAccount to set the user
+    every { mockFirestore.getUserAccount(captureLambda(), any()) } answers
+        {
+          lambda<(User) -> Unit>().invoke(user)
+        }
+
+    // Trigger initialization of the UserViewModel
+    userViewModel.setCurrentUser()
+  }
 
   @Test
   fun testSendMessageEoE() {
+
+    composeTestRule.setContent {
+      val navController = rememberNavController()
+      val navigationActions = NavigationActions(navController)
+      Log.d("TAG", "userViewModel userFriends: ${userViewModel.getUserFriends().value}")
+
+      NavHost(navController = navController, startDestination = Route.AUTH) {
+        navigation(
+            startDestination = Screen.AUTH,
+            route = Route.AUTH,
+        ) {
+          composable(Screen.AUTH) { SignInScreen(navigationActions, userViewModel) }
+          composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
+        }
+        navigation(
+            startDestination = Screen.OVERVIEW,
+            route = Route.OVERVIEW,
+        ) {
+          composable(Screen.OVERVIEW) {
+            // Start permission requests
+            OverviewScreen(navigationActions, userViewModel)
+          }
+          composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
+          composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
+          composable(Screen.CONV) { ConversationScreen(navigationActions) }
+          composable(Screen.SETTINGS) {
+            SettingsScreen(navigationActions, userViewModel, onNotificationsEnabledChange = {})
+          }
+          composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+          composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
+          composable(Screen.ADD_MEETING) {
+            AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
+          }
+        }
+        navigation(
+            startDestination = Screen.CALENDAR,
+            route = Route.CALENDAR,
+        ) {
+          composable(Screen.CALENDAR) {
+            CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+          }
+          composable(Screen.EDIT_MEETING) { EditMeetingScreen(navigationActions, meetingViewModel) }
+          composable(Screen.PENDING_MEETINGS) {
+            PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+          }
+        }
+
+        navigation(
+            startDestination = Screen.MAP,
+            route = Route.MAP,
+        ) {
+          composable(Screen.MAP) { MapScreen(navigationActions, userViewModel) }
+        }
+        navigation(
+            startDestination = Screen.MESS,
+            route = Route.MESS,
+        ) {
+          composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions) }
+        }
+
+        // Add new screens from Settings.kt
+        composable("AccountScreen") { AccountScreen(navigationActions) }
+        composable("ConfidentialityScreen") {
+          ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
+        }
+        composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
+      }
+    }
 
     composeTestRule.waitForIdle()
 
@@ -126,9 +259,10 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("overviewScreen").assertExists()
 
-    // part to debug, instead of clicking on a user's profile on the overview, go through
+    composeTestRule.waitForIdle()
+
     // conversation scree/message screen
-      // Step 2: Navigate to user row and send message
+    // Step 2: Navigate to user row and send message
 
     composeTestRule.onNodeWithTag("1").assertExists().performClick()
 
@@ -140,8 +274,8 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
 
     composeTestRule
-      .onNodeWithTag("ChatInputTextBox")
-      .performTextInput("Do you want to meet at Rolex today at 10?")
+        .onNodeWithTag("ChatInputTextBox")
+        .performTextInput("Do you want to meet at Rolex today at 10?")
     composeTestRule.onNodeWithTag("SendButton").performClick()
     composeTestRule.waitForIdle()
   }

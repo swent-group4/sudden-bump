@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.overview
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -116,6 +117,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(pd)
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
+              Log.d("TAG", "groupedFriends: $groupedFriends")
               if (groupedFriends?.isNotEmpty() == true) {
                 groupedFriends!!
                     .entries

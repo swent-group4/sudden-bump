@@ -259,12 +259,14 @@ fun MonthYearHeader(
                 }
               }
             }) {
-              IconButton(onClick = { navigationActions.navigateTo(Screen.PENDING_MEETINGS) }) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Pending Meetings",
-                    tint = Color.White)
-              }
+              IconButton(
+                  onClick = { navigationActions.navigateTo(Screen.PENDING_MEETINGS) },
+                  modifier = Modifier.testTag("pendingMeetingsButton")) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Pending Meetings",
+                        tint = Color.White)
+                  }
             }
       }
 }
