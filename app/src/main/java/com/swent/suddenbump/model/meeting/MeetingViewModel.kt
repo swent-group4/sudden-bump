@@ -127,4 +127,20 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
       }
     }
   }
+
+    /**
+     * Deletes all meetings for a given user ID.
+     *
+     * @param userId The ID of the user whose meetings are to be deleted.
+     */
+    fun deleteMeetingsForUser(userId: String) {
+        viewModelScope.launch {
+            meetings.value.forEach { meeting ->
+                if (meeting.friendId == userId || meeting.creatorId == userId) {
+                    deleteMeeting(meeting.meetingId)
+                }
+            }
+        }
+    }
+
 }

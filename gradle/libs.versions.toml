@@ -74,6 +74,7 @@ navigationTesting = "2.8.4"
 retrofit = "2.10.0"
 okhttpLoggingInterceptor = "4.9.1"
 kotlinxCoroutinesAndroid = "1.6.0"
+roomCommon = "2.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -154,6 +155,7 @@ retrofit-converter-scalars = { group = "com.squareup.retrofit2", name = "convert
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 # Optional: Logging interceptor for debugging
 okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttpLoggingInterceptor" }
+androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

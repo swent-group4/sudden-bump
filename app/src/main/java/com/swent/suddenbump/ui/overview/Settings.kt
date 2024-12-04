@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,7 +31,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.room.Delete
 import com.swent.suddenbump.R
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
@@ -40,6 +43,7 @@ import com.swent.suddenbump.ui.theme.Purple40
 fun SettingsScreen(
     navigationActions: NavigationActions,
     userViewModel: UserViewModel,
+    meetingViewModel: MeetingViewModel,
     onNotificationsEnabledChange: (Boolean) -> Unit,
     uri: Uri? = null
 ) {
@@ -75,6 +79,7 @@ fun SettingsScreen(
         LazyColumn(
             modifier =
                 Modifier.fillMaxSize()
+                    .background(Color.Black)
                     .padding(paddingValues)
                     .padding(16.dp)
                     .testTag("settingsLazyColumn"),
@@ -110,6 +115,13 @@ fun SettingsScreen(
                     },
                     modifier = Modifier.testTag("NotificationsSwitch"))
               }
+            item{
+                DeleteAllMeetingsItem(
+                    meetingViewModel,
+                    userViewModel,
+                    modifier = Modifier.testTag("DeleteAllMeetings")
+                )
+            }
             }
       })
 }
@@ -255,3 +267,98 @@ fun NotificationsSwitch(
                     uncheckedTrackColor = Color.DarkGray))
       }
 }
+
+@Composable
+fun DeleteAllMeetingsItem(
+    meetingViewModel: MeetingViewModel,
+    userViewModel: UserViewModel,
+    modifier: Modifier = Modifier
+) {
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(horizontal = 8.dp)
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Delete All Meetings",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+        )
+        Button(
+            onClick = {  showDialog = true },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Purple40,
+                contentColor = Color.Black
+            ),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .defaultMinSize(minWidth = 80.dp, minHeight = 40.dp)
+                .padding(4.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete Icon",
+                    tint = Color.Black
+                )
+                Text(
+                    text = "Delete",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+        }
+    }
+
+    // Confirmation Dialog
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Delete All Meetings") },
+            text = { Text("Are you sure you want to delete all your scheduled meetings?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                        meetingViewModel.deleteMeetingsForUser(
+                            userViewModel.getCurrentUser().value?.uid ?: ""
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red, // Red button for destructive action
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showDialog = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Gray, // Neutral color for dismissal
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("No")
+                }
+            }
+        )
+    }
+}
+
+
+
+

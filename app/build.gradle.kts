@@ -143,6 +143,7 @@ dependencies {
     // Firebase BoM
     implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.navigation.testing)
+    implementation(libs.androidx.room.common)
     testImplementation(platform(libs.firebase.bom))
     androidTestImplementation(platform(libs.firebase.bom))
 
