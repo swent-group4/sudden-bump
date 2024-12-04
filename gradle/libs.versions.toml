@@ -44,8 +44,6 @@ mockitoInline = "5.2.0"
 mockitoKotlin = "5.4.0"
 mockk = "1.13.13"
 core-testing = "2.1.0"
-hilt = "2.48"
-
 
 # Testing UI
 espressoCore = "3.6.1"
