@@ -37,7 +37,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
-  private val helper = UserRepositoryFirestoreHelper()
+  val helper = UserRepositoryFirestoreHelper()
 
   private val usersCollectionPath = "Users"
   private val emailCollectionPath = "Emails"
@@ -680,21 +680,33 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
 
           Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
               .addOnSuccessListener { documents ->
-                val friendsList =
-                    documents.mapNotNull { document ->
-                      var profilePicture: ImageBitmap? = null
-                      runBlocking {
-                        val path =
-                            helper.uidToProfilePicturePath(
-                                document.data!!["uid"].toString(), profilePicturesRef)
-                        imageRepository.downloadImage(
-                            path,
-                            onSuccess = { pp -> profilePicture = pp },
-                            onFailure = { e -> onFailure(e) })
-                      }
-                      helper.documentSnapshotToUser(document, profilePicture)
-                    }
-                onSuccess(friendsList)
+                var counterFriend = 0
+                var friendsListMutable = emptyList<User>()
+                for (doc in documents) {
+                  var profilePicture: ImageBitmap? = null
+                  val path =
+                      helper.uidToProfilePicturePath(
+                          doc.data!!["uid"].toString(), profilePicturesRef)
+                  imageRepository.downloadImageAsync(
+                      path,
+                      onSuccess = { image ->
+                        profilePicture = image
+                        val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
+                        friendsListMutable = friendsListMutable + userFriend
+
+                        counterFriend++
+                        if (counterFriend == documents.size) {
+                          onSuccess(friendsListMutable)
+                        }
+                      },
+                      onFailure = {
+                        Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
+                        counterFriend++
+                        if (counterFriend == documents.size) {
+                          onSuccess(friendsListMutable)
+                        }
+                      })
+                }
               }
               .addOnFailureListener { e -> onFailure(e) }
         }
@@ -1120,7 +1132,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
  * Helper class for UserRepositoryFirestore, providing methods for converting User objects to
  * Firestore data maps, and utilities for parsing and converting location data.
  */
-internal class UserRepositoryFirestoreHelper {
+class UserRepositoryFirestoreHelper {
   /**
    * Converts a User object into a map representation suitable for Firestore.
    *

@@ -8,6 +8,12 @@ interface ImageRepository {
 
   fun downloadImage(path: String, onSuccess: (ImageBitmap) -> Unit, onFailure: (Exception) -> Unit)
 
+  fun downloadImageAsync(
+      path: String,
+      onSuccess: (ImageBitmap) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
   fun uploadImage(
       imageBitmap: ImageBitmap,
       path: String,
