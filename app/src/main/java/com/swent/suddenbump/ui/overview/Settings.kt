@@ -115,13 +115,12 @@ fun SettingsScreen(
                     },
                     modifier = Modifier.testTag("NotificationsSwitch"))
               }
-            item{
+              item {
                 DeleteAllMeetingsItem(
                     meetingViewModel,
                     userViewModel,
-                    modifier = Modifier.testTag("DeleteAllMeetings")
-                )
-            }
+                    modifier = Modifier.testTag("DeleteAllMeetings"))
+              }
             }
       })
 }
@@ -275,90 +274,82 @@ fun DeleteAllMeetingsItem(
     modifier: Modifier = Modifier
 ) {
 
-    var showDialog by remember { mutableStateOf(false) }
+  var showDialog by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 8.dp)
-            .background(Color.White, RoundedCornerShape(8.dp))
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+  Row(
+      modifier =
+          modifier
+              .fillMaxWidth()
+              .height(56.dp)
+              .padding(horizontal = 8.dp)
+              .background(Color.White, RoundedCornerShape(8.dp))
+              .padding(horizontal = 16.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = "Delete All Meetings",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-        )
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold, color = Color.Black),
+            modifier = Modifier.testTag("deleteAllMeetingsText"))
         Button(
-            onClick = {  showDialog = true },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Purple40,
-                contentColor = Color.Black
-            ),
+            onClick = { showDialog = true },
+            colors =
+                ButtonDefaults.buttonColors(containerColor = Purple40, contentColor = Color.Black),
             shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .defaultMinSize(minWidth = 80.dp, minHeight = 40.dp)
-                .padding(4.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete Icon",
-                    tint = Color.Black
-                )
-                Text(
-                    text = "Delete",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-                )
+            modifier =
+                Modifier.defaultMinSize(minWidth = 80.dp, minHeight = 40.dp)
+                    .padding(4.dp)
+                    .testTag("DeleteButton")) {
+              Row(
+                  horizontalArrangement = Arrangement.spacedBy(4.dp),
+                  verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete Icon",
+                        tint = Color.Black)
+                    Text(
+                        text = "Delete",
+                        style =
+                            MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
+                  }
             }
-        }
-    }
+      }
 
-    // Confirmation Dialog
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text("Delete All Meetings") },
-            text = { Text("Are you sure you want to delete all your scheduled meetings?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDialog = false
-                        meetingViewModel.deleteMeetingsForUser(
-                            userViewModel.getCurrentUser().value?.uid ?: ""
-                        )
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Red, // Red button for destructive action
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Yes")
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = { showDialog = false },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Gray, // Neutral color for dismissal
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("No")
-                }
-            }
-        )
-    }
+  // Confirmation Dialog
+  if (showDialog) {
+    AlertDialog(
+        onDismissRequest = { showDialog = false },
+        title = {
+          Text(text = "Delete All Meetings", modifier = Modifier.testTag("deleteAllMeetingsTitle"))
+        },
+        text = {
+          Text(
+              text = "Are you sure you want to delete all your scheduled meetings?",
+              modifier = Modifier.testTag("AreYouSureDeleteText"))
+        },
+        modifier = Modifier.testTag("deleteAllMeetingsDialog"),
+        confirmButton = {
+          Button(
+              onClick = {
+                showDialog = false
+                meetingViewModel.deleteMeetingsForUser(
+                    userViewModel.getCurrentUser().value?.uid ?: "")
+              },
+              colors =
+                  ButtonDefaults.buttonColors(
+                      containerColor = Color.Red, contentColor = Color.White)) {
+                Text("Yes")
+              }
+        },
+        dismissButton = {
+          Button(
+              onClick = { showDialog = false },
+              colors =
+                  ButtonDefaults.buttonColors(
+                      containerColor = Color.Gray, contentColor = Color.White)) {
+                Text("No")
+              }
+        })
+  }
 }
-
-
-
-

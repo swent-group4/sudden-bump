@@ -43,8 +43,8 @@ class SettingsScreenTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
   private lateinit var chatRepository: ChatRepository
-    private lateinit var meetingRepository: MeetingRepository
-    private lateinit var meetingViewModel: MeetingViewModel
+  private lateinit var meetingRepository: MeetingRepository
+  private lateinit var meetingViewModel: MeetingViewModel
   private var notificationsEnabled = true
 
   @get:Rule val composeTestRule = createComposeRule()
@@ -61,8 +61,8 @@ class SettingsScreenTest {
     userRepository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
     userViewModel = UserViewModel(userRepository, chatRepository)
-      meetingRepository = mockk(relaxed = true)
-      meetingViewModel = MeetingViewModel(meetingRepository)
+    meetingRepository = mockk(relaxed = true)
+    meetingViewModel = MeetingViewModel(meetingRepository)
   }
 
   private fun setContentDefault() {

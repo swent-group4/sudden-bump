@@ -128,58 +128,57 @@ class MeetingViewModelTest {
     verify(meetingRepository, never()).deleteMeetingById(eq("upcomingMeetingId"), any(), any())
   }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    @Test
-    fun deleteMeetingsForUser_deletesOnlyMatchingMeetings() = runTest {
-        // Mock meetings with various friendId and creatorId values
-        val meeting1 = Meeting(
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun deleteMeetingsForUser_deletesOnlyMatchingMeetings() = runTest {
+    // Mock meetings with various friendId and creatorId values
+    val meeting1 =
+        Meeting(
             meetingId = "meeting1",
             location = "Cafe",
             date = Timestamp(Date()),
             friendId = "targetUserId",
             creatorId = "Creator1",
-            accepted = false
-        )
-        val meeting2 = Meeting(
+            accepted = false)
+    val meeting2 =
+        Meeting(
             meetingId = "meeting2",
             location = "Park",
             date = Timestamp(Date()),
             friendId = "Friend2",
             creatorId = "targetUserId",
-            accepted = true
-        )
-        val meeting3 = Meeting(
+            accepted = true)
+    val meeting3 =
+        Meeting(
             meetingId = "meeting3",
             location = "Library",
             date = Timestamp(Date()),
             friendId = "Friend3",
             creatorId = "Creator3",
-            accepted = true
-        )
+            accepted = true)
 
-        val mockMeetings = listOf(meeting1, meeting2, meeting3)
+    val mockMeetings = listOf(meeting1, meeting2, meeting3)
 
-        // Mock repository to provide the mock meetings
-        `when`(meetingRepository.getMeetings(any(), any())).thenAnswer { invocation ->
-            val onSuccess = invocation.arguments[0] as (List<Meeting>) -> Unit
-            onSuccess(mockMeetings)
-        }
-
-        // Call getMeetings to populate the _meetings StateFlow
-        meetingViewModel.getMeetings()
-
-        // Call the method under test with the target user ID
-        meetingViewModel.deleteMeetingsForUser("targetUserId")
-
-        // Advance the coroutine to ensure it completes
-        advanceUntilIdle()
-
-        // Verify that only the meetings with matching friendId or creatorId were deleted
-        verify(meetingRepository).deleteMeetingById(eq("meeting1"), any(), any())
-        verify(meetingRepository).deleteMeetingById(eq("meeting2"), any(), any())
-
-        // Verify that the meeting with no matching userId was not deleted
-        verify(meetingRepository, never()).deleteMeetingById(eq("meeting3"), any(), any())
+    // Mock repository to provide the mock meetings
+    `when`(meetingRepository.getMeetings(any(), any())).thenAnswer { invocation ->
+      val onSuccess = invocation.arguments[0] as (List<Meeting>) -> Unit
+      onSuccess(mockMeetings)
     }
 
+    // Call getMeetings to populate the _meetings StateFlow
+    meetingViewModel.getMeetings()
+
+    // Call the method under test with the target user ID
+    meetingViewModel.deleteMeetingsForUser("targetUserId")
+
+    // Advance the coroutine to ensure it completes
+    advanceUntilIdle()
+
+    // Verify that only the meetings with matching friendId or creatorId were deleted
+    verify(meetingRepository).deleteMeetingById(eq("meeting1"), any(), any())
+    verify(meetingRepository).deleteMeetingById(eq("meeting2"), any(), any())
+
+    // Verify that the meeting with no matching userId was not deleted
+    verify(meetingRepository, never()).deleteMeetingById(eq("meeting3"), any(), any())
+  }
 }
