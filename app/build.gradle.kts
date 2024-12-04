@@ -14,6 +14,7 @@ android {
     namespace = "com.swent.suddenbump"
     compileSdk = 34
 
+
     // Load the API key from local.properties
     val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
@@ -35,6 +36,7 @@ android {
             useSupportLibrary = true
         }
         manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
+        buildConfigField("String", "MAPS_API_KEY", "\"${mapsApiKey}\"")
     }
 
     buildTypes {
@@ -235,7 +237,7 @@ dependencies {
     // Image picker
     implementation(libs.ucrop)
 
-    // Google Services and Maps
+    implementation("com.google.maps:google-maps-services:0.18.0")
     implementation(libs.maps.compose)
     implementation(libs.maps.compose.utils)
     implementation(libs.play.services.auth)
@@ -270,6 +272,14 @@ dependencies {
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
     implementation(kotlin("test"))
+    implementation(libs.retrofit)
+    // Converter for JSON parsing
+    implementation(libs.retrofit.converter.gson)
+    // Coroutine support for Retrofit
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.okhttp.logging.interceptor)
+    // Optional: Logging interceptor for debugging
+    implementation(libs.retrofit.converter.scalars)
 }
 
 configurations.all {

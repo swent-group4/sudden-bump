@@ -97,13 +97,20 @@ interface UserRepository {
 
   fun getRecommendedFriends(
       uid: String,
-      onSuccess: (List<User>) -> Unit,
+      onSuccess: (List<UserWithFriendsInCommon>) -> Unit,
       onFailure: (Exception) -> Unit
   )
 
   fun getBlockedFriends(
       uid: String,
       onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun blockUser(
+      currentUser: User,
+      blockedUser: User,
+      onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
 
@@ -157,3 +164,5 @@ interface UserRepository {
 
   fun logoutUser()
 }
+
+data class UserWithFriendsInCommon(val user: User, val friendsInCommon: Int)
