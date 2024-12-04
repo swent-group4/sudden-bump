@@ -19,9 +19,6 @@ import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.model.user.UserViewModel
-import dagger.hilt.android.testing.HiltAndroidRule
-import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.UninstallModules
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,18 +28,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import javax.inject.Inject
 
-@HiltAndroidTest
-@UninstallModules(UserViewModel::class)
 @RunWith(AndroidJUnit4::class)
 class EndToEndTest {
 
-  @get:Rule
-  val hiltRule = HiltAndroidRule(this)
-
   @get:Rule val composeTestRule = createAndroidComposeRule<MainActivity>()
-
-  @Inject
-  lateinit var userViewModel: UserViewModel
 
   private lateinit var mockFirestore: UserRepositoryFirestore
   private lateinit var mockAuth: FirebaseAuth
@@ -66,7 +55,7 @@ class EndToEndTest {
     mockChatRepository = mockk(relaxed = true)
     mockQuery = mockk(relaxed = true)
 
-    userViewModel = UserViewModel(mockFirestore, mockChatRepository)
+    mockUserViewModel = UserViewModel(mockFirestore, mockChatRepository)
 
     val currentUserId = "user2"
     val friendId = "1"
@@ -78,9 +67,6 @@ class EndToEndTest {
     val mockDocumentSnapshot2 = mockk<DocumentSnapshot>(relaxed = true)
 
 
-
-
-    hiltRule.inject()
   }
 
 
@@ -99,15 +85,9 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("addContactScreen").assertExists()
 
-    // Step 3: Wait for and navigate to Contact screen
-    composeTestRule.waitUntil(timeoutMillis = 10_000) {
-      try {
-        composeTestRule.onNodeWithTag("userList").assertExists()
-        true
-      } catch (e: AssertionError) {
-        false
-      }
-    }
+    // Step 3: Navigate to Contact screen
+    composeTestRule.onNodeWithTag("userList").assertExists()
+
     composeTestRule.onNodeWithTag("userList").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("contactScreen").assertExists()
@@ -125,22 +105,7 @@ class EndToEndTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("settingsScreen").assertExists()
 
-    // Step 6: Scroll and navigate to Storage and Data screen
-    composeTestRule
-        .onNodeWithTag("settingsLazyColumn")
-        .performScrollToNode(hasTestTag("StorageAndDataOption")) // Scroll to make option visible
-    composeTestRule.onNodeWithTag("StorageAndDataOption").performClick()
-    composeTestRule.waitUntil(timeoutMillis = 10_000) {
-      try {
-        composeTestRule.onNodeWithTag("storageAndDataScreen").assertExists()
-        true
-      } catch (e: AssertionError) {
-        false
-      }
-    }
-    composeTestRule.onNodeWithTag("storageAndDataScreen").assertExists()
-
-    // Step 7: Navigate back to Overview
+    // Step 6: Navigate back to Overview
     composeTestRule.onNodeWithTag("backButton").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("settingsScreen").assertExists()

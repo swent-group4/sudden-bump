@@ -254,9 +254,6 @@ dependencies {
     testImplementation(libs.json)
     globalTestImplementation(libs.kaspresso)
     globalTestImplementation(libs.kaspresso.compose)
-    implementation(libs.hilt.android) // Hilt library
-    annotationProcessor(libs.hilt.compiler) // Hilt compiler for annotation processing
-    androidTestImplementation(libs.hilt.android.testing)
 
 
     // UI Testing
