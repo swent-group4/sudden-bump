@@ -42,10 +42,7 @@ fun PendingMeetingsScreen(
     meetingViewModel: MeetingViewModel,
     userViewModel: UserViewModel
 ) {
-  LaunchedEffect(Unit) {
-    meetingViewModel.getMeetings()
-    meetingViewModel.deleteExpiredMeetings()
-  }
+  LaunchedEffect(Unit) { meetingViewModel.getMeetings() }
   val meetings by meetingViewModel.meetings.collectAsState()
   val userFriends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
   val currentUserId = userViewModel.getCurrentUser().value.uid ?: ""
