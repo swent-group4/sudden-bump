@@ -209,7 +209,11 @@ class EndToEndTest2 {
           composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
           composable(Screen.CONV) { ConversationScreen(navigationActions) }
           composable(Screen.SETTINGS) {
-            SettingsScreen(navigationActions, userViewModel, onNotificationsEnabledChange = {})
+            SettingsScreen(
+                navigationActions,
+                userViewModel,
+                meetingViewModel,
+                onNotificationsEnabledChange = {})
           }
           composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
           composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
