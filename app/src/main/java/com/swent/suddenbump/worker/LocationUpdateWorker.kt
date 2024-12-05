@@ -16,6 +16,7 @@ import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.ui.calendar.showMeetingScheduledNotification
 import com.swent.suddenbump.ui.map.showFriendNearbyNotification
+import java.util.Calendar
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -87,7 +88,12 @@ class LocationUpdateWorker(
 
           meetingRepository.getMeetings(
               onSuccess = { meetings ->
-                val filteredMeetings = meetings.filter { it.friendId == user.uid && !it.accepted }
+                val filteredMeetings =
+                    meetings.filter {
+                      it.friendId == user.uid &&
+                          !it.accepted &&
+                          it.date.toDate().after(Calendar.getInstance().time)
+                    }
 
                 if (filteredMeetings.isNotEmpty()) {
                   filteredMeetings.forEach { meeting ->

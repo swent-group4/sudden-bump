@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 
+val screenDenominator = " Screen"
+
 object Route {
   const val SETTINGS = "Settings"
   const val OVERVIEW = "Overview"
@@ -69,20 +71,22 @@ open class NavigationActions(
    */
   open fun navigateTo(destination: TopLevelDestination) {
 
-    navController.navigate(destination.route) {
-      // Pop up to the start destination of the graph to
-      // avoid building up a large stack of destinations
-      popUpTo(navController.graph.findStartDestination().id) {
-        saveState = true
-        inclusive = true
-      }
+    if (destination.route + screenDenominator != currentRoute()) {
+      navController.navigate(destination.route) {
+        // Pop up to the start destination of the graph to
+        // avoid building up a large stack of destinations
+        popUpTo(navController.graph.findStartDestination().id) {
+          saveState = true
+          inclusive = true
+        }
 
-      // Avoid multiple copies of the same destination when reselecting same item
-      launchSingleTop = true
+        // Avoid multiple copies of the same destination when reselecting same item
+        launchSingleTop = true
 
-      // Restore state when reselecting a previously selected item
-      if (destination.route != Route.AUTH) {
-        restoreState = true
+        // Restore state when reselecting a previously selected item
+        if (destination.route != Route.AUTH) {
+          restoreState = true
+        }
       }
     }
   }
@@ -93,7 +97,9 @@ open class NavigationActions(
    * @param screen The screen to navigate to
    */
   open fun navigateTo(screen: String) {
-    navController.navigate(screen)
+    if (currentRoute() != screen) {
+      navController.navigate(screen)
+    }
   }
 
   /** Navigate back to the previous screen. */
