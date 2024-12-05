@@ -156,7 +156,7 @@ dependencies {
     androidTestImplementation(libs.firebase.firestore) {
         exclude(group = "com.google.protobuf", module = "protobuf-lite")
     }
-
+    testImplementation("org.robolectric:robolectric:4.10.3")
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database.ktx)
