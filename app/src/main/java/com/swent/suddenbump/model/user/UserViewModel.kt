@@ -733,8 +733,7 @@ open class UserViewModel(
             _blockedFriends.value = _blockedFriends.value.filter { it.uid != blockedUser.uid }
             onSuccess()
           },
-          onFailure = onFailure
-      )
+          onFailure = onFailure)
     }
   }
 }

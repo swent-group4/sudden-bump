@@ -786,61 +786,61 @@ class UserViewModelTest {
   @Test
   fun testUnblockUser_Success() = runTest {
     // Arrange
-    val currentUser = User(
-        "current_id",
-        "Current",
-        "User",
-        "+41789123450",
-        null,
-        "current.user@example.com",
-        MutableStateFlow(Location("mock_provider"))
-    )
-    val blockedUser = User(
-        "blocked_id",
-        "Blocked",
-        "User",
-        "+41789123456",
-        null,
-        "blocked.user@example.com",
-        MutableStateFlow(Location("mock_provider"))
-    )
+    val currentUser =
+        User(
+            "current_id",
+            "Current",
+            "User",
+            "+41789123450",
+            null,
+            "current.user@example.com",
+            MutableStateFlow(Location("mock_provider")))
+    val blockedUser =
+        User(
+            "blocked_id",
+            "Blocked",
+            "User",
+            "+41789123456",
+            null,
+            "blocked.user@example.com",
+            MutableStateFlow(Location("mock_provider")))
 
     // Set current user
     userViewModel.setUser(currentUser, {}, {})
 
     // Mock setBlockedFriends behavior
     doAnswer { invocation ->
-        val uid = invocation.getArgument<String>(0)
-        val blockedList = invocation.getArgument<List<User>>(1)
-        val onSuccess = invocation.getArgument<() -> Unit>(2)
-        onSuccess()
-        null
-    }.whenever(userRepository).setBlockedFriends(any(), any(), any(), any())
+          val uid = invocation.getArgument<String>(0)
+          val blockedList = invocation.getArgument<List<User>>(1)
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .setBlockedFriends(any(), any(), any(), any())
 
     // Add user to blocked list initially
     userViewModel.setBlockedFriends(
-        blockedFriendsList = listOf(blockedUser),
-        onSuccess = {},
-        onFailure = {}
-    )
+        blockedFriendsList = listOf(blockedUser), onSuccess = {}, onFailure = {})
 
     var onSuccessCalled = false
     var onFailureCalled = false
 
     // Mock unblockUser behavior
     doAnswer { invocation ->
-        val onSuccess = invocation.getArgument<() -> Unit>(2)
-        onSuccess()
-        null
-    }.whenever(userRepository).unblockUser(any(), any(), any(), any())
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .unblockUser(any(), any(), any(), any())
 
     // Act
     userViewModel.unblockUser(
         blockedUser = blockedUser,
         onSuccess = { onSuccessCalled = true },
-        onFailure = { onFailureCalled = true }
-    )
-    
+        onFailure = { onFailureCalled = true })
+
     advanceUntilIdle()
 
     // Assert
@@ -853,24 +853,24 @@ class UserViewModelTest {
   @Test
   fun testUnblockUser_Failure() = runTest {
     // Arrange
-    val currentUser = User(
-        "current_id",
-        "Current",
-        "User",
-        "+41789123450",
-        null,
-        "current.user@example.com",
-        MutableStateFlow(Location("mock_provider"))
-    )
-    val blockedUser = User(
-        "blocked_id",
-        "Blocked",
-        "User",
-        "+41789123456",
-        null,
-        "blocked.user@example.com",
-        MutableStateFlow(Location("mock_provider"))
-    )
+    val currentUser =
+        User(
+            "current_id",
+            "Current",
+            "User",
+            "+41789123450",
+            null,
+            "current.user@example.com",
+            MutableStateFlow(Location("mock_provider")))
+    val blockedUser =
+        User(
+            "blocked_id",
+            "Blocked",
+            "User",
+            "+41789123456",
+            null,
+            "blocked.user@example.com",
+            MutableStateFlow(Location("mock_provider")))
     val error = Exception("Failed to unblock user")
 
     // Set current user
@@ -878,19 +878,18 @@ class UserViewModelTest {
 
     // Mock setBlockedFriends behavior
     doAnswer { invocation ->
-        val uid = invocation.getArgument<String>(0)
-        val blockedList = invocation.getArgument<List<User>>(1)
-        val onSuccess = invocation.getArgument<() -> Unit>(2)
-        onSuccess()
-        null
-    }.whenever(userRepository).setBlockedFriends(any(), any(), any(), any())
+          val uid = invocation.getArgument<String>(0)
+          val blockedList = invocation.getArgument<List<User>>(1)
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .setBlockedFriends(any(), any(), any(), any())
 
     // Add user to blocked list initially
     userViewModel.setBlockedFriends(
-        blockedFriendsList = listOf(blockedUser),
-        onSuccess = {},
-        onFailure = {}
-    )
+        blockedFriendsList = listOf(blockedUser), onSuccess = {}, onFailure = {})
 
     var onSuccessCalled = false
     var onFailureCalled = false
@@ -898,21 +897,22 @@ class UserViewModelTest {
 
     // Mock unblockUser behavior to fail
     doAnswer { invocation ->
-        val onFailure = invocation.getArgument<(Exception) -> Unit>(3)
-        onFailure(error)
-        null
-    }.whenever(userRepository).unblockUser(any(), any(), any(), any())
+          val onFailure = invocation.getArgument<(Exception) -> Unit>(3)
+          onFailure(error)
+          null
+        }
+        .whenever(userRepository)
+        .unblockUser(any(), any(), any(), any())
 
     // Act
     userViewModel.unblockUser(
         blockedUser = blockedUser,
         onSuccess = { onSuccessCalled = true },
-        onFailure = { e -> 
-            onFailureCalled = true
-            failureException = e
-        }
-    )
-    
+        onFailure = { e ->
+          onFailureCalled = true
+          failureException = e
+        })
+
     advanceUntilIdle()
 
     // Assert
