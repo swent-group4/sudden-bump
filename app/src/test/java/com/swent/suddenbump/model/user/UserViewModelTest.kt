@@ -11,6 +11,7 @@ import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.Message
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -780,5 +781,146 @@ class UserViewModelTest {
 
     verify(userRepository).stopSharingLocationWithFriend(eq(uid), eq(friend.uid), any(), any())
     assert(!userViewModel.locationSharedWith.value.contains(friend))
+  }
+
+  @Test
+  fun testUnblockUser_Success() = runTest {
+    // Arrange
+    val currentUser = User(
+        "current_id",
+        "Current",
+        "User",
+        "+41789123450",
+        null,
+        "current.user@example.com",
+        MutableStateFlow(Location("mock_provider"))
+    )
+    val blockedUser = User(
+        "blocked_id",
+        "Blocked",
+        "User",
+        "+41789123456",
+        null,
+        "blocked.user@example.com",
+        MutableStateFlow(Location("mock_provider"))
+    )
+
+    // Set current user
+    userViewModel.setUser(currentUser, {}, {})
+
+    // Mock setBlockedFriends behavior
+    doAnswer { invocation ->
+        val uid = invocation.getArgument<String>(0)
+        val blockedList = invocation.getArgument<List<User>>(1)
+        val onSuccess = invocation.getArgument<() -> Unit>(2)
+        onSuccess()
+        null
+    }.whenever(userRepository).setBlockedFriends(any(), any(), any(), any())
+
+    // Add user to blocked list initially
+    userViewModel.setBlockedFriends(
+        blockedFriendsList = listOf(blockedUser),
+        onSuccess = {},
+        onFailure = {}
+    )
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Mock unblockUser behavior
+    doAnswer { invocation ->
+        val onSuccess = invocation.getArgument<() -> Unit>(2)
+        onSuccess()
+        null
+    }.whenever(userRepository).unblockUser(any(), any(), any(), any())
+
+    // Act
+    userViewModel.unblockUser(
+        blockedUser = blockedUser,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { onFailureCalled = true }
+    )
+    
+    advanceUntilIdle()
+
+    // Assert
+    verify(userRepository).unblockUser(eq(currentUser.uid), eq(blockedUser.uid), any(), any())
+    assert(onSuccessCalled)
+    assert(!onFailureCalled)
+    assert(!userViewModel.getBlockedFriends().value.contains(blockedUser))
+  }
+
+  @Test
+  fun testUnblockUser_Failure() = runTest {
+    // Arrange
+    val currentUser = User(
+        "current_id",
+        "Current",
+        "User",
+        "+41789123450",
+        null,
+        "current.user@example.com",
+        MutableStateFlow(Location("mock_provider"))
+    )
+    val blockedUser = User(
+        "blocked_id",
+        "Blocked",
+        "User",
+        "+41789123456",
+        null,
+        "blocked.user@example.com",
+        MutableStateFlow(Location("mock_provider"))
+    )
+    val error = Exception("Failed to unblock user")
+
+    // Set current user
+    userViewModel.setUser(currentUser, {}, {})
+
+    // Mock setBlockedFriends behavior
+    doAnswer { invocation ->
+        val uid = invocation.getArgument<String>(0)
+        val blockedList = invocation.getArgument<List<User>>(1)
+        val onSuccess = invocation.getArgument<() -> Unit>(2)
+        onSuccess()
+        null
+    }.whenever(userRepository).setBlockedFriends(any(), any(), any(), any())
+
+    // Add user to blocked list initially
+    userViewModel.setBlockedFriends(
+        blockedFriendsList = listOf(blockedUser),
+        onSuccess = {},
+        onFailure = {}
+    )
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Mock unblockUser behavior to fail
+    doAnswer { invocation ->
+        val onFailure = invocation.getArgument<(Exception) -> Unit>(3)
+        onFailure(error)
+        null
+    }.whenever(userRepository).unblockUser(any(), any(), any(), any())
+
+    // Act
+    userViewModel.unblockUser(
+        blockedUser = blockedUser,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { e -> 
+            onFailureCalled = true
+            failureException = e
+        }
+    )
+    
+    advanceUntilIdle()
+
+    // Assert
+    verify(userRepository).unblockUser(eq(currentUser.uid), eq(blockedUser.uid), any(), any())
+    assert(!onSuccessCalled)
+    assert(onFailureCalled)
+    assertEquals(error, failureException)
+    // User should still be in blocked list since unblock failed
+    assert(userViewModel.getBlockedFriends().value.contains(blockedUser))
   }
 }

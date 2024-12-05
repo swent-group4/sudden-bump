@@ -106,6 +106,13 @@ fun SettingsScreen(
                     modifier = Modifier.testTag("DiscussionsOption"))
               }
               item {
+                SettingsOption(
+                    label = "Blocked Users",
+                    backgroundColor = Color.White,
+                    onClick = { navigationActions.navigateTo("BlockedUsersScreen") },
+                    modifier = Modifier.testTag("BlockedUsersOption"))
+              }
+              item {
                 NotificationsSwitch(
                     notificationsEnabled = notificationsEnabled,
                     onCheckedChange = {

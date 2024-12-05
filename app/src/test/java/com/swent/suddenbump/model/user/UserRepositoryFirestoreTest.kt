@@ -1631,8 +1631,7 @@ class UserRepositoryFirestoreTest {
     // Mock the update() method on user document to return a successful task
     `when`(userDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
     // Mock the update() method on friend document to return a failed task
-    `when`(friendDocumentReference.update(anyString(), any()))
-        .thenReturn(Tasks.forException(Exception("Update friend's sentFriendRequests failed")))
+    `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forException(Exception("Update friend's sentFriendRequests failed")))
 
     // Create the UserRepositoryFirestore instance
     val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
@@ -2149,8 +2148,7 @@ class UserRepositoryFirestoreTest {
 
     `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
     `when`(mockUserDocumentSnapshot.data).thenReturn(userData)
-    `when`(mockUserDocumentReference.update(anyString(), any()))
-        .thenReturn(Tasks.forException(exception))
+    `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(Tasks.forException(exception))
 
     // Act
     val latch = CountDownLatch(1)
@@ -2303,7 +2301,7 @@ class UserRepositoryFirestoreTest {
       `when`(mockTask.result)
           .thenReturn(mockUserDocumentSnapshot) // Return a mocked snapshot of the user document
       `when`(mockTask.addOnFailureListener(any()))
-          .thenReturn(mockTask) // Add failure listener (we won’t use it)
+          .thenReturn(mockTask) // Add failure listener (we won't use it)
       `when`(mockUserDocumentSnapshot.data)
           .thenReturn(mapOf("friendsList" to listOf(friendUid))) // Mocking the friends list data
 
@@ -2458,7 +2456,7 @@ class UserRepositoryFirestoreTest {
       `when`(mockTask.result)
           .thenReturn(mockUserDocumentSnapshot) // Return a mocked snapshot of the user document
       `when`(mockTask.addOnFailureListener(any()))
-          .thenReturn(mockTask) // Add failure listener (we won’t use it)
+          .thenReturn(mockTask) // Add failure listener (we won't use it)
       `when`(mockUserDocumentSnapshot.data)
           .thenReturn(mapOf("friendsList" to listOf(friendUid))) // Mocking the friends list data
 
@@ -3614,5 +3612,117 @@ class UserRepositoryFirestoreTest {
         onFailure = { fail("Should not fail when no data is available") })
 
     shadowOf(Looper.getMainLooper()).idle()
+  }
+
+  @Test
+  fun unblockUser_Success() {
+    // Mock document references
+    val currentUserRef = mock(DocumentReference::class.java)
+    val currentUserSnapshot = mock(DocumentSnapshot::class.java)
+    
+    // Mock initial blocked list
+    val blockedList = listOf("blocked_user_id")
+    `when`(currentUserSnapshot.get("blockedList")).thenReturn(blockedList)
+    
+    // Mock Firestore interactions
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document("current_user_id")).thenReturn(currentUserRef)
+    `when`(currentUserRef.get()).thenReturn(Tasks.forResult(currentUserSnapshot))
+    `when`(currentUserRef.update("blockedList", emptyList<String>())).thenReturn(Tasks.forResult(null))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Call unblockUser
+    userRepositoryFirestore.unblockUser(
+        "current_user_id",
+        "blocked_user_id",
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { onFailureCalled = true }
+    )
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify success
+    assertTrue(onSuccessCalled)
+    assertFalse(onFailureCalled)
+    verify(currentUserRef).update("blockedList", emptyList<String>())
+  }
+
+  @Test
+  fun unblockUser_FailureOnGet() {
+    // Mock document references
+    val currentUserRef = mock(DocumentReference::class.java)
+    val exception = Exception("Failed to get document")
+
+    // Mock Firestore interactions with failure
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document("current_user_id")).thenReturn(currentUserRef)
+    `when`(currentUserRef.get()).thenReturn(Tasks.forException(exception))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Call unblockUser
+    userRepositoryFirestore.unblockUser(
+        "current_user_id",
+        "blocked_user_id",
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { e -> 
+            onFailureCalled = true
+            failureException = e
+        }
+    )
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify failure
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertEquals(exception, failureException)
+  }
+
+  @Test
+  fun unblockUser_FailureOnUpdate() {
+    // Mock document references
+    val currentUserRef = mock(DocumentReference::class.java)
+    val currentUserSnapshot = mock(DocumentSnapshot::class.java)
+    val exception = Exception("Failed to update document")
+    
+    // Mock initial blocked list
+    val blockedList = listOf("blocked_user_id")
+    `when`(currentUserSnapshot.get("blockedList")).thenReturn(blockedList)
+    
+    // Mock Firestore interactions with update failure
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document("current_user_id")).thenReturn(currentUserRef)
+    `when`(currentUserRef.get()).thenReturn(Tasks.forResult(currentUserSnapshot))
+    `when`(currentUserRef.update("blockedList", emptyList<String>())).thenReturn(Tasks.forException(exception))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Call unblockUser
+    userRepositoryFirestore.unblockUser(
+        "current_user_id",
+        "blocked_user_id",
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { e -> 
+            onFailureCalled = true
+            failureException = e
+        }
+    )
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify failure
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertEquals(exception, failureException)
   }
 }

@@ -718,4 +718,23 @@ open class UserViewModel(
   ) {
     repository.getSharedByFriends(uid, onSuccess, onFailure)
   }
+
+  fun unblockUser(
+      blockedUser: User,
+      onSuccess: () -> Unit = {},
+      onFailure: (Exception) -> Unit = {}
+  ) {
+    viewModelScope.launch {
+      repository.unblockUser(
+          currentUserId = _user.value.uid,
+          blockedUserId = blockedUser.uid,
+          onSuccess = {
+            // Remove user from blocked list in local state
+            _blockedFriends.value = _blockedFriends.value.filter { it.uid != blockedUser.uid }
+            onSuccess()
+          },
+          onFailure = onFailure
+      )
+    }
+  }
 }

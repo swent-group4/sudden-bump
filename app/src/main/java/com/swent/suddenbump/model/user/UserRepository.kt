@@ -189,6 +189,13 @@ interface UserRepository {
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  fun unblockUser(
+      currentUserId: String,
+      blockedUserId: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }
 
 data class UserWithFriendsInCommon(val user: User, val friendsInCommon: Int)

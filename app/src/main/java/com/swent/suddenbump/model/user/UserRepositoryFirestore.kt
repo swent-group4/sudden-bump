@@ -1296,6 +1296,35 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     }
     return userList
   }
+
+  override fun unblockUser(
+      currentUserId: String,
+      blockedUserId: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(currentUserId)
+        .get()
+        .addOnSuccessListener { document ->
+          val blockedList = document.get("blockedList") as? List<String> ?: listOf()
+          val updatedBlockedList = blockedList.filter { it != blockedUserId }
+          
+          // Update the blocked list in Firestore
+          db.collection(usersCollectionPath)
+              .document(currentUserId)
+              .update("blockedList", updatedBlockedList)
+              .addOnSuccessListener {
+                onSuccess()
+              }
+              .addOnFailureListener { e ->
+                onFailure(e)
+              }
+        }
+        .addOnFailureListener { e ->
+          onFailure(e)
+        }
+  }
 }
 
 /**
