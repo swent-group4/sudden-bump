@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -87,25 +88,38 @@ fun MapScreen(navigationActions: NavigationActions, userViewModel: UserViewModel
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
+    // Initialize necessary variables and states
+    val context = LocalContext.current
+    val markerState = rememberMarkerState(position = LatLng(0.0, 0.0))
+    val cameraPositionState = rememberCameraPositionState()
+    var zoomDone by remember { mutableStateOf(false) }
+    var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
+    var transportMode by remember { mutableStateOf("driving") }
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+
+    val directionsService = remember {
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://maps.googleapis.com/maps/api/")
+            .addConverterFactory(MoshiConverterFactory.create(Moshi.Builder().build()))
+            .build()
+
+        retrofit.create(GoogleMapsDirectionsService::class.java)
+    }
 
     // Create an instance of DirectionsRepository
     val directionsRepository = remember {
-        DirectionsRepository()
+        DirectionsRepository(directionsService)
     }
-    val context = LocalContext.current
+
     // Now create the MapViewModel
     val mapViewModel = remember {
         MapViewModel(directionsRepository)
     }
-    val markerState = rememberMarkerState(position = LatLng(0.0, 0.0))
-    val cameraPositionState = rememberCameraPositionState()
-    var zoomDone by remember { mutableStateOf(false) }
-    var selectedFriend by remember { mutableStateOf<User?>(null) }
-    var transportMode by remember { mutableStateOf("driving") }
 
+    // Collect the polyline points from the mapViewModel
     val polylinePoints by mapViewModel.polylinePoints.collectAsState()
-    var showConfirmationDialog by remember { mutableStateOf(false) }
 
+    // Update user location and camera position
     LaunchedEffect(userViewModel.getLocation()) {
         userViewModel.getLocation().let {
             val latLng = LatLng(it.value.latitude, it.value.longitude)
@@ -118,8 +132,33 @@ fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
         }
     }
 
-    Column(modifier = modifier.fillMaxSize()){
-        // Sélecteur de mode de transport
+    LaunchedEffect(selectedLocation, transportMode) {
+        selectedLocation?.let { destination ->
+            try {
+                mapViewModel.fetchDirections(
+                    origin = markerState.position,
+                    destination = destination,
+                    mode = transportMode,
+                    apiKey = "YOUR_ACTUAL_API_KEY" // Replace with your actual API key
+                )
+            } catch (e: Exception) {
+                Log.e("SimpleMap", "Error fetching directions", e)
+            }
+        }
+    }
+
+
+    if (polylinePoints.isNotEmpty()) {
+        Polyline(
+            points = polylinePoints,
+            color = Blue,
+            width = 5f
+        )
+    }
+
+
+    Column(modifier = modifier.fillMaxSize()) {
+        // Transport Mode Selector
         TransportModeSelector { mode ->
             transportMode = mode
         }
@@ -130,86 +169,79 @@ fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
                 cameraPositionState = cameraPositionState,
                 uiSettings = MapUiSettings(zoomControlsEnabled = false)
             ) {
+                // Your own position marker with click handling
                 val markerBitmap = getLocationMarkerBitmap()
                 Marker(
                     state = markerState,
-                    title = "Position actuelle",
-                    snippet = "Vous êtes ici",
-                    icon = BitmapDescriptorFactory.fromBitmap(markerBitmap)
+                    title = "Current Location",
+                    snippet = "You are here",
+                    icon = BitmapDescriptorFactory.fromBitmap(markerBitmap),
+                    onClick = {
+                        selectedLocation = markerState.position
+                        true
+                    }
                 )
 
-                FriendsMarkers(userViewModel) { friend ->
-                    selectedFriend = friend
+                // Friends' markers
+                FriendsMarkers(userViewModel) { friendLatLng ->
+                    selectedLocation = friendLatLng
                 }
 
-                // Si un ami est sélectionné, afficher l'itinéraire
-                selectedFriend?.let { friend ->
-                    val currentLocation = markerState.position
-                    val friendLocation = LatLng(
-                        friend.lastKnownLocation.value.latitude,
-                        friend.lastKnownLocation.value.longitude
+                // Draw polyline if available
+                if (polylinePoints.isNotEmpty()) {
+                    Polyline(
+                        points = polylinePoints,
+                        color = Blue,
+                        width = 5f
                     )
-                    LaunchedEffect(currentLocation, friendLocation, transportMode) {
-                        mapViewModel.fetchDirections(
-                            origin = currentLocation,
-                            destination = friendLocation,
-                            mode = transportMode,
-                            apiKey = "MAPS_API_KEY" // Remplacez par votre clé API
-                        )
-                    }
-
-                    if (polylinePoints.isNotEmpty()) {
-                        Polyline(
-                            points = polylinePoints,
-                            color = Blue,
-                            width = 5f
-                        )
-                    }
                 }
             }
 
-            // Bouton pour ouvrir l'itinéraire dans Google Maps
-            selectedFriend?.let {
+            // FloatingActionButton to open directions in Google Maps
+            selectedLocation?.let {
                 FloatingActionButton(
                     onClick = {
                         showConfirmationDialog = true
                     },
                     modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
                 ) {
-                    Icon(Icons.Default.LocationOn, contentDescription = "Ouvrir dans Google Maps")
+                    Icon(
+                        imageVector = Icons.Filled.Place, // Use the desired icon
+                        contentDescription = "Ouvrir dans Google Maps"
+                    )
                 }
             }
         }
     }
+
     // Confirmation Dialog
     if (showConfirmationDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmationDialog = false },
             title = { Text("Confirmation") },
-            text = { Text("Do you want to open directions in Google Maps?") },
+            text = { Text("Voulez-vous ouvrir l'itinéraire dans Google Maps ?") },
             confirmButton = {
                 Button(
                     onClick = {
                         val currentLocation = markerState.position
-                        val friendLocation = LatLng(
-                            selectedFriend!!.lastKnownLocation.value.latitude,
-                            selectedFriend!!.lastKnownLocation.value.longitude
-                        )
-                        openGoogleMapsDirections(context, currentLocation, friendLocation, transportMode)
+                        val destinationLocation = selectedLocation!!
+                        openGoogleMapsDirections(context, currentLocation, destinationLocation, transportMode)
                         showConfirmationDialog = false
+                        selectedLocation = null
                     }
                 ) {
-                    Text("Yes")
+                    Text("Oui")
                 }
             },
             dismissButton = {
                 Button(onClick = { showConfirmationDialog = false }) {
-                    Text("No")
+                    Text("Non")
                 }
             }
         )
     }
 }
+
 
 fun openGoogleMapsDirections(context: Context, origin: LatLng, destination: LatLng, mode: String) {
     val uri = Uri.parse("https://www.google.com/maps/dir/?api=1&origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&travelmode=$mode")
@@ -250,7 +282,7 @@ fun TransportModeSelector(onModeSelected: (String) -> Unit) {
 @Composable
 fun FriendsMarkers(
     userViewModel: UserViewModel,
-    onFriendMarkerClick: (User) -> Unit
+    onFriendMarkerClick: (LatLng) -> Unit
 ) {
     val friends = remember { mutableStateOf<List<User>>(emptyList()) }
 
@@ -262,22 +294,22 @@ fun FriendsMarkers(
     }
 
     friends.value.forEach { friend ->
+        val friendLatLng = LatLng(
+            friend.lastKnownLocation.value.latitude,
+            friend.lastKnownLocation.value.longitude
+        )
         Marker(
-            state = MarkerState(
-                position = LatLng(
-                    friend.lastKnownLocation.value.latitude,
-                    friend.lastKnownLocation.value.longitude
-                )
-            ),
+            state = MarkerState(position = friendLatLng),
             title = friend.firstName,
             snippet = friend.uid,
             onClick = {
-                onFriendMarkerClick(friend)
-                true // Indique que l'événement est consommé
+                onFriendMarkerClick(friendLatLng)
+                true // Consume the click event
             }
         )
     }
 }
+
 
 
 fun getLocationMarkerBitmap(): Bitmap {

@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.direction
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
@@ -27,15 +28,34 @@ class MapViewModel(
                     mode = mode,
                     apiKey = apiKey
                 )
-                val points = decodePolyline(response?.routes?.firstOrNull()?.overview_polyline?.points.orEmpty())
+
+                if (response == null) {
+                    Log.e("MapViewModel", "Response is null")
+                    return@launch
+                }
+
+                val route = response.routes.firstOrNull()
+                if (route == null) {
+                    Log.e("MapViewModel", "No routes found in response")
+                    return@launch
+                }
+
+                val polyline = route.overview_polyline?.points
+                if (polyline.isNullOrEmpty()) {
+                    Log.e("MapViewModel", "No polyline points found")
+                    return@launch
+                }
+
+                val points = decodePolyline(polyline)
                 _polylinePoints.value = points
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("MapViewModel", "Error fetching directions", e)
             } finally {
                 _loading.value = false
             }
         }
     }
+
 
     private fun decodePolyline(encoded: String): List<LatLng> {
         val poly = mutableListOf<LatLng>()
