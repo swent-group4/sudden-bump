@@ -163,6 +163,32 @@ interface UserRepository {
   fun isUserLoggedIn(): Boolean
 
   fun logoutUser()
+
+  fun shareLocationWithFriend(
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun stopSharingLocationWithFriend(
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun getSharedWithFriends(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun getSharedByFriends(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }
 
 data class UserWithFriendsInCommon(val user: User, val friendsInCommon: Int)
