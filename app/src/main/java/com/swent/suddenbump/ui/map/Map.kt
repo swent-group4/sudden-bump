@@ -30,8 +30,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,6 +50,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerInfoWindow
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -139,23 +142,13 @@ fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
                     origin = markerState.position,
                     destination = destination,
                     mode = transportMode,
-                    apiKey = "YOUR_ACTUAL_API_KEY" // Replace with your actual API key
+                    apiKey = "MAPS_API_KEY" // Replace with your actual API key
                 )
             } catch (e: Exception) {
                 Log.e("SimpleMap", "Error fetching directions", e)
             }
         }
     }
-
-
-    if (polylinePoints.isNotEmpty()) {
-        Polyline(
-            points = polylinePoints,
-            color = Blue,
-            width = 5f
-        )
-    }
-
 
     Column(modifier = modifier.fillMaxSize()) {
         // Transport Mode Selector
@@ -186,15 +179,6 @@ fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
                 FriendsMarkers(userViewModel) { friendLatLng ->
                     selectedLocation = friendLatLng
                 }
-
-                // Draw polyline if available
-                if (polylinePoints.isNotEmpty()) {
-                    Polyline(
-                        points = polylinePoints,
-                        color = Blue,
-                        width = 5f
-                    )
-                }
             }
 
             // FloatingActionButton to open directions in Google Maps
@@ -214,18 +198,30 @@ fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
         }
     }
 
+    if (polylinePoints.isNotEmpty()) {
+        Polyline(
+            points = polylinePoints,
+            color = Blue,
+            width = 5f
+        )
+    }
     // Confirmation Dialog
     if (showConfirmationDialog) {
         AlertDialog(
             onDismissRequest = { showConfirmationDialog = false },
             title = { Text("Confirmation") },
-            text = { Text("Voulez-vous ouvrir l'itinéraire dans Google Maps ?") },
+            text = { Text("Do you want to open Google Maps ?") },
             confirmButton = {
                 Button(
                     onClick = {
                         val currentLocation = markerState.position
                         val destinationLocation = selectedLocation!!
-                        openGoogleMapsDirections(context, currentLocation, destinationLocation, transportMode)
+                        openGoogleMapsDirections(
+                            context,
+                            currentLocation,
+                            destinationLocation,
+                            transportMode
+                        )
                         showConfirmationDialog = false
                         selectedLocation = null
                     }
@@ -278,38 +274,64 @@ fun TransportModeSelector(onModeSelected: (String) -> Unit) {
         }
     }
 }
-
 @Composable
 fun FriendsMarkers(
     userViewModel: UserViewModel,
     onFriendMarkerClick: (LatLng) -> Unit
 ) {
-    val friends = remember { mutableStateOf<List<User>>(emptyList()) }
+    val friends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
+    val markerStates = remember { mutableStateMapOf<String, Pair<MarkerState, MutableState<Boolean>>>() }
 
-    LaunchedEffect(userViewModel) {
-        launch {
-            userViewModel.loadFriends()
-            friends.value = userViewModel.getUserFriends().value
-        }
-    }
-
-    friends.value.forEach { friend ->
+    // Initialize marker states for each friend
+    friends.forEach { friend ->
         val friendLatLng = LatLng(
             friend.lastKnownLocation.value.latitude,
             friend.lastKnownLocation.value.longitude
         )
-        Marker(
-            state = MarkerState(position = friendLatLng),
-            title = friend.firstName,
-            snippet = friend.uid,
-            onClick = {
-                onFriendMarkerClick(friendLatLng)
-                true // Consume the click event
+        if (!markerStates.containsKey(friend.uid)) {
+            markerStates[friend.uid] = Pair(
+                MarkerState(position = friendLatLng),
+                mutableStateOf(false) // Info window shown state
+            )
+        } else {
+            // Update marker position if it has changed
+            val (markerState, _) = markerStates[friend.uid]!!
+            markerState.position = friendLatLng
+        }
+    }
+
+    friends.forEach { friend ->
+        val (markerState, infoWindowShownState) = markerStates[friend.uid] ?: return@forEach
+
+        MarkerInfoWindow(
+            state = markerState,
+            onClick = { marker ->
+                if (infoWindowShownState.value) {
+                    // Info window is already shown, proceed to show confirmation dialog
+                    onFriendMarkerClick(markerState.position)
+                    // Reset the info window shown state
+                    infoWindowShownState.value = false
+                    markerState.hideInfoWindow()
+                } else {
+                    // Show the info window
+                    infoWindowShownState.value = true
+                    markerState.showInfoWindow()
+                }
+                true // Return true to indicate the click event was consumed
+            },
+            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
+            content = {
+                // Custom info window content
+                Column {
+                    Text(text = friend.firstName,
+                        color = Blue)
+
+
+                }
             }
         )
     }
 }
-
 
 
 fun getLocationMarkerBitmap(): Bitmap {
