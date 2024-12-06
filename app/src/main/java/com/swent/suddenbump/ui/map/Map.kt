@@ -294,7 +294,7 @@ fun fetchLocationToServer(location: Location, userViewModel: UserViewModel) {
       onFailure = { Log.d("FireStoreLocation", "Failed to reach Firestore") })
 }
 
-fun showFriendNearbyNotification(context: Context, userUID: String, friend: git adUser) {
+fun showFriendNearbyNotification(context: Context, userUID: String, friend: User) {
   val channelId = "friend_nearby_channel"
   val channelName = "Friend Nearby Notifications"
   val notificationId = friend.uid.hashCode()
