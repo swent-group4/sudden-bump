@@ -12,6 +12,7 @@ val Pink40 = Color(0xFF7D5260)
 val violetColor = Color(0xFFC3A1E8)
 val purple = Color(0xFF5F08BD)
 val VibrantPurple = Color(0xFF552FC4)
+val Blue = Color(0xFF0000FF)
 
 val DividerColor = Color.White
 val ButtonBackgroundColor = Purple80
