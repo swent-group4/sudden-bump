@@ -1243,8 +1243,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
-          println("Document data: ${result.data}")
-          println("locationSharedWith: ${result.data?.get("locationSharedWith")}")
           if (result.data?.get("locationSharedBy") == null) {
             emptyList<User>()
           } else {
@@ -1272,8 +1270,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
-          println("Document data: ${result.data}")
-          println("locationSharedWith: ${result.data?.get("locationSharedWith")}")
           if (result.data?.get("locationSharedWith") == null) {
             emptyList<User>()
           } else {
@@ -1318,6 +1314,29 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
       }
     }
     return userList
+  }
+
+  override fun unblockUser(
+      currentUserId: String,
+      blockedUserId: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(currentUserId)
+        .get()
+        .addOnSuccessListener { document ->
+          val blockedList = document.get("blockedList") as? List<String> ?: listOf()
+          val updatedBlockedList = blockedList.filter { it != blockedUserId }
+
+          // Update the blocked list in Firestore
+          db.collection(usersCollectionPath)
+              .document(currentUserId)
+              .update("blockedList", updatedBlockedList)
+              .addOnSuccessListener { onSuccess() }
+              .addOnFailureListener { e -> onFailure(e) }
+        }
+        .addOnFailureListener { e -> onFailure(e) }
   }
 }
 

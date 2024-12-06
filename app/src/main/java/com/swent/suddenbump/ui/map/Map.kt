@@ -236,6 +236,7 @@ fun FriendsMarkers(userViewModel: UserViewModel, onFriendMarkerInfoWindowClick: 
       // Update marker position if it has changed
       val markerState = markerStates[friend.uid]!!
       markerState.position = friendLatLng
+
     }
   }
 
