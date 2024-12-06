@@ -22,6 +22,7 @@ class OverviewScreenTest {
 
   private lateinit var navigationActions: NavigationActions
   private lateinit var userViewModel: UserViewModel
+  private lateinit var locationSharedWithState: MutableStateFlow<List<User>>
 
   private val location1 =
       Location("mock_provider").apply {
@@ -74,6 +75,9 @@ class OverviewScreenTest {
     coEvery { userViewModel.getCityAndCountry(any()) } returns
         "San Francisco, USA" andThen
         "New York, USA"
+
+    locationSharedWithState = MutableStateFlow<List<User>>(emptyList())
+    every { userViewModel.locationSharedWith } returns locationSharedWithState
   }
 
   @Test
@@ -162,9 +166,6 @@ class OverviewScreenTest {
 
   @Test
   fun testIconToggleButton_ShowsCorrectIconAndTogglesState() {
-    // Initial mock state for location sharing
-    val locationSharedWithState = MutableStateFlow(emptyList<User>())
-    every { userViewModel.locationSharedWith } returns locationSharedWithState
 
     val currentUser = user1
     val friend = user2
