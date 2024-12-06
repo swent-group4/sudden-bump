@@ -59,6 +59,7 @@ import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.direction.DirectionsRepository
 import com.swent.suddenbump.model.direction.GoogleMapsDirectionsService
 import com.swent.suddenbump.model.direction.MapViewModel
+import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -236,7 +237,6 @@ fun FriendsMarkers(userViewModel: UserViewModel, onFriendMarkerInfoWindowClick: 
       // Update marker position if it has changed
       val markerState = markerStates[friend.uid]!!
       markerState.position = friendLatLng
-
     }
   }
 
@@ -294,7 +294,7 @@ fun fetchLocationToServer(location: Location, userViewModel: UserViewModel) {
       onFailure = { Log.d("FireStoreLocation", "Failed to reach Firestore") })
 }
 
-fun showFriendNearbyNotification(context: Context, userUID: String, friend: User) {
+fun showFriendNearbyNotification(context: Context, userUID: String, friend: git adUser) {
   val channelId = "friend_nearby_channel"
   val channelName = "Friend Nearby Notifications"
   val notificationId = friend.uid.hashCode()
