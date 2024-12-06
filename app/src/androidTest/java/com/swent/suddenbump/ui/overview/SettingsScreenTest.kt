@@ -15,10 +15,13 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.kaspersky.kaspresso.internal.extensions.other.createFileIfNeeded
 import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.meeting.MeetingRepository
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import io.mockk.mockk
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.test.fail
@@ -40,6 +43,8 @@ class SettingsScreenTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
   private lateinit var chatRepository: ChatRepository
+  private lateinit var meetingRepository: MeetingRepository
+  private lateinit var meetingViewModel: MeetingViewModel
   private var notificationsEnabled = true
 
   @get:Rule val composeTestRule = createComposeRule()
@@ -56,6 +61,8 @@ class SettingsScreenTest {
     userRepository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
     userViewModel = UserViewModel(userRepository, chatRepository)
+    meetingRepository = mockk(relaxed = true)
+    meetingViewModel = MeetingViewModel(meetingRepository)
   }
 
   private fun setContentDefault() {
@@ -63,6 +70,7 @@ class SettingsScreenTest {
       SettingsScreen(
           navigationActions = navigationActions,
           userViewModel = userViewModel,
+          meetingViewModel = meetingViewModel,
           onNotificationsEnabledChange = { notificationsEnabled = it })
     }
   }
@@ -194,6 +202,7 @@ class SettingsScreenTest {
       SettingsScreen(
           navigationActions = navigationActions,
           userViewModel = userViewModel,
+          meetingViewModel = meetingViewModel,
           onNotificationsEnabledChange = { notificationsEnabled = it },
           uri = uriImage)
     }
@@ -201,12 +210,4 @@ class SettingsScreenTest {
 
     verify(userRepository).updateUserAccount(any(), any(), any())
   }
-}
-
-object Screen {
-  const val ACCOUNT = "AccountScreen"
-  const val CONFIDENTIALITY = "ConfidentialityScreen"
-  const val DISCUSSIONS = "DiscussionsScreen"
-  const val STORAGE_AND_DATA = "StorageAndDataScreen"
-  const val HELP = "HelpScreen"
 }
