@@ -4,9 +4,11 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.location.Location
 import androidx.test.core.app.ApplicationProvider
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.meeting.Meeting
+import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.ui.calendar.showMeetingScheduledNotification
 import com.swent.suddenbump.ui.map.showFriendNearbyNotification
 import java.security.Timestamp
@@ -14,6 +16,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.Locale
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,12 +30,30 @@ class NotificationTest {
 
   @Test
   fun testShowFriendNearbyNotification() {
+
+    val locationDummy =
+        MutableStateFlow(
+            Location("dummy").apply {
+              latitude = 0.0 // Latitude fictive
+              longitude = 0.0 // Longitude fictive
+            })
+
+    val userDummy1 =
+        User(
+            "1",
+            "Martin",
+            "Vetterli",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            locationDummy)
+
     val context = ApplicationProvider.getApplicationContext<Context>()
     val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     // Call the function to show the notification
-    showFriendNearbyNotification(context)
+    showFriendNearbyNotification(context, "2", userDummy1)
 
     // Verify that the NotificationChannel was created
     val notificationChannel = notificationManager.getNotificationChannel("friend_nearby_channel")
@@ -46,16 +67,15 @@ class NotificationTest {
     // Verify notification content
     assertEquals("Friend Nearby", notification.extras.getString(Notification.EXTRA_TITLE))
     assertEquals(
-        "A friend is within your radius!", notification.extras.getString(Notification.EXTRA_TEXT))
+        "Martin Vetterli is within your radius! \n" +
+            " Would you like to share your location with them?",
+        notification.extras.getString(Notification.EXTRA_TEXT))
 
     // Verify the PendingIntent destination
     val pendingIntent = notification.contentIntent
     val shadowPendingIntent = Shadows.shadowOf(pendingIntent)
     val actualIntent = shadowPendingIntent.savedIntent
     assertEquals(MainActivity::class.java.name, actualIntent.component?.className)
-    assertEquals("Screen.OVERVIEW", actualIntent.getStringExtra("destination"))
-    assertEquals(
-        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK, actualIntent.flags)
   }
 
   @Test

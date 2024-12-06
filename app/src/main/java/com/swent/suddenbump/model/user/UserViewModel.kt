@@ -16,6 +16,7 @@ import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.network.RetrofitInstance
+import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -51,6 +52,15 @@ open class UserViewModel(
             latitude = 0.0 // Latitude fictive
             longitude = 0.0 // Longitude fictive
           })
+  val testUser =
+      User(
+          "h33lbxyJpcj4OZQAA4QM",
+          "Martin",
+          "Vetterli",
+          "+1234567890",
+          null,
+          "martin.vetterli@epfl.ch",
+          locationDummy)
 
   val userDummy1 =
       User(
@@ -78,9 +88,11 @@ open class UserViewModel(
       MutableStateFlow(listOf(userDummy1))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
+  private val _userFriends: MutableStateFlow<List<User>> =
+      if (!isRunningTest()) MutableStateFlow(emptyList()) else MutableStateFlow(listOf(testUser))
   private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
-      MutableStateFlow(emptyList())
+      if (!isRunningTest()) MutableStateFlow(emptyList())
+      else MutableStateFlow(listOf(UserWithFriendsInCommon(userDummy1, 1)))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)

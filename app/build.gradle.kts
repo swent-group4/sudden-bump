@@ -140,6 +140,7 @@ buildscript {
 }
 
 dependencies {
+
     // Firebase BoM
     implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.navigation.testing)
@@ -255,6 +256,7 @@ dependencies {
     testImplementation(libs.json)
     globalTestImplementation(libs.kaspresso)
     globalTestImplementation(libs.kaspresso.compose)
+
 
     // UI Testing
     androidTestImplementation(libs.androidx.junit)
