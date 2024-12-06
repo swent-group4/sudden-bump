@@ -17,6 +17,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
@@ -1071,6 +1073,27 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     return sharedPreferences.getString("userId", null) ?: ""
   }
 
+  override fun saveNotifiedFriends(friendsUID: List<String>) {
+    val gson = Gson()
+    val jsonString = gson.toJson(friendsUID) // Convert list to JSON string
+    sharedPreferences.edit().putString("notified_friends", jsonString).apply()
+  }
+
+  /**
+   * Retrieves the saved friends ID from shared preferences.
+   *
+   * @return The saved friends ID as a String, or an empty string if no user is logged in.
+   */
+  override fun getSavedAlreadyNotifiedFriends(): List<String> {
+    val gson = Gson()
+    val jsonString = sharedPreferences.getString("notified_friends", null)
+    return if (jsonString != null) {
+      gson.fromJson(jsonString, object : TypeToken<List<String>>() {}.type)
+    } else {
+      emptyList() // Return an empty list if no data is found
+    }
+  }
+
   /**
    * Checks if a user is currently logged in based on shared preferences.
    *
@@ -1089,6 +1112,176 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
       putString("userId", null)
       apply()
     }
+  }
+
+  /**
+   * Shares the user's location with a friend.
+   *
+   * @param uid The user ID of the person sharing their location.
+   * @param fid The friend ID of the person with whom the location is being shared.
+   * @param onSuccess Called when the location is successfully shared.
+   * @param onFailure Called with an exception if the sharing fails.
+   */
+  override fun shareLocationWithFriend(
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val sharedFriendsUidList =
+              result.data?.get("locationSharedWith") as? List<String> ?: emptyList()
+          val mutableSharedFriendsUidList = sharedFriendsUidList.toMutableList()
+
+          if (fid !in mutableSharedFriendsUidList) {
+            mutableSharedFriendsUidList.add(fid)
+            db.collection(usersCollectionPath)
+                .document(uid)
+                .update("locationSharedWith", mutableSharedFriendsUidList)
+                .addOnFailureListener { e -> onFailure(e) }
+                .addOnSuccessListener { onSuccess() }
+          } else {
+            onFailure(Exception("Friend already has access to location"))
+          }
+        }
+    db.collection(usersCollectionPath)
+        .document(fid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { friendResult ->
+          val sharedByFriendsUidList =
+              friendResult.data?.get("locationSharedBy") as? List<String> ?: emptyList()
+          val mutableSharedByFriendsUidList = sharedByFriendsUidList.toMutableList()
+
+          if (uid !in mutableSharedByFriendsUidList) {
+            mutableSharedByFriendsUidList.add(uid)
+            db.collection(usersCollectionPath)
+                .document(fid)
+                .update("locationSharedBy", mutableSharedByFriendsUidList)
+                .addOnFailureListener { e -> onFailure(e) }
+                .addOnSuccessListener { onSuccess() }
+          } else {
+            onFailure(Exception("Location already shared by this user"))
+          }
+        }
+  }
+
+  /**
+   * Stops sharing the user's location with a friend.
+   *
+   * @param uid The user ID of the person stopping the sharing.
+   * @param fid The friend ID of the person with whom the location sharing is being stopped.
+   * @param onSuccess Called when the location sharing is successfully stopped.
+   * @param onFailure Called with an exception if the stopping fails.
+   */
+  override fun stopSharingLocationWithFriend(
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val sharedFriendsUidList =
+              result.data?.get("locationSharedWith") as? List<String> ?: emptyList()
+          val mutableSharedFriendsUidList = sharedFriendsUidList.toMutableList()
+
+          if (fid in mutableSharedFriendsUidList) {
+            mutableSharedFriendsUidList.remove(fid)
+            db.collection(usersCollectionPath)
+                .document(uid)
+                .update("locationSharedWith", mutableSharedFriendsUidList)
+                .addOnFailureListener { e -> onFailure(e) }
+                .addOnSuccessListener { onSuccess() }
+          } else {
+            onFailure(Exception("Friend does not have access to location"))
+          }
+        }
+    db.collection(usersCollectionPath)
+        .document(fid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { friendResult ->
+          val sharedByFriendsUidList =
+              friendResult.data?.get("locationSharedBy") as? List<String> ?: emptyList()
+          val mutableSharedByFriendsUidList = sharedByFriendsUidList.toMutableList()
+
+          if (uid in mutableSharedByFriendsUidList) {
+            mutableSharedByFriendsUidList.remove(uid)
+            db.collection(usersCollectionPath)
+                .document(fid)
+                .update("locationSharedBy", mutableSharedByFriendsUidList)
+                .addOnFailureListener { e -> onFailure(e) }
+                .addOnSuccessListener { onSuccess() }
+          } else {
+            onFailure(Exception("Location not shared by this user"))
+          }
+        }
+  }
+
+  /**
+   * Retrieves the list of friends who have shared their location with the user.
+   *
+   * @param uid The user ID of the person retrieving the list.
+   * @param onSuccess Called with a list of User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  override fun getSharedByFriends(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          println("Document data: ${result.data}")
+          println("locationSharedWith: ${result.data?.get("locationSharedWith")}")
+          if (result.data?.get("locationSharedBy") == null) {
+            emptyList<User>()
+          } else {
+            onSuccess(
+                documentSnapshotToUserList(
+                    result.data?.get("locationSharedBy").toString(), onFailure))
+          }
+        }
+  }
+
+  /**
+   * Retrieves the list of friends with whom the user has shared their location.
+   *
+   * @param uid The user ID of the person retrieving the list.
+   * @param onSuccess Called with a list of User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  override fun getSharedWithFriends(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          println("Document data: ${result.data}")
+          println("locationSharedWith: ${result.data?.get("locationSharedWith")}")
+          if (result.data?.get("locationSharedWith") == null) {
+            emptyList<User>()
+          } else {
+            onSuccess(
+                documentSnapshotToUserList(
+                    result.data?.get("locationSharedWith").toString(), onFailure))
+          }
+        }
   }
 
   /**

@@ -16,6 +16,7 @@ import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.network.RetrofitInstance
+import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -51,6 +52,15 @@ open class UserViewModel(
             latitude = 0.0 // Latitude fictive
             longitude = 0.0 // Longitude fictive
           })
+  val testUser =
+      User(
+          "h33lbxyJpcj4OZQAA4QM",
+          "Martin",
+          "Vetterli",
+          "+1234567890",
+          null,
+          "martin.vetterli@epfl.ch",
+          locationDummy)
 
   val userDummy1 =
       User(
@@ -78,12 +88,18 @@ open class UserViewModel(
       MutableStateFlow(listOf(userDummy1))
   private val _sentFriendRequests: MutableStateFlow<List<User>> =
       MutableStateFlow(listOf(userDummy1))
-  private val _userFriends: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
+  private val _userFriends: MutableStateFlow<List<User>> =
+      if (!isRunningTest()) MutableStateFlow(emptyList()) else MutableStateFlow(listOf(testUser))
   private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
-      MutableStateFlow(emptyList())
+      if (!isRunningTest()) MutableStateFlow(emptyList())
+      else MutableStateFlow(listOf(UserWithFriendsInCommon(userDummy1, 1)))
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
+
+  private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
+
+  val locationSharedWith: StateFlow<List<User>> = _locationSharedWith.asStateFlow()
 
   // LiveData for verification status
   private val _verificationStatus = MutableLiveData<String>()
@@ -462,26 +478,20 @@ open class UserViewModel(
 
   fun loadFriends() {
     try {
-      Log.i(logTag, "1: ${_userFriends.value}")
-      Log.i(logTag, "2: ${getUserFriends().value}")
       repository.getUserFriends(
           uid = _user.value.uid,
           onSuccess = { friends ->
             // Update the state with the locations of friends
             _userFriends.value = friends
             Log.d("FriendsMarkers", "On success load Friends ${_userFriends.value}")
-            println("On success load Friends $friends")
           },
           onFailure = { error ->
             // Handle the error, e.g., log or show error message
             Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
-            println("exception1")
           })
     } catch (e: Exception) {
       Log.e("UserViewModel", e.toString())
-      println("exception2")
     }
-    println("endfunc")
   }
 
   fun getSelectedContact(): StateFlow<User> {
@@ -667,5 +677,57 @@ open class UserViewModel(
     } else {
       _verificationStatus.postValue("Verification ID is missing.")
     }
+  }
+
+  /**
+   * Shares the user's location with a friend.
+   *
+   * @param uid The user ID of the person sharing their location.
+   * @param friend The User object representing the friend with whom the location is being shared.
+   * @param onSuccess Called when the location is successfully shared.
+   * @param onFailure Called with an exception if the sharing fails.
+   */
+  fun shareLocationWithFriend(
+      uid: String,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _locationSharedWith.value = _locationSharedWith.value.plus(friend)
+    repository.shareLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
+  }
+
+  /**
+   * Stops sharing the user's location with a friend.
+   *
+   * @param uid The user ID of the person stopping the sharing.
+   * @param friend The User object representing the friend with whom the location sharing is being
+   *   stopped.
+   * @param onSuccess Called when the location sharing is successfully stopped.
+   * @param onFailure Called with an exception if the stopping fails.
+   */
+  fun stopSharingLocationWithFriend(
+      uid: String,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _locationSharedWith.value = _locationSharedWith.value.minus(friend)
+    repository.stopSharingLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
+  }
+
+  /**
+   * Retrieves the list of friends who have shared their location with the user.
+   *
+   * @param uid The user ID of the person retrieving the list.
+   * @param onSuccess Called with a list of User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  fun getLocationSharedBy(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.getSharedByFriends(uid, onSuccess, onFailure)
   }
 }
