@@ -9,18 +9,26 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 
-class ActionReceiver : BroadcastReceiver() {
+class ActionReceiver(
+    private val notificationManagerFactory: (Context) -> NotificationManagerCompat = {
+      NotificationManagerCompat.from(it)
+    },
+    private val userRepositoryFactory: (Context) -> UserRepositoryFirestore = {
+      UserRepositoryFirestore(Firebase.firestore, it)
+    }
+) : BroadcastReceiver() {
+
   override fun onReceive(context: Context, intent: Intent) {
     val extras = intent.extras
     val userUID = extras?.getString("userUID")
     val friendUID = extras?.getString("FriendUID")
     val notifID = extras?.getInt("notificationId")
-    val notificationManager = NotificationManagerCompat.from(context)
-    val repository = UserRepositoryFirestore(Firebase.firestore, context)
+    val notificationManager = notificationManagerFactory(context)
+    val repository = userRepositoryFactory(context)
+
     when (intent.action) {
       "ACTION_ACCEPT" -> {
         Log.d("IntentSB", "Accept button clicked")
-        // Handle the accept action
         Log.d("IntentSB", "userUID: $userUID, friendUID: $friendUID")
         notificationManager.cancel(notifID!!)
         repository.shareLocationWithFriend(
@@ -32,7 +40,6 @@ class ActionReceiver : BroadcastReceiver() {
       "ACTION_REFUSE" -> {
         Log.d("IntentSB", "Refuse button clicked")
         Log.d("IntentSB", "userUID: $userUID, friendUID: $friendUID")
-        // Handle the refuse action
         notificationManager.cancel(notifID!!)
         repository.stopSharingLocationWithFriend(
             userUID!!,
