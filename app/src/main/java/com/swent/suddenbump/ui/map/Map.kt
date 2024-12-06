@@ -11,6 +11,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.location.Location
+import android.os.Bundle
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,6 +35,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import com.swent.suddenbump.ActionReceiver
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
@@ -151,35 +153,71 @@ fun fetchLocationToServer(location: Location, userViewModel: UserViewModel) {
       onFailure = { Log.d("FireStoreLocation", "Failure to reach Firestore") })
 }
 
-fun showFriendNearbyNotification(context: Context) {
+fun showFriendNearbyNotification(context: Context, userUID: String, friend: User) {
   val channelId = "friend_nearby_channel"
   val channelName = "Friend Nearby Notifications"
-  val notificationId = 1
+  val notificationId = friend.uid.hashCode()
 
   val notificationChannel =
       NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
   val notificationManager = context.getSystemService(NotificationManager::class.java)
   notificationManager?.createNotificationChannel(notificationChannel)
 
-  // Modify the intent to navigate to Screen.OVERVIEW
   val intent =
       Intent(context, MainActivity::class.java).apply {
-        putExtra("destination", "Screen.OVERVIEW")
-        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
       }
 
   val pendingIntent: PendingIntent =
       PendingIntent.getActivity(
           context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
+  val bundle =
+      Bundle().apply {
+        putString("userUID", userUID) // Add key-value pairs to the bundle
+        putString("FriendUID", friend.uid)
+        putInt("notificationId", notificationId)
+      }
+
+  // Create intents for Accept and Refuse actions
+  val acceptIntent =
+      Intent(context, ActionReceiver::class.java).apply {
+        action = "ACTION_ACCEPT"
+        putExtras(bundle)
+      }
+
+  val refuseIntent =
+      Intent(context, ActionReceiver::class.java).apply {
+        action = "ACTION_REFUSE"
+        putExtras(bundle)
+      }
+
+  val acceptPendingIntent: PendingIntent =
+      PendingIntent.getBroadcast(
+          context,
+          1,
+          acceptIntent,
+          PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+  val refusePendingIntent: PendingIntent =
+      PendingIntent.getBroadcast(
+          context,
+          2,
+          refuseIntent,
+          PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+  // Build the notification with actions
   val notificationBuilder =
       NotificationCompat.Builder(context, channelId)
           .setSmallIcon(android.R.drawable.ic_dialog_info)
           .setContentTitle("Friend Nearby")
-          .setContentText("A friend is within your radius!")
+          .setContentText(
+              "${friend.firstName} ${friend.lastName} is within your radius! \n Would you like to share your location with them?")
           .setPriority(NotificationCompat.PRIORITY_HIGH)
           .setContentIntent(pendingIntent)
           .setAutoCancel(true)
+          .addAction(android.R.drawable.ic_menu_compass, "Accept", acceptPendingIntent)
+          .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Refuse", refusePendingIntent)
 
   try {
     with(NotificationManagerCompat.from(context)) {

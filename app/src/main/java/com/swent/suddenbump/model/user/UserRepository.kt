@@ -160,6 +160,10 @@ interface UserRepository {
 
   fun getSavedUid(): String
 
+  fun saveNotifiedFriends(friends: List<String>)
+
+  fun getSavedAlreadyNotifiedFriends(): List<String>
+
   fun isUserLoggedIn(): Boolean
 
   fun logoutUser()
