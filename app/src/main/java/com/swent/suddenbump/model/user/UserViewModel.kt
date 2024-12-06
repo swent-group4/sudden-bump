@@ -211,6 +211,7 @@ open class UserViewModel(
         uid,
         onSuccess = {
           _user.value = it
+          Log.d(logTag, "User set 2: ${_user.value}")
           repository.getUserFriends(
               uid = _user.value.uid,
               onSuccess = { friendsList ->
@@ -465,21 +466,27 @@ open class UserViewModel(
   }
 
   fun loadFriends() {
-    try {
-      repository.getUserFriends(
-          uid = _user.value.uid,
-          onSuccess = { friends ->
-            // Update the state with the locations of friends
-            _userFriends.value = friends
-            Log.d("FriendsMarkers", "On success load Friends ${_userFriends.value}")
-          },
-          onFailure = { error ->
-            // Handle the error, e.g., log or show error message
-            Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
-          })
-    } catch (e: Exception) {
-      Log.e("UserViewModel", e.toString())
-    }
+    repository.getUserFriends(
+        uid = _user.value.uid,
+        onSuccess = { friends ->
+          // Update the state with the locations of friends
+          _userFriends.value = friends
+          Log.d("UserViewModel", "On success load Friends ${_userFriends.value}")
+        },
+        onFailure = { error ->
+          // Handle the error, e.g., log or show error message
+          Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
+        })
+    Log.d("UserViewModel", "Loading sharedLocationWith...")
+    repository.getSharedWithFriends(
+        uid = _user.value.uid,
+        onSuccess = { list ->
+          _locationSharedWith.value = list
+          Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
+        },
+        onFailure = { error ->
+          Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
+        })
   }
 
   fun getSelectedContact(): StateFlow<User> {
@@ -700,7 +707,11 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    _locationSharedWith.value = _locationSharedWith.value.minus(friend)
+    _locationSharedWith.value.forEach {
+      if (it.uid == friend.uid) {
+        _locationSharedWith.value = _locationSharedWith.value.minus(it)
+      }
+    }
     repository.stopSharingLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
   }
 

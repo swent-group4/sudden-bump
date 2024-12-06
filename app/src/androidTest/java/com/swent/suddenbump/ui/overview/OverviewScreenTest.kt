@@ -159,4 +159,59 @@ class OverviewScreenTest {
         .onNodeWithTag("profileImageNotNull_${user2.uid}", useUnmergedTree = true)
         .assertIsDisplayed()
   }
+
+  @Test
+  fun testIconToggleButton_ShowsCorrectIconAndTogglesState() {
+    // Initial mock state for location sharing
+    val locationSharedWithState = MutableStateFlow(emptyList<User>())
+    every { userViewModel.locationSharedWith } returns locationSharedWithState
+
+    val currentUser = user1
+    val friend = user2
+
+    composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
+
+    // Verify initial state (location sharing is off)
+    composeTestRule
+        .onNodeWithTag("locationIcon_${friend.uid}", useUnmergedTree = true)
+        .assertExists()
+        .assertContentDescriptionEquals("Share location")
+        .assertIsDisplayed()
+
+    // Simulate clicking the icon to enable location sharing
+    composeTestRule
+        .onNodeWithTag("locationIcon_${friend.uid}", useUnmergedTree = true)
+        .performClick()
+
+    // Verify that the ViewModel method to share location is called
+    verify { userViewModel.shareLocationWithFriend(currentUser.uid, friend, any(), any()) }
+
+    // Simulate state change after sharing location
+    locationSharedWithState.value = listOf(friend)
+
+    // Verify state after enabling location sharing
+    composeTestRule
+        .onNodeWithTag("locationIcon_${friend.uid}", useUnmergedTree = true)
+        .assertExists()
+        .assertContentDescriptionEquals("Stop sharing location")
+        .assertIsDisplayed()
+
+    // Simulate clicking the icon to disable location sharing
+    composeTestRule
+        .onNodeWithTag("locationIcon_${friend.uid}", useUnmergedTree = true)
+        .performClick()
+
+    // Verify that the ViewModel method to stop sharing location is called
+    verify { userViewModel.stopSharingLocationWithFriend(currentUser.uid, friend, any(), any()) }
+
+    // Simulate state change after stopping location sharing
+    locationSharedWithState.value = emptyList()
+
+    // Verify state after disabling location sharing
+    composeTestRule
+        .onNodeWithTag("locationIcon_${friend.uid}", useUnmergedTree = true)
+        .assertExists()
+        .assertContentDescriptionEquals("Share location")
+        .assertIsDisplayed()
+  }
 }
