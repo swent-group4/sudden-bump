@@ -1,5 +1,7 @@
 package com.swent.suddenbump.ui.overview
 
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,11 +21,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -170,10 +172,16 @@ fun CategoryHeader(category: DistanceCategory) {
       }
 }
 // Modify UserRow to fetch and display city and country
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val coroutineScope = rememberCoroutineScope()
   var locationText by remember { mutableStateOf("Loading...") }
+  val locationSharedWith by userViewModel.locationSharedWith.collectAsState()
+  var isLocationShared = false
+  locationSharedWith.forEach { friend ->
+    isLocationShared = isLocationShared || friend.uid == user.uid
+  }
 
   LaunchedEffect(user.uid) {
     coroutineScope.launch {
@@ -225,9 +233,39 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                     color = Color.White)
               }
             }
-        Icon(
-            imageVector = Icons.Default.Email,
-            contentDescription = "Message",
-            tint = com.swent.suddenbump.ui.theme.Purple40)
+        IconToggleButton(
+            checked = isLocationShared,
+            onCheckedChange = { isChecked ->
+              if (isChecked) {
+                userViewModel.shareLocationWithFriend(
+                    uid = userViewModel.getCurrentUser().value.uid,
+                    friend = user,
+                    onSuccess = { isLocationShared = true },
+                    onFailure = { exception ->
+                      Log.e("Overview", "Failed to share location: ${exception.message}")
+                    })
+              } else {
+                userViewModel.stopSharingLocationWithFriend(
+                    uid = userViewModel.getCurrentUser().value.uid,
+                    friend = user,
+                    onSuccess = { isLocationShared = false },
+                    onFailure = { exception ->
+                      Log.e("Overview", "Failed to stop sharing location: ${exception.message}")
+                    })
+              }
+            }) {
+              Icon(
+                  painter =
+                      painterResource(
+                          id =
+                              if (isLocationShared) R.drawable.baseline_location_on_24
+                              else R.drawable.baseline_location_off_24),
+                  contentDescription =
+                      if (isLocationShared) "Stop sharing location" else "Share location",
+                  tint =
+                      if (isLocationShared) com.swent.suddenbump.ui.theme.Purple40
+                      else com.swent.suddenbump.ui.theme.PurpleGrey40,
+                  modifier = Modifier.size(24.dp).testTag("locationIcon_${user.uid}"))
+            }
       }
 }

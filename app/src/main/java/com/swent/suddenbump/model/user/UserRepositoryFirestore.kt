@@ -1243,8 +1243,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
-          println("Document data: ${result.data}")
-          println("locationSharedWith: ${result.data?.get("locationSharedWith")}")
           if (result.data?.get("locationSharedBy") == null) {
             emptyList<User>()
           } else {
@@ -1272,8 +1270,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
-          println("Document data: ${result.data}")
-          println("locationSharedWith: ${result.data?.get("locationSharedWith")}")
           if (result.data?.get("locationSharedWith") == null) {
             emptyList<User>()
           } else {

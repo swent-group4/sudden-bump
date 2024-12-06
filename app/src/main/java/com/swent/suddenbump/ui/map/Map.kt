@@ -100,8 +100,10 @@ fun FriendsMarkers(userViewModel: UserViewModel) {
 
   LaunchedEffect(userViewModel) {
     launch {
-      userViewModel.loadFriends()
-      friends.value = userViewModel.getUserFriends().value
+      userViewModel.getLocationSharedBy(
+          userViewModel.getCurrentUser().value.uid,
+          onSuccess = { friends.value = it },
+          onFailure = { Log.d("FriendsMarkers", "Failed to get friends") })
       // Log the friendsLocations
       Log.d("FriendsMarkers", "Friends Locations: $friends")
     }
