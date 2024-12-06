@@ -154,7 +154,7 @@ private fun BlockedUserItem(user: User, onUnblock: (User) -> Unit) {
               Button(
                   onClick = { showConfirmDialog = true },
                   colors = ButtonDefaults.buttonColors(containerColor = Purple40),
-                  modifier = Modifier.testTag("unblockButton_${user.uid}")) {
+                  modifier = Modifier.testTag("unblockButton")) {
                     Text("Unblock")
                   }
             }
