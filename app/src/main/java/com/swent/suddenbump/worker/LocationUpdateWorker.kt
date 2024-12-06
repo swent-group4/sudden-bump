@@ -50,6 +50,7 @@ class LocationUpdateWorker(
         // Initialize UserRepository
         val repository = UserRepositoryFirestore(Firebase.firestore, applicationContext)
         val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
+        val alreadyNotifiedFriends = repository.getSavedAlreadyNotifiedFriends()
 
         val uid = repository.getSavedUid()
         val radius = 5000.0
@@ -79,7 +80,16 @@ class LocationUpdateWorker(
                     location,
                     friends,
                     radius,
-                    onSuccess = { showFriendNearbyNotification(applicationContext) },
+                    onSuccess = {
+                      friends.forEach { friend ->
+                        if (friend.uid !in alreadyNotifiedFriends) {
+                          Log.d(
+                              "WorkerSuddenBump", "alreadyNotifiedFriends: $alreadyNotifiedFriends")
+                          showFriendNearbyNotification(applicationContext, user.uid, friend)
+                          repository.saveNotifiedFriends(alreadyNotifiedFriends + friend.uid)
+                        }
+                      }
+                    },
                     onFailure = { Log.d("WorkerSuddenBump", "No friends in radius") })
               },
               onFailure = {

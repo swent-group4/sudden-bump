@@ -17,6 +17,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
@@ -1069,6 +1071,27 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    */
   override fun getSavedUid(): String {
     return sharedPreferences.getString("userId", null) ?: ""
+  }
+
+  override fun saveNotifiedFriends(friendsUID: List<String>) {
+    val gson = Gson()
+    val jsonString = gson.toJson(friendsUID) // Convert list to JSON string
+    sharedPreferences.edit().putString("notified_friends", jsonString).apply()
+  }
+
+  /**
+   * Retrieves the saved friends ID from shared preferences.
+   *
+   * @return The saved friends ID as a String, or an empty string if no user is logged in.
+   */
+  override fun getSavedAlreadyNotifiedFriends(): List<String> {
+    val gson = Gson()
+    val jsonString = sharedPreferences.getString("notified_friends", null)
+    return if (jsonString != null) {
+      gson.fromJson(jsonString, object : TypeToken<List<String>>() {}.type)
+    } else {
+      emptyList() // Return an empty list if no data is found
+    }
   }
 
   /**
