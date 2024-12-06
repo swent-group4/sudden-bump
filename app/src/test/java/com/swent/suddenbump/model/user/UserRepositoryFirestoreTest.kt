@@ -2,6 +2,7 @@ package com.swent.suddenbump.model.user
 
 import android.app.Activity
 import android.content.Context
+import android.content.SharedPreferences
 import android.location.Location
 import android.os.Looper
 import android.os.Looper.getMainLooper
@@ -27,6 +28,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.Transaction
 import com.google.firebase.storage.StorageReference
+import com.google.gson.Gson
 import com.swent.suddenbump.model.image.ImageRepository
 import java.util.concurrent.CountDownLatch
 import junit.framework.TestCase.assertFalse
@@ -103,6 +105,8 @@ class UserRepositoryFirestoreTest {
 
   @Mock private lateinit var mockFriendDocumentSnapshot: DocumentSnapshot
   @Mock private lateinit var transaction: Transaction
+  @Mock private lateinit var sharedPreferences: SharedPreferences
+  @Mock private lateinit var sharedPreferencesEditor: SharedPreferences.Editor
 
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
   private val helper = UserRepositoryFirestoreHelper()
@@ -137,7 +141,12 @@ class UserRepositoryFirestoreTest {
       FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
 
-    userRepositoryFirestore = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
+    // Mock the context to return the mocked SharedPreferences
+    val mockContext = mock(Context::class.java)
+    `when`(mockContext.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE)))
+        .thenReturn(sharedPreferences)
+
+    userRepositoryFirestore = UserRepositoryFirestore(mockFirestore, mockContext)
 
     `when`(mockTaskVoid.isSuccessful).thenReturn(true)
     `when`(mockTaskVoid.isCanceled).thenReturn(false)
@@ -182,6 +191,11 @@ class UserRepositoryFirestoreTest {
     `when`(mockFirebaseUser.uid).thenReturn("1")
     `when`(mockFirebaseUser.email).thenReturn("alexandre.carel@epfl.ch")
     `when`(mockFirebaseUser.displayName).thenReturn("Alexandre Carel")
+
+    // Mock behavior of the editor
+    `when`(sharedPreferences.edit()).thenReturn(sharedPreferencesEditor)
+    `when`(sharedPreferencesEditor.putString(anyString(), anyString()))
+        .thenReturn(sharedPreferencesEditor)
   }
 
   @Test
@@ -3614,5 +3628,47 @@ class UserRepositoryFirestoreTest {
         onFailure = { fail("Should not fail when no data is available") })
 
     shadowOf(Looper.getMainLooper()).idle()
+  }
+
+  @Test
+  fun saveNotifiedFriends_shouldSaveListAsJsonString() {
+    val friendsUID = listOf("user1", "user2", "user3")
+    val gson = Gson()
+    val expectedJson = gson.toJson(friendsUID)
+
+    // Act
+    userRepositoryFirestore.saveNotifiedFriends(friendsUID)
+
+    // Verify JSON string is saved in SharedPreferences
+    verify(sharedPreferencesEditor).putString("notified_friends", expectedJson)
+    verify(sharedPreferencesEditor).apply()
+  }
+
+  @Test
+  fun getSavedAlreadyNotifiedFriends_shouldReturnSavedList() {
+    val friendsUID = listOf("user1", "user2", "user3")
+    val gson = Gson()
+    val jsonString = gson.toJson(friendsUID)
+
+    // Mock SharedPreferences to return the JSON string
+    `when`(sharedPreferences.getString("notified_friends", null)).thenReturn(jsonString)
+
+    // Act
+    val result = userRepositoryFirestore.getSavedAlreadyNotifiedFriends()
+
+    // Assert the result matches the expected list
+    assertEquals(friendsUID, result)
+  }
+
+  @Test
+  fun getSavedAlreadyNotifiedFriends_shouldReturnEmptyListWhenNoData() {
+    // Mock SharedPreferences to return null
+    `when`(sharedPreferences.getString("notified_friends", null)).thenReturn(null)
+
+    // Act
+    val result = userRepositoryFirestore.getSavedAlreadyNotifiedFriends()
+
+    // Assert the result is an empty list
+    assertEquals(emptyList<String>(), result)
   }
 }
