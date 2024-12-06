@@ -63,11 +63,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
   val groupedFriends by userViewModel.groupedFriends.collectAsState()
 
   // Charge les emplacements des amis lorsque l'écran est composé
-  LaunchedEffect(Unit) {
-    Log.d("OverviewScreen", "currentUser: $currentUser")
-    Log.d("OverviewScreen", "groupedFriends: $groupedFriends")
-    userViewModel.loadFriends()
-  }
+  LaunchedEffect(Unit) { userViewModel.loadFriends() }
 
   Scaffold(
       topBar = {
@@ -123,7 +119,6 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
               if (groupedFriends?.isNotEmpty() == true) {
-                Log.d("OverviewScreen", "groupedFriends 2: $groupedFriends")
                 groupedFriends!!
                     .entries
                     .sortedBy { it.key.ordinal }
@@ -187,8 +182,6 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
   locationSharedWith.forEach { friend ->
     isLocationShared = isLocationShared || friend.uid == user.uid
   }
-  Log.d("UserRow", "isLocationShared: $isLocationShared")
-  Log.d("UserRow", "locationSharedWith: $locationSharedWith")
 
   LaunchedEffect(user.uid) {
     coroutineScope.launch {
@@ -249,7 +242,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                     friend = user,
                     onSuccess = { isLocationShared = true },
                     onFailure = { exception ->
-                      println("Failed to share location: ${exception.message}")
+                      Log.e("Overview", "Failed to share location: ${exception.message}")
                     })
               } else {
                 userViewModel.stopSharingLocationWithFriend(
@@ -257,7 +250,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                     friend = user,
                     onSuccess = { isLocationShared = false },
                     onFailure = { exception ->
-                      println("Failed to stop sharing location: ${exception.message}")
+                      Log.e("Overview", "Failed to stop sharing location: ${exception.message}")
                     })
               }
             }) {

@@ -179,7 +179,6 @@ open class UserViewModel(
           _user.value = user
           saveUserLoginStatus(_user.value.uid)
           scheduleLocationUpdateWorker(getApplicationContext(), _user.value.uid)
-          Log.d(logTag, "User set 1: ${_user.value}")
           repository.getUserFriends(
               uid = _user.value.uid,
               onSuccess = { friendsList ->
@@ -223,7 +222,6 @@ open class UserViewModel(
         uid,
         onSuccess = {
           _user.value = it
-          Log.d(logTag, "User set 2: ${_user.value}")
           repository.getUserFriends(
               uid = _user.value.uid,
               onSuccess = { friendsList ->
