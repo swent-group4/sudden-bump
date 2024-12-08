@@ -1,6 +1,5 @@
 package com.swent.suddenbump.model.user
 
-import android.content.Context
 import android.location.Location
 import android.location.LocationManager
 import android.util.Log
@@ -22,6 +21,7 @@ import com.google.gson.reflect.TypeToken
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
+import com.swent.suddenbump.worker.WorkerScheduler
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
@@ -35,8 +35,11 @@ import kotlinx.coroutines.tasks.await
  * @property db The Firestore database instance used to perform CRUD operations.
  * @property context Application context, used for accessing shared preferences.
  */
-class UserRepositoryFirestore(private val db: FirebaseFirestore, private val context: Context) :
-    UserRepository {
+class UserRepositoryFirestore(
+    private val db: FirebaseFirestore,
+    private val sharedPreferencesManager: SharedPreferencesManager,
+    private val workerScheduler: WorkerScheduler
+) : UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
   val helper = UserRepositoryFirestoreHelper()
@@ -51,9 +54,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
 
   private lateinit var verificationId: String
-
-  private val sharedPreferences =
-      context.getSharedPreferences("SuddenBumpLocalDB", Context.MODE_PRIVATE)
 
   /**
    * Initializes the repository by setting up the image repository.
@@ -1057,11 +1057,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    * @param uid The unique identifier of the user to save.
    */
   override fun saveLoginStatus(uid: String) {
-    with(sharedPreferences.edit()) {
-      putBoolean("isLoggedIn", true)
-      putString("userId", uid)
-      apply()
-    }
+    sharedPreferencesManager.saveBoolean("isLoggedIn", true)
+    sharedPreferencesManager.saveString("userId", uid)
   }
 
   /**
@@ -1070,13 +1067,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    * @return The saved user ID as a String, or an empty string if no user is logged in.
    */
   override fun getSavedUid(): String {
-    return sharedPreferences.getString("userId", null) ?: ""
+    return sharedPreferencesManager.getString("userId")
   }
 
   override fun saveNotifiedFriends(friendsUID: List<String>) {
     val gson = Gson()
     val jsonString = gson.toJson(friendsUID) // Convert list to JSON string
-    sharedPreferences.edit().putString("notified_friends", jsonString).apply()
+    sharedPreferencesManager.saveString("notified_friends", jsonString)
   }
 
   /**
@@ -1086,8 +1083,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    */
   override fun getSavedAlreadyNotifiedFriends(): List<String> {
     val gson = Gson()
-    val jsonString = sharedPreferences.getString("notified_friends", null)
-    return if (jsonString != null) {
+    val jsonString = sharedPreferencesManager.getString("notified_friends")
+    return if (jsonString != "") {
       gson.fromJson(jsonString, object : TypeToken<List<String>>() {}.type)
     } else {
       emptyList() // Return an empty list if no data is found
@@ -1100,18 +1097,15 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    * @return `true` if the user is logged in, `false` otherwise.
    */
   override fun isUserLoggedIn(): Boolean {
-    return sharedPreferences.getBoolean("isLoggedIn", false)
+    return sharedPreferencesManager.getBoolean("isLoggedIn")
   }
 
   /**
    * Logs out the current user by updating shared preferences to remove login status and user ID.
    */
   override fun logoutUser() {
-    with(sharedPreferences.edit()) {
-      putBoolean("isLoggedIn", false)
-      putString("userId", null)
-      apply()
-    }
+    workerScheduler.unscheduleLocationUpdateWorker()
+    sharedPreferencesManager.clearPreferences()
   }
 
   /**
@@ -1337,6 +1331,10 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               .addOnFailureListener { e -> onFailure(e) }
         }
         .addOnFailureListener { e -> onFailure(e) }
+  }
+
+  override fun scheduleWorker(uid: String) {
+    workerScheduler.scheduleWorker(uid)
   }
 }
 

@@ -248,7 +248,7 @@ class EndToEndTest2 {
         }
 
         // Add new screens from Settings.kt
-        composable("AccountScreen") { AccountScreen(navigationActions) }
+        composable("AccountScreen") { AccountScreen(navigationActions, userViewModel) }
         composable("ConfidentialityScreen") {
           ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
         }
