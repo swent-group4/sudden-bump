@@ -62,7 +62,6 @@ import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.overview.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 import com.swent.suddenbump.ui.utils.isRunningTest
-import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 
 class MainActivity : ComponentActivity() {
 
@@ -173,7 +172,9 @@ class MainActivity : ComponentActivity() {
     val navigationActions = NavigationActions(navController)
 
     val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
-    val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
+    val userViewModel: UserViewModel by viewModels {
+      UserViewModel.provideFactory(applicationContext)
+    }
 
     newLocation?.let { it1 ->
       userViewModel.updateLocation(location = it1, onSuccess = {}, onFailure = {})
@@ -189,8 +190,6 @@ class MainActivity : ComponentActivity() {
                 Log.i("MainActivity", "User set: ${userViewModel.getCurrentUser().value}")
               },
               onFailure = { e -> Log.e("MainActivity", e.toString()) })
-          // Schedule the LocationUpdateWorker
-          scheduleLocationUpdateWorker(this, uid)
           Route.OVERVIEW
         } else {
           Route.AUTH
@@ -260,7 +259,7 @@ class MainActivity : ComponentActivity() {
       }
 
       // Add new screens from Settings.kt
-      composable("AccountScreen") { AccountScreen(navigationActions) }
+      composable("AccountScreen") { AccountScreen(navigationActions, userViewModel) }
       composable("ConfidentialityScreen") {
         ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
       }

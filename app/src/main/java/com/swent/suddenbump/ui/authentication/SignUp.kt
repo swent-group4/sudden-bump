@@ -37,7 +37,6 @@ import com.swent.suddenbump.ui.navigation.TopLevelDestinations
 import com.swent.suddenbump.ui.theme.Purple40
 import com.swent.suddenbump.ui.theme.PurpleGrey40
 import com.swent.suddenbump.ui.utils.PhoneNumberVisualTransformation
-import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import com.yalantis.ucrop.UCrop
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -409,7 +408,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                             lastKnownLocation = baseLocation),
                         onSuccess = {
                           userViewModel.saveUserLoginStatus(newUid)
-                          scheduleLocationUpdateWorker(context, newUid)
+                          userViewModel.scheduleWorker(newUid)
                           navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
                         },
                         onFailure = {
