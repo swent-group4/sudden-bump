@@ -45,7 +45,7 @@ fun PendingMeetingsScreen(
   LaunchedEffect(Unit) { meetingViewModel.getMeetings() }
   val meetings by meetingViewModel.meetings.collectAsState()
   val userFriends by userViewModel.getUserFriends().collectAsState(initial = emptyList())
-  val currentUserId = userViewModel.getCurrentUser().value?.uid ?: ""
+  val currentUserId = userViewModel.getCurrentUser().value.uid ?: ""
 
   Scaffold(
       topBar = {

@@ -16,6 +16,7 @@ import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.ui.calendar.showMeetingScheduledNotification
 import com.swent.suddenbump.ui.map.showFriendNearbyNotification
+import java.util.Calendar
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -49,6 +50,7 @@ class LocationUpdateWorker(
         // Initialize UserRepository
         val repository = UserRepositoryFirestore(Firebase.firestore, applicationContext)
         val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
+        val alreadyNotifiedFriends = repository.getSavedAlreadyNotifiedFriends()
 
         val uid = repository.getSavedUid()
         val radius = 5000.0
@@ -78,7 +80,16 @@ class LocationUpdateWorker(
                     location,
                     friends,
                     radius,
-                    onSuccess = { showFriendNearbyNotification(applicationContext) },
+                    onSuccess = {
+                      friends.forEach { friend ->
+                        if (friend.uid !in alreadyNotifiedFriends) {
+                          Log.d(
+                              "WorkerSuddenBump", "alreadyNotifiedFriends: $alreadyNotifiedFriends")
+                          showFriendNearbyNotification(applicationContext, user.uid, friend)
+                          repository.saveNotifiedFriends(alreadyNotifiedFriends + friend.uid)
+                        }
+                      }
+                    },
                     onFailure = { Log.d("WorkerSuddenBump", "No friends in radius") })
               },
               onFailure = {
@@ -87,7 +98,12 @@ class LocationUpdateWorker(
 
           meetingRepository.getMeetings(
               onSuccess = { meetings ->
-                val filteredMeetings = meetings.filter { it.friendId == user.uid && !it.accepted }
+                val filteredMeetings =
+                    meetings.filter {
+                      it.friendId == user.uid &&
+                          !it.accepted &&
+                          it.date.toDate().after(Calendar.getInstance().time)
+                    }
 
                 if (filteredMeetings.isNotEmpty()) {
                   filteredMeetings.forEach { meeting ->

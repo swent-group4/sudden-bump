@@ -140,6 +140,7 @@ buildscript {
 }
 
 dependencies {
+
     // Firebase BoM
     implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.navigation.testing)
@@ -156,7 +157,7 @@ dependencies {
     androidTestImplementation(libs.firebase.firestore) {
         exclude(group = "com.google.protobuf", module = "protobuf-lite")
     }
-
+    testImplementation("org.robolectric:robolectric:4.10.3")
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database.ktx)
@@ -228,8 +229,13 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    // Moshi
+    implementation("com.squareup.moshi:moshi:1.14.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
 
-
+    // Retrofit with Moshi Converter
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
     // Phone number formatting
     implementation(libs.libphonenumber)
 
@@ -255,6 +261,7 @@ dependencies {
     testImplementation(libs.json)
     globalTestImplementation(libs.kaspresso)
     globalTestImplementation(libs.kaspresso.compose)
+
 
     // UI Testing
     androidTestImplementation(libs.androidx.junit)

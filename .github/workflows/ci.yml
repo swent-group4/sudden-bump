@@ -14,6 +14,7 @@ on:
       - 143-add-and-edit-meetings-on-the-calendar
       - 149-add-ui-improvements
       - 202-displaying-messages-preview-in-the-messages-screen
+      - 270-add-meetings-settings
 
   pull_request:
     types:

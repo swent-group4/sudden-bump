@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import java.util.Calendar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -115,5 +116,30 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
    */
   fun selectMeeting(meeting: Meeting) {
     selectedMeeting.value = meeting
+  }
+
+  /** Deletes all expired meetings from the repository. */
+  fun deleteExpiredMeetings() {
+    val currentDate = Calendar.getInstance().time
+    meetings.value.forEach { meeting ->
+      if (meeting.date.toDate().before(currentDate)) {
+        deleteMeeting(meeting.meetingId)
+      }
+    }
+  }
+
+  /**
+   * Deletes all meetings for a given user ID.
+   *
+   * @param userId The ID of the user whose meetings are to be deleted.
+   */
+  fun deleteMeetingsForUser(userId: String) {
+    viewModelScope.launch {
+      meetings.value.forEach { meeting ->
+        if (meeting.friendId == userId || meeting.creatorId == userId) {
+          deleteMeeting(meeting.meetingId)
+        }
+      }
+    }
   }
 }

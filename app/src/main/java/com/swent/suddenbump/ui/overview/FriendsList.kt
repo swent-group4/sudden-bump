@@ -154,11 +154,3 @@ fun FriendsListScreen(navigationActions: NavigationActions, userViewModel: UserV
             }
       })
 }
-
-// @Preview(showBackground = true)
-// @Composable
-// fun PreviewAddContactScreen() {
-//  val navController = rememberNavController()
-//  val navigationActions = NavigationActions(navController)
-//  FriendsListScreen(navigationActions,)
-// }

@@ -2,6 +2,7 @@ package com.swent.suddenbump.model.user
 
 import android.app.Activity
 import android.content.Context
+import android.content.SharedPreferences
 import android.location.Location
 import android.os.Looper
 import android.os.Looper.getMainLooper
@@ -27,6 +28,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.Transaction
 import com.google.firebase.storage.StorageReference
+import com.google.gson.Gson
 import com.swent.suddenbump.model.image.ImageRepository
 import java.util.concurrent.CountDownLatch
 import junit.framework.TestCase.assertFalse
@@ -103,6 +105,8 @@ class UserRepositoryFirestoreTest {
 
   @Mock private lateinit var mockFriendDocumentSnapshot: DocumentSnapshot
   @Mock private lateinit var transaction: Transaction
+  @Mock private lateinit var sharedPreferences: SharedPreferences
+  @Mock private lateinit var sharedPreferencesEditor: SharedPreferences.Editor
 
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
   private val helper = UserRepositoryFirestoreHelper()
@@ -137,7 +141,12 @@ class UserRepositoryFirestoreTest {
       FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
 
-    userRepositoryFirestore = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
+    // Mock the context to return the mocked SharedPreferences
+    val mockContext = mock(Context::class.java)
+    `when`(mockContext.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE)))
+        .thenReturn(sharedPreferences)
+
+    userRepositoryFirestore = UserRepositoryFirestore(mockFirestore, mockContext)
 
     `when`(mockTaskVoid.isSuccessful).thenReturn(true)
     `when`(mockTaskVoid.isCanceled).thenReturn(false)
@@ -182,6 +191,11 @@ class UserRepositoryFirestoreTest {
     `when`(mockFirebaseUser.uid).thenReturn("1")
     `when`(mockFirebaseUser.email).thenReturn("alexandre.carel@epfl.ch")
     `when`(mockFirebaseUser.displayName).thenReturn("Alexandre Carel")
+
+    // Mock behavior of the editor
+    `when`(sharedPreferences.edit()).thenReturn(sharedPreferencesEditor)
+    `when`(sharedPreferencesEditor.putString(anyString(), anyString()))
+        .thenReturn(sharedPreferencesEditor)
   }
 
   @Test
@@ -2303,7 +2317,7 @@ class UserRepositoryFirestoreTest {
       `when`(mockTask.result)
           .thenReturn(mockUserDocumentSnapshot) // Return a mocked snapshot of the user document
       `when`(mockTask.addOnFailureListener(any()))
-          .thenReturn(mockTask) // Add failure listener (we won’t use it)
+          .thenReturn(mockTask) // Add failure listener (we won't use it)
       `when`(mockUserDocumentSnapshot.data)
           .thenReturn(mapOf("friendsList" to listOf(friendUid))) // Mocking the friends list data
 
@@ -2458,7 +2472,7 @@ class UserRepositoryFirestoreTest {
       `when`(mockTask.result)
           .thenReturn(mockUserDocumentSnapshot) // Return a mocked snapshot of the user document
       `when`(mockTask.addOnFailureListener(any()))
-          .thenReturn(mockTask) // Add failure listener (we won’t use it)
+          .thenReturn(mockTask) // Add failure listener (we won't use it)
       `when`(mockUserDocumentSnapshot.data)
           .thenReturn(mapOf("friendsList" to listOf(friendUid))) // Mocking the friends list data
 
@@ -3111,5 +3125,661 @@ class UserRepositoryFirestoreTest {
           // Assert
           assertEquals("Query failed", error.message)
         })
+  }
+
+  @Test
+  fun shareLocationWithFriendCallsFirestore() {
+    `when`(mockUserCollectionReference.get()).thenReturn(Tasks.forResult(mockUserQuerySnapshot))
+    `when`(mockUserQuerySnapshot.documents).thenReturn(listOf())
+
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
+
+    userRepositoryFirestore.shareLocationWithFriend(
+        user.uid,
+        "1",
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
+
+    verify(timeout(100)) { (mockUserQuerySnapshot).documents }
+  }
+
+  @Test
+  fun shareLocationWithFriendSucceeds() {
+    val user =
+        User(
+            "1",
+            "Deyan",
+            "Marinov",
+            "+33613507628",
+            null,
+            "deyan.marinov@epfl.ch",
+            lastKnownLocation = location)
+    val friend =
+        User(
+            "2",
+            "Dan-Costin",
+            "Ruicu",
+            "+41774618762",
+            null,
+            "dan-costin.ruicu@epfl.ch",
+            lastKnownLocation = location)
+
+    // Mock the Firestore document snapshots
+    val userDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    val friendDocumentSnapshot = mock(DocumentSnapshot::class.java)
+
+    // Mock the data returned by the document snapshots
+    `when`(userDocumentSnapshot.data).thenReturn(mapOf("locationSharedWith" to emptyList<String>()))
+    `when`(friendDocumentSnapshot.data).thenReturn(mapOf("locationSharedBy" to emptyList<String>()))
+
+    // Mock the Firestore document references
+    val userDocumentReference = mock(DocumentReference::class.java)
+    val friendDocumentReference = mock(DocumentReference::class.java)
+
+    // Mock the Firestore collection reference
+    val userCollectionReference = mock(CollectionReference::class.java)
+    `when`(userCollectionReference.document(user.uid)).thenReturn(userDocumentReference)
+    `when`(userCollectionReference.document(friend.uid)).thenReturn(friendDocumentReference)
+
+    // Mock the Firestore instance
+    val mockFirestore = mock(FirebaseFirestore::class.java)
+    `when`(mockFirestore.collection("Users")).thenReturn(userCollectionReference)
+
+    // Mock the get() method to return the document snapshots
+    `when`(userDocumentReference.get()).thenReturn(Tasks.forResult(userDocumentSnapshot))
+    `when`(friendDocumentReference.get()).thenReturn(Tasks.forResult(friendDocumentSnapshot))
+
+    // Mock the update() method to return a successful task
+    `when`(userDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+    `when`(friendDocumentReference.update(anyString(), any())).thenReturn(Tasks.forResult(null))
+
+    // Create the UserRepositoryFirestore instance
+    val userRepository = UserRepositoryFirestore(mockFirestore, mock(Context::class.java))
+
+    // Call the deleteFriendRequest method
+    userRepository.shareLocationWithFriend(
+        user.uid,
+        friend.uid,
+        {
+          // Verify the updates to the user document
+          verify(userDocumentReference).update("locationSharedWith", listOf(friend.uid))
+
+          // Verify the updates to the friend document
+          verify(friendDocumentReference).update("locationSharedBy", listOf(user.uid))
+        },
+        { fail("onFailure should not be called") })
+  }
+
+  @Test
+  fun shareLocationWithFriendSuccessfullySharesLocation() {
+    val uid = "user123"
+    val fid = "friend123"
+    val sharedFriendsUidList = emptyList<String>()
+    val sharedByFriendsUidList = emptyList<String>()
+
+    val mockUidDocumentReference: DocumentReference = mock()
+    val mockFidDocumentReference: DocumentReference = mock()
+
+    val mockUidDocumentSnapshot: DocumentSnapshot = mock()
+    val mockFidDocumentSnapshot: DocumentSnapshot = mock()
+
+    val mockSuccessTask: Task<Void> = Tasks.forResult(null)
+
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(uid)).thenReturn(mockUidDocumentReference)
+    `when`(mockUserCollectionReference.document(fid)).thenReturn(mockFidDocumentReference)
+
+    `when`(mockUidDocumentReference.get()).thenReturn(Tasks.forResult(mockUidDocumentSnapshot))
+    `when`(mockUidDocumentSnapshot.data)
+        .thenReturn(mapOf("locationSharedWith" to sharedFriendsUidList))
+
+    `when`(mockFidDocumentReference.get()).thenReturn(Tasks.forResult(mockFidDocumentSnapshot))
+    `when`(mockFidDocumentSnapshot.data)
+        .thenReturn(mapOf("locationSharedBy" to sharedByFriendsUidList))
+
+    `when`(mockUidDocumentReference.update(eq("locationSharedWith"), any()))
+        .thenReturn(mockSuccessTask)
+    `when`(mockFidDocumentReference.update(eq("locationSharedBy"), any()))
+        .thenReturn(mockSuccessTask)
+
+    var successCalled = false
+    userRepositoryFirestore.shareLocationWithFriend(
+        uid, fid, { successCalled = true }, { fail("Should not fail") })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertTrue(successCalled)
+    verify(mockUidDocumentReference).update(eq("locationSharedWith"), eq(listOf(fid)))
+    verify(mockFidDocumentReference).update(eq("locationSharedBy"), eq(listOf(uid)))
+  }
+
+  @Test
+  fun shareLocationWithFriendFailsIfFriendAlreadyHasAccess() {
+    val uid = "user123"
+    val fid = "friend123"
+    val sharedFriendsUidList = listOf(fid)
+    val sharedByFriendsUidList = listOf(uid)
+
+    val mockUidDocumentReference: DocumentReference = mock()
+    val mockFidDocumentReference: DocumentReference = mock()
+
+    val mockUidDocumentSnapshot: DocumentSnapshot = mock()
+    val mockFidDocumentSnapshot: DocumentSnapshot = mock()
+
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(uid)).thenReturn(mockUidDocumentReference)
+    `when`(mockUserCollectionReference.document(fid)).thenReturn(mockFidDocumentReference)
+
+    `when`(mockUidDocumentReference.get()).thenReturn(Tasks.forResult(mockUidDocumentSnapshot))
+    `when`(mockUidDocumentSnapshot.data)
+        .thenReturn(mapOf("locationSharedWith" to sharedFriendsUidList))
+
+    `when`(mockFidDocumentReference.get()).thenReturn(Tasks.forResult(mockFidDocumentSnapshot))
+    `when`(mockFidDocumentSnapshot.data)
+        .thenReturn(mapOf("locationSharedBy" to sharedByFriendsUidList))
+
+    var errorCalled = false
+    userRepositoryFirestore.shareLocationWithFriend(
+        uid, fid, { fail("Should not succeed") }, { errorCalled = true })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertTrue(errorCalled)
+    verify(mockUidDocumentReference, never()).update(anyString(), any())
+    verify(mockFidDocumentReference, never()).update(anyString(), any())
+  }
+
+  @Test
+  fun shareLocationWithFriendFailsWhenFriendAlreadyHasAccess() {
+    val uid = "user123"
+    val fid = "friend123"
+    val sharedFriendsUidList = listOf(fid)
+    val sharedByFriendsUidList = listOf(uid)
+
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    `when`(mockUserCollectionReference.document(fid)).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
+    `when`(mockUserDocumentSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "locationSharedWith" to sharedFriendsUidList,
+                "locationSharedBy" to sharedByFriendsUidList))
+
+    userRepositoryFirestore.shareLocationWithFriend(uid, fid, {}, {})
+
+    verify(mockUserDocumentReference, never()).update(anyString(), any())
+  }
+
+  @Test
+  fun stopSharingLocationWithFriendSuccessfullyStopsSharing() {
+    val uid = "user123"
+    val fid = "friend123"
+    val sharedFriendsUidList = listOf(fid)
+    val sharedByFriendsUidList = listOf(uid)
+
+    val mockUidDocumentReference: DocumentReference = mock()
+    val mockFidDocumentReference: DocumentReference = mock()
+
+    val mockUidDocumentSnapshot: DocumentSnapshot = mock()
+    val mockFidDocumentSnapshot: DocumentSnapshot = mock()
+
+    val mockSuccessTask: Task<Void> = Tasks.forResult(null)
+
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(uid)).thenReturn(mockUidDocumentReference)
+    `when`(mockUserCollectionReference.document(fid)).thenReturn(mockFidDocumentReference)
+
+    `when`(mockUidDocumentReference.get()).thenReturn(Tasks.forResult(mockUidDocumentSnapshot))
+    `when`(mockUidDocumentSnapshot.data)
+        .thenReturn(mapOf("locationSharedWith" to sharedFriendsUidList))
+
+    `when`(mockFidDocumentReference.get()).thenReturn(Tasks.forResult(mockFidDocumentSnapshot))
+    `when`(mockFidDocumentSnapshot.data)
+        .thenReturn(mapOf("locationSharedBy" to sharedByFriendsUidList))
+
+    `when`(mockUidDocumentReference.update(eq("locationSharedWith"), any()))
+        .thenReturn(mockSuccessTask)
+    `when`(mockFidDocumentReference.update(eq("locationSharedBy"), any()))
+        .thenReturn(mockSuccessTask)
+
+    userRepositoryFirestore.stopSharingLocationWithFriend(uid, fid, {}, {})
+
+    // Ensure all async tasks complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    verify(mockUidDocumentReference).update(eq("locationSharedWith"), eq(listOf<String>()))
+    verify(mockFidDocumentReference).update(eq("locationSharedBy"), eq(listOf<String>()))
+  }
+
+  @Test
+  fun stopSharingLocationWithFriendFailsWhenFriendDoesNotHaveAccess() {
+    val uid = "user123"
+    val fid = "friend123"
+    val sharedFriendsUidList = listOf<String>()
+    val sharedByFriendsUidList = listOf<String>()
+
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    `when`(mockUserCollectionReference.document(fid)).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
+    `when`(mockUserDocumentSnapshot.data)
+        .thenReturn(
+            mapOf(
+                "locationSharedWith" to sharedFriendsUidList,
+                "locationSharedBy" to sharedByFriendsUidList))
+
+    userRepositoryFirestore.stopSharingLocationWithFriend(uid, fid, {}, {})
+
+    shadowOf(Looper.getMainLooper()).idle()
+    verify(mockUserDocumentReference, never()).update(anyString(), any())
+  }
+
+  @Test
+  fun getSharedByFriendsReturnsCorrectList() {
+    val uid = "user123"
+    val sharedByFriendsUidList = listOf("friend123", "friend456")
+
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
+    `when`(mockUserDocumentSnapshot.data)
+        .thenReturn(mapOf("locationSharedBy" to sharedByFriendsUidList))
+
+    userRepositoryFirestore.getSharedByFriends(uid, {}, {})
+
+    verify(mockUserDocumentReference).get()
+  }
+
+  @Test
+  fun getSharedByFriendsSuccessfullyRetrievesUsers() {
+    // Mock friends
+    val friend1 =
+        User(
+            uid = "friend1",
+            firstName = "Alice",
+            lastName = "Smith",
+            phoneNumber = "123456789",
+            profilePicture = null,
+            emailAddress = "alice.smith@example.com",
+            lastKnownLocation = location)
+
+    val friend2 =
+        User(
+            uid = "friend2",
+            firstName = "Bob",
+            lastName = "Brown",
+            phoneNumber = "987654321",
+            profilePicture = null,
+            emailAddress = "bob.brown@example.com",
+            lastKnownLocation = location)
+
+    // Mock sharedBy UIDs
+    val sharedByUidList = listOf(friend1.uid, friend2.uid)
+
+    // Mock document snapshots for each friend
+    val userSnapshot = mock(DocumentSnapshot::class.java)
+    val friend1Snapshot = mock(DocumentSnapshot::class.java)
+    val friend2Snapshot = mock(DocumentSnapshot::class.java)
+
+    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("locationSharedBy" to sharedByUidList))
+
+    // Mock document references for each friend
+    val friend1DocumentRef = mock(DocumentReference::class.java)
+    val friend2DocumentRef = mock(DocumentReference::class.java)
+
+    `when`(mockFirestore.collection("Users").document(friend1.uid)).thenReturn(friend1DocumentRef)
+    `when`(friend1DocumentRef.get()).thenReturn(Tasks.forResult(friend1Snapshot))
+
+    `when`(mockFirestore.collection("Users").document(friend2.uid)).thenReturn(friend2DocumentRef)
+    `when`(friend2DocumentRef.get()).thenReturn(Tasks.forResult(friend2Snapshot))
+
+    `when`(friend1Snapshot.exists()).thenReturn(true)
+    `when`(friend2Snapshot.exists()).thenReturn(true)
+
+    // Mock documentSnapshotToUser behavior
+    val helper = mock(UserRepositoryFirestoreHelper::class.java)
+    `when`(helper.documentSnapshotToUser(friend1Snapshot, null)).thenReturn(friend1)
+    `when`(helper.documentSnapshotToUser(friend2Snapshot, null)).thenReturn(friend2)
+
+    // Inject the mock helper into the repository
+    val helperField = UserRepositoryFirestore::class.java.getDeclaredField("helper")
+    helperField.isAccessible = true
+    helperField.set(userRepositoryFirestore, helper)
+
+    // Prepare tasks for whenAllSuccess
+    val friendTasks = listOf(friend1DocumentRef.get(), friend2DocumentRef.get())
+
+    // Mock Tasks.whenAllSuccess behavior
+    `when`(Tasks.whenAllSuccess<DocumentSnapshot>(friendTasks))
+        .thenReturn(Tasks.forResult(listOf(friend1Snapshot, friend2Snapshot)))
+
+    // Invoke the method under test
+    userRepositoryFirestore.getSharedByFriends(
+        uid = "user123",
+        onSuccess = { result ->
+          // Verify the result
+          assert(result.size == 2)
+          assert(result.contains(friend1))
+          assert(result.contains(friend2))
+        },
+        onFailure = { assert(false) { "Should not fail on success" } })
+  }
+
+  @Test
+  fun getSharedByFriendsReturnsEmptyListWhenNoData() {
+    val uid = "user123"
+
+    // Mock Firestore document snapshot for the user
+    val mockUserSnapshot = mock(DocumentSnapshot::class.java)
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserSnapshot))
+
+    // Mock the data to simulate no "locationSharedBy" field
+    `when`(mockUserSnapshot.data).thenReturn(emptyMap())
+
+    userRepositoryFirestore.getSharedByFriends(
+        uid = uid,
+        onSuccess = { result ->
+          // Assert that the result is an empty list
+          assertNotNull(result)
+          assertTrue(result.isEmpty())
+        },
+        onFailure = { fail("Should not fail when no data is available") })
+
+    // Ensure all async tasks complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify that the Firestore document reference's `get` method was called
+    verify(mockUserDocumentReference).get()
+  }
+
+  @Test
+  fun getSharedByFriendsFailsWhenFirestoreFails() {
+    val uid = "user123"
+    val exception = Exception("Firestore error")
+
+    // Mock Firestore collection and document references
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+
+    // Mock a failing Firestore Task
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forException(exception))
+
+    var failureResult: Exception? = null
+
+    userRepositoryFirestore.getSharedByFriends(
+        uid, { fail("Should not succeed") }, { failureResult = it })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertNotNull(failureResult)
+    assertEquals(exception.message, failureResult!!.message)
+    verify(mockUserDocumentReference).get()
+  }
+
+  @Test
+  fun getSharedWithFriendsReturnsCorrectList() {
+    val uid = "user123"
+    val sharedWithFriendsUidList = listOf("friend123", "friend456")
+
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
+    `when`(mockUserDocumentSnapshot.data)
+        .thenReturn(mapOf("locationSharedWith" to sharedWithFriendsUidList))
+
+    userRepositoryFirestore.getSharedWithFriends(uid, {}, {})
+
+    verify(mockUserDocumentReference).get()
+  }
+
+  @Test
+  fun getSharedWithFriendsSuccessfullyRetrievesUsers() {
+    // Mock friends
+    val friend1 =
+        User(
+            uid = "friend1",
+            firstName = "Alice",
+            lastName = "Smith",
+            phoneNumber = "123456789",
+            profilePicture = null,
+            emailAddress = "alice.smith@example.com",
+            lastKnownLocation = location)
+
+    val friend2 =
+        User(
+            uid = "friend2",
+            firstName = "Bob",
+            lastName = "Brown",
+            phoneNumber = "987654321",
+            profilePicture = null,
+            emailAddress = "bob.brown@example.com",
+            lastKnownLocation = location)
+
+    // Mock sharedWith UIDs
+    val sharedWithUidList = listOf(friend1.uid, friend2.uid)
+
+    // Mock document snapshots for each friend
+    val friend1Snapshot = mock(DocumentSnapshot::class.java)
+    val friend2Snapshot = mock(DocumentSnapshot::class.java)
+
+    `when`(mockUserDocumentSnapshot.data)
+        .thenReturn(mapOf("locationSharedWith" to sharedWithUidList))
+
+    // Mock document references for each friend
+    val friend1DocumentRef = mock(DocumentReference::class.java)
+    val friend2DocumentRef = mock(DocumentReference::class.java)
+
+    `when`(mockFirestore.collection("Users").document(friend1.uid)).thenReturn(friend1DocumentRef)
+    `when`(friend1DocumentRef.get()).thenReturn(Tasks.forResult(friend1Snapshot))
+
+    `when`(mockFirestore.collection("Users").document(friend2.uid)).thenReturn(friend2DocumentRef)
+    `when`(friend2DocumentRef.get()).thenReturn(Tasks.forResult(friend2Snapshot))
+
+    `when`(friend1Snapshot.exists()).thenReturn(true)
+    `when`(friend2Snapshot.exists()).thenReturn(true)
+
+    // Mock documentSnapshotToUser behavior
+    val helper = mock(UserRepositoryFirestoreHelper::class.java)
+    `when`(helper.documentSnapshotToUser(friend1Snapshot, null)).thenReturn(friend1)
+    `when`(helper.documentSnapshotToUser(friend2Snapshot, null)).thenReturn(friend2)
+
+    // Inject the mock helper into the repository
+    val helperField = UserRepositoryFirestore::class.java.getDeclaredField("helper")
+    helperField.isAccessible = true
+    helperField.set(userRepositoryFirestore, helper)
+
+    // Prepare tasks for whenAllSuccess
+    val friendTasks = listOf(friend1DocumentRef.get(), friend2DocumentRef.get())
+
+    // Mock Tasks.whenAllSuccess behavior
+    `when`(Tasks.whenAllSuccess<DocumentSnapshot>(friendTasks))
+        .thenReturn(Tasks.forResult(listOf(friend1Snapshot, friend2Snapshot)))
+
+    // Invoke the method under test
+    userRepositoryFirestore.getSharedWithFriends(
+        uid = "user123",
+        onSuccess = { result ->
+          // Verify the result
+          assert(result.size == 2)
+          assert(result.contains(friend1))
+          assert(result.contains(friend2))
+        },
+        onFailure = { assert(false) { "Should not fail on success" } })
+  }
+
+  @Test
+  fun getSharedWithFriendsReturnsEmptyListWhenNoData() {
+    val uid = "user123"
+
+    // Mock document snapshot for the user
+    val mockUserSnapshot = mock(DocumentSnapshot::class.java)
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserSnapshot))
+
+    // Mock the data to simulate no "locationSharedWith" field
+    `when`(mockUserSnapshot.data).thenReturn(emptyMap())
+
+    userRepositoryFirestore.getSharedWithFriends(
+        uid = uid,
+        onSuccess = { result ->
+          assertNotNull(result)
+          assertTrue(result.isEmpty())
+        },
+        onFailure = { fail("Should not fail when no data is available") })
+
+    shadowOf(Looper.getMainLooper()).idle()
+  }
+
+  @Test
+  fun saveNotifiedFriends_shouldSaveListAsJsonString() {
+    val friendsUID = listOf("user1", "user2", "user3")
+    val gson = Gson()
+    val expectedJson = gson.toJson(friendsUID)
+
+    // Act
+    userRepositoryFirestore.saveNotifiedFriends(friendsUID)
+
+    // Verify JSON string is saved in SharedPreferences
+    verify(sharedPreferencesEditor).putString("notified_friends", expectedJson)
+    verify(sharedPreferencesEditor).apply()
+  }
+
+  @Test
+  fun getSavedAlreadyNotifiedFriends_shouldReturnSavedList() {
+    val friendsUID = listOf("user1", "user2", "user3")
+    val gson = Gson()
+    val jsonString = gson.toJson(friendsUID)
+
+    // Mock SharedPreferences to return the JSON string
+    `when`(sharedPreferences.getString("notified_friends", null)).thenReturn(jsonString)
+
+    // Act
+    val result = userRepositoryFirestore.getSavedAlreadyNotifiedFriends()
+
+    // Assert the result matches the expected list
+    assertEquals(friendsUID, result)
+  }
+
+  @Test
+  fun getSavedAlreadyNotifiedFriends_shouldReturnEmptyListWhenNoData() {
+    // Mock SharedPreferences to return null
+    `when`(sharedPreferences.getString("notified_friends", null)).thenReturn(null)
+
+    // Act
+    val result = userRepositoryFirestore.getSavedAlreadyNotifiedFriends()
+
+    // Assert the result is an empty list
+    assertEquals(emptyList<String>(), result)
+  }
+
+  @Test
+  fun unblockUser_Success() {
+    // Mock document references
+    val currentUserRef = mock(DocumentReference::class.java)
+    val currentUserSnapshot = mock(DocumentSnapshot::class.java)
+
+    // Mock initial blocked list
+    val blockedList = listOf("blocked_user_id")
+    `when`(currentUserSnapshot.get("blockedList")).thenReturn(blockedList)
+
+    // Mock Firestore interactions
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document("current_user_id")).thenReturn(currentUserRef)
+    `when`(currentUserRef.get()).thenReturn(Tasks.forResult(currentUserSnapshot))
+    `when`(currentUserRef.update("blockedList", emptyList<String>()))
+        .thenReturn(Tasks.forResult(null))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Call unblockUser
+    userRepositoryFirestore.unblockUser(
+        "current_user_id",
+        "blocked_user_id",
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { onFailureCalled = true })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify success
+    assertTrue(onSuccessCalled)
+    assertFalse(onFailureCalled)
+    verify(currentUserRef).update("blockedList", emptyList<String>())
+  }
+
+  @Test
+  fun unblockUser_FailureOnGet() {
+    // Mock document references
+    val currentUserRef = mock(DocumentReference::class.java)
+    val exception = Exception("Failed to get document")
+
+    // Mock Firestore interactions with failure
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document("current_user_id")).thenReturn(currentUserRef)
+    `when`(currentUserRef.get()).thenReturn(Tasks.forException(exception))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Call unblockUser
+    userRepositoryFirestore.unblockUser(
+        "current_user_id",
+        "blocked_user_id",
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { e ->
+          onFailureCalled = true
+          failureException = e
+        })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify failure
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertEquals(exception, failureException)
+  }
+
+  @Test
+  fun unblockUser_FailureOnUpdate() {
+    // Mock document references
+    val currentUserRef = mock(DocumentReference::class.java)
+    val currentUserSnapshot = mock(DocumentSnapshot::class.java)
+    val exception = Exception("Failed to update document")
+
+    // Mock initial blocked list
+    val blockedList = listOf("blocked_user_id")
+    `when`(currentUserSnapshot.get("blockedList")).thenReturn(blockedList)
+
+    // Mock Firestore interactions with update failure
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document("current_user_id")).thenReturn(currentUserRef)
+    `when`(currentUserRef.get()).thenReturn(Tasks.forResult(currentUserSnapshot))
+    `when`(currentUserRef.update("blockedList", emptyList<String>()))
+        .thenReturn(Tasks.forException(exception))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var failureException: Exception? = null
+
+    // Call unblockUser
+    userRepositoryFirestore.unblockUser(
+        "current_user_id",
+        "blocked_user_id",
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { e ->
+          onFailureCalled = true
+          failureException = e
+        })
+
+    // Ensure all asynchronous operations complete
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Verify failure
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertEquals(exception, failureException)
   }
 }

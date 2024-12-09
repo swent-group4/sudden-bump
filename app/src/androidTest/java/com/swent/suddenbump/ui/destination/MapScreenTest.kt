@@ -1,4 +1,4 @@
-package com.swent.suddenbump.ui
+package com.swent.suddenbump.ui.destination
 
 import android.location.Location
 import androidx.compose.ui.test.*

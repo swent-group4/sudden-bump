@@ -160,9 +160,46 @@ interface UserRepository {
 
   fun getSavedUid(): String
 
+  fun saveNotifiedFriends(friends: List<String>)
+
+  fun getSavedAlreadyNotifiedFriends(): List<String>
+
   fun isUserLoggedIn(): Boolean
 
   fun logoutUser()
+
+  fun shareLocationWithFriend(
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun stopSharingLocationWithFriend(
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun getSharedWithFriends(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun getSharedByFriends(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  fun unblockUser(
+      currentUserId: String,
+      blockedUserId: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }
 
 data class UserWithFriendsInCommon(val user: User, val friendsInCommon: Int)
