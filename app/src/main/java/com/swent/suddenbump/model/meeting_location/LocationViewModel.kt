@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.meeting_location
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -21,13 +22,22 @@ class LocationViewModel(val repository: LocationRepository) : ViewModel() {
     }
 
     private fun searchLocations(query: String) {
+        if (query.isBlank()) {
+            _locationSuggestions.value = emptyList()
+            return
+        }
+
         viewModelScope.launch {
             repository.search(
                 query,
-                onSuccess = { locations -> _locationSuggestions.value = locations },
+                onSuccess = { locations ->
+                    Log.d("LocationViewModel", "Search successful with ${locations.size} results")
+                    _locationSuggestions.value = locations
+                },
                 onFailure = { exception ->
-                    // Handle error
-                })
+                    Log.e("LocationViewModel", "Error searching locations", exception)
+                }
+            )
         }
     }
 
@@ -38,7 +48,16 @@ class LocationViewModel(val repository: LocationRepository) : ViewModel() {
                 override fun <T : ViewModel> create(
                     modelClass: Class<T>,
                 ): T {
-                    return LocationViewModel(NominatimLocationRepository(OkHttpClient())) as T
+                    val client = OkHttpClient.Builder()
+                        .addInterceptor { chain ->
+                            val request = chain.request()
+                                .newBuilder()
+                                .addHeader("User-Agent", "SuddenBump")
+                                .build()
+                            chain.proceed(request)
+                        }
+                        .build()
+                    return LocationViewModel(NominatimLocationRepository(client)) as T
                 }
             }
     }

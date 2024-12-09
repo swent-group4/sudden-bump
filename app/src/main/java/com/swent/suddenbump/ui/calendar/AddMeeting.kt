@@ -21,12 +21,16 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingViewModel
+import com.swent.suddenbump.model.meeting_location.Location
+import com.swent.suddenbump.model.meeting_location.LocationViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.utils.formatDateString
@@ -39,13 +43,15 @@ import java.util.*
 fun AddMeetingScreen(
     navigationActions: NavigationActions,
     userViewModel: UserViewModel,
-    meetingViewModel: MeetingViewModel
+    meetingViewModel: MeetingViewModel,
+    locationViewModel: LocationViewModel = viewModel(factory = LocationViewModel.Factory)
 ) {
   var location by remember { mutableStateOf("") }
   var date by remember { mutableStateOf(TextFieldValue("")) }
   var showDatePicker by remember { mutableStateOf(false) }
   val context = LocalContext.current
   val friendId = userViewModel.user?.uid ?: ""
+    val locationList = locationViewModel.locationSuggestions.collectAsState().value.map { it.name }
 
   Scaffold(
       topBar = {
@@ -70,12 +76,38 @@ fun AddMeetingScreen(
                 Modifier.padding(padding).fillMaxSize().background(Color.Black).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
               // Location field
-              OutlinedTextField(
-                  value = location,
-                  onValueChange = { location = it },
-                  label = { Text("Location") },
-                  textStyle = LocalTextStyle.current.copy(color = Color.White),
-                  modifier = Modifier.fillMaxWidth().testTag("Location"))
+            val expanded = remember { mutableStateOf(false) }
+            OutlinedTextField(
+                value = location,
+                onValueChange = {
+                    location = it
+                    Log.d("AddMeetingScreen", "Location input: $it")
+                    try {
+                        locationViewModel.setQuery(it)
+                        expanded.value = true
+                    } catch (e: Exception) {
+                        Log.e("AddMeetingScreen", "Error setting query: $it", e)
+                    }
+                },
+                label = { Text("Location") },
+                placeholder = { Text("Enter an address") },
+                modifier = Modifier.fillMaxWidth().testTag("Location"))
+
+            DropdownMenu(
+                expanded = expanded.value,
+                onDismissRequest = { expanded.value = false },
+                properties = PopupProperties(focusable = false)
+            ) {
+                locationList.forEach { loc ->
+                    DropdownMenuItem(
+                        onClick = {
+                            location = loc
+                            expanded.value = false
+                        },
+                        text = { Text(text = loc) },
+                        modifier = Modifier.testTag("itemTodoResult"))
+                }
+            }
 
               // Date Field (Non-clickable)
               OutlinedTextField(
@@ -148,7 +180,7 @@ fun AddMeetingScreen(
                           Meeting(
                               meetingId = meetingViewModel.getNewMeetingid(),
                               friendId = friendId,
-                              location = location,
+                              location = Location(name = location),
                               date = meetingDate,
                               creatorId = userViewModel.getCurrentUser().value.uid,
                               accepted = false)
