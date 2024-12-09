@@ -137,7 +137,8 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              SuddenBumpApp()
+              val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
+              SuddenBumpApp(userViewModel)
             }
       }
     }
@@ -168,12 +169,11 @@ class MainActivity : ComponentActivity() {
   }
 
   @Composable
-  fun SuddenBumpApp() {
+  fun SuddenBumpApp(userViewModel: UserViewModel) {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
     val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
-    val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
 
     newLocation?.let { it1 ->
       userViewModel.updateLocation(location = it1, onSuccess = {}, onFailure = {})
