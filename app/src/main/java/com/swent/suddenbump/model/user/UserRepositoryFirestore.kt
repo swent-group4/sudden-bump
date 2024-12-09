@@ -14,9 +14,6 @@ import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ktx.firestoreSettings
-import com.google.firebase.firestore.ktx.memoryCacheSettings
-import com.google.firebase.firestore.ktx.persistentCacheSettings
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
@@ -25,11 +22,10 @@ import com.google.gson.reflect.TypeToken
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
-import java.util.concurrent.TimeUnit
-import kotlin.math.log
 
 /**
  * A Firebase Firestore-backed implementation of the UserRepository interface, managing user
@@ -42,466 +38,461 @@ import kotlin.math.log
 class UserRepositoryFirestore(private val db: FirebaseFirestore, private val context: Context) :
     UserRepository {
 
-    private val logTag = "UserRepositoryFirestore"
-    val helper = UserRepositoryFirestoreHelper()
+  private val logTag = "UserRepositoryFirestore"
+  val helper = UserRepositoryFirestoreHelper()
 
-    private val usersCollectionPath = "Users"
-    private val emailCollectionPath = "Emails"
-    private val phoneCollectionPath = "Phones"
+  private val usersCollectionPath = "Users"
+  private val emailCollectionPath = "Emails"
+  private val phoneCollectionPath = "Phones"
 
-    private val storage = Firebase.storage("gs://sudden-bump-swent.appspot.com")
-    private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
+  private val storage = Firebase.storage("gs://sudden-bump-swent.appspot.com")
+  private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
 
-    override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
+  override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
 
-    private lateinit var verificationId: String
+  private lateinit var verificationId: String
 
-    private val sharedPreferences =
-        context.getSharedPreferences("SuddenBumpLocalDB", Context.MODE_PRIVATE)
+  private val sharedPreferences =
+      context.getSharedPreferences("SuddenBumpLocalDB", Context.MODE_PRIVATE)
 
-    /**
-     * Initializes the repository by setting up the image repository.
-     *
-     * @param onSuccess Called when initialization is successful.
-     */
-    override fun init(onSuccess: () -> Unit) {
-        imageRepository.init(onSuccess)
-        onSuccess()
-    }
+  /**
+   * Initializes the repository by setting up the image repository.
+   *
+   * @param onSuccess Called when initialization is successful.
+   */
+  override fun init(onSuccess: () -> Unit) {
+    imageRepository.init(onSuccess)
+    onSuccess()
+  }
 
-    /**
-     * Generates a new unique user ID.
-     *
-     * @return The generated user ID as a String.
-     */
-    override fun getNewUid(): String {
-        return db.collection(usersCollectionPath).document().id
-    }
+  /**
+   * Generates a new unique user ID.
+   *
+   * @return The generated user ID as a String.
+   */
+  override fun getNewUid(): String {
+    return db.collection(usersCollectionPath).document().id
+  }
 
-    /**
-     * Verifies if no account exists with the given email address.
-     *
-     * @param emailAddress The email address to verify.
-     * @param onSuccess Called with `true` if no account exists, `false` otherwise.
-     * @param onFailure Called with an exception if the check fails.
-     */
-    override fun verifyNoAccountExists(
-        emailAddress: String,
-        onSuccess: (Boolean) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(emailCollectionPath)
-            .get()
-            .addOnFailureListener { onFailure(it) }
-            .addOnCompleteListener { result ->
-                if (result.isSuccessful) {
-                    val resultEmail = result.result.documents.map { it.id }
-                    onSuccess(!resultEmail.contains(emailAddress))
-                } else {
-                    result.exception?.let { onFailure(it) }
+  /**
+   * Verifies if no account exists with the given email address.
+   *
+   * @param emailAddress The email address to verify.
+   * @param onSuccess Called with `true` if no account exists, `false` otherwise.
+   * @param onFailure Called with an exception if the check fails.
+   */
+  override fun verifyNoAccountExists(
+      emailAddress: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(emailCollectionPath)
+        .get()
+        .addOnFailureListener { onFailure(it) }
+        .addOnCompleteListener { result ->
+          if (result.isSuccessful) {
+            val resultEmail = result.result.documents.map { it.id }
+            onSuccess(!resultEmail.contains(emailAddress))
+          } else {
+            result.exception?.let { onFailure(it) }
+          }
+        }
+  }
+
+  /**
+   * Verifies if the given phone number is not associated with any account.
+   *
+   * @param phoneNumber The phone number to verify.
+   * @param onSuccess Called with `true` if the phone number is not associated with any account,
+   *   `false` otherwise.
+   * @param onFailure Called with an exception if the check fails.
+   */
+  override fun verifyUnusedPhoneNumber(
+      phoneNumber: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(phoneCollectionPath)
+        .get()
+        .addOnFailureListener { onFailure(it) }
+        .addOnCompleteListener { result ->
+          if (result.isSuccessful) {
+            val resultPhone = result.result.documents.map { it.id }
+            onSuccess(!resultPhone.contains(phoneNumber))
+          } else {
+            result.exception?.let { onFailure(it) }
+          }
+        }
+  }
+
+  /**
+   * Creates a new user account with the given User object and uploads profile picture if available.
+   *
+   * @param user The User object containing user information.
+   * @param onSuccess Called when the account is successfully created.
+   * @param onFailure Called with an exception if account creation fails.
+   */
+  override fun createUserAccount(
+      user: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(user.uid)
+        .set(helper.userToMapOf(user))
+        .addOnFailureListener { exception ->
+          Log.e(logTag, exception.toString())
+          onFailure(exception)
+        }
+        .addOnCompleteListener { result ->
+          if (result.isSuccessful) {
+            db.collection(emailCollectionPath)
+                .document(user.emailAddress)
+                .set(mapOf("uid" to user.uid))
+                .addOnFailureListener { onFailure(it) }
+                .addOnSuccessListener {
+                  user.profilePicture?.let { it1 ->
+                    imageRepository.uploadImage(
+                        it1,
+                        helper.uidToProfilePicturePath(user.uid, profilePicturesRef),
+                        onSuccess = { onSuccess() },
+                        onFailure = { e -> onFailure(e) })
+                  }
                 }
-            }
-    }
+            db.collection(phoneCollectionPath)
+                .document(user.phoneNumber)
+                .set(mapOf("uid" to user.uid))
+                .addOnFailureListener { onFailure(it) }
+          } else {
+            result.exception?.let { onFailure(it) }
+          }
+        }
+  }
 
-    /**
-     * Verifies if the given phone number is not associated with any account.
-     *
-     * @param phoneNumber The phone number to verify.
-     * @param onSuccess Called with `true` if the phone number is not associated with any account,
-     *   `false` otherwise.
-     * @param onFailure Called with an exception if the check fails.
-     */
-    override fun verifyUnusedPhoneNumber(
-        phoneNumber: String,
-        onSuccess: (Boolean) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(phoneCollectionPath)
-            .get()
-            .addOnFailureListener { onFailure(it) }
-            .addOnCompleteListener { result ->
-                if (result.isSuccessful) {
-                    val resultPhone = result.result.documents.map { it.id }
-                    onSuccess(!resultPhone.contains(phoneNumber))
-                } else {
-                    result.exception?.let { onFailure(it) }
-                }
-            }
-    }
-
-    /**
-     * Creates a new user account with the given User object and uploads profile picture if available.
-     *
-     * @param user The User object containing user information.
-     * @param onSuccess Called when the account is successfully created.
-     * @param onFailure Called with an exception if account creation fails.
-     */
-    override fun createUserAccount(
-        user: User,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(user.uid)
-            .set(helper.userToMapOf(user))
-            .addOnFailureListener { exception ->
-                Log.e(logTag, exception.toString())
-                onFailure(exception)
-            }
-            .addOnCompleteListener { result ->
-                if (result.isSuccessful) {
-                    db.collection(emailCollectionPath)
-                        .document(user.emailAddress)
-                        .set(mapOf("uid" to user.uid))
-                        .addOnFailureListener { onFailure(it) }
-                        .addOnSuccessListener {
-                            user.profilePicture?.let { it1 ->
-                                imageRepository.uploadImage(
-                                    it1,
-                                    helper.uidToProfilePicturePath(user.uid, profilePicturesRef),
-                                    onSuccess = { onSuccess() },
-                                    onFailure = { e -> onFailure(e) })
-                            }
-                        }
-                    db.collection(phoneCollectionPath)
-                        .document(user.phoneNumber)
-                        .set(mapOf("uid" to user.uid))
-                        .addOnFailureListener { onFailure(it) }
-                } else {
-                    result.exception?.let { onFailure(it) }
-                }
-            }
-    }
-
-    /**
-     * Retrieves the current authenticated user's account details.
-     *
-     * @param onSuccess Called with the User object if retrieval succeeds.
-     * @param onFailure Called with an exception if retrieval fails.
-     */
-    override fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit) {
-        db.collection(emailCollectionPath)
-            .document(FirebaseAuth.getInstance().currentUser!!.email.toString())
-            .get()
-            .addOnFailureListener { onFailure(it) }
-            .addOnSuccessListener { resultEmail ->
-                db.collection(usersCollectionPath)
-                    .document(resultEmail.data!!["uid"].toString())
-                    .get()
-                    .addOnFailureListener { onFailure(it) }
-                    .addOnCompleteListener { resultUser ->
-                        if (resultUser.isSuccessful) {
-                            val path =
-                                helper.uidToProfilePicturePath(
-                                    resultEmail.data!!["uid"].toString(), profilePicturesRef
-                                )
-                            imageRepository.downloadImage(
-                                path,
-                                onSuccess = {
-                                    onSuccess(helper.documentSnapshotToUser(resultUser.result, it))
-                                },
-                                onFailure = { onFailure(it) })
-                        } else {
-                            resultUser.exception?.let { onFailure(it) }
-                        }
-                    }
-            }
-    }
-
-    /**
-     * Retrieves another user's account details by user ID.
-     *
-     * @param uid The user ID of the account to retrieve.
-     * @param onSuccess Called with the User object if retrieval succeeds.
-     * @param onFailure Called with an exception if retrieval fails.
-     */
-    override fun getUserAccount(
-        uid: String,
-        onSuccess: (User) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(uid)
-            .get()
-            .addOnFailureListener { onFailure(it) }
-            .addOnCompleteListener { resultUser ->
+  /**
+   * Retrieves the current authenticated user's account details.
+   *
+   * @param onSuccess Called with the User object if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  override fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit) {
+    db.collection(emailCollectionPath)
+        .document(FirebaseAuth.getInstance().currentUser!!.email.toString())
+        .get()
+        .addOnFailureListener { onFailure(it) }
+        .addOnSuccessListener { resultEmail ->
+          db.collection(usersCollectionPath)
+              .document(resultEmail.data!!["uid"].toString())
+              .get()
+              .addOnFailureListener { onFailure(it) }
+              .addOnCompleteListener { resultUser ->
                 if (resultUser.isSuccessful) {
-                    val path = helper.uidToProfilePicturePath(uid, profilePicturesRef)
-                    imageRepository.downloadImage(
-                        path,
-                        onSuccess = { image ->
-                            onSuccess(helper.documentSnapshotToUser(resultUser.result, image))
-                        },
-                        onFailure = { onFailure(it) })
+                  val path =
+                      helper.uidToProfilePicturePath(
+                          resultEmail.data!!["uid"].toString(), profilePicturesRef)
+                  imageRepository.downloadImage(
+                      path,
+                      onSuccess = {
+                        onSuccess(helper.documentSnapshotToUser(resultUser.result, it))
+                      },
+                      onFailure = { onFailure(it) })
                 } else {
-                    resultUser.exception?.let { onFailure(it) }
+                  resultUser.exception?.let { onFailure(it) }
                 }
-            }
-    }
+              }
+        }
+  }
 
-    /**
-     * Updates the account details of the given User object in the database.
-     *
-     * @param user The User object containing updated information.
-     * @param onSuccess Called when the account update is successful.
-     * @param onFailure Called with an exception if the update fails.
-     */
-    override fun updateUserAccount(
-        user: User,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(user.uid)
-            .update(helper.userToMapOf(user))
-            .addOnFailureListener { exception ->
-                Log.e(logTag, exception.toString())
-                onFailure(exception)
+  /**
+   * Retrieves another user's account details by user ID.
+   *
+   * @param uid The user ID of the account to retrieve.
+   * @param onSuccess Called with the User object if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  override fun getUserAccount(
+      uid: String,
+      onSuccess: (User) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { onFailure(it) }
+        .addOnCompleteListener { resultUser ->
+          if (resultUser.isSuccessful) {
+            val path = helper.uidToProfilePicturePath(uid, profilePicturesRef)
+            imageRepository.downloadImage(
+                path,
+                onSuccess = { image ->
+                  onSuccess(helper.documentSnapshotToUser(resultUser.result, image))
+                },
+                onFailure = { onFailure(it) })
+          } else {
+            resultUser.exception?.let { onFailure(it) }
+          }
+        }
+  }
+
+  /**
+   * Updates the account details of the given User object in the database.
+   *
+   * @param user The User object containing updated information.
+   * @param onSuccess Called when the account update is successful.
+   * @param onFailure Called with an exception if the update fails.
+   */
+  override fun updateUserAccount(
+      user: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(user.uid)
+        .update(helper.userToMapOf(user))
+        .addOnFailureListener { exception ->
+          Log.e(logTag, exception.toString())
+          onFailure(exception)
+        }
+        .addOnCompleteListener { result ->
+          if (result.isSuccessful) {
+            user.profilePicture?.let { it1 ->
+              imageRepository.uploadImage(
+                  it1,
+                  helper.uidToProfilePicturePath(user.uid, profilePicturesRef),
+                  onSuccess = { onSuccess() },
+                  onFailure = { e -> onFailure(e) })
             }
-            .addOnCompleteListener { result ->
-                if (result.isSuccessful) {
-                    user.profilePicture?.let { it1 ->
-                        imageRepository.uploadImage(
-                            it1,
-                            helper.uidToProfilePicturePath(user.uid, profilePicturesRef),
-                            onSuccess = { onSuccess() },
-                            onFailure = { e -> onFailure(e) })
-                    }
-                } else {
-                    result.exception?.let { onFailure(it) }
+          } else {
+            result.exception?.let { onFailure(it) }
+          }
+        }
+  }
+
+  /**
+   * Deletes a user account by user ID.
+   *
+   * @param uid The user ID of the account to delete.
+   * @param onSuccess Called when the account deletion is successful.
+   * @param onFailure Called with an exception if deletion fails.
+   */
+  override fun deleteUserAccount(
+      uid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .delete()
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { e -> onFailure(e) }
+  }
+
+  /**
+   * Retrieves friend requests received by the specified user.
+   *
+   * @param uid The user id whose friend requests are being retrieved.
+   * @param onSuccess Called with a list of Users who sent friend requests if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  override fun getUserFriendRequests(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val friendRequestsUidList =
+              result.data?.get("friendRequests") as? List<String> ?: emptyList()
+          if (friendRequestsUidList.isEmpty()) {
+            onSuccess(emptyList())
+          } else {
+            val tasks =
+                friendRequestsUidList.map { uid ->
+                  db.collection(usersCollectionPath).document(uid).get()
                 }
-            }
-    }
-
-    /**
-     * Deletes a user account by user ID.
-     *
-     * @param uid The user ID of the account to delete.
-     * @param onSuccess Called when the account deletion is successful.
-     * @param onFailure Called with an exception if deletion fails.
-     */
-    override fun deleteUserAccount(
-        uid: String,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(uid)
-            .delete()
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { e -> onFailure(e) }
-    }
-
-    /**
-     * Retrieves friend requests received by the specified user.
-     *
-     * @param uid The user id whose friend requests are being retrieved.
-     * @param onSuccess Called with a list of Users who sent friend requests if retrieval succeeds.
-     * @param onFailure Called with an exception if retrieval fails.
-     */
-    override fun getUserFriendRequests(
-        uid: String,
-        onSuccess: (List<User>) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(uid)
-            .get()
-            .addOnFailureListener { e -> onFailure(e) }
-            .addOnSuccessListener { result ->
-                val friendRequestsUidList =
-                    result.data?.get("friendRequests") as? List<String> ?: emptyList()
-                if (friendRequestsUidList.isEmpty()) {
-                    onSuccess(emptyList())
-                } else {
-                    val tasks =
-                        friendRequestsUidList.map { uid ->
-                            db.collection(usersCollectionPath).document(uid).get()
-                        }
-                    Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
-                        .addOnSuccessListener { documents ->
-                            val friendRequestsList =
-                                documents.mapNotNull { document ->
-                                    helper.documentSnapshotToUser(document, null)
-                                }
-                            onSuccess(friendRequestsList)
-                        }
-                        .addOnFailureListener { e -> onFailure(e) }
+            Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
+                .addOnSuccessListener { documents ->
+                  val friendRequestsList =
+                      documents.mapNotNull { document ->
+                        helper.documentSnapshotToUser(document, null)
+                      }
+                  onSuccess(friendRequestsList)
                 }
+                .addOnFailureListener { e -> onFailure(e) }
+          }
+        }
+  }
+
+  /**
+   * Retrieves friend requests sent by the specified user.
+   *
+   * @param uid The user id who sent the friend requests.
+   * @param onSuccess Called with a list of Users who received friend requests from the user.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  override fun getSentFriendRequests(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val sentFriendRequestsUidList =
+              result.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
+          if (sentFriendRequestsUidList.isEmpty()) {
+            onSuccess(emptyList())
+            return@addOnSuccessListener
+          }
+
+          val tasks =
+              sentFriendRequestsUidList.map { uid ->
+                db.collection(usersCollectionPath).document(uid).get()
+              }
+
+          Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
+              .addOnSuccessListener { documents ->
+                val sentFriendRequestsList =
+                    documents.mapNotNull { document ->
+                      helper.documentSnapshotToUser(document, null)
+                    }
+                onSuccess(sentFriendRequestsList)
+              }
+              .addOnFailureListener { e -> onFailure(e) }
+        }
+  }
+
+  /**
+   * Adds a friend to the specified user's friend list, removing any pending friend requests between
+   * them.
+   *
+   * @param uid The user id who is adding a friend.
+   * @param fid The friend id being added.
+   * @param onSuccess Called when the friend addition is successful.
+   * @param onFailure Called with an exception if the operation fails.
+   */
+  override fun createFriend(
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    // Update the user document to remove the friend from the friendRequests or sentFriendRequest
+    // list and add them to the friends list
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val friendsUidList = result.data?.get("friendsList") as? List<String> ?: emptyList()
+          val friendRequestsUidList =
+              result.data?.get("friendRequests") as? List<String> ?: emptyList()
+          val sentFriendRequestsUidList =
+              result.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
+
+          val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
+          val mutableFriendsUidList = friendsUidList.toMutableList()
+
+          when (fid) {
+            in mutableFriendRequestsUidList -> {
+              createFriendHelper(
+                  mutableFriendRequestsUidList,
+                  mutableFriendsUidList,
+                  uid,
+                  fid,
+                  "friendRequests",
+                  onSuccess,
+                  onFailure)
             }
-    }
-
-    /**
-     * Retrieves friend requests sent by the specified user.
-     *
-     * @param uid The user id who sent the friend requests.
-     * @param onSuccess Called with a list of Users who received friend requests from the user.
-     * @param onFailure Called with an exception if retrieval fails.
-     */
-    override fun getSentFriendRequests(
-        uid: String,
-        onSuccess: (List<User>) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(uid)
-            .get()
-            .addOnFailureListener { e -> onFailure(e) }
-            .addOnSuccessListener { result ->
-                val sentFriendRequestsUidList =
-                    result.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
-                if (sentFriendRequestsUidList.isEmpty()) {
-                    onSuccess(emptyList())
-                    return@addOnSuccessListener
-                }
-
-                val tasks =
-                    sentFriendRequestsUidList.map { uid ->
-                        db.collection(usersCollectionPath).document(uid).get()
-                    }
-
-                Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
-                    .addOnSuccessListener { documents ->
-                        val sentFriendRequestsList =
-                            documents.mapNotNull { document ->
-                                helper.documentSnapshotToUser(document, null)
-                            }
-                        onSuccess(sentFriendRequestsList)
-                    }
-                    .addOnFailureListener { e -> onFailure(e) }
+            in sentFriendRequestsUidList -> {
+              createFriendHelper(
+                  mutableFriendRequestsUidList,
+                  mutableFriendsUidList,
+                  uid,
+                  fid,
+                  "sentFriendRequests",
+                  onSuccess,
+                  onFailure)
             }
-    }
-
-    /**
-     * Adds a friend to the specified user's friend list, removing any pending friend requests between
-     * them.
-     *
-     * @param uid The user id who is adding a friend.
-     * @param fid The friend id being added.
-     * @param onSuccess Called when the friend addition is successful.
-     * @param onFailure Called with an exception if the operation fails.
-     */
-    override fun createFriend(
-        uid: String,
-        fid: String,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        // Update the user document to remove the friend from the friendRequests or sentFriendRequest
-        // list and add them to the friends list
-        db.collection(usersCollectionPath)
-            .document(uid)
-            .get()
-            .addOnFailureListener { e -> onFailure(e) }
-            .addOnSuccessListener { result ->
-                val friendsUidList = result.data?.get("friendsList") as? List<String> ?: emptyList()
-                val friendRequestsUidList =
-                    result.data?.get("friendRequests") as? List<String> ?: emptyList()
-                val sentFriendRequestsUidList =
-                    result.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
-
-                val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
-                val mutableFriendsUidList = friendsUidList.toMutableList()
-
-                when (fid) {
-                    in mutableFriendRequestsUidList -> {
-                        createFriendHelper(
-                            mutableFriendRequestsUidList,
-                            mutableFriendsUidList,
-                            uid,
-                            fid,
-                            "friendRequests",
-                            onSuccess,
-                            onFailure
-                        )
-                    }
-
-                    in sentFriendRequestsUidList -> {
-                        createFriendHelper(
-                            mutableFriendRequestsUidList,
-                            mutableFriendsUidList,
-                            uid,
-                            fid,
-                            "sentFriendRequests",
-                            onSuccess,
-                            onFailure
-                        )
-                    }
-
-                    else -> {
-                        onFailure(Exception("Friend request not found"))
-                    }
-                }
+            else -> {
+              onFailure(Exception("Friend request not found"))
             }
+          }
+        }
 
-        // Update the friend document to add the user to the friends list
-        db.collection(usersCollectionPath)
-            .document(fid)
-            .get()
-            .addOnFailureListener { e -> onFailure(e) }
-            .addOnSuccessListener { result ->
-                val friendsUidList = result.data?.get("friendsList") as? List<String> ?: emptyList()
-                val friendsSentRequestList =
-                    result.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
-                val friendsRequestList =
-                    result.data?.get("friendRequests") as? List<String> ?: emptyList()
+    // Update the friend document to add the user to the friends list
+    db.collection(usersCollectionPath)
+        .document(fid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val friendsUidList = result.data?.get("friendsList") as? List<String> ?: emptyList()
+          val friendsSentRequestList =
+              result.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
+          val friendsRequestList =
+              result.data?.get("friendRequests") as? List<String> ?: emptyList()
 
-                val mutableFriendsUidList = friendsUidList.toMutableList()
-                val mutableFriendsSentRequestList = friendsSentRequestList.toMutableList()
-                val mutableFriendsRequestList = friendsRequestList.toMutableList()
+          val mutableFriendsUidList = friendsUidList.toMutableList()
+          val mutableFriendsSentRequestList = friendsSentRequestList.toMutableList()
+          val mutableFriendsRequestList = friendsRequestList.toMutableList()
 
-                mutableFriendsUidList.add(uid)
-                mutableFriendsRequestList.remove(uid)
-                mutableFriendsSentRequestList.remove(uid)
+          mutableFriendsUidList.add(uid)
+          mutableFriendsRequestList.remove(uid)
+          mutableFriendsSentRequestList.remove(uid)
+          db.collection(usersCollectionPath)
+              .document(fid)
+              .update("friendsList", mutableFriendsUidList)
+              .addOnFailureListener { e -> onFailure(e) }
+              .addOnSuccessListener {
                 db.collection(usersCollectionPath)
                     .document(fid)
-                    .update("friendsList", mutableFriendsUidList)
+                    .update("friendRequests", mutableFriendsRequestList)
                     .addOnFailureListener { e -> onFailure(e) }
                     .addOnSuccessListener {
-                        db.collection(usersCollectionPath)
-                            .document(fid)
-                            .update("friendRequests", mutableFriendsRequestList)
-                            .addOnFailureListener { e -> onFailure(e) }
-                            .addOnSuccessListener {
-                                db.collection(usersCollectionPath)
-                                    .document(fid)
-                                    .update("sentFriendRequests", mutableFriendsSentRequestList)
-                                    .addOnFailureListener { e -> onFailure(e) }
-                                    .addOnSuccessListener {
-                                        db.collection(usersCollectionPath)
-                                            .document(fid)
-                                            .update("friendsList", mutableFriendsUidList)
-                                            .addOnFailureListener { e -> onFailure(e) }
-                                            .addOnSuccessListener { onSuccess() }
-                                    }
-                            }
+                      db.collection(usersCollectionPath)
+                          .document(fid)
+                          .update("sentFriendRequests", mutableFriendsSentRequestList)
+                          .addOnFailureListener { e -> onFailure(e) }
+                          .addOnSuccessListener {
+                            db.collection(usersCollectionPath)
+                                .document(fid)
+                                .update("friendsList", mutableFriendsUidList)
+                                .addOnFailureListener { e -> onFailure(e) }
+                                .addOnSuccessListener { onSuccess() }
+                          }
                     }
-            }
-    }
+              }
+        }
+  }
 
-    override fun createFriendHelper(
-        friendRequestsUidList: MutableList<String>,
-        friendsUidList: MutableList<String>,
-        uid: String,
-        fid: String,
-        updateField: String,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        friendRequestsUidList.remove(fid)
-        friendsUidList.add(fid)
-        db.collection(usersCollectionPath)
-            .document(uid)
-            .update(updateField, friendRequestsUidList)
-            .addOnFailureListener { e -> onFailure(e) }
-            .addOnSuccessListener {
-                db.collection(usersCollectionPath)
-                    .document(uid)
-                    .update("friendsList", friendsUidList)
-                    .addOnFailureListener { e -> onFailure(e) }
-                    .addOnSuccessListener { onSuccess() }
-            }
-    }
+  override fun createFriendHelper(
+      friendRequestsUidList: MutableList<String>,
+      friendsUidList: MutableList<String>,
+      uid: String,
+      fid: String,
+      updateField: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    friendRequestsUidList.remove(fid)
+    friendsUidList.add(fid)
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .update(updateField, friendRequestsUidList)
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener {
+          db.collection(usersCollectionPath)
+              .document(uid)
+              .update("friendsList", friendsUidList)
+              .addOnFailureListener { e -> onFailure(e) }
+              .addOnSuccessListener { onSuccess() }
+        }
+  }
 
   /**
    * Sends a friend request from the specified user to the target friend.

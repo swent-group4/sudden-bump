@@ -168,29 +168,33 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
       onFailure: (Exception) -> Unit
   ) {
     try {
-        val timeoutMillis = 3_500L
-        withTimeout(timeoutMillis) {
-            val fileDownloadTask = imageRef.getFile(localFile).await()
-            if (fileDownloadTask.task.isCanceled) {
-                onFailure(fileDownloadTask.task.exception!!)
-            } else {
-                val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
-                val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-                Log.i("FirebaseDownload", "Finished online : ${profilePicturesPath + path.substringAfterLast('/')}")
-                onSuccess(bitmap.asImageBitmap())
-            }
+      val timeoutMillis = 3_500L
+      withTimeout(timeoutMillis) {
+        val fileDownloadTask = imageRef.getFile(localFile).await()
+        if (fileDownloadTask.task.isCanceled) {
+          onFailure(fileDownloadTask.task.exception!!)
+        } else {
+          val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
+          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+          Log.i(
+              "FirebaseDownload",
+              "Finished online : ${profilePicturesPath + path.substringAfterLast('/')}")
+          onSuccess(bitmap.asImageBitmap())
         }
+      }
     } catch (e: TimeoutCancellationException) {
-        Log.e("FirebaseDownload", "Download timed out", e)
-        try {
-            val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
-            val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-            Log.i("FirebaseDownload", "Finished offline : ${profilePicturesPath + path.substringAfterLast('/')}")
-            onSuccess(bitmap.asImageBitmap())
-        } catch (e: Exception) {
-            Log.e("FirebaseDownload", "Failed to download file locally", e)
-            onFailure(e)
-        }
+      Log.e("FirebaseDownload", "Download timed out", e)
+      try {
+        val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
+        val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+        Log.i(
+            "FirebaseDownload",
+            "Finished offline : ${profilePicturesPath + path.substringAfterLast('/')}")
+        onSuccess(bitmap.asImageBitmap())
+      } catch (e: Exception) {
+        Log.e("FirebaseDownload", "Failed to download file locally", e)
+        onFailure(e)
+      }
     } catch (e: Exception) {
       Log.e("FirebaseDownload", "Failed to download file", e)
       onFailure(e)

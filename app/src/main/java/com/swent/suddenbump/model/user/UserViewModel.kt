@@ -7,13 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.google.firebase.Timestamp
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
-import com.google.firebase.firestore.firestoreSettings
 import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.firestore.memoryCacheSettings
-import com.google.firebase.firestore.persistentCacheSettings
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.BuildConfig
 import com.swent.suddenbump.model.chat.ChatRepository
@@ -31,10 +25,10 @@ import kotlinx.coroutines.withContext
 
 /** Enumération pour les catégories de distance utilisées pour regrouper les amis. */
 enum class DistanceCategory(val maxDistance: Float, val title: String) {
-    WITHIN_5KM(5000f, "Within 5km"),
-    WITHIN_10KM(10000f, "Within 10km"),
-    WITHIN_20KM(20000f, "Within 20km"),
-    FURTHER(Float.MAX_VALUE, "Further")
+  WITHIN_5KM(5000f, "Within 5km"),
+  WITHIN_10KM(10000f, "Within 10km"),
+  WITHIN_20KM(20000f, "Within 20km"),
+  FURTHER(Float.MAX_VALUE, "Further")
 }
 
 /** Classe ViewModel pour gérer les données et opérations liées à l'utilisateur. */
