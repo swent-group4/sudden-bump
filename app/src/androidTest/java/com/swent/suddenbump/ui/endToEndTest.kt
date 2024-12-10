@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.firebase.firestore.*
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
+import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingRepositoryFirestore
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
@@ -238,7 +239,7 @@ class EndToEndTest2 {
             startDestination = Screen.MAP,
             route = Route.MAP,
         ) {
-          composable(Screen.MAP) { MapScreen(navigationActions, userViewModel) }
+          composable(Screen.MAP) { MapScreen(navigationActions, userViewModel, meetingViewModel) }
         }
         navigation(
             startDestination = Screen.MESS,

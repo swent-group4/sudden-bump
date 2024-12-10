@@ -3,6 +3,8 @@ package com.swent.suddenbump.ui.destination
 import android.location.Location
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.meeting.MeetingRepository
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
@@ -19,6 +21,8 @@ class SimpleMapTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
   private lateinit var chatRepository: ChatRepository
+  private lateinit var meetingRepository: MeetingRepository
+  private lateinit var meetingViewModel: MeetingViewModel
 
   private val location =
       MutableStateFlow(
@@ -34,6 +38,8 @@ class SimpleMapTest {
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
+      meetingRepository = mock(MeetingRepository::class.java)
+      meetingViewModel = MeetingViewModel(meetingRepository)
     userViewModel = UserViewModel(userRepository, chatRepository)
   }
 
@@ -47,6 +53,6 @@ class SimpleMapTest {
         }
 
     // Render the SimpleMap composable with the initial location
-    composeTestRule.setContent { SimpleMap(userViewModel = userViewModel) }
+    composeTestRule.setContent { SimpleMap(userViewModel = userViewModel, meetingViewModel = meetingViewModel) }
   }
 }

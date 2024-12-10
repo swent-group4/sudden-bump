@@ -6,6 +6,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.meeting.MeetingRepository
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
@@ -28,6 +30,8 @@ class MapScreenTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
   private lateinit var chatRepository: ChatRepository
+  private lateinit var meetingViewModel: MeetingViewModel
+  private lateinit var meetingRepository: MeetingRepository
 
   private val exception = Exception()
   private val location =
@@ -43,6 +47,8 @@ class MapScreenTest {
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
+      meetingRepository = mock(MeetingRepository::class.java)
+      meetingViewModel = MeetingViewModel(meetingRepository)
     userViewModel = UserViewModel(userRepository, chatRepository)
   }
 
@@ -56,7 +62,7 @@ class MapScreenTest {
       val navigationActions = NavigationActions(navController)
 
       // Set the content for testing
-      MapScreen(navigationActions = navigationActions, userViewModel = userViewModel)
+      MapScreen(navigationActions = navigationActions, userViewModel = userViewModel, meetingViewModel = meetingViewModel)
     }
 
     // Verify that the bottom navigation is displayed
@@ -88,7 +94,7 @@ class MapScreenTest {
 
     // Set the content for testing
     composeTestRule.setContent {
-      MapScreen(navigationActions = mockNavigationActions, userViewModel = userViewModel)
+      MapScreen(navigationActions = mockNavigationActions, userViewModel = userViewModel, meetingViewModel = meetingViewModel)
     }
 
     // Simulate a click on the "Map" tab (or any other tab based on your setup)

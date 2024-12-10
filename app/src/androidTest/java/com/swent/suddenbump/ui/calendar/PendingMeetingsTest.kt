@@ -43,10 +43,10 @@ class PendingMeetingsScreenTest {
     // Mock meetings
     val meeting1 =
         Meeting(
-            "1", "Central Park", Timestamp(Date(1735403269000)), "currentUserId", "creator1", false)
+            "1", com.swent.suddenbump.model.meeting_location.Location(12.34, 56.78, "Central Park"), Timestamp(Date(1735403269000)), "currentUserId", "creator1", false)
     val meeting2 =
         Meeting(
-            "2", "City Square", Timestamp(Date(1735403269000)), "currentUserId", "creator2", true)
+            "2", com.swent.suddenbump.model.meeting_location.Location(12.24, 56.78, "City Square"), Timestamp(Date(1735403269000)), "currentUserId", "creator2", true)
 
     val mockMeetings = listOf(meeting1, meeting2)
 
@@ -110,7 +110,7 @@ class PendingMeetingsScreenTest {
   fun acceptMeeting_callsUpdateMeeting() {
     val meetingAccepted =
         Meeting(
-            "1", "Central Park", Timestamp(Date(1735403269000)), "currentUserId", "creator1", true)
+            "1", com.swent.suddenbump.model.meeting_location.Location(12.34, 56.78, "Central Park"), Timestamp(Date(1735403269000)), "currentUserId", "creator1", true)
 
     composeTestRule.setContent {
       PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)

@@ -45,7 +45,7 @@ class EditMeetingScreenTest {
   private val meeting =
       Meeting(
           meetingId = "JhXlhoSvTmbtTFSVpNnA",
-          location = "Cafe",
+          location = com.swent.suddenbump.model.meeting_location.Location(12.34, 56.78, "Cafe"),
           date = Timestamp(Date(1725494400000)),
           friendId = "FPHuqGkCBo7Iinbo5OO9",
           creatorId = "P7vuP4bbEQB03OSR3QwJ")
