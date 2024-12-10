@@ -47,6 +47,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerInfoWindow
@@ -59,6 +61,7 @@ import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.direction.DirectionsRepository
 import com.swent.suddenbump.model.direction.GoogleMapsDirectionsService
 import com.swent.suddenbump.model.direction.MapViewModel
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
@@ -67,10 +70,12 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Blue
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MapScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+fun MapScreen(navigationActions: NavigationActions, userViewModel: UserViewModel, meetingViewModel: MeetingViewModel) {
   Scaffold(
       bottomBar = {
         BottomNavigationMenu(
@@ -79,13 +84,13 @@ fun MapScreen(navigationActions: NavigationActions, userViewModel: UserViewModel
             selectedItem = navigationActions.currentRoute())
       },
       content = { innerPadding ->
-        SimpleMap(userViewModel, modifier = Modifier.padding(innerPadding))
+        SimpleMap(userViewModel, meetingViewModel, Modifier.padding(innerPadding))
       })
 }
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
+fun SimpleMap(userViewModel: UserViewModel, meetingViewModel: MeetingViewModel, modifier: Modifier = Modifier) {
   // Initialize necessary variables and states
   val context = LocalContext.current
   val markerState = rememberMarkerState(position = LatLng(0.0, 0.0))
@@ -94,6 +99,7 @@ fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
   var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
   var transportMode by remember { mutableStateOf("driving") }
   var showConfirmationDialog by remember { mutableStateOf(false) }
+    val currentUserId = userViewModel.getCurrentUser().value.uid ?: ""
 
   val directionsService = remember {
     val retrofit =
@@ -124,6 +130,11 @@ fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
     }
   }
 
+    // Fetch meetings
+    val meetings by meetingViewModel.meetings.collectAsState()
+    val filteredMeetings =
+        meetings.filter { (it.creatorId == currentUserId || it.friendId == currentUserId) && it.accepted }
+
   Column(modifier = modifier.fillMaxSize()) {
     // Transport Mode Selector
     TransportModeSelector { mode -> transportMode = mode }
@@ -132,7 +143,8 @@ fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
       GoogleMap(
           modifier = Modifier.fillMaxSize(),
           cameraPositionState = cameraPositionState,
-          uiSettings = MapUiSettings(zoomControlsEnabled = false)) {
+          uiSettings = MapUiSettings(zoomControlsEnabled = false),
+          properties = MapProperties(mapType = MapType.SATELLITE) ) {
             // Your own position marker with click handling
             val markerBitmap = getLocationMarkerBitmap()
             Marker(
@@ -150,7 +162,23 @@ fun SimpleMap(userViewModel: UserViewModel, modifier: Modifier = Modifier) {
               selectedLocation = friendLatLng
               showConfirmationDialog = true // Show confirmation dialog when info window is clicked
             }
+
+          // Meeting markers
+          filteredMeetings.forEach { meeting ->
+              val meetingLatLng = LatLng(
+                  meeting.location?.latitude ?: 48.7855465,
+                  meeting.location?.longitude ?: 2.3147013
+              )
+
+              Marker(
+                  state = rememberMarkerState(position = meetingLatLng),
+                  title = "Meeting at ${meeting.location?.name ?: "Unknown Location"}",
+                  snippet = "Scheduled on ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(meeting.date.toDate())}",
+                  icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+              )
           }
+
+      }
 
       // FloatingActionButton to open directions in Google Maps
       selectedLocation?.let {
