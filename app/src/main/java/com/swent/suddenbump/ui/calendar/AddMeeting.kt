@@ -117,8 +117,10 @@ fun AddMeetingScreen(
                                 )
                             },
                             onClick = {
-                                locationViewModel.setQuery(location.name)
-                                selectedLocation = location
+                                // Extract substring up to the first comma
+                                val trimmedLocation = location.name.substringBefore(",")
+                                locationViewModel.setQuery(trimmedLocation) // Update the query with trimmed location
+                                selectedLocation = location.copy(name = trimmedLocation) // Save the trimmed name
                                 showDropdown = false // Close dropdown on selection
                             },
                             modifier = Modifier.padding(8.dp).background(Color.Black))

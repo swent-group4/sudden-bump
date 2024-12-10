@@ -40,8 +40,8 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
         })
   }
   var showDatePicker by remember { mutableStateOf(false) }
-    var selectedLocation by remember { mutableStateOf(meeting.location) }
-    val locationQuery by locationViewModel.query.collectAsState()
+    var selectedLocation by remember { mutableStateOf(meeting.location)}
+    var locationQuery by remember { mutableStateOf(meeting.location?.name) }
 
     // State for dropdown visibility
     var showDropdown by remember { mutableStateOf(false) }
@@ -75,8 +75,9 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                 onExpandedChange = { showDropdown = it } // Toggle dropdown visibility
             ) {
                 OutlinedTextField(
-                    value = locationQuery,
+                    value = locationQuery ?: "",
                     onValueChange = {
+                        locationQuery = it
                         locationViewModel.setQuery(it)
                         showDropdown = true // Show dropdown when user starts typing
                     },
@@ -107,8 +108,10 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                                 )
                             },
                             onClick = {
-                                locationViewModel.setQuery(location.name)
-                                selectedLocation = location
+                                // Extract substring up to the first comma
+                                val trimmedLocation = location.name.substringBefore(",")
+                                locationViewModel.setQuery(trimmedLocation) // Update the query with trimmed location
+                                selectedLocation = location.copy(name = trimmedLocation) // Save the trimmed name
                                 showDropdown = false // Close dropdown on selection
                             },
                             modifier = Modifier.padding(8.dp).background(Color.Black))
