@@ -11,7 +11,6 @@ import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.ui.calendar.showMeetingScheduledNotification
 import com.swent.suddenbump.ui.map.showFriendNearbyNotification
-import java.security.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.GregorianCalendar
@@ -102,7 +101,11 @@ class NotificationTest {
     val meeting =
         Meeting(
             meetingId = "123",
-            location = "Ikea",
+            location = com.swent.suddenbump.model.meeting_location.Location(
+                12.34,
+                56.78,
+                "Ikea",
+            ),
             date = meetingDate,
             friendId = "friend",
             creatorId = "creator",

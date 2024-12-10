@@ -44,7 +44,7 @@ class NominatimLocationRepository(val client: OkHttpClient) : LocationRepository
                         val locations = parseLocations(responseBody)
                         onSuccess(locations)
                     } else {
-                        onFailure(IOException("Unexpected response format: $responseBody"))
+                        onSuccess(emptyList()) // Pass an empty list on parsing failure
                     }
                 } catch (e: Exception) {
                     Log.e("Nominatim", "Error processing response", e)
