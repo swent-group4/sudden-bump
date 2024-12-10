@@ -22,4 +22,5 @@ interface ChatRepository {
   suspend fun getUserAccount(uid: String): User?
 
   suspend fun deleteAllMessages(userId: String)
+
 }

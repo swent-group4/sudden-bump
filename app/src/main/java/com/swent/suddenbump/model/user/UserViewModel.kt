@@ -96,7 +96,8 @@ open class UserViewModel(
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
-
+  private val _friendIsOnline: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val friendIsOnline = _friendIsOnline.asStateFlow()
   private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
 
   val locationSharedWith: StateFlow<List<User>> = _locationSharedWith.asStateFlow()
@@ -457,7 +458,23 @@ open class UserViewModel(
     _user.value.lastKnownLocation.value = location
     repository.updateUserLocation(user.uid, location, onSuccess, onFailure)
   }
+  fun updateUserStatus(
+      uid: String,
+      status: Boolean,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _friendIsOnline.value = status
+    repository.updateUserStatus(uid, status, onSuccess, onFailure)
+  }
 
+    fun getUserStatus(
+        uid: String,
+        onSuccess: (Boolean) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        repository.getUserStatus(uid, onSuccess, onFailure)
+    }
   /**
    * Updates the user's last activity timestamp in the repository.
    *

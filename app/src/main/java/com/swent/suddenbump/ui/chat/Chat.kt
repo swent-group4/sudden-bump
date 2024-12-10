@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +57,9 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.purple
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,10 +71,20 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
   val messages by viewModel.messages.collectAsState(emptyList())
   val user by viewModel.getCurrentUser().collectAsState()
   val otherUser = viewModel.user
+  val friendIsOnline = remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            if (otherUser != null) {
+                viewModel.getUserStatus(otherUser.uid, onSuccess = { friendIsOnline.value = it }, onFailure = {})
+            }
+        }
+    }
   // if (messages.isNotEmpty())
   //    viewModel.markMessagesAsRead()
   var list by remember { mutableStateOf<List<ListItem>>(emptyList()) }
+
   list = generateListItems(messages.reversed()).reversed()
+
   Column(
       modifier = Modifier.fillMaxSize().background(Color.Black),
   ) {
@@ -79,9 +93,19 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
           Column(modifier = Modifier.fillMaxWidth()) {
             TopAppBar(
                 title = {
-                  Text(
-                      "${otherUser?.firstName?.replaceFirstChar { it.uppercase() }} ${otherUser?.lastName?.replaceFirstChar { it.uppercase() }}",
-                      color = Color.White)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "${otherUser?.firstName?.replaceFirstChar { it.uppercase() }} ${otherUser?.lastName?.replaceFirstChar { it.uppercase() }}",
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (friendIsOnline.value) "Online" else "Offline",
+                            color = Color.DarkGray,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
                 },
                 navigationIcon = {
                   IconButton(onClick = { navigationActions.goBack() }) {
