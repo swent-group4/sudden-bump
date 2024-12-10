@@ -55,6 +55,8 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
@@ -63,7 +65,12 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
   val groupedFriends by userViewModel.groupedFriends.collectAsState()
 
   // Charge les emplacements des amis lorsque l'écran est composé
-  LaunchedEffect(Unit) { userViewModel.loadFriends() }
+  LaunchedEffect(Unit) {
+    CoroutineScope(Dispatchers.IO).launch {
+      Log.i("FirebaseDownload", "Request made !")
+      userViewModel.loadFriends()
+    }
+  }
 
   Scaffold(
       topBar = {
@@ -171,6 +178,7 @@ fun CategoryHeader(category: DistanceCategory) {
             modifier = Modifier.padding(start = 8.dp))
       }
 }
+
 // Modify UserRow to fetch and display city and country
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable

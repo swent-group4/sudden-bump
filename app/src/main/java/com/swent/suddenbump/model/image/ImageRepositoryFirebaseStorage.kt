@@ -13,10 +13,12 @@ import java.io.File
 import java.io.FileInputStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 
 class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : ImageRepository {
 
@@ -165,18 +167,38 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
       onSuccess: (ImageBitmap) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
+    val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
     try {
-      val fileDownloadTask = imageRef.getFile(localFile).await()
-      if (fileDownloadTask.task.isCanceled) {
-        onFailure(fileDownloadTask.task.exception!!)
-      } else {
-        val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
+      val timeoutMillis = 3_500L
+      withTimeout(timeoutMillis) {
+        val fileDownloadTask = imageRef.getFile(localFile).await()
+        if (fileDownloadTask.task.isCanceled) {
+          fileInputStream.close()
+          onFailure(fileDownloadTask.task.exception!!)
+        } else {
+          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+          Log.i(
+              "FirebaseDownload",
+              "Finished online : ${profilePicturesPath + path.substringAfterLast('/')}")
+          onSuccess(bitmap.asImageBitmap())
+        }
+      }
+    } catch (e: TimeoutCancellationException) {
+      Log.e("FirebaseDownload", "Download timed out", e)
+      try {
         val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-        Log.d("Image", "finished : ${profilePicturesPath + path.substringAfterLast('/')}")
+        Log.i(
+            "FirebaseDownload",
+            "Finished offline : ${profilePicturesPath + path.substringAfterLast('/')}")
         onSuccess(bitmap.asImageBitmap())
+      } catch (e: Exception) {
+        Log.e("FirebaseDownload", "Failed to download file locally", e)
+        withContext(Dispatchers.IO) { fileInputStream.close() }
+        onFailure(e)
       }
     } catch (e: Exception) {
       Log.e("FirebaseDownload", "Failed to download file", e)
+      withContext(Dispatchers.IO) { fileInputStream.close() }
       onFailure(e)
     }
   }
