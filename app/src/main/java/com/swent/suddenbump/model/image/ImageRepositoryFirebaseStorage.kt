@@ -167,14 +167,15 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
       onSuccess: (ImageBitmap) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
+    val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
     try {
       val timeoutMillis = 3_500L
       withTimeout(timeoutMillis) {
         val fileDownloadTask = imageRef.getFile(localFile).await()
         if (fileDownloadTask.task.isCanceled) {
+          fileInputStream.close()
           onFailure(fileDownloadTask.task.exception!!)
         } else {
-          val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
           val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
           Log.i(
               "FirebaseDownload",
@@ -185,7 +186,6 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
     } catch (e: TimeoutCancellationException) {
       Log.e("FirebaseDownload", "Download timed out", e)
       try {
-        val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
         val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
         Log.i(
             "FirebaseDownload",
@@ -193,10 +193,12 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
         onSuccess(bitmap.asImageBitmap())
       } catch (e: Exception) {
         Log.e("FirebaseDownload", "Failed to download file locally", e)
+        withContext(Dispatchers.IO) { fileInputStream.close() }
         onFailure(e)
       }
     } catch (e: Exception) {
       Log.e("FirebaseDownload", "Failed to download file", e)
+      withContext(Dispatchers.IO) { fileInputStream.close() }
       onFailure(e)
     }
   }

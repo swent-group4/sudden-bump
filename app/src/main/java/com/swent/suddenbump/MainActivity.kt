@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
@@ -71,7 +73,7 @@ class MainActivity : ComponentActivity() {
   private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
   private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
   private lateinit var locationGetter: LocationGetter
-  private var newLocation by mutableStateOf<Location?>(null)
+  private var newLocation by mutableStateOf<Pair<Double, Double>?>(null)
 
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,7 +85,13 @@ class MainActivity : ComponentActivity() {
             object : LocationGetter.LocationListener {
               override fun onLocationResult(location: Location?) {
                 // Handle location update
-                newLocation = location
+                location?.let {
+                  val coordinatesPair = it.latitude to it.longitude
+                  if (coordinatesPair != newLocation) {
+                    Log.d("UserViewModel", "UPDATING")
+                    newLocation = coordinatesPair
+                  }
+                }
               }
 
               override fun onLocationFailure(message: String) {
@@ -137,8 +145,7 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
-              SuddenBumpApp(userViewModel)
+              SuddenBumpApp()
             }
       }
     }
@@ -169,15 +176,29 @@ class MainActivity : ComponentActivity() {
   }
 
   @Composable
-  fun SuddenBumpApp(userViewModel: UserViewModel) {
+  fun SuddenBumpApp() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
     val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
+    val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
 
-    newLocation?.let { it1 ->
-      userViewModel.updateLocation(location = it1, onSuccess = {}, onFailure = {})
+    val currentCoordinates = rememberUpdatedState(newLocation)
+    LaunchedEffect(currentCoordinates.value) {
+      Log.d("UserviewModel", "coordinates : $currentCoordinates")
+      currentCoordinates.value?.let { (latitudeCoord, longitudeCoord) ->
+        userViewModel.updateLocation(
+            location =
+                Location("GPS").apply {
+                  latitude = latitudeCoord // Latitude fictive
+                  longitude = longitudeCoord // Longitude fictive
+                },
+            onSuccess = {},
+            onFailure = {})
+      }
     }
+
+    Log.d("UserViewModel", "!!restarts everything!!")
 
     val startRoute =
         if (!isRunningTest() && userViewModel.isUserLoggedIn()) {
@@ -214,9 +235,6 @@ class MainActivity : ComponentActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
               checkNotificationPermission()
             }
-          }
-          newLocation?.let { it1 ->
-            userViewModel.updateLocation(location = it1, onSuccess = {}, onFailure = {})
           }
           OverviewScreen(navigationActions, userViewModel)
         }
