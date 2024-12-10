@@ -5,7 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,13 +16,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.model.meeting_location.LocationViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.Purple40
 import com.swent.suddenbump.ui.utils.formatDateString
 import com.swent.suddenbump.ui.utils.showDatePickerDialog
 import java.text.SimpleDateFormat
@@ -33,7 +33,6 @@ import java.util.*
 fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: MeetingViewModel, locationViewModel: LocationViewModel = viewModel(factory = LocationViewModel.Factory)) {
   val meeting = meetingViewModel.selectedMeeting.collectAsState().value ?: return
 
-  var location by remember { mutableStateOf(meeting.location) }
   var date by remember {
     mutableStateOf(
         meeting.date.toDate().let {
@@ -41,8 +40,15 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
         })
   }
   var showDatePicker by remember { mutableStateOf(false) }
+    var selectedLocation by remember { mutableStateOf(meeting.location) }
+    val locationQuery by locationViewModel.query.collectAsState()
+
+    // State for dropdown visibility
+    var showDropdown by remember { mutableStateOf(false) }
+    val locationSuggestions by
+    locationViewModel.locationSuggestions.collectAsState(initial = emptyList<Location?>())
   val context = LocalContext.current
-    val locationList = locationViewModel.locationSuggestions.collectAsState().value
+
 
   Scaffold(
       topBar = {
@@ -53,7 +59,7 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("Back")) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = Color.White)
                   }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black))
@@ -64,32 +70,49 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                 Modifier.padding(padding).fillMaxSize().background(Color.Black).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
               // Location field
-            val expanded = remember { mutableStateOf(false) }
-
-            OutlinedTextField(
-                value = location.name,
-                onValueChange = {
-                    location = Location(name = it)
-                    locationViewModel.setQuery(it)
-                    expanded.value = true
-                },
-                label = { Text("Location") },
-                placeholder = { Text("Enter an address") },
-                modifier = Modifier.fillMaxWidth().testTag("Location"))
-
-            DropdownMenu(
-                expanded = expanded.value,
-                onDismissRequest = { expanded.value = false },
-                properties = PopupProperties(focusable = false)
+            ExposedDropdownMenuBox(
+                expanded = showDropdown && locationSuggestions.isNotEmpty(),
+                onExpandedChange = { showDropdown = it } // Toggle dropdown visibility
             ) {
-                locationList.forEach { loc ->
-                    DropdownMenuItem(
-                        onClick = {
-                            location = loc
-                            expanded.value = false
-                        },
-                        text = { Text(text = loc.name) },
-                        modifier = Modifier.testTag("itemTodoResult"))
+                OutlinedTextField(
+                    value = locationQuery,
+                    onValueChange = {
+                        locationViewModel.setQuery(it)
+                        showDropdown = true // Show dropdown when user starts typing
+                    },
+                    label = { Text("Location") },
+                    textStyle = TextStyle(color = Color.White),
+                    placeholder = { Text("Enter an Address or Location") },
+                    modifier =
+                    Modifier.menuAnchor() // Anchor the dropdown to this text field
+                        .fillMaxWidth()
+                        .testTag("inputTodoLocation"),
+                    singleLine = true)
+
+                // Dropdown menu for location suggestions
+                ExposedDropdownMenu(
+                    expanded = showDropdown && locationSuggestions.isNotEmpty(),
+                    onDismissRequest = { showDropdown = false },
+                    modifier = Modifier.background(Color.Black)) {
+                    locationSuggestions.filterNotNull().take(3).forEach { location ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text =
+                                    location.name.take(30) +
+                                            if (location.name.length > 30) "..."
+                                            else "", // Limit name length
+                                    color = Purple40,
+                                    maxLines = 1 // Ensure name doesn't overflow
+                                )
+                            },
+                            onClick = {
+                                locationViewModel.setQuery(location.name)
+                                selectedLocation = location
+                                showDropdown = false // Close dropdown on selection
+                            },
+                            modifier = Modifier.padding(8.dp).background(Color.Black))
+                    }
                 }
             }
 
@@ -160,7 +183,7 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                       val meetingDate = Timestamp(inputCalendar.time)
 
                       // Save the updated meeting
-                      val updatedMeeting = meeting.copy(location = location, date = meetingDate)
+                      val updatedMeeting = meeting.copy(location = selectedLocation, date = meetingDate)
                       meetingViewModel.updateMeeting(updatedMeeting)
 
                       Toast.makeText(context, "Meeting updated successfully", Toast.LENGTH_SHORT)
@@ -175,7 +198,7 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                       Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
                     }
                   },
-                  colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
+                  colors = ButtonDefaults.buttonColors(Purple40),
                   modifier = Modifier.fillMaxWidth().testTag("Save Changes")) {
                     Text("Save Changes")
                   }

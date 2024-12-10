@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.calendar
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -161,7 +162,7 @@ fun PendingMeetingRow(
                                   fontWeight = FontWeight.Bold),
                           modifier = Modifier.testTag("userName"))
                       Text(
-                          text = "Meet at ${meeting.location} on $formattedDate",
+                          text = "Meet at ${meeting.location?.name} on $formattedDate",
                           style = MaterialTheme.typography.bodyMedium,
                           color = Color.Gray,
                           modifier = Modifier.testTag("meetingDetails"))
