@@ -259,7 +259,7 @@ fun showMeetingScheduledNotification(context: Context, meeting: Meeting) {
           .setSmallIcon(android.R.drawable.ic_dialog_info)
           .setContentTitle("New Meeting Request")
           .setContentText(
-              "You have a new meeting request at ${meeting.location} on ${
+              "You have a new meeting request at ${meeting.location?.name} on ${
                     SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(meeting.date.toDate())
                 }.")
           .setPriority(NotificationCompat.PRIORITY_HIGH)
