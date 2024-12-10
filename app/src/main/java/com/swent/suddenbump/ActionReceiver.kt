@@ -7,14 +7,16 @@ import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.swent.suddenbump.model.user.SharedPreferencesManager
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
+import com.swent.suddenbump.worker.WorkerScheduler
 
 class ActionReceiver(
     private val notificationManagerFactory: (Context) -> NotificationManagerCompat = {
       NotificationManagerCompat.from(it)
     },
     private val userRepositoryFactory: (Context) -> UserRepositoryFirestore = {
-      UserRepositoryFirestore(Firebase.firestore, it)
+      UserRepositoryFirestore(Firebase.firestore, SharedPreferencesManager(it), WorkerScheduler(it))
     }
 ) : BroadcastReceiver() {
 
