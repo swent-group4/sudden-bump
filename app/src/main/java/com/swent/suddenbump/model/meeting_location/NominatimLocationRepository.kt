@@ -8,7 +8,19 @@ import org.json.JSONArray
 import org.json.JSONException
 import java.net.URLEncoder
 
+/**
+ * A repository class that interfaces with the Nominatim API to perform location searches.
+ *
+ * @param client An instance of [OkHttpClient] used for making HTTP requests.
+ */
 class NominatimLocationRepository(val client: OkHttpClient) : LocationRepository {
+    /**
+     * Searches for locations matching the given query using the Nominatim API.
+     *
+     * @param query The search query (e.g., an address or place name).
+     * @param onSuccess A callback invoked with the list of [Location] objects upon a successful search.
+     * @param onFailure A callback invoked with an [Exception] if the search fails.
+     */
     override fun search(
         query: String,
         onSuccess: (List<Location>) -> Unit,
@@ -53,7 +65,12 @@ class NominatimLocationRepository(val client: OkHttpClient) : LocationRepository
             }
         })
     }
-
+    /**
+     * Parses a JSON response from the Nominatim API into a list of [Location] objects.
+     *
+     * @param json The JSON string to parse.
+     * @return A list of [Location] objects, or an empty list if parsing fails.
+     */
     private fun parseLocations(json: String): List<Location> {
         return try {
             val jsonArray = JSONArray(json)
