@@ -54,6 +54,7 @@ class EndToEndTest1 {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+  /** Tests the full app navigation flow. */
   @Test
   fun fullAppNavigationTest() {
     composeTestRule.waitForIdle()
@@ -174,6 +175,7 @@ class EndToEndTest2 {
     userViewModel.setCurrentUser()
   }
 
+  /** Tests the end-to-end flow of sending a message. */
   @Test
   fun testSendMessageEoE() {
 

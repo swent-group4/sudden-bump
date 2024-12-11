@@ -3922,6 +3922,34 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
+  fun saveRadiusSavesRadiusAsStringInSharedPreferences() {
+    // Arrange
+    val radiusToSave = 5.5f
+    val radiusKey = "radius"
+
+    // Act
+    userRepositoryFirestore.saveRadius(radiusToSave)
+
+    // Assert
+    verify(sharedPreferencesEditor).putString(radiusKey, radiusToSave.toString())
+    verify(sharedPreferencesEditor).apply()
+  }
+
+  @Test
+  fun saveNotificationStatusSavesStatusInSharedPreferences() {
+    // Arrange
+    val notificationKey = "notificationStatus"
+    val notificationStatus = true
+
+    // Act
+    userRepositoryFirestore.saveNotificationStatus(notificationStatus)
+
+    // Assert
+    verify(sharedPreferencesEditor).putBoolean(notificationKey, notificationStatus)
+    verify(sharedPreferencesEditor).apply()
+  }
+
+  @Test
   fun unblockUser_Success() {
     // Mock document references
     val currentUserRef = mock(DocumentReference::class.java)
