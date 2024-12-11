@@ -114,8 +114,6 @@ open class UserViewModel(
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
-  // In UserViewModel
-
   // Change the type to allow null values
   val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
       combine(_user, _userFriends) { user, friends ->
