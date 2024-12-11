@@ -19,10 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -64,7 +60,11 @@ import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.overview.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 import com.swent.suddenbump.ui.utils.isRunningTest
+import com.swent.suddenbump.ui.utils.testableMeetingViewModel
+import com.swent.suddenbump.ui.utils.testableUserViewModel
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class MainActivity : ComponentActivity() {
 
@@ -72,8 +72,8 @@ class MainActivity : ComponentActivity() {
 
   private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
   private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
-  private lateinit var locationGetter: LocationGetter
-  private var newLocation by mutableStateOf<Pair<Double, Double>?>(null)
+  lateinit var locationGetter: LocationGetter
+  var newLocation = MutableStateFlow<Pair<Double, Double>?>(null)
 
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,9 +87,9 @@ class MainActivity : ComponentActivity() {
                 // Handle location update
                 location?.let {
                   val coordinatesPair = it.latitude to it.longitude
-                  if (coordinatesPair != newLocation) {
+                  if (coordinatesPair != newLocation.value) {
                     Log.d("UserViewModel", "UPDATING")
-                    newLocation = coordinatesPair
+                    newLocation.value = coordinatesPair
                   }
                 }
               }
@@ -180,21 +180,26 @@ class MainActivity : ComponentActivity() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
-    val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
-    val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
+    val meetingViewModelFactory: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
+    val meetingViewModel: MeetingViewModel =
+        if (isRunningTest()) testableMeetingViewModel else meetingViewModelFactory
+    val userViewModelFactory: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
+    val userViewModel: UserViewModel =
+        if (isRunningTest()) testableUserViewModel else userViewModelFactory
 
-    val currentCoordinates = rememberUpdatedState(newLocation)
-    LaunchedEffect(currentCoordinates.value) {
-      Log.d("UserviewModel", "coordinates : $currentCoordinates")
-      currentCoordinates.value?.let { (latitudeCoord, longitudeCoord) ->
-        userViewModel.updateLocation(
-            location =
-                Location("GPS").apply {
-                  latitude = latitudeCoord // Latitude fictive
-                  longitude = longitudeCoord // Longitude fictive
-                },
-            onSuccess = {},
-            onFailure = {})
+    LaunchedEffect(newLocation.asStateFlow()) {
+      Log.d("UserviewModel", "coordinates : $newLocation")
+      newLocation.asStateFlow().collect { newValue ->
+        newValue?.let { (latitudeCoord, longitudeCoord) ->
+          userViewModel.updateLocation(
+              location =
+                  Location("GPS").apply {
+                    latitude = latitudeCoord // Latitude fictive
+                    longitude = longitudeCoord // Longitude fictive
+                  },
+              onSuccess = {},
+              onFailure = {})
+        }
       }
     }
 

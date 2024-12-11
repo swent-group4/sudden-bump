@@ -169,7 +169,7 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
   ) {
     val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
     try {
-      val timeoutMillis = 3_500L
+      val timeoutMillis = 1_500L
       withTimeout(timeoutMillis) {
         val fileDownloadTask = imageRef.getFile(localFile).await()
         if (fileDownloadTask.task.isCanceled) {

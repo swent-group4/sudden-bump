@@ -1,5 +1,8 @@
 package com.swent.suddenbump.ui.utils
 
+import com.swent.suddenbump.model.meeting.MeetingViewModel
+import com.swent.suddenbump.model.user.UserViewModel
+
 @Synchronized
 fun isRunningTest(): Boolean {
   return try {
@@ -13,3 +16,6 @@ fun isRunningTest(): Boolean {
     false
   }
 }
+
+lateinit var testableMeetingViewModel: MeetingViewModel
+lateinit var testableUserViewModel: UserViewModel
