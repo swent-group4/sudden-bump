@@ -72,13 +72,14 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
   val user by viewModel.getCurrentUser().collectAsState()
   val otherUser = viewModel.user
   val friendIsOnline = remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
-            if (otherUser != null) {
-                viewModel.getUserStatus(otherUser.uid, onSuccess = { friendIsOnline.value = it }, onFailure = {})
-            }
-        }
+  LaunchedEffect(Unit) {
+    CoroutineScope(Dispatchers.IO).launch {
+      if (otherUser != null) {
+        viewModel.getUserStatus(
+            otherUser.uid, onSuccess = { friendIsOnline.value = it }, onFailure = {})
+      }
     }
+  }
   // if (messages.isNotEmpty())
   //    viewModel.markMessagesAsRead()
   var list by remember { mutableStateOf<List<ListItem>>(emptyList()) }
@@ -93,19 +94,17 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
           Column(modifier = Modifier.fillMaxWidth()) {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "${otherUser?.firstName?.replaceFirstChar { it.uppercase() }} ${otherUser?.lastName?.replaceFirstChar { it.uppercase() }}",
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (friendIsOnline.value) "Online" else "Offline",
-                            color = Color.DarkGray,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(start = 4.dp)
-                        )
-                    }
+                  Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "${otherUser?.firstName?.replaceFirstChar { it.uppercase() }} ${otherUser?.lastName?.replaceFirstChar { it.uppercase() }}",
+                        color = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (friendIsOnline.value) "Online" else "Offline",
+                        color = Color.DarkGray,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 4.dp))
+                  }
                 },
                 navigationIcon = {
                   IconButton(onClick = { navigationActions.goBack() }) {

@@ -943,46 +943,44 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
   }
-    /**
-     * Récupère le statut en ligne d'un utilisateur spécifique.
-     *
-     * @param uid L'identifiant unique de l'utilisateur dont on veut vérifier le statut.
-     * @param onSuccess Appelé avec `true` si l'utilisateur est en ligne, `false` sinon.
-     * @param onFailure Appelé avec une exception si la récupération échoue.
-     */
-    override fun getUserStatus(
-        uid: String,
-        onSuccess: (Boolean) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(uid)
-            .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    val isOnline = document.getBoolean("isOnline") ?: false
-                    onSuccess(isOnline)
-                } else {
-                    onFailure(Exception("User not found"))
-                }
-            }
-            .addOnFailureListener { exception ->
-                onFailure(exception)
-            }
-    }
+  /**
+   * Récupère le statut en ligne d'un utilisateur spécifique.
+   *
+   * @param uid L'identifiant unique de l'utilisateur dont on veut vérifier le statut.
+   * @param onSuccess Appelé avec `true` si l'utilisateur est en ligne, `false` sinon.
+   * @param onFailure Appelé avec une exception si la récupération échoue.
+   */
+  override fun getUserStatus(
+      uid: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnSuccessListener { document ->
+          if (document.exists()) {
+            val isOnline = document.getBoolean("isOnline") ?: false
+            onSuccess(isOnline)
+          } else {
+            onFailure(Exception("User not found"))
+          }
+        }
+        .addOnFailureListener { exception -> onFailure(exception) }
+  }
 
-    override fun updateUserStatus(
-        uid: String,
-        status: Boolean,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(uid)
-            .update("isOnline", status)
-            .addOnFailureListener { onFailure(it) }
-            .addOnSuccessListener { onSuccess() }
-    }
+  override fun updateUserStatus(
+      uid: String,
+      status: Boolean,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .update("isOnline", status)
+        .addOnFailureListener { onFailure(it) }
+        .addOnSuccessListener { onSuccess() }
+  }
 
   /**
    * Updates the timestamp for the specified user.

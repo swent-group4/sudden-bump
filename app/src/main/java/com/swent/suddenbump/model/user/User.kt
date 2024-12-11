@@ -12,7 +12,7 @@ data class User(
     val profilePicture: ImageBitmap?,
     val emailAddress: String,
     val lastKnownLocation: MutableStateFlow<Location>,
-    val isOnline : Boolean = false,
+    val isOnline: Boolean = false,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

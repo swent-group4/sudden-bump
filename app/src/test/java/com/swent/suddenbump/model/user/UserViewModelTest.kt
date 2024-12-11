@@ -84,156 +84,161 @@ class UserViewModelTest {
     WorkManager.getInstance(ApplicationProvider.getApplicationContext()).cancelAllWork()
   }
 
-    @Test
-    fun getUserStatus_shouldCallOnSuccessWhenUserIsOnline() = runTest {
-        val uid = "test_user_id"
-        val isOnline = true
+  @Test
+  fun getUserStatus_shouldCallOnSuccessWhenUserIsOnline() = runTest {
+    val uid = "test_user_id"
+    val isOnline = true
 
-        // Mock repository getUserStatus to call onSuccess with `true`
-        doAnswer { invocation ->
-            val onSuccess = invocation.getArgument<(Boolean) -> Unit>(1)
-            onSuccess(isOnline)
-            null
-        }.whenever(userRepository).getUserStatus(eq(uid), any(), any())
+    // Mock repository getUserStatus to call onSuccess with `true`
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<(Boolean) -> Unit>(1)
+          onSuccess(isOnline)
+          null
+        }
+        .whenever(userRepository)
+        .getUserStatus(eq(uid), any(), any())
 
-        var onSuccessCalled = false
-        var resultIsOnline: Boolean? = null
-        var onFailureCalled = false
+    var onSuccessCalled = false
+    var resultIsOnline: Boolean? = null
+    var onFailureCalled = false
 
-        userViewModel.getUserStatus(
-            uid = uid,
-            onSuccess = {
-                onSuccessCalled = true
-                resultIsOnline = it
-            },
-            onFailure = { onFailureCalled = true }
-        )
+    userViewModel.getUserStatus(
+        uid = uid,
+        onSuccess = {
+          onSuccessCalled = true
+          resultIsOnline = it
+        },
+        onFailure = { onFailureCalled = true })
 
-        // Assertions
-        verify(userRepository).getUserStatus(eq(uid), any(), any())
-        assert(onSuccessCalled)
-        assert(!onFailureCalled)
-        assert(resultIsOnline == true)
-    }
+    // Assertions
+    verify(userRepository).getUserStatus(eq(uid), any(), any())
+    assert(onSuccessCalled)
+    assert(!onFailureCalled)
+    assert(resultIsOnline == true)
+  }
 
-    @Test
-    fun getUserStatus_shouldCallOnSuccessWhenUserIsOffline() = runTest {
-        val uid = "test_user_id"
-        val isOnline = false
+  @Test
+  fun getUserStatus_shouldCallOnSuccessWhenUserIsOffline() = runTest {
+    val uid = "test_user_id"
+    val isOnline = false
 
-        doAnswer { invocation ->
-            val onSuccess = invocation.getArgument<(Boolean) -> Unit>(1)
-            onSuccess(isOnline)
-            null
-        }.whenever(userRepository).getUserStatus(eq(uid), any(), any())
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<(Boolean) -> Unit>(1)
+          onSuccess(isOnline)
+          null
+        }
+        .whenever(userRepository)
+        .getUserStatus(eq(uid), any(), any())
 
-        var onSuccessCalled = false
-        var resultIsOnline: Boolean? = null
-        var onFailureCalled = false
+    var onSuccessCalled = false
+    var resultIsOnline: Boolean? = null
+    var onFailureCalled = false
 
-        userViewModel.getUserStatus(
-            uid = uid,
-            onSuccess = {
-                onSuccessCalled = true
-                resultIsOnline = it
-            },
-            onFailure = { onFailureCalled = true }
-        )
+    userViewModel.getUserStatus(
+        uid = uid,
+        onSuccess = {
+          onSuccessCalled = true
+          resultIsOnline = it
+        },
+        onFailure = { onFailureCalled = true })
 
-        verify(userRepository).getUserStatus(eq(uid), any(), any())
-        assert(onSuccessCalled)
-        assert(!onFailureCalled)
-        assert(resultIsOnline == false)
-    }
+    verify(userRepository).getUserStatus(eq(uid), any(), any())
+    assert(onSuccessCalled)
+    assert(!onFailureCalled)
+    assert(resultIsOnline == false)
+  }
 
-    @Test
-    fun getUserStatus_shouldCallOnFailureWhenRepositoryFails() = runTest {
-        val uid = "test_user_id"
-        val exception = Exception("Firestore error")
+  @Test
+  fun getUserStatus_shouldCallOnFailureWhenRepositoryFails() = runTest {
+    val uid = "test_user_id"
+    val exception = Exception("Firestore error")
 
-        doAnswer { invocation ->
-            val onFailure = invocation.getArgument<(Exception) -> Unit>(2)
-            onFailure(exception)
-            null
-        }.whenever(userRepository).getUserStatus(eq(uid), any(), any())
+    doAnswer { invocation ->
+          val onFailure = invocation.getArgument<(Exception) -> Unit>(2)
+          onFailure(exception)
+          null
+        }
+        .whenever(userRepository)
+        .getUserStatus(eq(uid), any(), any())
 
-        var onSuccessCalled = false
-        var onFailureCalled = false
-        var caughtException: Exception? = null
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var caughtException: Exception? = null
 
-        userViewModel.getUserStatus(
-            uid = uid,
-            onSuccess = { onSuccessCalled = true },
-            onFailure = {
-                onFailureCalled = true
-                caughtException = it
-            }
-        )
+    userViewModel.getUserStatus(
+        uid = uid,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = {
+          onFailureCalled = true
+          caughtException = it
+        })
 
-        verify(userRepository).getUserStatus(eq(uid), any(), any())
-        assert(!onSuccessCalled)
-        assert(onFailureCalled)
-        assert(caughtException == exception)
-    }
+    verify(userRepository).getUserStatus(eq(uid), any(), any())
+    assert(!onSuccessCalled)
+    assert(onFailureCalled)
+    assert(caughtException == exception)
+  }
 
-    @Test
-    fun updateUserStatus_shouldCallOnSuccessWhenUpdateIsSuccessful() = runTest {
-        val uid = "test_user_id"
-        val isOnline = true
+  @Test
+  fun updateUserStatus_shouldCallOnSuccessWhenUpdateIsSuccessful() = runTest {
+    val uid = "test_user_id"
+    val isOnline = true
 
-        doAnswer { invocation ->
-            val onSuccess = invocation.getArgument<() -> Unit>(2)
-            onSuccess()
-            null
-        }.whenever(userRepository).updateUserStatus(eq(uid), eq(isOnline), any(), any())
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .updateUserStatus(eq(uid), eq(isOnline), any(), any())
 
-        var onSuccessCalled = false
-        var onFailureCalled = false
+    var onSuccessCalled = false
+    var onFailureCalled = false
 
-        userViewModel.updateUserStatus(
-            uid = uid,
-            status = isOnline,
-            onSuccess = { onSuccessCalled = true },
-            onFailure = { onFailureCalled = true }
-        )
+    userViewModel.updateUserStatus(
+        uid = uid,
+        status = isOnline,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { onFailureCalled = true })
 
-        verify(userRepository).updateUserStatus(eq(uid), eq(isOnline), any(), any())
-        assert(onSuccessCalled)
-        assert(!onFailureCalled)
-        // Optionally verify the view model's internal state if it updates anything related to isOnline
-    }
+    verify(userRepository).updateUserStatus(eq(uid), eq(isOnline), any(), any())
+    assert(onSuccessCalled)
+    assert(!onFailureCalled)
+    // Optionally verify the view model's internal state if it updates anything related to isOnline
+  }
 
-    @Test
-    fun updateUserStatus_shouldCallOnFailureWhenUpdateFails() = runTest {
-        val uid = "test_user_id"
-        val isOnline = false
-        val exception = Exception("Failed to update status")
+  @Test
+  fun updateUserStatus_shouldCallOnFailureWhenUpdateFails() = runTest {
+    val uid = "test_user_id"
+    val isOnline = false
+    val exception = Exception("Failed to update status")
 
-        doAnswer { invocation ->
-            val onFailure = invocation.getArgument<(Exception) -> Unit>(3)
-            onFailure(exception)
-            null
-        }.whenever(userRepository).updateUserStatus(eq(uid), eq(isOnline), any(), any())
+    doAnswer { invocation ->
+          val onFailure = invocation.getArgument<(Exception) -> Unit>(3)
+          onFailure(exception)
+          null
+        }
+        .whenever(userRepository)
+        .updateUserStatus(eq(uid), eq(isOnline), any(), any())
 
-        var onSuccessCalled = false
-        var onFailureCalled = false
-        var caughtException: Exception? = null
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var caughtException: Exception? = null
 
-        userViewModel.updateUserStatus(
-            uid = uid,
-            status = isOnline,
-            onSuccess = { onSuccessCalled = true },
-            onFailure = { error ->
-                onFailureCalled = true
-                caughtException = error
-            }
-        )
+    userViewModel.updateUserStatus(
+        uid = uid,
+        status = isOnline,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { error ->
+          onFailureCalled = true
+          caughtException = error
+        })
 
-        verify(userRepository).updateUserStatus(eq(uid), eq(isOnline), any(), any())
-        assert(!onSuccessCalled)
-        assert(onFailureCalled)
-        assert(caughtException == exception)
-    }
+    verify(userRepository).updateUserStatus(eq(uid), eq(isOnline), any(), any())
+    assert(!onSuccessCalled)
+    assert(onFailureCalled)
+    assert(caughtException == exception)
+  }
 
   @Test
   fun setCurrentUser() {
