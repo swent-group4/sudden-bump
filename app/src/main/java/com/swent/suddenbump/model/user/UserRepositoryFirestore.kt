@@ -1003,13 +1003,21 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
 
+  /**
+   * Filters a list of friends to find those within a specified radius of the user's location.
+   *
+   * @param userLocation The current location of the user.
+   * @param friends A list of User objects representing the user's friends.
+   * @param radius The radius within which to search for friends, in meters.
+   * @return A list of User objects representing friends within the specified radius.
+   */
   override fun userFriendsInRadius(
       userLocation: Location,
       friends: List<User>,
       radius: Double
   ): List<User> {
     return friends.filter { friend ->
-      userLocation.distanceTo(friend.lastKnownLocation.value) < radius
+      userLocation.distanceTo(friend.lastKnownLocation.value) <= radius
     }
   }
 
