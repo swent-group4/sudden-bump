@@ -3838,6 +3838,48 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
+  fun userFriendsInRadiusTest() {
+    // Arrange
+    val userLocation =
+        Location("mock_provider").apply {
+          latitude = 40.748817 // Example: Latitude for New York
+          longitude = -73.985428
+        }
+
+    val friend1Location =
+        Location("mock_provider").apply {
+          latitude = 40.748817 // Same location
+          longitude = -73.985428
+        }
+
+    val friend2Location =
+        Location("mock_provider").apply {
+          latitude = 40.730610 // Another point in New York
+          longitude = -73.935242
+        }
+
+    val friend3Location =
+        Location("mock_provider").apply {
+          latitude = 34.052235 // Los Angeles
+          longitude = -118.243683
+        }
+
+    val friend1 = user.copy(lastKnownLocation = MutableStateFlow(friend1Location))
+    val friend2 = user.copy(lastKnownLocation = MutableStateFlow(friend2Location))
+    val friend3 = user.copy(lastKnownLocation = MutableStateFlow(friend3Location))
+
+    val friends = listOf(friend1, friend2, friend3)
+    val radius = 5000.0 // 5 kilometers
+
+    // Act
+    val result = userRepositoryFirestore.userFriendsInRadius(userLocation, friends, radius)
+
+    // Assert
+    val expectedFriends = listOf(friend1, friend2)
+    assertEquals(expectedFriends, result)
+  }
+
+  @Test
   fun saveNotifiedFriends_shouldSaveListAsJsonString() {
     val friendsUID = listOf("user1", "user2", "user3")
     val gson = Gson()
