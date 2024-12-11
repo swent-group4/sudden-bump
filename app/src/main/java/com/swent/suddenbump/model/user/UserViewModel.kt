@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Enumération pour les catégories de distance utilisées pour regrouper les amis. */
+/** Enumeration for distance categories used to group friends. */
 enum class DistanceCategory(val maxDistance: Float, val title: String) {
   WITHIN_5KM(5000f, "Within 5km"),
   WITHIN_10KM(10000f, "Within 10km"),
@@ -31,7 +31,7 @@ enum class DistanceCategory(val maxDistance: Float, val title: String) {
   FURTHER(Float.MAX_VALUE, "Further")
 }
 
-/** Classe ViewModel pour gérer les données et opérations liées à l'utilisateur. */
+/** ViewModel class to manage user-related data and operations. */
 open class UserViewModel(
     private val repository: UserRepository,
     private val chatRepository: ChatRepository
@@ -147,7 +147,7 @@ open class UserViewModel(
           }
           .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-  /** Initialise le ViewModel en configurant le dépôt. */
+  /** Initializes the ViewModel by configuring the repository. */
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
   }
@@ -171,8 +171,8 @@ open class UserViewModel(
   }
 
   /**
-   * Sets the current authenticated user in the ViewModel and fetches related data such as friends,
-   * friend requests, and recommendations.
+   * /** Sets the current authenticated user in the ViewModel and fetches related data such as
+   * friends, friend requests, and recommendations. / friend requests, and recommendations.
    */
   fun setCurrentUser() {
     repository.getUserAccount(
@@ -674,7 +674,7 @@ open class UserViewModel(
     repository.sendVerificationCode(
         phoneNumber,
         onSuccess = { verificationId ->
-          _verificationId.postValue(verificationId) // Stocke l'ID de vérification
+          _verificationId.postValue(verificationId) // Stores the verification ID
           _verificationStatus.postValue("Code Sent")
         },
         onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })

@@ -146,26 +146,22 @@ class MainActivity : ComponentActivity() {
 
   override fun onStart() {
     super.onStart()
-    // Mettre à jour le statut en ligne lorsque l'activité commence
+    // Update online status when the activity starts
     userViewModel.updateUserStatus(
         uid = userViewModel.getCurrentUser().value.uid,
         status = true,
-        onSuccess = { Log.d("UserStatus", "Statut en ligne mis à jour") },
-        onFailure = { e ->
-          Log.e("UserStatus", "Erreur de mise à jour du statut en ligne : ${e.message}")
-        })
+        onSuccess = { Log.d("UserStatus", "Online status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
   }
 
   override fun onStop() {
     super.onStop()
-    // Mettre à jour le statut hors ligne lorsque l'activité s'arrête
+    // Update offline status when the activity stops
     userViewModel.updateUserStatus(
         uid = userViewModel.getCurrentUser().value.uid,
         status = false,
-        onSuccess = { Log.d("UserStatus", "Statut hors ligne mis à jour") },
-        onFailure = { e ->
-          Log.e("UserStatus", "Erreur de mise à jour du statut hors ligne : ${e.message}")
-        })
+        onSuccess = { Log.d("UserStatus", "Offline status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
   }
 
   private fun checkLocationPermissions(onResult: () -> Unit) {

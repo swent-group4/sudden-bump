@@ -944,11 +944,11 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
   /**
-   * Récupère le statut en ligne d'un utilisateur spécifique.
+   * Retrieves the online status of a specific user.
    *
-   * @param uid L'identifiant unique de l'utilisateur dont on veut vérifier le statut.
-   * @param onSuccess Appelé avec `true` si l'utilisateur est en ligne, `false` sinon.
-   * @param onFailure Appelé avec une exception si la récupération échoue.
+   * @param uid The unique identifier of the user whose status is being checked.
+   * @param onSuccess Called with `true` if the user is online, `false` otherwise.
+   * @param onFailure Called with an exception if the retrieval fails.
    */
   override fun getUserStatus(
       uid: String,
