@@ -78,14 +78,16 @@ fun EditMeetingScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
               // Location field
-            LocationField(
-                locationQuery = locationQuery,
-                onLocationQueryChange = { locationQuery = it; locationViewModel.setQuery(it) },
-                locationSuggestions = locationSuggestions,
-                onLocationSelected = { selectedLocation = it },
-                showDropdown = showDropdown,
-                onDropdownChange = { showDropdown = it }
-            )
+              LocationField(
+                  locationQuery = locationQuery,
+                  onLocationQueryChange = {
+                    locationQuery = it
+                    locationViewModel.setQuery(it)
+                  },
+                  locationSuggestions = locationSuggestions,
+                  onLocationSelected = { selectedLocation = it },
+                  showDropdown = showDropdown,
+                  onDropdownChange = { showDropdown = it })
 
               // Date Field
               OutlinedTextField(

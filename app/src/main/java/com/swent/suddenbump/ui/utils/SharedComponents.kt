@@ -172,51 +172,54 @@ fun LocationField(
     onDropdownChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ExposedDropdownMenuBox(
-        expanded = showDropdown && locationSuggestions.isNotEmpty(),
-        onExpandedChange = { onDropdownChange(it) } // Toggle dropdown visibility
-    ) {
+  ExposedDropdownMenuBox(
+      expanded = showDropdown && locationSuggestions.isNotEmpty(),
+      onExpandedChange = { onDropdownChange(it) } // Toggle dropdown visibility
+      ) {
         OutlinedTextField(
             value = locationQuery ?: "",
             onValueChange = {
-                onLocationQueryChange(it)
-                onDropdownChange(true) // Show dropdown when user starts typing
+              onLocationQueryChange(it)
+              onDropdownChange(true) // Show dropdown when user starts typing
             },
             label = { Text("Location") },
             textStyle = TextStyle(color = Color.White),
             placeholder = { Text("Enter an Address or Location") },
-            modifier = modifier.menuAnchor() // Anchor the dropdown to this text field
-                .fillMaxWidth()
-                .testTag("Location"),
-            singleLine = true
-        )
+            modifier =
+                modifier
+                    .menuAnchor() // Anchor the dropdown to this text field
+                    .fillMaxWidth()
+                    .testTag("Location"),
+            singleLine = true)
 
         // Dropdown menu for location suggestions
         ExposedDropdownMenu(
             expanded = showDropdown && locationSuggestions.isNotEmpty(),
             onDismissRequest = { onDropdownChange(false) },
-            modifier = Modifier.background(Color.Black).testTag("DropDownMenu")
-        ) {
-            locationSuggestions.filterNotNull().take(3).forEach { location ->
+            modifier = Modifier.background(Color.Black).testTag("DropDownMenu")) {
+              locationSuggestions.filterNotNull().take(3).forEach { location ->
                 DropdownMenuItem(
                     text = {
-                        Text(
-                            text = location.name.take(30) + if (location.name.length > 30) "..." else "", // Limit name length
-                            color = Purple40,
-                            maxLines = 1 // Ensure name doesn't overflow
-                        )
+                      Text(
+                          text =
+                              location.name.take(30) +
+                                  if (location.name.length > 30) "..." else "", // Limit name length
+                          color = Purple40,
+                          maxLines = 1 // Ensure name doesn't overflow
+                          )
                     },
                     onClick = {
-                        // Extract substring up to the first comma
-                        val trimmedLocation = location.name.substringBefore(",")
-                        onLocationQueryChange(trimmedLocation) // Update the query with trimmed location
-                        onLocationSelected(location.copy(name = trimmedLocation)) // Save the trimmed name
-                        onDropdownChange(false) // Close dropdown on selection
+                      // Extract substring up to the first comma
+                      val trimmedLocation = location.name.substringBefore(",")
+                      onLocationQueryChange(
+                          trimmedLocation) // Update the query with trimmed location
+                      onLocationSelected(
+                          location.copy(name = trimmedLocation)) // Save the trimmed name
+                      onDropdownChange(false) // Close dropdown on selection
                     },
-                    modifier = Modifier.padding(8.dp).background(Color.Black).testTag("DropDownMenuItem")
-                )
+                    modifier =
+                        Modifier.padding(8.dp).background(Color.Black).testTag("DropDownMenuItem"))
+              }
             }
-        }
-    }
+      }
 }
-

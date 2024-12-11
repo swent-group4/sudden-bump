@@ -113,47 +113,45 @@ class UiUtilsTest {
     assert(optionClicked) { "Account option was not clicked!" }
   }
 
-    @Test
-    fun testLocationFieldDisplaysAndHandlesSelection() {
-        val locationSuggestions = listOf(
+  @Test
+  fun testLocationFieldDisplaysAndHandlesSelection() {
+    val locationSuggestions =
+        listOf(
             Location(12.34, 56.78, "Location 1"),
             Location(34.56, 78.90, "Location 2"),
-            Location(90.12, 34.56, "Location 3")
-        )
+            Location(90.12, 34.56, "Location 3"))
 
-        var locationQuery = ""
-        var showDropdown = true
-        var selectedLocation: Location? = null
+    var locationQuery = ""
+    var showDropdown = true
+    var selectedLocation: Location? = null
 
-        composeTestRule.setContent {
-            LocationField(
-                locationQuery = locationQuery,
-                onLocationQueryChange = { locationQuery = it },
-                locationSuggestions = locationSuggestions,
-                onLocationSelected = { selectedLocation = it },
-                showDropdown = showDropdown,
-                onDropdownChange = { showDropdown = it }
-            )
-        }
-
-        // Verify the text field exists
-        composeTestRule.onNodeWithTag("Location").assertExists()
-        composeTestRule.onNodeWithTag("Location").assertIsDisplayed()
-
-        // Simulate user typing to trigger the dropdown
-        composeTestRule.onNodeWithTag("Location").performTextInput("Loc")
-        composeTestRule.waitForIdle()
-
-        // Verify the dropdown menu is displayed
-        composeTestRule.onNodeWithTag("DropDownMenu").assertExists()
-        composeTestRule.onNodeWithTag("Location").assertIsDisplayed()
-
-        // Select the first suggestion
-        composeTestRule.onAllNodesWithTag("DropDownMenuItem")[0].performClick()
-        composeTestRule.waitForIdle()
-
-        // Verify the selected location is updated
-        assert(selectedLocation?.name == "Location 1")
-
+    composeTestRule.setContent {
+      LocationField(
+          locationQuery = locationQuery,
+          onLocationQueryChange = { locationQuery = it },
+          locationSuggestions = locationSuggestions,
+          onLocationSelected = { selectedLocation = it },
+          showDropdown = showDropdown,
+          onDropdownChange = { showDropdown = it })
     }
+
+    // Verify the text field exists
+    composeTestRule.onNodeWithTag("Location").assertExists()
+    composeTestRule.onNodeWithTag("Location").assertIsDisplayed()
+
+    // Simulate user typing to trigger the dropdown
+    composeTestRule.onNodeWithTag("Location").performTextInput("Loc")
+    composeTestRule.waitForIdle()
+
+    // Verify the dropdown menu is displayed
+    composeTestRule.onNodeWithTag("DropDownMenu").assertExists()
+    composeTestRule.onNodeWithTag("Location").assertIsDisplayed()
+
+    // Select the first suggestion
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[0].performClick()
+    composeTestRule.waitForIdle()
+
+    // Verify the selected location is updated
+    assert(selectedLocation?.name == "Location 1")
+  }
 }
