@@ -1003,21 +1003,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnSuccessListener { onSuccess() }
   }
 
-  override fun isFriendsInRadius(
+  override fun userFriendsInRadius(
       userLocation: Location,
       friends: List<User>,
-      radius: Double,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    var inRadius = false
-    friends.forEach { friend ->
-      inRadius = inRadius || userLocation.distanceTo(friend.lastKnownLocation.value) < radius
-    }
-    if (inRadius) {
-      onSuccess()
-    } else {
-      onFailure(Exception("No friends in radius"))
+      radius: Double
+  ): List<User> {
+    return friends.filter { friend ->
+      userLocation.distanceTo(friend.lastKnownLocation.value) < radius
     }
   }
 

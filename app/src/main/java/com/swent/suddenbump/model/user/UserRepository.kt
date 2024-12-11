@@ -137,13 +137,7 @@ interface UserRepository {
 
   fun getUserStatus(uid: String, onSuccess: (Boolean) -> Unit, onFailure: (Exception) -> Unit)
 
-  fun isFriendsInRadius(
-      userLocation: Location,
-      friends: List<User>,
-      radius: Double,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  )
+  fun userFriendsInRadius(userLocation: Location, friends: List<User>, radius: Double): List<User>
 
   fun updateUserStatus(
       uid: String,
