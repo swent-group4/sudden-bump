@@ -53,7 +53,7 @@ class LocationUpdateWorker(
         val alreadyNotifiedFriends = repository.getSavedAlreadyNotifiedFriends().toMutableList()
 
         val uid = repository.getSavedUid()
-        val radius = 5000.0
+        val radius = repository.getSavedRadius() * 1000
 
         val user = getUserAccountSuspend(repository, uid)
 
@@ -73,45 +73,47 @@ class LocationUpdateWorker(
               onSuccess = { /* Handle success */},
               onFailure = { /* Handle failure */})
 
-          repository.getUserFriends(
-              uid = user.uid,
-              onSuccess = { friends ->
-                val friendsInRadius =
-                    repository.userFriendsInRadius(
-                        userLocation = location, friends = friends, radius = radius)
-                friendsInRadius.forEach { friend ->
-                  if (friend.uid !in alreadyNotifiedFriends) {
-                    Log.d("WorkerSuddenBump", "alreadyNotifiedFriends: $alreadyNotifiedFriends")
-                    showFriendNearbyNotification(applicationContext, user.uid, friend)
-                    alreadyNotifiedFriends.add(friend.uid)
-                    repository.saveNotifiedFriends(alreadyNotifiedFriends)
-                  }
-                }
-              },
-              onFailure = {
-                Log.d("WorkerSuddenBump", "Retrieval of friends encountered an issue")
-              })
-
-          meetingRepository.getMeetings(
-              onSuccess = { meetings ->
-                val filteredMeetings =
-                    meetings.filter {
-                      it.friendId == user.uid &&
-                          !it.accepted &&
-                          it.date.toDate().after(Calendar.getInstance().time)
+          if (repository.getSavedNotificationStatus()) {
+            repository.getUserFriends(
+                uid = user.uid,
+                onSuccess = { friends ->
+                  val friendsInRadius =
+                      repository.userFriendsInRadius(
+                          userLocation = location, friends = friends, radius = radius.toDouble())
+                  friendsInRadius.forEach { friend ->
+                    if (friend.uid !in alreadyNotifiedFriends) {
+                      Log.d("WorkerSuddenBump", "alreadyNotifiedFriends: $alreadyNotifiedFriends")
+                      showFriendNearbyNotification(applicationContext, user.uid, friend)
+                      alreadyNotifiedFriends.add(friend.uid)
+                      repository.saveNotifiedFriends(alreadyNotifiedFriends)
                     }
-
-                if (filteredMeetings.isNotEmpty()) {
-                  filteredMeetings.forEach { meeting ->
-                    showMeetingScheduledNotification(applicationContext, meeting)
                   }
-                } else {
-                  Log.d("MeetingCheck", "No new pending meetings found")
-                }
-              },
-              onFailure = {
-                Log.d("MeetingCheck", "Retrieval of meetings encountered an issue: ${it.message}")
-              })
+                },
+                onFailure = {
+                  Log.d("WorkerSuddenBump", "Retrieval of friends encountered an issue")
+                })
+
+            meetingRepository.getMeetings(
+                onSuccess = { meetings ->
+                  val filteredMeetings =
+                      meetings.filter {
+                        it.friendId == user.uid &&
+                            !it.accepted &&
+                            it.date.toDate().after(Calendar.getInstance().time)
+                      }
+
+                  if (filteredMeetings.isNotEmpty()) {
+                    filteredMeetings.forEach { meeting ->
+                      showMeetingScheduledNotification(applicationContext, meeting)
+                    }
+                  } else {
+                    Log.d("MeetingCheck", "No new pending meetings found")
+                  }
+                },
+                onFailure = {
+                  Log.d("MeetingCheck", "Retrieval of meetings encountered an issue: ${it.message}")
+                })
+          }
 
           Result.success()
         } else {

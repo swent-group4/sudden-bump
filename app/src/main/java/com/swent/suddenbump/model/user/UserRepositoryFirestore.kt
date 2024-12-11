@@ -1132,6 +1132,28 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     }
   }
 
+  override fun saveRadius(radius: Float) {
+    with(sharedPreferences.edit()) {
+      putString("radius", radius.toString())
+      apply()
+    }
+  }
+
+  override fun getSavedRadius(): Float {
+    return sharedPreferences.getString("radius", "5.0")!!.toFloat()
+  }
+
+  override fun saveNotificationStatus(status: Boolean) {
+    with(sharedPreferences.edit()) {
+      putBoolean("notificationStatus", status)
+      apply()
+    }
+  }
+
+  override fun getSavedNotificationStatus(): Boolean {
+    return sharedPreferences.getBoolean("notificationStatus", true)
+  }
+
   /**
    * Checks if a user is currently logged in based on shared preferences.
    *

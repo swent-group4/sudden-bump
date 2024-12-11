@@ -163,7 +163,15 @@ interface UserRepository {
 
   fun getSavedUid(): String
 
-  fun saveNotifiedFriends(friends: List<String>)
+  fun saveNotifiedFriends(friendsUID: List<String>)
+
+  fun saveRadius(radius: Float)
+
+  fun getSavedRadius(): Float
+
+  fun saveNotificationStatus(status: Boolean)
+
+  fun getSavedNotificationStatus(): Boolean
 
   fun getSavedAlreadyNotifiedFriends(): List<String>
 
