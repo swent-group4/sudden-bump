@@ -150,7 +150,17 @@ fun AccountOption(label: String, backgroundColor: Color, onClick: () -> Unit, te
             modifier = Modifier.padding(start = 16.dp))
       }
 }
-
+/**
+ * Composable that displays a location field with dropdown suggestions.
+ *
+ * @param locationQuery The current query string for the location.
+ * @param onLocationQueryChange The callback for when the location query changes.
+ * @param locationSuggestions The list of location suggestions.
+ * @param onLocationSelected The callback for when a location is selected.
+ * @param showDropdown The visibility state of the dropdown.
+ * @param onDropdownChange The callback for when the dropdown visibility changes.
+ * @param modifier The modifier for the location field.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationField(
@@ -185,7 +195,7 @@ fun LocationField(
         ExposedDropdownMenu(
             expanded = showDropdown && locationSuggestions.isNotEmpty(),
             onDismissRequest = { onDropdownChange(false) },
-            modifier = Modifier.background(Color.Black)
+            modifier = Modifier.background(Color.Black).testTag("DropDownMenu")
         ) {
             locationSuggestions.filterNotNull().take(3).forEach { location ->
                 DropdownMenuItem(
@@ -203,7 +213,7 @@ fun LocationField(
                         onLocationSelected(location.copy(name = trimmedLocation)) // Save the trimmed name
                         onDropdownChange(false) // Close dropdown on selection
                     },
-                    modifier = Modifier.padding(8.dp).background(Color.Black)
+                    modifier = Modifier.padding(8.dp).background(Color.Black).testTag("DropDownMenuItem")
                 )
             }
         }
