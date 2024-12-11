@@ -602,7 +602,7 @@ open class UserViewModel(
   }
 
   fun logout() {
-    repository.logoutUser()
+      repository.logoutUser()
     _user.value = userDummy2
     _messages.value = emptyList()
     _userFriends.value = emptyList()

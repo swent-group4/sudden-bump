@@ -1,32 +1,52 @@
 package com.swent.suddenbump.ui.overview
 
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Route
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mock
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.doNothing
+import org.mockito.kotlin.spy
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @RunWith(AndroidJUnit4::class)
 class AccountScreenTest {
 
+  @Mock
   private lateinit var navigationActions: NavigationActions
+  @Mock
   private lateinit var userViewModel: UserViewModel
+  @Mock
+    private lateinit var userRepository: UserRepository
+    @Mock
+    private lateinit var chatRepository: ChatRepository
 
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setUp() {
+    userRepository = mock(UserRepository::class.java)
     navigationActions = mock(NavigationActions::class.java)
-    userViewModel = mock(UserViewModel::class.java)
+    chatRepository = mock(ChatRepository::class.java)
+
+    doNothing().`when`(userRepository).logoutUser()
+
+    userViewModel = UserViewModel(userRepository, chatRepository)
     composeTestRule.setContent {
       AccountScreen(navigationActions = navigationActions, userViewModel = userViewModel)
     }
@@ -68,5 +88,18 @@ class AccountScreenTest {
     verify(navigationActions).navigateTo("AccountScreen")
   }
 
-  // add test for logout button. maybe in an end-to-end test?
+  @Test
+  fun testLogoutSectionVisibility() {
+    // Assert that the logout section is displayed
+    composeTestRule.onNodeWithTag("logoutSection").assertIsDisplayed()
+  }
+
+  @Test
+  fun testLogoutButtonCallsLogout() {
+    // Perform a click on the "Log out" section
+    composeTestRule.onNodeWithTag("logoutSection").assertHasClickAction()
+    composeTestRule.onNodeWithTag("logoutSection").performClick()
+    verify(navigationActions).navigateTo(Route.AUTH)
+  }
+
 }
