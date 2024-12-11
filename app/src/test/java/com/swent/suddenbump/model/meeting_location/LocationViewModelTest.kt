@@ -14,65 +14,69 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class LocationViewModelTest {
 
-    @Mock private lateinit var mockRepository: LocationRepository
+  @Mock private lateinit var mockRepository: LocationRepository
 
-    private lateinit var viewModel: LocationViewModel
+  private lateinit var viewModel: LocationViewModel
 
-    @Before
-    fun setUp() {
-        MockitoAnnotations.openMocks(this)
-        viewModel = LocationViewModel(mockRepository)
-    }
+  @Before
+  fun setUp() {
+    MockitoAnnotations.openMocks(this)
+    viewModel = LocationViewModel(mockRepository)
+  }
 
-    @Test
-    fun `setQuery should update query state`() {
-        val testQuery = "test"
+  @Test
+  fun `setQuery should update query state`() {
+    val testQuery = "test"
 
-        viewModel.setQuery(testQuery)
+    viewModel.setQuery(testQuery)
 
-        assertEquals(testQuery, viewModel.query.value)
-    }
+    assertEquals(testQuery, viewModel.query.value)
+  }
 
-    @Test
-    fun `setQuery should trigger search and update location suggestions`() = runBlocking {
-        val testQuery = "location"
-        val mockLocations = listOf(
-            Location( 12.34, 56.78, "Location 1"),
-            Location( 98.76, 54.32, "Location 2")
-        )
+  @Test
+  fun `setQuery should trigger search and update location suggestions`() = runBlocking {
+    val testQuery = "location"
+    val mockLocations =
+        listOf(Location(12.34, 56.78, "Location 1"), Location(98.76, 54.32, "Location 2"))
 
-        doAnswer { invocation ->
-            val onSuccess = invocation.arguments[1] as (List<Location>) -> Unit
-            onSuccess(mockLocations)
-            null
-        }.`when`(mockRepository).search(org.mockito.kotlin.eq(testQuery), org.mockito.kotlin.any(), org.mockito.kotlin.any())
+    doAnswer { invocation ->
+          val onSuccess = invocation.arguments[1] as (List<Location>) -> Unit
+          onSuccess(mockLocations)
+          null
+        }
+        .`when`(mockRepository)
+        .search(
+            org.mockito.kotlin.eq(testQuery), org.mockito.kotlin.any(), org.mockito.kotlin.any())
 
-        viewModel.setQuery(testQuery)
+    viewModel.setQuery(testQuery)
 
-        assertEquals(mockLocations, viewModel.locationSuggestions.value)
-    }
+    assertEquals(mockLocations, viewModel.locationSuggestions.value)
+  }
 
-    @Test
-    fun `setQuery should clear location suggestions for blank query`() = runBlocking {
-        viewModel.setQuery("")
+  @Test
+  fun `setQuery should clear location suggestions for blank query`() = runBlocking {
+    viewModel.setQuery("")
 
-        assertTrue(viewModel.locationSuggestions.value.isEmpty())
-    }
+    assertTrue(viewModel.locationSuggestions.value.isEmpty())
+  }
 
-    @Test
-    fun `searchLocations should handle repository failure`() = runBlocking {
-        val testQuery = "location"
-        val exception = Exception("Search failed")
+  @Test
+  fun `searchLocations should handle repository failure`() = runBlocking {
+    val testQuery = "location"
+    val exception = Exception("Search failed")
 
-        doAnswer { invocation ->
-            val onFailure = invocation.arguments[2] as (Exception) -> Unit
-            onFailure(exception)
-            null
-        }.`when`(mockRepository).search(org.mockito.kotlin.eq(testQuery), org.mockito.kotlin.any(), org.mockito.kotlin.any())
+    doAnswer { invocation ->
+          val onFailure = invocation.arguments[2] as (Exception) -> Unit
+          onFailure(exception)
+          null
+        }
+        .`when`(mockRepository)
+        .search(
+            org.mockito.kotlin.eq(testQuery), org.mockito.kotlin.any(), org.mockito.kotlin.any())
 
-        viewModel.setQuery(testQuery)
+    viewModel.setQuery(testQuery)
 
-        // Ensure no crash or improper state update
-        assertTrue(viewModel.locationSuggestions.value.isEmpty())
-    }
+    // Ensure no crash or improper state update
+    assertTrue(viewModel.locationSuggestions.value.isEmpty())
+  }
 }

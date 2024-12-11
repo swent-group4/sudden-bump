@@ -101,11 +101,12 @@ class NotificationTest {
     val meeting =
         Meeting(
             meetingId = "123",
-            location = com.swent.suddenbump.model.meeting_location.Location(
-                12.34,
-                56.78,
-                "Ikea",
-            ),
+            location =
+                com.swent.suddenbump.model.meeting_location.Location(
+                    12.34,
+                    56.78,
+                    "Ikea",
+                ),
             date = meetingDate,
             friendId = "friend",
             creatorId = "creator",

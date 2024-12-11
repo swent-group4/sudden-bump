@@ -30,7 +30,11 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: MeetingViewModel, locationViewModel: LocationViewModel = viewModel(factory = LocationViewModel.Factory)) {
+fun EditMeetingScreen(
+    navigationActions: NavigationActions,
+    meetingViewModel: MeetingViewModel,
+    locationViewModel: LocationViewModel = viewModel(factory = LocationViewModel.Factory)
+) {
   val meeting = meetingViewModel.selectedMeeting.collectAsState().value ?: return
 
   var date by remember {
@@ -40,15 +44,14 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
         })
   }
   var showDatePicker by remember { mutableStateOf(false) }
-    var selectedLocation by remember { mutableStateOf(meeting.location)}
-    var locationQuery by remember { mutableStateOf(meeting.location?.name) }
+  var selectedLocation by remember { mutableStateOf(meeting.location) }
+  var locationQuery by remember { mutableStateOf(meeting.location?.name) }
 
-    // State for dropdown visibility
-    var showDropdown by remember { mutableStateOf(false) }
-    val locationSuggestions by
-    locationViewModel.locationSuggestions.collectAsState(initial = emptyList<Location?>())
+  // State for dropdown visibility
+  var showDropdown by remember { mutableStateOf(false) }
+  val locationSuggestions by
+      locationViewModel.locationSuggestions.collectAsState(initial = emptyList<Location?>())
   val context = LocalContext.current
-
 
   Scaffold(
       topBar = {
@@ -59,7 +62,10 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("Back")) {
-                    Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    Icon(
+                        Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White)
                   }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black))
@@ -70,54 +76,56 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                 Modifier.padding(padding).fillMaxSize().background(Color.Black).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
               // Location field
-            ExposedDropdownMenuBox(
-                expanded = showDropdown && locationSuggestions.isNotEmpty(),
-                onExpandedChange = { showDropdown = it } // Toggle dropdown visibility
-            ) {
-                OutlinedTextField(
-                    value = locationQuery ?: "",
-                    onValueChange = {
-                        locationQuery = it
-                        locationViewModel.setQuery(it)
-                        showDropdown = true // Show dropdown when user starts typing
-                    },
-                    label = { Text("Location") },
-                    textStyle = TextStyle(color = Color.White),
-                    placeholder = { Text("Enter an Address or Location") },
-                    modifier =
-                    Modifier.menuAnchor() // Anchor the dropdown to this text field
-                        .fillMaxWidth()
-                        .testTag("inputTodoLocation"),
-                    singleLine = true)
+              ExposedDropdownMenuBox(
+                  expanded = showDropdown && locationSuggestions.isNotEmpty(),
+                  onExpandedChange = { showDropdown = it } // Toggle dropdown visibility
+                  ) {
+                    OutlinedTextField(
+                        value = locationQuery ?: "",
+                        onValueChange = {
+                          locationQuery = it
+                          locationViewModel.setQuery(it)
+                          showDropdown = true // Show dropdown when user starts typing
+                        },
+                        label = { Text("Location") },
+                        textStyle = TextStyle(color = Color.White),
+                        placeholder = { Text("Enter an Address or Location") },
+                        modifier =
+                            Modifier.menuAnchor() // Anchor the dropdown to this text field
+                                .fillMaxWidth()
+                                .testTag("Location"),
+                        singleLine = true)
 
-                // Dropdown menu for location suggestions
-                ExposedDropdownMenu(
-                    expanded = showDropdown && locationSuggestions.isNotEmpty(),
-                    onDismissRequest = { showDropdown = false },
-                    modifier = Modifier.background(Color.Black)) {
-                    locationSuggestions.filterNotNull().take(3).forEach { location ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text =
-                                    location.name.take(30) +
-                                            if (location.name.length > 30) "..."
-                                            else "", // Limit name length
-                                    color = Purple40,
-                                    maxLines = 1 // Ensure name doesn't overflow
-                                )
-                            },
-                            onClick = {
-                                // Extract substring up to the first comma
-                                val trimmedLocation = location.name.substringBefore(",")
-                                locationViewModel.setQuery(trimmedLocation) // Update the query with trimmed location
-                                selectedLocation = location.copy(name = trimmedLocation) // Save the trimmed name
-                                showDropdown = false // Close dropdown on selection
-                            },
-                            modifier = Modifier.padding(8.dp).background(Color.Black))
-                    }
-                }
-            }
+                    // Dropdown menu for location suggestions
+                    ExposedDropdownMenu(
+                        expanded = showDropdown && locationSuggestions.isNotEmpty(),
+                        onDismissRequest = { showDropdown = false },
+                        modifier = Modifier.background(Color.Black)) {
+                          locationSuggestions.filterNotNull().take(3).forEach { location ->
+                            DropdownMenuItem(
+                                text = {
+                                  Text(
+                                      text =
+                                          location.name.take(30) +
+                                              if (location.name.length > 30) "..."
+                                              else "", // Limit name length
+                                      color = Purple40,
+                                      maxLines = 1 // Ensure name doesn't overflow
+                                      )
+                                },
+                                onClick = {
+                                  // Extract substring up to the first comma
+                                  val trimmedLocation = location.name.substringBefore(",")
+                                  locationViewModel.setQuery(
+                                      trimmedLocation) // Update the query with trimmed location
+                                  selectedLocation =
+                                      location.copy(name = trimmedLocation) // Save the trimmed name
+                                  showDropdown = false // Close dropdown on selection
+                                },
+                                modifier = Modifier.padding(8.dp).background(Color.Black))
+                          }
+                        }
+                  }
 
               // Date Field
               OutlinedTextField(
@@ -186,7 +194,8 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
                       val meetingDate = Timestamp(inputCalendar.time)
 
                       // Save the updated meeting
-                      val updatedMeeting = meeting.copy(location = selectedLocation, date = meetingDate)
+                      val updatedMeeting =
+                          meeting.copy(location = selectedLocation, date = meetingDate)
                       meetingViewModel.updateMeeting(updatedMeeting)
 
                       Toast.makeText(context, "Meeting updated successfully", Toast.LENGTH_SHORT)

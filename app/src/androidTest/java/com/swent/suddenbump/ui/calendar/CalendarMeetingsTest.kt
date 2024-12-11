@@ -82,8 +82,20 @@ class CalendarMeetingsScreenTest {
     // Mock meeting data
     val meetings =
         listOf(
-            Meeting("1", com.swent.suddenbump.model.meeting_location.Location(12.34, 56.78, "Central Park"), Timestamp.now(), "currentUserId", "friendId1", false),
-            Meeting("2", com.swent.suddenbump.model.meeting_location.Location(12.24, 56.78, "City Square"), Timestamp.now(), "currentUserId", "friendId2", true))
+            Meeting(
+                "1",
+                com.swent.suddenbump.model.meeting_location.Location(12.34, 56.78, "Central Park"),
+                Timestamp.now(),
+                "currentUserId",
+                "friendId1",
+                false),
+            Meeting(
+                "2",
+                com.swent.suddenbump.model.meeting_location.Location(12.24, 56.78, "City Square"),
+                Timestamp.now(),
+                "currentUserId",
+                "friendId2",
+                true))
     every { meetingRepository.getMeetings(any(), any()) } answers
         {
           val onSuccess = firstArg<(List<Meeting>) -> Unit>()

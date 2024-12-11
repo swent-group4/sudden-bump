@@ -128,32 +128,4 @@ class AddMeetingScreenTest {
     // Assert: Check addMeeting is called with any arguments
     verify(meetingRepository).addMeeting(any(), any(), any())
   }
-
-  /*@Test
-  fun datePickerDialog_isShown_whenIconButtonIsPressed() {
-    composeTestRule.setContent {
-      AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
-    }
-
-    // Perform click on the IconButton inside the OutlinedTextField
-    composeTestRule.onNodeWithTag("DateIconButton").performClick()
-
-    // Wait for the dialog to be displayed
-    onView(isRoot()).perform(waitFor(500))
-    // Check if the DatePickerDialog is displayed
-    // Check if a native dialog is displayed
-    onView(withId(android.R.id.datePicker)).perform(PickerActions.setDate(2024, 11, 20));
-
-  }*/
-
-  // Custom wait action
-  /*private fun waitFor(delay: Long): ViewAction {
-    return object : ViewAction {
-      override fun getConstraints(): Matcher<View> = isRoot()
-      override fun getDescription(): String = "Wait for $delay milliseconds."
-      override fun perform(uiController: UiController, view: View?) {
-        uiController.loopMainThreadForAtLeast(delay)
-      }
-    }
-  }*/
 }

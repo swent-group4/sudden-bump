@@ -15,7 +15,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.firebase.firestore.*
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
-import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingRepositoryFirestore
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User

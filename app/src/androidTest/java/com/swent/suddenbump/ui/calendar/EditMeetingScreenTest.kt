@@ -103,7 +103,7 @@ class EditMeetingScreenTest {
 
     // Act
     composeTestRule.onNodeWithTag("Location").performTextClearance()
-    composeTestRule.onNodeWithTag("Location").performTextInput("New Location")
+    composeTestRule.onNodeWithTag("Location").performTextInput("Cafe")
     composeTestRule.onNodeWithTag("Date").performTextClearance()
     composeTestRule.onNodeWithTag("Date").performTextInput("25/12/2024")
     composeTestRule.onNodeWithTag("Save Changes").performClick()
@@ -130,7 +130,7 @@ class EditMeetingScreenTest {
     val meetingDate = Timestamp(calendar.time)
 
     assertEquals("JhXlhoSvTmbtTFSVpNnA", meetingCaptor.firstValue.meetingId)
-    assertEquals("New Location", meetingCaptor.firstValue.location)
+    assertEquals("Cafe", meetingCaptor.firstValue.location?.name)
     assertEquals(meetingDate, meetingCaptor.firstValue.date)
     assertEquals("FPHuqGkCBo7Iinbo5OO9", meetingCaptor.firstValue.friendId)
     assertEquals("P7vuP4bbEQB03OSR3QwJ", meetingCaptor.firstValue.creatorId)

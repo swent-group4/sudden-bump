@@ -38,8 +38,8 @@ class SimpleMapTest {
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
-      meetingRepository = mock(MeetingRepository::class.java)
-      meetingViewModel = MeetingViewModel(meetingRepository)
+    meetingRepository = mock(MeetingRepository::class.java)
+    meetingViewModel = MeetingViewModel(meetingRepository)
     userViewModel = UserViewModel(userRepository, chatRepository)
   }
 
@@ -53,6 +53,8 @@ class SimpleMapTest {
         }
 
     // Render the SimpleMap composable with the initial location
-    composeTestRule.setContent { SimpleMap(userViewModel = userViewModel, meetingViewModel = meetingViewModel) }
+    composeTestRule.setContent {
+      SimpleMap(userViewModel = userViewModel, meetingViewModel = meetingViewModel)
+    }
   }
 }

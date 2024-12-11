@@ -51,11 +51,11 @@ fun AddMeetingScreen(
   var showDatePicker by remember { mutableStateOf(false) }
   val context = LocalContext.current
   val friendId = userViewModel.user?.uid ?: ""
-    var selectedLocation by remember { mutableStateOf<Location?>(null) }
-    val locationQuery by locationViewModel.query.collectAsState()
-    var showDropdown by remember { mutableStateOf(false) }
-    val locationSuggestions by
-    locationViewModel.locationSuggestions.collectAsState(initial = emptyList<Location?>())
+  var selectedLocation by remember { mutableStateOf<Location?>(null) }
+  val locationQuery by locationViewModel.query.collectAsState()
+  var showDropdown by remember { mutableStateOf(false) }
+  val locationSuggestions by
+      locationViewModel.locationSuggestions.collectAsState(initial = emptyList<Location?>())
 
   Scaffold(
       topBar = {
@@ -69,7 +69,10 @@ fun AddMeetingScreen(
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("Back")) {
-                    Icon(imageVector = Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White)
                   }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black))
@@ -80,53 +83,55 @@ fun AddMeetingScreen(
                 Modifier.padding(padding).fillMaxSize().background(Color.Black).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
               // Location field
-            ExposedDropdownMenuBox(
-                expanded = showDropdown && locationSuggestions.isNotEmpty(),
-                onExpandedChange = { showDropdown = it } // Toggle dropdown visibility
-            ) {
-                OutlinedTextField(
-                    value = locationQuery,
-                    onValueChange = {
-                        locationViewModel.setQuery(it)
-                        showDropdown = true // Show dropdown when user starts typing
-                    },
-                    label = { Text("Location") },
-                    textStyle = TextStyle(color = Color.White),
-                    placeholder = { Text("Enter an Address or Location") },
-                    modifier =
-                    Modifier.menuAnchor() // Anchor the dropdown to this text field
-                        .fillMaxWidth()
-                        .testTag("inputTodoLocation"),
-                    singleLine = true)
+              ExposedDropdownMenuBox(
+                  expanded = showDropdown && locationSuggestions.isNotEmpty(),
+                  onExpandedChange = { showDropdown = it } // Toggle dropdown visibility
+                  ) {
+                    OutlinedTextField(
+                        value = locationQuery,
+                        onValueChange = {
+                          locationViewModel.setQuery(it)
+                          showDropdown = true // Show dropdown when user starts typing
+                        },
+                        label = { Text("Location") },
+                        textStyle = TextStyle(color = Color.White),
+                        placeholder = { Text("Enter an Address or Location") },
+                        modifier =
+                            Modifier.menuAnchor() // Anchor the dropdown to this text field
+                                .fillMaxWidth()
+                                .testTag("Location"),
+                        singleLine = true)
 
-                // Dropdown menu for location suggestions
-                ExposedDropdownMenu(
-                    expanded = showDropdown && locationSuggestions.isNotEmpty(),
-                    onDismissRequest = { showDropdown = false },
-                    modifier = Modifier.background(Color.Black) ) {
-                    locationSuggestions.filterNotNull().take(3).forEach { location ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text =
-                                    location.name.take(30) +
-                                            if (location.name.length > 30) "..."
-                                            else "", // Limit name length
-                                    color = Purple40,
-                                    maxLines = 1 // Ensure name doesn't overflow
-                                )
-                            },
-                            onClick = {
-                                // Extract substring up to the first comma
-                                val trimmedLocation = location.name.substringBefore(",")
-                                locationViewModel.setQuery(trimmedLocation) // Update the query with trimmed location
-                                selectedLocation = location.copy(name = trimmedLocation) // Save the trimmed name
-                                showDropdown = false // Close dropdown on selection
-                            },
-                            modifier = Modifier.padding(8.dp).background(Color.Black))
-                    }
-                }
-            }
+                    // Dropdown menu for location suggestions
+                    ExposedDropdownMenu(
+                        expanded = showDropdown && locationSuggestions.isNotEmpty(),
+                        onDismissRequest = { showDropdown = false },
+                        modifier = Modifier.background(Color.Black)) {
+                          locationSuggestions.filterNotNull().take(3).forEach { location ->
+                            DropdownMenuItem(
+                                text = {
+                                  Text(
+                                      text =
+                                          location.name.take(30) +
+                                              if (location.name.length > 30) "..."
+                                              else "", // Limit name length
+                                      color = Purple40,
+                                      maxLines = 1 // Ensure name doesn't overflow
+                                      )
+                                },
+                                onClick = {
+                                  // Extract substring up to the first comma
+                                  val trimmedLocation = location.name.substringBefore(",")
+                                  locationViewModel.setQuery(
+                                      trimmedLocation) // Update the query with trimmed location
+                                  selectedLocation =
+                                      location.copy(name = trimmedLocation) // Save the trimmed name
+                                  showDropdown = false // Close dropdown on selection
+                                },
+                                modifier = Modifier.padding(8.dp).background(Color.Black))
+                          }
+                        }
+                  }
 
               // Date Field
               OutlinedTextField(

@@ -244,7 +244,9 @@ class MainActivity : ComponentActivity() {
         composable(Screen.CALENDAR) {
           CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
         }
-        composable(Screen.EDIT_MEETING) { EditMeetingScreen(navigationActions, meetingViewModel, locationViewModel) }
+        composable(Screen.EDIT_MEETING) {
+          EditMeetingScreen(navigationActions, meetingViewModel, locationViewModel)
+        }
         composable(Screen.PENDING_MEETINGS) {
           PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
         }

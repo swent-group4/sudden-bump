@@ -47,8 +47,8 @@ class MapScreenTest {
   fun setUp() {
     userRepository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
-      meetingRepository = mock(MeetingRepository::class.java)
-      meetingViewModel = MeetingViewModel(meetingRepository)
+    meetingRepository = mock(MeetingRepository::class.java)
+    meetingViewModel = MeetingViewModel(meetingRepository)
     userViewModel = UserViewModel(userRepository, chatRepository)
   }
 
@@ -62,7 +62,10 @@ class MapScreenTest {
       val navigationActions = NavigationActions(navController)
 
       // Set the content for testing
-      MapScreen(navigationActions = navigationActions, userViewModel = userViewModel, meetingViewModel = meetingViewModel)
+      MapScreen(
+          navigationActions = navigationActions,
+          userViewModel = userViewModel,
+          meetingViewModel = meetingViewModel)
     }
 
     // Verify that the bottom navigation is displayed
@@ -94,7 +97,10 @@ class MapScreenTest {
 
     // Set the content for testing
     composeTestRule.setContent {
-      MapScreen(navigationActions = mockNavigationActions, userViewModel = userViewModel, meetingViewModel = meetingViewModel)
+      MapScreen(
+          navigationActions = mockNavigationActions,
+          userViewModel = userViewModel,
+          meetingViewModel = meetingViewModel)
     }
 
     // Simulate a click on the "Map" tab (or any other tab based on your setup)

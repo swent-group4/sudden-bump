@@ -68,14 +68,18 @@ import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Blue
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Locale
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MapScreen(navigationActions: NavigationActions, userViewModel: UserViewModel, meetingViewModel: MeetingViewModel) {
+fun MapScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel,
+    meetingViewModel: MeetingViewModel
+) {
   Scaffold(
       bottomBar = {
         BottomNavigationMenu(
@@ -90,7 +94,11 @@ fun MapScreen(navigationActions: NavigationActions, userViewModel: UserViewModel
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun SimpleMap(userViewModel: UserViewModel, meetingViewModel: MeetingViewModel, modifier: Modifier = Modifier) {
+fun SimpleMap(
+    userViewModel: UserViewModel,
+    meetingViewModel: MeetingViewModel,
+    modifier: Modifier = Modifier
+) {
   // Initialize necessary variables and states
   val context = LocalContext.current
   val markerState = rememberMarkerState(position = LatLng(0.0, 0.0))
@@ -99,7 +107,7 @@ fun SimpleMap(userViewModel: UserViewModel, meetingViewModel: MeetingViewModel, 
   var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
   var transportMode by remember { mutableStateOf("driving") }
   var showConfirmationDialog by remember { mutableStateOf(false) }
-    val currentUserId = userViewModel.getCurrentUser().value.uid ?: ""
+  val currentUserId = userViewModel.getCurrentUser().value.uid ?: ""
 
   val directionsService = remember {
     val retrofit =
@@ -130,10 +138,12 @@ fun SimpleMap(userViewModel: UserViewModel, meetingViewModel: MeetingViewModel, 
     }
   }
 
-    // Fetch meetings
-    val meetings by meetingViewModel.meetings.collectAsState()
-    val filteredMeetings =
-        meetings.filter { (it.creatorId == currentUserId || it.friendId == currentUserId) && it.accepted }
+  // Fetch meetings
+  val meetings by meetingViewModel.meetings.collectAsState()
+  val filteredMeetings =
+      meetings.filter {
+        (it.creatorId == currentUserId || it.friendId == currentUserId) && it.accepted
+      }
 
   Column(modifier = modifier.fillMaxSize()) {
     // Transport Mode Selector
@@ -144,7 +154,7 @@ fun SimpleMap(userViewModel: UserViewModel, meetingViewModel: MeetingViewModel, 
           modifier = Modifier.fillMaxSize(),
           cameraPositionState = cameraPositionState,
           uiSettings = MapUiSettings(zoomControlsEnabled = false),
-          properties = MapProperties(mapType = MapType.SATELLITE) ) {
+          properties = MapProperties(mapType = MapType.SATELLITE)) {
             // Your own position marker with click handling
             val markerBitmap = getLocationMarkerBitmap()
             Marker(
@@ -163,22 +173,21 @@ fun SimpleMap(userViewModel: UserViewModel, meetingViewModel: MeetingViewModel, 
               showConfirmationDialog = true // Show confirmation dialog when info window is clicked
             }
 
-          // Meeting markers
-          filteredMeetings.forEach { meeting ->
-              val meetingLatLng = LatLng(
-                  meeting.location?.latitude ?: 48.7855465,
-                  meeting.location?.longitude ?: 2.3147013
-              )
+            // Meeting markers
+            filteredMeetings.forEach { meeting ->
+              val meetingLatLng =
+                  LatLng(
+                      meeting.location?.latitude ?: 48.7855465,
+                      meeting.location?.longitude ?: 2.3147013)
 
               Marker(
                   state = rememberMarkerState(position = meetingLatLng),
                   title = "Meeting at ${meeting.location?.name ?: "Unknown Location"}",
-                  snippet = "Scheduled on ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(meeting.date.toDate())}",
-                  icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
-              )
+                  snippet =
+                      "Scheduled on ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(meeting.date.toDate())}",
+                  icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+            }
           }
-
-      }
 
       // FloatingActionButton to open directions in Google Maps
       selectedLocation?.let {
