@@ -457,6 +457,25 @@ open class UserViewModel(
     repository.updateUserLocation(user.uid, location, onSuccess, onFailure)
   }
 
+  /**
+   * Retrieves the online status of a user from the repository.
+   *
+   * @param uid The unique identifier of the user.
+   * @param onSuccess Called with the online status if retrieval is successful.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  fun getUserStatus(uid: String, onSuccess: (Boolean) -> Unit, onFailure: (Exception) -> Unit) {
+    repository.getUserStatus(uid, onSuccess, onFailure)
+  }
+  /**
+   * Updates the user's online status in the repository.
+   *
+   * @param uid The unique identifier of the user.
+   * @param status The new online status of the user.
+   * @param onSuccess Called when the update is successful.
+   * @param onFailure Called with an exception if the update fails.
+   */
+
   fun updateUserStatus(
       uid: String,
       status: Boolean,
@@ -465,10 +484,6 @@ open class UserViewModel(
   ) {
     _friendIsOnline.value = status
     repository.updateUserStatus(uid, status, onSuccess, onFailure)
-  }
-
-  fun getUserStatus(uid: String, onSuccess: (Boolean) -> Unit, onFailure: (Exception) -> Unit) {
-    repository.getUserStatus(uid, onSuccess, onFailure)
   }
   /**
    * Updates the user's last activity timestamp in the repository.

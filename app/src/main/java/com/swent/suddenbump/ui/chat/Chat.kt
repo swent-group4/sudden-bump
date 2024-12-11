@@ -75,6 +75,7 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
   LaunchedEffect(Unit) {
     CoroutineScope(Dispatchers.IO).launch {
       if (otherUser != null) {
+        // Fetch the status of the other user and update the friendIsOnline state
         viewModel.getUserStatus(
             otherUser.uid, onSuccess = { friendIsOnline.value = it }, onFailure = {})
       }

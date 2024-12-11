@@ -164,6 +164,26 @@ class MainActivity : ComponentActivity() {
         onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
   }
 
+  override fun onResume() {
+    // Update online status when the activity resumes
+    super.onResume()
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = true,
+        onSuccess = { Log.d("UserStatus", "Online status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
+  }
+
+  override fun onDestroy() {
+    // Update offline status when the activity is destroyed
+    super.onDestroy()
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = false,
+        onSuccess = { Log.d("UserStatus", "Offline status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
+  }
+
   private fun checkLocationPermissions(onResult: () -> Unit) {
 
     if (!isRunningTest()) {
