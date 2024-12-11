@@ -106,13 +106,6 @@ fun SettingsScreen(
               }
               item {
                 SettingsOption(
-                    label = "Confidentiality",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("ConfidentialityScreen") },
-                    modifier = Modifier.testTag("ConfidentialityOption"))
-              }
-              item {
-                SettingsOption(
                     label = "Discussions",
                     backgroundColor = Color.White,
                     onClick = { navigationActions.navigateTo("DiscussionsScreen") },

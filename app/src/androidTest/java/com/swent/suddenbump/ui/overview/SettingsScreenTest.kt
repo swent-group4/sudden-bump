@@ -116,16 +116,6 @@ class SettingsScreenTest {
   }
 
   @Test
-  fun confidentialityButtonNavigatesToConfidentialityScreen() {
-    setContentDefault()
-    composeTestRule.waitForIdle()
-
-    // Verify that the Confidentiality option navigates to the Confidentiality screen
-    composeTestRule.onNodeWithTag("ConfidentialityOption").performClick()
-    verify(navigationActions).navigateTo("ConfidentialityScreen")
-  }
-
-  @Test
   fun discussionsButtonNavigatesToDiscussionsScreen() {
     setContentDefault()
     composeTestRule.waitForIdle()
