@@ -169,8 +169,8 @@ open class UserViewModel(
   }
 
   /**
-   * /** Sets the current authenticated user in the ViewModel and fetches related data such as
-   * friends, friend requests, and recommendations. / friend requests, and recommendations.
+   * Sets the current authenticated user in the ViewModel and fetches related data such as friends,
+   * friend requests, and recommendations.
    */
   fun setCurrentUser() {
     repository.getUserAccount(
@@ -672,7 +672,7 @@ open class UserViewModel(
     repository.sendVerificationCode(
         phoneNumber,
         onSuccess = { verificationId ->
-          _verificationId.postValue(verificationId) // Stores the verification ID
+          _verificationId.postValue(verificationId) // Stocke l'ID de vérification
           _verificationStatus.postValue("Code Sent")
         },
         onFailure = { _verificationStatus.postValue("Failed to send code: ${it.message}") })
