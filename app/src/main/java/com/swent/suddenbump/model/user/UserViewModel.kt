@@ -475,7 +475,6 @@ open class UserViewModel(
    * @param onSuccess Called when the update is successful.
    * @param onFailure Called with an exception if the update fails.
    */
-
   fun updateUserStatus(
       uid: String,
       status: Boolean,
