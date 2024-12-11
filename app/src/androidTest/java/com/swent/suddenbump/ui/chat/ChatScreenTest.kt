@@ -124,4 +124,110 @@ class ChatScreenTest {
     // **Assert**
     assert(fakeNavigationActions.goBackCalled)
   }
+
+  @Test
+  fun testFriendIsOnline_DisplaysOnlineText() {
+    // **Arrange**
+
+    // Define the user and the other friend
+    val uid = "friend_id"
+    val user =
+        User(
+            uid = "current_user_id",
+            firstName = "Current",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "current.user@example.com",
+            lastKnownLocation = location)
+    val otherUser =
+        User(
+            uid = uid,
+            firstName = "Friend",
+            lastName = "User",
+            phoneNumber = "+0987654321",
+            profilePicture = null,
+            emailAddress = "friend.user@example.com",
+            lastKnownLocation = location)
+
+    // Mock the ViewModel's user property to return otherUser
+    every { mockViewModel.user } returns otherUser
+
+    // Mock getCurrentUser to return the current user
+    val currentUserFlow = MutableStateFlow(user)
+    every { mockViewModel.getCurrentUser() } returns currentUserFlow
+
+    // Mock getUserStatus to invoke onSuccess with true (Online)
+    every { mockViewModel.getUserStatus(eq(uid), any(), any()) } answers
+        {
+          val onSuccess = it.invocation.args[1] as (Boolean) -> Unit
+          onSuccess(true) // Friend is online
+          Unit
+        }
+
+    // **Act**
+    composeTestRule.setContent {
+      ChatScreen(viewModel = mockViewModel, navigationActions = fakeNavigationActions)
+    }
+
+    // Allow all pending coroutines to execute
+    composeTestRule.waitForIdle()
+
+    // **Assert**
+    composeTestRule.onNodeWithText("Online").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Offline").assertDoesNotExist()
+  }
+
+  @Test
+  fun testFriendIsOffline_DisplaysOfflineText() {
+    // **Arrange**
+
+    // Define the user and the other friend
+    val uid = "friend_id"
+    val user =
+        User(
+            uid = "current_user_id",
+            firstName = "Current",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "current.user@example.com",
+            lastKnownLocation = location)
+    val otherUser =
+        User(
+            uid = uid,
+            firstName = "Friend",
+            lastName = "User",
+            phoneNumber = "+0987654321",
+            profilePicture = null,
+            emailAddress = "friend.user@example.com",
+            lastKnownLocation = location)
+
+    // Mock the ViewModel's user property to return otherUser
+    every { mockViewModel.user } returns otherUser
+
+    // Mock getCurrentUser to return the current user
+    val currentUserFlow = MutableStateFlow(user)
+    every { mockViewModel.getCurrentUser() } returns currentUserFlow
+
+    // Mock getUserStatus to invoke onSuccess with false (Offline)
+    every { mockViewModel.getUserStatus(eq(uid), any(), any()) } answers
+        {
+          val onSuccess = it.invocation.args[1] as (Boolean) -> Unit
+          onSuccess(false) // Friend is offline
+          Unit
+        }
+
+    // **Act**
+    composeTestRule.setContent {
+      ChatScreen(viewModel = mockViewModel, navigationActions = fakeNavigationActions)
+    }
+
+    // Allow all pending coroutines to execute
+    composeTestRule.waitForIdle()
+
+    // **Assert**
+    composeTestRule.onNodeWithText("Offline").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Online").assertDoesNotExist()
+  }
 }

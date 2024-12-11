@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
   private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
   private lateinit var locationGetter: LocationGetter
   private var newLocation by mutableStateOf<Location?>(null)
+  private val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
 
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -141,6 +142,46 @@ class MainActivity : ComponentActivity() {
             }
       }
     }
+  }
+
+  override fun onStart() {
+    super.onStart()
+    // Update online status when the activity starts
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = true,
+        onSuccess = { Log.d("UserStatus", "Online status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
+  }
+
+  override fun onStop() {
+    super.onStop()
+    // Update offline status when the activity stops
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = false,
+        onSuccess = { Log.d("UserStatus", "Offline status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
+  }
+
+  override fun onResume() {
+    // Update online status when the activity resumes
+    super.onResume()
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = true,
+        onSuccess = { Log.d("UserStatus", "Online status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
+  }
+
+  override fun onDestroy() {
+    // Update offline status when the activity is destroyed
+    super.onDestroy()
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = false,
+        onSuccess = { Log.d("UserStatus", "Offline status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
   }
 
   private fun checkLocationPermissions(onResult: () -> Unit) {
