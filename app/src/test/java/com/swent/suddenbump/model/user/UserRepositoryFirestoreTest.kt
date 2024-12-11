@@ -3647,4 +3647,17 @@ class UserRepositoryFirestoreTest {
     assertTrue(onFailureCalled)
     assertEquals(exception, failureException)
   }
+
+  @Test
+  fun logoutUserShouldUnscheduleLocationUpdatesAndClearPreferences() {
+    // Act
+    userRepositoryFirestore.logoutUser()
+
+    // Assert
+    // Verify that the location update worker was unscheduled
+    verify(mockWorkerScheduler).unscheduleLocationUpdateWorker()
+
+    // Verify that shared preferences were cleared
+    verify(mockSharedPreferencesManager).clearPreferences()
+  }
 }

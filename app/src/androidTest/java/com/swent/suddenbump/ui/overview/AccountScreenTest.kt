@@ -12,7 +12,6 @@ import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -20,21 +19,15 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.doNothing
-import org.mockito.kotlin.spy
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 
 @RunWith(AndroidJUnit4::class)
 class AccountScreenTest {
 
-  @Mock
-  private lateinit var navigationActions: NavigationActions
-  @Mock
-  private lateinit var userViewModel: UserViewModel
-  @Mock
-    private lateinit var userRepository: UserRepository
-    @Mock
-    private lateinit var chatRepository: ChatRepository
+  @Mock private lateinit var navigationActions: NavigationActions
+  @Mock private lateinit var userViewModel: UserViewModel
+  @Mock private lateinit var userRepository: UserRepository
+  @Mock private lateinit var chatRepository: ChatRepository
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -101,5 +94,4 @@ class AccountScreenTest {
     composeTestRule.onNodeWithTag("logoutSection").performClick()
     verify(navigationActions).navigateTo(Route.AUTH)
   }
-
 }
