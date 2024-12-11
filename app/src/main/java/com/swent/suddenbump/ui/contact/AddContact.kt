@@ -114,6 +114,8 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                   },
                   colors =
                       TextFieldDefaults.colors(
+                          unfocusedIndicatorColor = Color.Transparent, // Mask mask indicator under search bar
+                          focusedIndicatorColor = Color.Transparent,  // Mask also for the focus
                           unfocusedContainerColor = Color.White,
                           unfocusedLabelColor = com.swent.suddenbump.ui.theme.Purple40,
                           unfocusedTextColor = com.swent.suddenbump.ui.theme.Purple40,
