@@ -23,6 +23,7 @@ import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.model.meeting_location.LocationViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.utils.LocationField
 import com.swent.suddenbump.ui.utils.formatDateString
 import com.swent.suddenbump.ui.utils.showDatePickerDialog
 import java.text.SimpleDateFormat
@@ -75,57 +76,16 @@ fun EditMeetingScreen(
             modifier =
                 Modifier.padding(padding).fillMaxSize().background(Color.Black).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-              // Location field
-              ExposedDropdownMenuBox(
-                  expanded = showDropdown && locationSuggestions.isNotEmpty(),
-                  onExpandedChange = { showDropdown = it } // Toggle dropdown visibility
-                  ) {
-                    OutlinedTextField(
-                        value = locationQuery ?: "",
-                        onValueChange = {
-                          locationQuery = it
-                          locationViewModel.setQuery(it)
-                          showDropdown = true // Show dropdown when user starts typing
-                        },
-                        label = { Text("Location") },
-                        textStyle = TextStyle(color = Color.White),
-                        placeholder = { Text("Enter an Address or Location") },
-                        modifier =
-                            Modifier.menuAnchor() // Anchor the dropdown to this text field
-                                .fillMaxWidth()
-                                .testTag("Location"),
-                        singleLine = true)
 
-                    // Dropdown menu for location suggestions
-                    ExposedDropdownMenu(
-                        expanded = showDropdown && locationSuggestions.isNotEmpty(),
-                        onDismissRequest = { showDropdown = false },
-                        modifier = Modifier.background(Color.Black)) {
-                          locationSuggestions.filterNotNull().take(3).forEach { location ->
-                            DropdownMenuItem(
-                                text = {
-                                  Text(
-                                      text =
-                                          location.name.take(30) +
-                                              if (location.name.length > 30) "..."
-                                              else "", // Limit name length
-                                      color = Purple40,
-                                      maxLines = 1 // Ensure name doesn't overflow
-                                      )
-                                },
-                                onClick = {
-                                  // Extract substring up to the first comma
-                                  val trimmedLocation = location.name.substringBefore(",")
-                                  locationViewModel.setQuery(
-                                      trimmedLocation) // Update the query with trimmed location
-                                  selectedLocation =
-                                      location.copy(name = trimmedLocation) // Save the trimmed name
-                                  showDropdown = false // Close dropdown on selection
-                                },
-                                modifier = Modifier.padding(8.dp).background(Color.Black))
-                          }
-                        }
-                  }
+              // Location field
+            LocationField(
+                locationQuery = locationQuery,
+                onLocationQueryChange = { locationQuery = it; locationViewModel.setQuery(it) },
+                locationSuggestions = locationSuggestions,
+                onLocationSelected = { selectedLocation = it },
+                showDropdown = showDropdown,
+                onDropdownChange = { showDropdown = it }
+            )
 
               // Date Field
               OutlinedTextField(

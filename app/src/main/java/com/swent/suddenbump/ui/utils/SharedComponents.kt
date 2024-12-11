@@ -12,9 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
@@ -148,3 +150,63 @@ fun AccountOption(label: String, backgroundColor: Color, onClick: () -> Unit, te
             modifier = Modifier.padding(start = 16.dp))
       }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LocationField(
+    locationQuery: String?,
+    onLocationQueryChange: (String) -> Unit,
+    locationSuggestions: List<Location?>,
+    onLocationSelected: (Location) -> Unit,
+    showDropdown: Boolean,
+    onDropdownChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ExposedDropdownMenuBox(
+        expanded = showDropdown && locationSuggestions.isNotEmpty(),
+        onExpandedChange = { onDropdownChange(it) } // Toggle dropdown visibility
+    ) {
+        OutlinedTextField(
+            value = locationQuery ?: "",
+            onValueChange = {
+                onLocationQueryChange(it)
+                onDropdownChange(true) // Show dropdown when user starts typing
+            },
+            label = { Text("Location") },
+            textStyle = TextStyle(color = Color.White),
+            placeholder = { Text("Enter an Address or Location") },
+            modifier = modifier.menuAnchor() // Anchor the dropdown to this text field
+                .fillMaxWidth()
+                .testTag("Location"),
+            singleLine = true
+        )
+
+        // Dropdown menu for location suggestions
+        ExposedDropdownMenu(
+            expanded = showDropdown && locationSuggestions.isNotEmpty(),
+            onDismissRequest = { onDropdownChange(false) },
+            modifier = Modifier.background(Color.Black)
+        ) {
+            locationSuggestions.filterNotNull().take(3).forEach { location ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = location.name.take(30) + if (location.name.length > 30) "..." else "", // Limit name length
+                            color = Purple40,
+                            maxLines = 1 // Ensure name doesn't overflow
+                        )
+                    },
+                    onClick = {
+                        // Extract substring up to the first comma
+                        val trimmedLocation = location.name.substringBefore(",")
+                        onLocationQueryChange(trimmedLocation) // Update the query with trimmed location
+                        onLocationSelected(location.copy(name = trimmedLocation)) // Save the trimmed name
+                        onDropdownChange(false) // Close dropdown on selection
+                    },
+                    modifier = Modifier.padding(8.dp).background(Color.Black)
+                )
+            }
+        }
+    }
+}
+
