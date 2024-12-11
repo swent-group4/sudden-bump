@@ -17,5 +17,6 @@ fun isRunningTest(): Boolean {
   }
 }
 
+var isUsingMockViewModel = false
 lateinit var testableMeetingViewModel: MeetingViewModel
 lateinit var testableUserViewModel: UserViewModel

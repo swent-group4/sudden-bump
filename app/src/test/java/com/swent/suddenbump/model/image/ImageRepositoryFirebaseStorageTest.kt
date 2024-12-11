@@ -157,4 +157,106 @@ class ImageRepositoryFirebaseStorageTest {
 
     verify(mockFirebaseStorage).reference
   }
+
+  @Test
+  fun downloadImageFactoryFileDownloadTaskCancels() {
+    runBlocking {
+      val testContext: Context = ApplicationProvider.getApplicationContext()
+      val pathOverride = testContext.getExternalFilesDir(null)?.path
+
+      val profilePicturesPath =
+          ImageRepositoryFirebaseStorage::class.java.getDeclaredField("profilePicturesPath")
+      profilePicturesPath.isAccessible = true
+      profilePicturesPath.set(mockImageRepository, pathOverride)
+
+      val uriExternal = testContext.getExternalFilesDir(null)?.toURI()
+
+      val uriImage = Uri.parse("file://${uriExternal!!.path}imagetest.jpeg")
+
+      val fileOutputStream: FileOutputStream
+      val drawable = ContextCompat.getDrawable(testContext, android.R.drawable.arrow_down_float)!!
+      val bitmap =
+          Bitmap.createBitmap(
+              drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+
+      try {
+        val file = File(uriImage.path!!).createFileIfNeeded()
+        fileOutputStream = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream).also {
+          fileOutputStream.close()
+        }
+      } catch (e: Exception) {
+        Log.d("Debug", e.toString())
+        fail("Couldn't write the file for the test")
+      }
+
+      `when`(mockFirebaseStorage.reference).thenReturn(mockFirebaseReference)
+      `when`(mockFirebaseReference.child(anyString())).thenReturn(mockFirebaseReference)
+      `when`(mockFirebaseReference.getFile(any<File>())).thenReturn(mockFileDownloadTask)
+      `when`(mockFileDownloadTask.isCanceled).thenReturn(false)
+      `when`(mockFileDownloadTask.isComplete).thenReturn(true)
+      `when`(mockFileDownloadTask.isSuccessful).thenReturn(true)
+      `when`(mockFileDownloadTask.await()).thenReturn(mockTaskSnapshot)
+      `when`(mockTaskSnapshot.task).thenReturn(mockStorageTask)
+      `when`(mockStorageTask.isCanceled).thenReturn(true)
+      `when`(mockStorageTask.exception).thenReturn(Exception("Mock Exception"))
+
+      val results =
+          mockImageRepository.downloadImageAsync(
+              "/imagetest.jpeg", { fail("Fetching should fail") }, { println() })
+    }
+
+    verify(mockFirebaseStorage).reference
+    verify(mockStorageTask).exception
+  }
+
+  @Test
+  fun downloadImageFactoryFileDownloadTimeOuts() {
+    runBlocking {
+      val testContext: Context = ApplicationProvider.getApplicationContext()
+      val pathOverride = testContext.getExternalFilesDir(null)?.path
+
+      val profilePicturesPath =
+          ImageRepositoryFirebaseStorage::class.java.getDeclaredField("profilePicturesPath")
+      profilePicturesPath.isAccessible = true
+      profilePicturesPath.set(mockImageRepository, pathOverride)
+
+      val uriExternal = testContext.getExternalFilesDir(null)?.toURI()
+
+      val uriImage = Uri.parse("file://${uriExternal!!.path}imagetest.jpeg")
+
+      val fileOutputStream: FileOutputStream
+      val drawable = ContextCompat.getDrawable(testContext, android.R.drawable.arrow_down_float)!!
+      val bitmap =
+          Bitmap.createBitmap(
+              drawable.intrinsicWidth, drawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
+
+      try {
+        val file = File(uriImage.path!!).createFileIfNeeded()
+        fileOutputStream = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream).also {
+          fileOutputStream.close()
+        }
+      } catch (e: Exception) {
+        Log.d("Debug", e.toString())
+        fail("Couldn't write the file for the test")
+      }
+
+      `when`(mockFirebaseStorage.reference).thenReturn(mockFirebaseReference)
+      `when`(mockFirebaseReference.child(anyString())).thenReturn(mockFirebaseReference)
+      `when`(mockFirebaseReference.getFile(any<File>())).thenReturn(mockFileDownloadTask)
+      `when`(mockFileDownloadTask.isCanceled).thenReturn(false)
+      `when`(mockFileDownloadTask.isComplete).thenReturn(true)
+      `when`(mockFileDownloadTask.isSuccessful).thenReturn(true)
+      `when`(mockFileDownloadTask.await()).thenReturn(mockTaskSnapshot)
+      `when`(mockTaskSnapshot.task).thenReturn(mockStorageTask)
+      `when`(mockStorageTask.isCanceled).thenReturn(false)
+
+      val results =
+          mockImageRepository.downloadImageAsync(
+              "/imagetest.jpeg", { println() }, { fail("Fetching should not fail") })
+    }
+
+    verify(mockFirebaseStorage).reference
+  }
 }

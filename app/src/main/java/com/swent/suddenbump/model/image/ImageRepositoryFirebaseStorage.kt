@@ -174,6 +174,7 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
         val fileDownloadTask = imageRef.getFile(localFile).await()
         if (fileDownloadTask.task.isCanceled) {
           fileInputStream.close()
+          Log.e("FirebaseDownload", "Download failed : $path")
           onFailure(fileDownloadTask.task.exception!!)
         } else {
           val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }

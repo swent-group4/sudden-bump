@@ -60,6 +60,7 @@ import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.overview.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 import com.swent.suddenbump.ui.utils.isRunningTest
+import com.swent.suddenbump.ui.utils.isUsingMockViewModel
 import com.swent.suddenbump.ui.utils.testableMeetingViewModel
 import com.swent.suddenbump.ui.utils.testableUserViewModel
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
@@ -182,10 +183,10 @@ class MainActivity : ComponentActivity() {
 
     val meetingViewModelFactory: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
     val meetingViewModel: MeetingViewModel =
-        if (isRunningTest()) testableMeetingViewModel else meetingViewModelFactory
+        if (isUsingMockViewModel) testableMeetingViewModel else meetingViewModelFactory
     val userViewModelFactory: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
     val userViewModel: UserViewModel =
-        if (isRunningTest()) testableUserViewModel else userViewModelFactory
+        if (isUsingMockViewModel) testableUserViewModel else userViewModelFactory
 
     LaunchedEffect(newLocation.asStateFlow()) {
       Log.d("UserviewModel", "coordinates : $newLocation")

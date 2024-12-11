@@ -12,6 +12,7 @@ import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
+import com.swent.suddenbump.ui.utils.isUsingMockViewModel
 import com.swent.suddenbump.ui.utils.testableMeetingViewModel
 import com.swent.suddenbump.ui.utils.testableUserViewModel
 import io.mockk.invoke
@@ -47,6 +48,7 @@ class MainActivityTest {
         mockMeetingRepository = mock(MeetingRepository::class.java)
         mockMeetingViewModel = MeetingViewModel(mockMeetingRepository)
 
+        isUsingMockViewModel = true
         testableMeetingViewModel = mockMeetingViewModel
         testableUserViewModel = mockUserViewModel
       }
