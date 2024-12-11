@@ -70,8 +70,7 @@ class SettingsScreenTest {
       SettingsScreen(
           navigationActions = navigationActions,
           userViewModel = userViewModel,
-          meetingViewModel = meetingViewModel,
-          onNotificationsEnabledChange = { notificationsEnabled = it })
+          meetingViewModel = meetingViewModel)
     }
   }
 
@@ -203,7 +202,6 @@ class SettingsScreenTest {
           navigationActions = navigationActions,
           userViewModel = userViewModel,
           meetingViewModel = meetingViewModel,
-          onNotificationsEnabledChange = { notificationsEnabled = it },
           uri = uriImage)
     }
     composeTestRule.waitForIdle()
