@@ -2839,7 +2839,7 @@ class UserRepositoryFirestoreTest {
     `when`(mocked.result).thenReturn(mockUserDocumentSnapshot)
     `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("locationSharedBy" to listOf(user)))
 
-    userRepositoryFirestore.getBlockedFriends(
+    userRepositoryFirestore.getSharedByFriends(
         uid = user.uid,
         onSuccess = {},
         onFailure = { fail("Failure callback should not be called") })
@@ -2865,7 +2865,7 @@ class UserRepositoryFirestoreTest {
     `when`(mocked.result).thenReturn(mockUserDocumentSnapshot)
     `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("locationSharedWith" to listOf(user)))
 
-    userRepositoryFirestore.getBlockedFriends(
+    userRepositoryFirestore.getSharedWithFriends(
         uid = user.uid,
         onSuccess = {},
         onFailure = { fail("Failure callback should not be called") })
