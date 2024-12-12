@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.utils
 
+import com.google.firebase.storage.FileDownloadTask.TaskSnapshot
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 
@@ -20,3 +21,8 @@ fun isRunningTest(): Boolean {
 var isUsingMockViewModel = false
 lateinit var testableMeetingViewModel: MeetingViewModel
 lateinit var testableUserViewModel: UserViewModel
+
+var isUsingMockFileDownloadTask = false
+lateinit var testableFileDownloadTask: TaskSnapshot
+
+var isUsingMockException = false
