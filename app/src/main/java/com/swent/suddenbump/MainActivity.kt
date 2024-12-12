@@ -176,7 +176,7 @@ class MainActivity : ComponentActivity() {
     val navigationActions = NavigationActions(navController)
 
     val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
-    val locationViewModel = LocationViewModel(NominatimLocationRepository(OkHttpClient()))
+    val locationViewModel = LocationViewModel()
     val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
 
     newLocation?.let { it1 ->

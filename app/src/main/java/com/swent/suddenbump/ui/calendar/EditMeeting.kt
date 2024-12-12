@@ -18,9 +18,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
+import com.swent.suddenbump.BuildConfig
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.model.meeting_location.LocationViewModel
+import com.swent.suddenbump.network.RetrofitInstance
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
 import com.swent.suddenbump.ui.utils.LocationField
@@ -34,7 +36,7 @@ import java.util.*
 fun EditMeetingScreen(
     navigationActions: NavigationActions,
     meetingViewModel: MeetingViewModel,
-    locationViewModel: LocationViewModel = viewModel(factory = LocationViewModel.Factory)
+    locationViewModel: LocationViewModel
 ) {
   val meeting = meetingViewModel.selectedMeeting.collectAsState().value ?: return
 
@@ -50,8 +52,8 @@ fun EditMeetingScreen(
 
   // State for dropdown visibility
   var showDropdown by remember { mutableStateOf(false) }
-  val locationSuggestions by
-      locationViewModel.locationSuggestions.collectAsState(initial = emptyList<Location?>())
+    val locationSuggestions =
+        locationQuery?.let { RetrofitInstance.geocodingApi.geocode(it, BuildConfig.MAPS_API_KEY) }
   val context = LocalContext.current
 
   Scaffold(
@@ -78,16 +80,18 @@ fun EditMeetingScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
               // Location field
-              LocationField(
-                  locationQuery = locationQuery,
-                  onLocationQueryChange = {
-                    locationQuery = it
-                    locationViewModel.setQuery(it)
-                  },
-                  locationSuggestions = locationSuggestions,
-                  onLocationSelected = { selectedLocation = it },
-                  showDropdown = showDropdown,
-                  onDropdownChange = { showDropdown = it })
+            if (locationSuggestions != null) {
+                LocationField(
+                    locationQuery = locationQuery,
+                    onLocationQueryChange = {
+                        locationQuery = it
+                        locationViewModel.fetchLocationSuggestions(it)
+                    },
+                    locationSuggestions = locationSuggestions.results,
+                    onLocationSelected = { selectedLocation = it },
+                    showDropdown = showDropdown,
+                    onDropdownChange = { showDropdown = it })
+            }
 
               // Date Field
               OutlinedTextField(

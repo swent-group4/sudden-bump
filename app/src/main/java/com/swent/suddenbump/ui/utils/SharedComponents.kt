@@ -18,7 +18,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.BuildConfig
+import com.swent.suddenbump.model.geocoding.GeocodingResponse
+import com.swent.suddenbump.model.geocoding.Result
 import com.swent.suddenbump.model.meeting_location.Location
+import com.swent.suddenbump.network.RetrofitInstance
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
@@ -152,6 +156,8 @@ fun AccountOption(label: String, backgroundColor: Color, onClick: () -> Unit, te
             modifier = Modifier.padding(start = 16.dp))
       }
 }
+
+
 /**
  * Composable that displays a location field with dropdown suggestions.
  *
@@ -168,7 +174,7 @@ fun AccountOption(label: String, backgroundColor: Color, onClick: () -> Unit, te
 fun LocationField(
     locationQuery: String?,
     onLocationQueryChange: (String) -> Unit,
-    locationSuggestions: List<Location?>,
+    locationSuggestions: List<Result>,
     onLocationSelected: (Location) -> Unit,
     showDropdown: Boolean,
     onDropdownChange: (Boolean) -> Unit,
@@ -203,24 +209,24 @@ fun LocationField(
             expanded = showDropdown && locationSuggestions.isNotEmpty(),
             onDismissRequest = { onDropdownChange(false) },
             modifier = Modifier.background(Color.Black).testTag("DropDownMenu")) {
-              locationSuggestions.filterNotNull().take(maxItemsToShow.value).forEach { location ->
+              locationSuggestions.take(maxItemsToShow.value).forEach { Result ->
                 DropdownMenuItem(
                     text = {
                       Text(
                           text =
-                              location.name.take(30) +
-                                  if (location.name.length > 30) "..." else "", // Limit name length
+                              Result.formatted_address.take(30) +
+                                  if (Result.formatted_address.length > 30) "..." else "", // Limit name length
                           color = Color.White,
                           maxLines = 1 // Ensure name doesn't overflow
                           )
                     },
                     onClick = {
                       // Extract substring up to the first comma
-                      val trimmedLocation = location.name.substringBefore(",")
+                      val trimmedLocation = Result.formatted_address.substringBefore(",")
                       onLocationQueryChange(
                           trimmedLocation) // Update the query with trimmed location
-                      onLocationSelected(
-                          location.copy(name = trimmedLocation)) // Save the trimmed name
+//                      onLocationSelected(
+//                          location.copy(name = trimmedLocation)) // Save the trimmed name
                       onDropdownChange(false) // Close dropdown on selection
                     },
                     modifier =

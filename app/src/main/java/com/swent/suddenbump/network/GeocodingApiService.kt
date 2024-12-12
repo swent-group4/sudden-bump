@@ -10,4 +10,10 @@ interface GeocodingApiService {
       @Query("latlng") latlng: String,
       @Query("key") apiKey: String
   ): GeocodingResponse
+
+    @GET("geocode/json")
+    fun geocode(
+        @Query("address") address: String,
+        @Query("key") apiKey: String
+    ): GeocodingResponse
 }

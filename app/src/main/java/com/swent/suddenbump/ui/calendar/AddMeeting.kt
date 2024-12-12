@@ -25,12 +25,14 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
+import com.swent.suddenbump.BuildConfig
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.model.meeting_location.LocationViewModel
 import com.swent.suddenbump.model.user.UserViewModel
+import com.swent.suddenbump.network.RetrofitInstance
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
 import com.swent.suddenbump.ui.utils.LocationField
@@ -45,7 +47,7 @@ fun AddMeetingScreen(
     navigationActions: NavigationActions,
     userViewModel: UserViewModel,
     meetingViewModel: MeetingViewModel,
-    locationViewModel: LocationViewModel = viewModel(factory = LocationViewModel.Factory)
+    locationViewModel: LocationViewModel
 ) {
 
   var date by remember { mutableStateOf(TextFieldValue("")) }
@@ -55,8 +57,7 @@ fun AddMeetingScreen(
   var selectedLocation by remember { mutableStateOf<Location?>(null) }
   var locationQuery by remember { mutableStateOf("") }
   var showDropdown by remember { mutableStateOf(false) }
-  val locationSuggestions by
-      locationViewModel.locationSuggestions.collectAsState(initial = emptyList<Location?>())
+    val locationSuggestions by locationViewModel.locationSuggestions
 
   Scaffold(
       topBar = {
@@ -88,7 +89,7 @@ fun AddMeetingScreen(
                   locationQuery = locationQuery,
                   onLocationQueryChange = {
                     locationQuery = it
-                    locationViewModel.setQuery(it)
+                    locationViewModel.fetchLocationSuggestions(it)
                   },
                   locationSuggestions = locationSuggestions,
                   onLocationSelected = { selectedLocation = it },
