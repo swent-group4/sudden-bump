@@ -35,7 +35,6 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.overview.AccountScreen
-import com.swent.suddenbump.ui.overview.ConfidentialityScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.DiscussionScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
@@ -55,6 +54,7 @@ class EndToEndTest1 {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<MainActivity>()
 
+  /** Tests the full app navigation flow. */
   @Test
   fun fullAppNavigationTest() {
     composeTestRule.waitForIdle()
@@ -81,12 +81,6 @@ class EndToEndTest1 {
     composeTestRule.onNodeWithTag("settingsFab").performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag("settingsScreen").assertExists()
-
-    composeTestRule.onNodeWithTag("ConfidentialityOption").performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag("confidentialityScreen").assertExists()
-
-    composeTestRule.onNodeWithTag("backButton").performClick()
 
     composeTestRule.onNodeWithTag("settingsScreen").assertExists()
     // Step 6: Navigate back to Overview
@@ -181,6 +175,7 @@ class EndToEndTest2 {
     userViewModel.setCurrentUser()
   }
 
+  /** Tests the end-to-end flow of sending a message. */
   @Test
   fun testSendMessageEoE() {
 
@@ -209,11 +204,7 @@ class EndToEndTest2 {
           composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
           composable(Screen.CONV) { ConversationScreen(navigationActions) }
           composable(Screen.SETTINGS) {
-            SettingsScreen(
-                navigationActions,
-                userViewModel,
-                meetingViewModel,
-                onNotificationsEnabledChange = {})
+            SettingsScreen(navigationActions, userViewModel, meetingViewModel)
           }
           composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
           composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
@@ -249,9 +240,6 @@ class EndToEndTest2 {
 
         // Add new screens from Settings.kt
         composable("AccountScreen") { AccountScreen(navigationActions) }
-        composable("ConfidentialityScreen") {
-          ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
-        }
         composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
       }
     }

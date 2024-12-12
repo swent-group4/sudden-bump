@@ -54,7 +54,6 @@ import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.overview.AccountScreen
 import com.swent.suddenbump.ui.overview.BlockedUsersScreen
-import com.swent.suddenbump.ui.overview.ConfidentialityScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.DiscussionScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
@@ -265,8 +264,7 @@ class MainActivity : ComponentActivity() {
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) {
-          SettingsScreen(
-              navigationActions, userViewModel, meetingViewModel, onNotificationsEnabledChange = {})
+          SettingsScreen(navigationActions, userViewModel, meetingViewModel)
         }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
@@ -302,9 +300,6 @@ class MainActivity : ComponentActivity() {
 
       // Add new screens from Settings.kt
       composable("AccountScreen") { AccountScreen(navigationActions) }
-      composable("ConfidentialityScreen") {
-        ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
-      }
       composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
       composable("BlockedUsersScreen") { BlockedUsersScreen(navigationActions, userViewModel) }
     }

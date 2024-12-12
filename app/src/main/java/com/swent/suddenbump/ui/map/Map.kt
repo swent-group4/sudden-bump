@@ -336,14 +336,14 @@ fun showFriendNearbyNotification(context: Context, userUID: String, friend: User
   val acceptPendingIntent: PendingIntent =
       PendingIntent.getBroadcast(
           context,
-          1,
+          notificationId,
           acceptIntent,
           PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
   val refusePendingIntent: PendingIntent =
       PendingIntent.getBroadcast(
           context,
-          2,
+          notificationId + 1,
           refuseIntent,
           PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
