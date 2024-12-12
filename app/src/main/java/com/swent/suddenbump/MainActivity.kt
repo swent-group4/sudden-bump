@@ -18,10 +18,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -67,9 +66,9 @@ import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.ui.utils.isUsingMockViewModel
 import com.swent.suddenbump.ui.utils.testableMeetingViewModel
 import com.swent.suddenbump.ui.utils.testableUserViewModel
+import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import okhttp3.OkHttpClient
 
 class MainActivity : ComponentActivity() {
@@ -229,6 +228,7 @@ class MainActivity : ComponentActivity() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
+    val locationViewModel = LocationViewModel(NominatimLocationRepository(OkHttpClient()))
     val meetingViewModelFactory: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
     val meetingViewModel: MeetingViewModel =
         if (isUsingMockViewModel) testableMeetingViewModel else meetingViewModelFactory
