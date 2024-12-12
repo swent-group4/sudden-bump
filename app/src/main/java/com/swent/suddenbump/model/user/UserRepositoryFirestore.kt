@@ -941,6 +941,44 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
   }
+  /**
+   * Retrieves the online status of a specific user.
+   *
+   * @param uid The unique identifier of the user whose status is being checked.
+   * @param onSuccess Called with `true` if the user is online, `false` otherwise.
+   * @param onFailure Called with an exception if the retrieval fails.
+   */
+  override fun getUserStatus(
+      uid: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnSuccessListener { document ->
+          if (document.exists()) {
+            val isOnline = document.getBoolean("isOnline") ?: false
+            onSuccess(isOnline)
+          } else {
+            onFailure(Exception("User not found"))
+          }
+        }
+        .addOnFailureListener { exception -> onFailure(exception) }
+  }
+
+  override fun updateUserStatus(
+      uid: String,
+      status: Boolean,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .update("isOnline", status)
+        .addOnFailureListener { onFailure(it) }
+        .addOnSuccessListener { onSuccess() }
+  }
 
   /**
    * Updates the timestamp for the specified user.
