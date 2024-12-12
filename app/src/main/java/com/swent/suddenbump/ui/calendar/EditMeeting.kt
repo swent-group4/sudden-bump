@@ -1,6 +1,5 @@
 package com.swent.suddenbump.ui.calendar
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -85,73 +84,15 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
 
               Spacer(modifier = Modifier.height(16.dp))
 
-              Button(
-                  onClick = {
-                    try {
-                      // Log the input for debugging
-                      Log.d("EditMeetingScreen", "Raw date input: ${date.text}")
+              val editButtonHelper: (Timestamp) -> Unit = { meetingDate ->
+                // Save the updated meeting
+                val updatedMeeting = meeting.copy(location = location, date = meetingDate)
+                meetingViewModel.updateMeeting(updatedMeeting)
 
-                      // Validate input length (must be exactly "DD/MM/YYYY")
-                      if (date.text.length != 10) {
-                        throw IllegalArgumentException("Date must be in the format DD/MM/YYYY")
-                      }
+                Toast.makeText(context, "Meeting updated successfully", Toast.LENGTH_SHORT).show()
+              }
 
-                      // Parse the date
-                      val dateFormat =
-                          SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
-                            isLenient = false // Strict parsing
-                          }
-
-                      val parsedDate =
-                          dateFormat.parse(date.text)
-                              ?: throw IllegalArgumentException("Failed to parse date")
-
-                      // Log parsed date for debugging
-                      Log.d("EditMeetingScreen", "Parsed date: $parsedDate")
-
-                      // Check if the date is in the past
-                      val today =
-                          GregorianCalendar().apply {
-                            set(Calendar.HOUR_OF_DAY, 0)
-                            set(Calendar.MINUTE, 0)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                          }
-                      val inputCalendar =
-                          GregorianCalendar().apply {
-                            time = parsedDate
-                            set(Calendar.HOUR_OF_DAY, 0)
-                            set(Calendar.MINUTE, 0)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                          }
-
-                      if (inputCalendar.before(today)) {
-                        throw IllegalArgumentException("Date is in the past")
-                      }
-
-                      val meetingDate = Timestamp(inputCalendar.time)
-
-                      // Save the updated meeting
-                      val updatedMeeting = meeting.copy(location = location, date = meetingDate)
-                      meetingViewModel.updateMeeting(updatedMeeting)
-
-                      Toast.makeText(context, "Meeting updated successfully", Toast.LENGTH_SHORT)
-                          .show()
-                      navigationActions.goBack()
-                    } catch (e: IllegalArgumentException) {
-                      Log.e("EditMeetingScreen", "Invalid date input: ${date.text}", e)
-                      Toast.makeText(context, "Invalid date: ${e.message}", Toast.LENGTH_SHORT)
-                          .show()
-                    } catch (e: Exception) {
-                      Log.e("EditMeetingScreen", "Error parsing date: ${date.text}", e)
-                      Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
-                    }
-                  },
-                  colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
-                  modifier = Modifier.fillMaxWidth().testTag("Save Changes")) {
-                    Text("Save Changes")
-                  }
+              AddAndEditMeetingButton(false, date, context, navigationActions, editButtonHelper)
 
               Spacer(modifier = Modifier.height(16.dp))
 
