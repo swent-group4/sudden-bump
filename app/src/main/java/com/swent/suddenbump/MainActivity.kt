@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
@@ -33,6 +36,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.location.LocationGetter
 import com.swent.suddenbump.model.location.LocationPermission
 import com.swent.suddenbump.model.meeting.MeetingViewModel
+import com.swent.suddenbump.model.meeting_location.LocationViewModel
+import com.swent.suddenbump.model.meeting_location.NominatimLocationRepository
 import com.swent.suddenbump.model.notifications.NotificationsPermission
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
@@ -52,7 +57,6 @@ import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.overview.AccountScreen
 import com.swent.suddenbump.ui.overview.BlockedUsersScreen
-import com.swent.suddenbump.ui.overview.ConfidentialityScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.DiscussionScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
@@ -65,6 +69,8 @@ import com.swent.suddenbump.ui.utils.testableMeetingViewModel
 import com.swent.suddenbump.ui.utils.testableUserViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
+import okhttp3.OkHttpClient
 
 class MainActivity : ComponentActivity() {
 
@@ -246,8 +252,6 @@ class MainActivity : ComponentActivity() {
       }
     }
 
-    Log.d("UserViewModel", "!!restarts everything!!")
-
     val startRoute =
         if (!isRunningTest() && userViewModel.isUserLoggedIn()) {
           val uid = userViewModel.getSavedUid()
@@ -259,7 +263,7 @@ class MainActivity : ComponentActivity() {
               },
               onFailure = { e -> Log.e("MainActivity", e.toString()) })
           // Schedule the LocationUpdateWorker
-          userViewModel.scheduleWorker(this)
+          scheduleLocationUpdateWorker(this, uid)
           Route.OVERVIEW
         } else {
           Route.AUTH
@@ -290,13 +294,12 @@ class MainActivity : ComponentActivity() {
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) {
-          SettingsScreen(
-              navigationActions, userViewModel, meetingViewModel, onNotificationsEnabledChange = {})
+          SettingsScreen(navigationActions, userViewModel, meetingViewModel)
         }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
         composable(Screen.ADD_MEETING) {
-          AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
+          AddMeetingScreen(navigationActions, userViewModel, meetingViewModel, locationViewModel)
         }
       }
       navigation(
@@ -306,7 +309,9 @@ class MainActivity : ComponentActivity() {
         composable(Screen.CALENDAR) {
           CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
         }
-        composable(Screen.EDIT_MEETING) { EditMeetingScreen(navigationActions, meetingViewModel) }
+        composable(Screen.EDIT_MEETING) {
+          EditMeetingScreen(navigationActions, meetingViewModel, locationViewModel)
+        }
         composable(Screen.PENDING_MEETINGS) {
           PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
         }
@@ -316,7 +321,7 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.MAP,
           route = Route.MAP,
       ) {
-        composable(Screen.MAP) { MapScreen(navigationActions, userViewModel) }
+        composable(Screen.MAP) { MapScreen(navigationActions, userViewModel, meetingViewModel) }
       }
       navigation(
           startDestination = Screen.MESS,
@@ -327,9 +332,6 @@ class MainActivity : ComponentActivity() {
 
       // Add new screens from Settings.kt
       composable("AccountScreen") { AccountScreen(navigationActions) }
-      composable("ConfidentialityScreen") {
-        ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
-      }
       composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
       composable("BlockedUsersScreen") { BlockedUsersScreen(navigationActions, userViewModel) }
     }

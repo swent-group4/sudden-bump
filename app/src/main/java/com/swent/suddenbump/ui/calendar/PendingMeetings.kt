@@ -161,7 +161,7 @@ fun PendingMeetingRow(
                                   fontWeight = FontWeight.Bold),
                           modifier = Modifier.testTag("userName"))
                       Text(
-                          text = "Meet at ${meeting.location} on $formattedDate",
+                          text = "Meet at ${meeting.location?.name} on $formattedDate",
                           style = MaterialTheme.typography.bodyMedium,
                           color = Color.Gray,
                           modifier = Modifier.testTag("meetingDetails"))

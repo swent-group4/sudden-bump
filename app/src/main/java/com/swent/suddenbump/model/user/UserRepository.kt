@@ -137,13 +137,7 @@ interface UserRepository {
 
   fun getUserStatus(uid: String, onSuccess: (Boolean) -> Unit, onFailure: (Exception) -> Unit)
 
-  fun isFriendsInRadius(
-      userLocation: Location,
-      friends: List<User>,
-      radius: Double,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  )
+  fun userFriendsInRadius(userLocation: Location, friends: List<User>, radius: Double): List<User>
 
   fun updateUserStatus(
       uid: String,
@@ -169,7 +163,15 @@ interface UserRepository {
 
   fun getSavedUid(): String
 
-  fun saveNotifiedFriends(friends: List<String>)
+  fun saveNotifiedFriends(friendsUID: List<String>)
+
+  fun saveRadius(radius: Float)
+
+  fun getSavedRadius(): Float
+
+  fun saveNotificationStatus(status: Boolean)
+
+  fun getSavedNotificationStatus(): Boolean
 
   fun getSavedAlreadyNotifiedFriends(): List<String>
 

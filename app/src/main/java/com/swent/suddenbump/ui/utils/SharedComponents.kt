@@ -8,13 +8,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
@@ -146,5 +150,90 @@ fun AccountOption(label: String, backgroundColor: Color, onClick: () -> Unit, te
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                     color = if (backgroundColor == Pink40) Color.White else Color.Black),
             modifier = Modifier.padding(start = 16.dp))
+      }
+}
+/**
+ * Composable that displays a location field with dropdown suggestions.
+ *
+ * @param locationQuery The current query string for the location.
+ * @param onLocationQueryChange The callback for when the location query changes.
+ * @param locationSuggestions The list of location suggestions.
+ * @param onLocationSelected The callback for when a location is selected.
+ * @param showDropdown The visibility state of the dropdown.
+ * @param onDropdownChange The callback for when the dropdown visibility changes.
+ * @param modifier The modifier for the location field.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LocationField(
+    locationQuery: String?,
+    onLocationQueryChange: (String) -> Unit,
+    locationSuggestions: List<Location?>,
+    onLocationSelected: (Location) -> Unit,
+    showDropdown: Boolean,
+    onDropdownChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+  // State to track the number of items displayed
+  val maxItemsToShow = remember { mutableIntStateOf(3) }
+
+  ExposedDropdownMenuBox(
+      expanded = showDropdown && locationSuggestions.isNotEmpty(),
+      onExpandedChange = { onDropdownChange(it) } // Toggle dropdown visibility
+      ) {
+        OutlinedTextField(
+            value = locationQuery ?: "",
+            onValueChange = {
+              onLocationQueryChange(it)
+              onDropdownChange(true) // Show dropdown when user starts typing
+              maxItemsToShow.value = 3 // Reset to show initial 3 items when query changes
+            },
+            label = { Text("Location") },
+            textStyle = TextStyle(color = Color.White),
+            placeholder = { Text("Enter an Address or Location") },
+            modifier =
+                modifier
+                    .menuAnchor() // Anchor the dropdown to this text field
+                    .fillMaxWidth()
+                    .testTag("Location"),
+            singleLine = true)
+
+        // Dropdown menu for location suggestions
+        ExposedDropdownMenu(
+            expanded = showDropdown && locationSuggestions.isNotEmpty(),
+            onDismissRequest = { onDropdownChange(false) },
+            modifier = Modifier.background(Color.Black).testTag("DropDownMenu")) {
+              locationSuggestions.filterNotNull().take(maxItemsToShow.value).forEach { location ->
+                DropdownMenuItem(
+                    text = {
+                      Text(
+                          text =
+                              location.name.take(30) +
+                                  if (location.name.length > 30) "..." else "", // Limit name length
+                          color = Color.White,
+                          maxLines = 1 // Ensure name doesn't overflow
+                          )
+                    },
+                    onClick = {
+                      // Extract substring up to the first comma
+                      val trimmedLocation = location.name.substringBefore(",")
+                      onLocationQueryChange(
+                          trimmedLocation) // Update the query with trimmed location
+                      onLocationSelected(
+                          location.copy(name = trimmedLocation)) // Save the trimmed name
+                      onDropdownChange(false) // Close dropdown on selection
+                    },
+                    modifier =
+                        Modifier.padding(8.dp).background(Color.Black).testTag("DropDownMenuItem"))
+              }
+              if (locationSuggestions.size > maxItemsToShow.value) {
+                DropdownMenuItem(
+                    text = { Text(text = "More...", color = Color.White) },
+                    onClick = {
+                      maxItemsToShow.value += 3 // Show 3 more items
+                    },
+                    modifier = Modifier.padding(8.dp).background(Color.Black).testTag("MoreButton"))
+              }
+            }
       }
 }
