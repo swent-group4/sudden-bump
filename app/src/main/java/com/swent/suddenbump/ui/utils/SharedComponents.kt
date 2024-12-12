@@ -204,7 +204,7 @@ fun LocationField(
                           text =
                               location.name.take(30) +
                                   if (location.name.length > 30) "..." else "", // Limit name length
-                          color = Purple40,
+                          color = Color.White,
                           maxLines = 1 // Ensure name doesn't overflow
                           )
                     },

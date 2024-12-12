@@ -290,7 +290,7 @@ fun FriendsMarkers(userViewModel: UserViewModel, onFriendMarkerInfoWindowClick: 
           // When the info window is clicked, proceed to confirmation dialog
           onFriendMarkerInfoWindowClick(markerState.position)
         },
-        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
+        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN),
         content = {
           // Custom info window content displaying friend's name in blue
           Column { Text(
