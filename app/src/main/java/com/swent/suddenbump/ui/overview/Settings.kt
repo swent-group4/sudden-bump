@@ -33,7 +33,9 @@ import com.swent.suddenbump.R
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.DividerColor
 import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.theme.VibrantPurple
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,11 +44,13 @@ fun SettingsScreen(
     navigationActions: NavigationActions,
     userViewModel: UserViewModel,
     meetingViewModel: MeetingViewModel,
-    onNotificationsEnabledChange: (Boolean) -> Unit,
     uri: Uri? = null
 ) {
   var profilePictureUri = remember { mutableStateOf<Uri?>(uri) }
-  var notificationsEnabled by remember { mutableStateOf(true) }
+  var notificationsEnabled by remember {
+    mutableStateOf(userViewModel.getSavedNotificationStatus())
+  }
+  var radius by remember { mutableStateOf(userViewModel.getSavedRadius()) }
 
   val launcher =
       rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -74,11 +78,13 @@ fun SettingsScreen(
                     modifier = Modifier.testTag("AccountOption"))
               }
               item {
-                SettingsOption(
-                    label = "Confidentiality",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("ConfidentialityScreen") },
-                    modifier = Modifier.testTag("ConfidentialityOption"))
+                RadiusSlider(
+                    radius = radius,
+                    onRadiusChange = {
+                      radius = it
+                      userViewModel.saveRadius(it)
+                    },
+                    modifier = Modifier.testTag("RadiusSlider"))
               }
               item {
                 SettingsOption(
@@ -99,7 +105,7 @@ fun SettingsScreen(
                     notificationsEnabled = notificationsEnabled,
                     onCheckedChange = {
                       notificationsEnabled = it
-                      onNotificationsEnabledChange(it)
+                      userViewModel.saveNotificationStatus(it)
                     },
                     modifier = Modifier.testTag("NotificationsSwitch"))
               }
@@ -111,6 +117,48 @@ fun SettingsScreen(
               }
             }
       })
+}
+
+/**
+ * A composable function that displays a slider for adjusting the radius.
+ *
+ * @param radius The current radius value.
+ * @param onRadiusChange A callback function to handle changes in the radius value.
+ * @param modifier A [Modifier] for this composable.
+ */
+@Composable
+fun RadiusSlider(radius: Float, onRadiusChange: (Float) -> Unit, modifier: Modifier = Modifier) {
+  Column(
+      modifier =
+          modifier
+              .fillMaxWidth()
+              .padding(horizontal = 8.dp)
+              .background(DividerColor, RoundedCornerShape(8.dp))
+              .padding(16.dp)) {
+        Text(
+            text = "Adjust Radius",
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold, color = Color.Black),
+            modifier = Modifier.padding(bottom = 8.dp))
+        Slider(
+            value = radius,
+            onValueChange = onRadiusChange,
+            valueRange = 3f..12f,
+            steps = 3,
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = Purple40,
+                    activeTrackColor = VibrantPurple,
+                    inactiveTrackColor = Purple40.copy(alpha = 0.5f),
+                    activeTickColor = VibrantPurple,
+                    inactiveTickColor = Purple40.copy(alpha = 0.5f)),
+            modifier = Modifier.testTag("RadiusSliderControl"))
+        Text(
+            text = "Radius: ${radius.toInt()} km",
+            style = MaterialTheme.typography.bodyMedium.copy(color = Color.Black),
+            modifier = Modifier.padding(top = 8.dp))
+      }
 }
 
 @Composable

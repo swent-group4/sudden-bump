@@ -4,7 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,9 +15,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.meeting.MeetingViewModel
+import com.swent.suddenbump.model.meeting_location.Location
+import com.swent.suddenbump.model.meeting_location.LocationViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.utils.LocationField
 import com.swent.suddenbump.ui.utils.formatDateString
 import com.swent.suddenbump.ui.utils.showDatePickerDialog
 import java.text.SimpleDateFormat
@@ -25,10 +29,13 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: MeetingViewModel) {
+fun EditMeetingScreen(
+    navigationActions: NavigationActions,
+    meetingViewModel: MeetingViewModel,
+    locationViewModel: LocationViewModel = viewModel(factory = LocationViewModel.Factory)
+) {
   val meeting = meetingViewModel.selectedMeeting.collectAsState().value ?: return
 
-  var location by remember { mutableStateOf(meeting.location) }
   var date by remember {
     mutableStateOf(
         meeting.date.toDate().let {
@@ -36,6 +43,13 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
         })
   }
   var showDatePicker by remember { mutableStateOf(false) }
+  var selectedLocation by remember { mutableStateOf(meeting.location) }
+  var locationQuery by remember { mutableStateOf(meeting.location?.name) }
+
+  // State for dropdown visibility
+  var showDropdown by remember { mutableStateOf(false) }
+  val locationSuggestions by
+      locationViewModel.locationSuggestions.collectAsState(initial = emptyList<Location?>())
   val context = LocalContext.current
 
   Scaffold(
@@ -47,7 +61,10 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
             navigationIcon = {
               IconButton(
                   onClick = { navigationActions.goBack() }, modifier = Modifier.testTag("Back")) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    Icon(
+                        Icons.AutoMirrored.Outlined.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White)
                   }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black))
@@ -57,13 +74,18 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
             modifier =
                 Modifier.padding(padding).fillMaxSize().background(Color.Black).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
               // Location field
-              OutlinedTextField(
-                  value = location,
-                  onValueChange = { location = it },
-                  label = { Text("Location") },
-                  textStyle = LocalTextStyle.current.copy(color = Color.White),
-                  modifier = Modifier.fillMaxWidth().testTag("Location"))
+              LocationField(
+                  locationQuery = locationQuery,
+                  onLocationQueryChange = {
+                    locationQuery = it
+                    locationViewModel.setQuery(it)
+                  },
+                  locationSuggestions = locationSuggestions,
+                  onLocationSelected = { selectedLocation = it },
+                  showDropdown = showDropdown,
+                  onDropdownChange = { showDropdown = it })
 
               // Date Field
               OutlinedTextField(
@@ -85,8 +107,12 @@ fun EditMeetingScreen(navigationActions: NavigationActions, meetingViewModel: Me
               Spacer(modifier = Modifier.height(16.dp))
 
               val editButtonHelper: (Timestamp) -> Unit = { meetingDate ->
+                // Check if selectedLocation is a valid Location
+                if (selectedLocation == null || locationQuery != selectedLocation?.name) {
+                  throw IllegalArgumentException("Location must be selected")
+                }
                 // Save the updated meeting
-                val updatedMeeting = meeting.copy(location = location, date = meetingDate)
+                val updatedMeeting = meeting.copy(location = selectedLocation, date = meetingDate)
                 meetingViewModel.updateMeeting(updatedMeeting)
 
                 Toast.makeText(context, "Meeting updated successfully", Toast.LENGTH_SHORT).show()

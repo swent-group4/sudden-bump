@@ -87,7 +87,7 @@ class MeetingRepositoryFirestore(private val db: FirebaseFirestore) : MeetingRep
     }
   }
 
-  private fun Meeting.toMap(): Map<String, Any> {
+  private fun Meeting.toMap(): Map<String, Any?> {
     return mapOf(
         "meetingId" to meetingId,
         "location" to location,

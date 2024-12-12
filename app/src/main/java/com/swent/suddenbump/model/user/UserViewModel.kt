@@ -616,6 +616,22 @@ open class UserViewModel(
     return repository.getSavedUid()
   }
 
+  fun saveRadius(radius: Float) {
+    repository.saveRadius(radius)
+  }
+
+  fun getSavedRadius(): Float {
+    return repository.getSavedRadius()
+  }
+
+  fun saveNotificationStatus(status: Boolean) {
+    repository.saveNotificationStatus(status)
+  }
+
+  fun getSavedNotificationStatus(): Boolean {
+    return repository.getSavedNotificationStatus()
+  }
+
   fun isUserLoggedIn(): Boolean {
     return repository.isUserLoggedIn()
   }
