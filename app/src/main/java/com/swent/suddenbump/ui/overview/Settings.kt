@@ -34,6 +34,7 @@ import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +55,7 @@ fun SettingsScreen(
 
   Scaffold(
       modifier = Modifier.testTag("settingsScreen"),
-      topBar = { OverviewScreenTopBar("Settings", navigationActions) },
+      topBar = { CustomCenterAlignedTopBar("Settings", navigationActions) },
       content = { paddingValues ->
         LazyColumn(
             modifier =

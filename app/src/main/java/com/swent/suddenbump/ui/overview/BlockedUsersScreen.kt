@@ -30,8 +30,8 @@ import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BlockedUsersScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val blockedUsers = userViewModel.getBlockedFriends().collectAsState()
@@ -39,7 +39,7 @@ fun BlockedUsersScreen(navigationActions: NavigationActions, userViewModel: User
   Scaffold(
       modifier = Modifier.testTag("blockedUsersScreen"),
       topBar = {
-        OverviewScreenTopBar(title = "Blocked Users", navigationActions = navigationActions)
+        CustomCenterAlignedTopBar(title = "Blocked Users", navigationActions = navigationActions)
       }) { paddingValues ->
         Box(
             modifier =

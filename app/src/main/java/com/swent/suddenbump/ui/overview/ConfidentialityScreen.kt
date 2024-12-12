@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 import com.swent.suddenbump.ui.utils.LabeledButtonSection
 
 data class ConfidentialityOption(
@@ -37,7 +38,7 @@ fun ConfidentialityScreen(navigationActions: NavigationActions, userViewModel: U
   Scaffold(
       modifier = Modifier.testTag("confidentialityScreen"),
       topBar = {
-        OverviewScreenTopBar(title = "Confidentiality", navigationActions = navigationActions)
+        CustomCenterAlignedTopBar(title = "Confidentiality", navigationActions = navigationActions)
       },
       content = { paddingValues ->
         Column(

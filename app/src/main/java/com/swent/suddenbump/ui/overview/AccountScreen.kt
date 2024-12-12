@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.sp
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.utils.AccountOption
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(navigationActions: NavigationActions) {
   var selectedLanguage by remember { mutableStateOf("English") }
@@ -25,7 +25,9 @@ fun AccountScreen(navigationActions: NavigationActions) {
 
   Scaffold(
       modifier = Modifier.testTag("accountScreen"),
-      topBar = { OverviewScreenTopBar(title = "Account", navigationActions = navigationActions) },
+      topBar = {
+        CustomCenterAlignedTopBar(title = "Account", navigationActions = navigationActions)
+      },
       content = { paddingValues ->
         LazyColumn(
             modifier =

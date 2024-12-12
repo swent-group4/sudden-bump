@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 import com.swent.suddenbump.ui.utils.CustomTopBar
 
 data class SectionData(
@@ -48,7 +49,7 @@ fun DiscussionScreen(navigationActions: NavigationActions, userViewModel: UserVi
   // Scaffold to define the screen layout
   Scaffold(
       modifier = Modifier.testTag("discussionScreen").background(Color.Black),
-      topBar = { OverviewScreenTopBar("Discussions", navigationActions = navigationActions) },
+      topBar = { CustomCenterAlignedTopBar("Discussions", navigationActions = navigationActions) },
       content = { paddingValues ->
         Column(
             modifier =

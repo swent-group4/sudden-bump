@@ -44,7 +44,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.model.user.UserWithFriendsInCommon
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
-import com.swent.suddenbump.ui.overview.OverviewScreenTopBar
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +73,7 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
   Scaffold(
       modifier = Modifier.testTag("addContactScreen"),
       topBar = {
-        OverviewScreenTopBar(title = "Add friends", navigationActions = navigationActions)
+        CustomCenterAlignedTopBar(title = "Add friends", navigationActions = navigationActions)
       },
       content = { pd ->
         Column(
