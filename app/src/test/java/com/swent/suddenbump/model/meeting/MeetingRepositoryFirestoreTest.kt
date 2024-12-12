@@ -10,6 +10,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import com.swent.suddenbump.model.meeting_location.Location
 import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
 import org.junit.Before
@@ -38,7 +39,7 @@ class MeetingRepositoryFirestoreTest {
   private val meeting =
       Meeting(
           meetingId = "1",
-          location = "Cafe",
+          location = Location(),
           date = Timestamp.now(),
           friendId = "friendId",
           creatorId = "creatorId",

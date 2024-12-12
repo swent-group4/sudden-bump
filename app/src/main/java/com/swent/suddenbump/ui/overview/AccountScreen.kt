@@ -5,8 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swent.suddenbump.model.user.UserViewModel
@@ -23,8 +20,8 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.utils.AccountOption
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   var selectedLanguage by remember { mutableStateOf("English") }
@@ -35,22 +32,7 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
   Scaffold(
       modifier = Modifier.testTag("accountScreen"),
       topBar = {
-        CenterAlignedTopAppBar(
-            title = { Text("Account", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("backButton")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Go back")
-                  }
-            },
-            colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White))
+        CustomCenterAlignedTopBar(title = "Account", navigationActions = navigationActions)
       },
       content = { paddingValues ->
         LazyColumn(

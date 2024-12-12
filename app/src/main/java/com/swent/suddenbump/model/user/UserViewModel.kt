@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Enumération pour les catégories de distance utilisées pour regrouper les amis. */
+/** Enumeration for distance categories used to group friends. */
 enum class DistanceCategory(val maxDistance: Float, val title: String) {
   WITHIN_5KM(5000f, "Within 5km"),
   WITHIN_10KM(10000f, "Within 10km"),
@@ -30,7 +30,7 @@ enum class DistanceCategory(val maxDistance: Float, val title: String) {
   FURTHER(Float.MAX_VALUE, "Further")
 }
 
-/** Classe ViewModel pour gérer les données et opérations liées à l'utilisateur. */
+/** ViewModel class to manage user-related data and operations. */
 open class UserViewModel(
     private val repository: UserRepository,
     private val chatRepository: ChatRepository
@@ -95,7 +95,8 @@ open class UserViewModel(
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
-
+  private val _friendIsOnline: MutableStateFlow<Boolean> = MutableStateFlow(false)
+  val friendIsOnline = _friendIsOnline.asStateFlow()
   private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
 
   val locationSharedWith: StateFlow<List<User>> = _locationSharedWith.asStateFlow()
@@ -111,8 +112,6 @@ open class UserViewModel(
   // LiveData for verification ID
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
-
-  // In UserViewModel
 
   // Change the type to allow null values
   val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
@@ -145,7 +144,7 @@ open class UserViewModel(
           }
           .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-  /** Initialise le ViewModel en configurant le dépôt. */
+  /** Initializes the ViewModel by configuring the repository. */
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
   }
@@ -466,6 +465,33 @@ open class UserViewModel(
   }
 
   /**
+   * Retrieves the online status of a user from the repository.
+   *
+   * @param uid The unique identifier of the user.
+   * @param onSuccess Called with the online status if retrieval is successful.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
+  fun getUserStatus(uid: String, onSuccess: (Boolean) -> Unit, onFailure: (Exception) -> Unit) {
+    repository.getUserStatus(uid, onSuccess, onFailure)
+  }
+  /**
+   * Updates the user's online status in the repository.
+   *
+   * @param uid The unique identifier of the user.
+   * @param status The new online status of the user.
+   * @param onSuccess Called when the update is successful.
+   * @param onFailure Called with an exception if the update fails.
+   */
+  fun updateUserStatus(
+      uid: String,
+      status: Boolean,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    _friendIsOnline.value = status
+    repository.updateUserStatus(uid, status, onSuccess, onFailure)
+  }
+  /**
    * Updates the user's last activity timestamp in the repository.
    *
    * @param user The user whose timestamp is being updated.
@@ -617,6 +643,22 @@ open class UserViewModel(
    *
    * @return True if the user is logged in, false otherwise.
    */
+  fun saveRadius(radius: Float) {
+    repository.saveRadius(radius)
+  }
+
+  fun getSavedRadius(): Float {
+    return repository.getSavedRadius()
+  }
+
+  fun saveNotificationStatus(status: Boolean) {
+    repository.saveNotificationStatus(status)
+  }
+
+  fun getSavedNotificationStatus(): Boolean {
+    return repository.getSavedNotificationStatus()
+  }
+
   fun isUserLoggedIn(): Boolean {
     return repository.isUserLoggedIn()
   }

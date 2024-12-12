@@ -215,6 +215,213 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
+  fun updateUserStatus_shouldCallOnSuccessWhenUpdateIsSuccessful() {
+    // Arrange
+    val uid = "test_user_id"
+    val isOnline = true
+
+    // Mock the Firestore and its references
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+
+    // Mock a successful update task
+    val mockUpdateTask = Tasks.forResult<Void>(null)
+    whenever(mockUserDocumentReference.update("isOnline", isOnline)).thenReturn(mockUpdateTask)
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Act
+    userRepositoryFirestore.updateUserStatus(
+        uid = uid,
+        status = isOnline,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { onFailureCalled = true })
+
+    // Ensure all posted runnables on the main thread have been executed
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue("Expected onSuccess to be called", onSuccessCalled)
+    assertFalse("Expected onFailure not to be called", onFailureCalled)
+    verify(mockUserDocumentReference).update("isOnline", isOnline)
+  }
+
+  @Test
+  fun updateUserStatus_shouldCallOnFailureWhenUpdateFails() {
+    // Arrange
+    val uid = "test_user_id"
+    val isOnline = false
+    val exception = Exception("Failed to update status")
+
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+
+    // Mock a failing update task
+    val failingTask = Tasks.forException<Void>(exception)
+    whenever(mockUserDocumentReference.update("isOnline", isOnline)).thenReturn(failingTask)
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var caughtException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.updateUserStatus(
+        uid = uid,
+        status = isOnline,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = {
+          onFailureCalled = true
+          caughtException = it
+        })
+
+    // Ensure all posted runnables on the main thread have been executed
+    shadowOf(Looper.getMainLooper()).idle()
+    // Assert
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertNotNull(caughtException)
+    assertEquals("Failed to update status", caughtException?.message)
+    verify(mockUserDocumentReference).update("isOnline", isOnline)
+  }
+
+  @Test
+  fun getUserStatus_shouldReturnTrueWhenUserIsOnline() {
+    // Arrange
+    val uid = "test_user_id"
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+
+    val mockSnapshot = mock(DocumentSnapshot::class.java)
+    whenever(mockSnapshot.exists()).thenReturn(true)
+    whenever(mockSnapshot.getBoolean("isOnline")).thenReturn(true)
+    whenever(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockSnapshot))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var isOnlineResult: Boolean? = null
+
+    // Act
+    userRepositoryFirestore.getUserStatus(
+        uid = uid,
+        onSuccess = {
+          onSuccessCalled = true
+          isOnlineResult = it
+        },
+        onFailure = { onFailureCalled = true })
+
+    // Ensure all posted runnables on the main thread have been executed
+    shadowOf(Looper.getMainLooper()).idle()
+    // Assert
+    assertTrue(onSuccessCalled)
+    assertFalse(onFailureCalled)
+    assertTrue(isOnlineResult == true)
+    verify(mockUserDocumentReference).get()
+  }
+
+  @Test
+  fun getUserStatus_shouldReturnFalseWhenUserIsOffline() {
+    // Arrange
+    val uid = "test_user_id"
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+
+    val mockSnapshot = mock(DocumentSnapshot::class.java)
+    whenever(mockSnapshot.exists()).thenReturn(true)
+    whenever(mockSnapshot.getBoolean("isOnline")).thenReturn(false)
+    whenever(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockSnapshot))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var isOnlineResult: Boolean? = null
+
+    // Act
+    userRepositoryFirestore.getUserStatus(
+        uid = uid,
+        onSuccess = {
+          onSuccessCalled = true
+          isOnlineResult = it
+        },
+        onFailure = { onFailureCalled = true })
+
+    // Ensure all posted runnables on the main thread have been executed
+    shadowOf(Looper.getMainLooper()).idle()
+    // Assert
+    assertTrue(onSuccessCalled)
+    assertFalse(onFailureCalled)
+    assertFalse(isOnlineResult == true)
+    verify(mockUserDocumentReference).get()
+  }
+
+  @Test
+  fun getUserStatus_shouldCallOnFailureWhenUserNotFound() {
+    // Arrange
+    val uid = "non_existent_user"
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+
+    // Mock snapshot that doesn't exist
+    val mockSnapshot = mock(DocumentSnapshot::class.java)
+    whenever(mockSnapshot.exists()).thenReturn(false)
+    whenever(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockSnapshot))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var caughtException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.getUserStatus(
+        uid = uid,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = {
+          onFailureCalled = true
+          caughtException = it
+        })
+
+    // Ensure all posted runnables on the main thread have been executed
+    shadowOf(Looper.getMainLooper()).idle()
+    // Assert
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertNotNull(caughtException)
+    assertEquals("User not found", caughtException?.message)
+    verify(mockUserDocumentReference).get()
+  }
+
+  @Test
+  fun getUserStatus_shouldCallOnFailureWhenFirestoreFails() {
+    // Arrange
+    val uid = "test_user_id"
+    val exception = Exception("Firestore error")
+
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.get()).thenReturn(Tasks.forException(exception))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var caughtException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.getUserStatus(
+        uid = uid,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = {
+          onFailureCalled = true
+          caughtException = it
+        })
+
+    // Ensure all posted runnables on the main thread have been executed
+    shadowOf(Looper.getMainLooper()).idle()
+    // Assert
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertNotNull(caughtException)
+    assertEquals("Firestore error", caughtException?.message)
+    verify(mockUserDocumentReference).get()
+  }
+
+  @Test
   fun getNewUid() {
     `when`(mockUserDocumentReference.id).thenReturn("1")
     val uid = userRepositoryFirestore.getNewUid()
@@ -3497,6 +3704,48 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
+  fun userFriendsInRadiusTest() {
+    // Arrange
+    val userLocation =
+        Location("mock_provider").apply {
+          latitude = 40.748817 // Example: Latitude for New York
+          longitude = -73.985428
+        }
+
+    val friend1Location =
+        Location("mock_provider").apply {
+          latitude = 40.748817 // Same location
+          longitude = -73.985428
+        }
+
+    val friend2Location =
+        Location("mock_provider").apply {
+          latitude = 40.730610 // Another point in New York
+          longitude = -73.935242
+        }
+
+    val friend3Location =
+        Location("mock_provider").apply {
+          latitude = 34.052235 // Los Angeles
+          longitude = -118.243683
+        }
+
+    val friend1 = user.copy(lastKnownLocation = MutableStateFlow(friend1Location))
+    val friend2 = user.copy(lastKnownLocation = MutableStateFlow(friend2Location))
+    val friend3 = user.copy(lastKnownLocation = MutableStateFlow(friend3Location))
+
+    val friends = listOf(friend1, friend2, friend3)
+    val radius = 5000.0 // 5 kilometers
+
+    // Act
+    val result = userRepositoryFirestore.userFriendsInRadius(userLocation, friends, radius)
+
+    // Assert
+    val expectedFriends = listOf(friend1, friend2)
+    assertEquals(expectedFriends, result)
+  }
+
+  @Test
   fun saveNotifiedFriends_shouldSaveListAsJsonString() {
     val friendsUID = listOf("user1", "user2", "user3")
     val gson = Gson()
@@ -3535,6 +3784,34 @@ class UserRepositoryFirestoreTest {
 
     // Assert the result is an empty list
     assertEquals(emptyList<String>(), result)
+  }
+
+  @Test
+  fun saveRadiusSavesRadiusAsStringInSharedPreferences() {
+    // Arrange
+    val radiusToSave = 5.5f
+    val radiusKey = "radius"
+
+    // Act
+    userRepositoryFirestore.saveRadius(radiusToSave)
+
+    // Assert
+    verify(sharedPreferencesEditor).putString(radiusKey, radiusToSave.toString())
+    verify(sharedPreferencesEditor).apply()
+  }
+
+  @Test
+  fun saveNotificationStatusSavesStatusInSharedPreferences() {
+    // Arrange
+    val notificationKey = "notificationStatus"
+    val notificationStatus = true
+
+    // Act
+    userRepositoryFirestore.saveNotificationStatus(notificationStatus)
+
+    // Assert
+    verify(sharedPreferencesEditor).putBoolean(notificationKey, notificationStatus)
+    verify(sharedPreferencesEditor).apply()
   }
 
   @Test

@@ -70,8 +70,7 @@ class SettingsScreenTest {
       SettingsScreen(
           navigationActions = navigationActions,
           userViewModel = userViewModel,
-          meetingViewModel = meetingViewModel,
-          onNotificationsEnabledChange = { notificationsEnabled = it })
+          meetingViewModel = meetingViewModel)
     }
   }
 
@@ -114,16 +113,6 @@ class SettingsScreenTest {
     // Verify that the Account option navigates to the Account screen
     composeTestRule.onNodeWithTag("AccountOption").performClick()
     verify(navigationActions).navigateTo("AccountScreen")
-  }
-
-  @Test
-  fun confidentialityButtonNavigatesToConfidentialityScreen() {
-    setContentDefault()
-    composeTestRule.waitForIdle()
-
-    // Verify that the Confidentiality option navigates to the Confidentiality screen
-    composeTestRule.onNodeWithTag("ConfidentialityOption").performClick()
-    verify(navigationActions).navigateTo("ConfidentialityScreen")
   }
 
   @Test
@@ -203,7 +192,6 @@ class SettingsScreenTest {
           navigationActions = navigationActions,
           userViewModel = userViewModel,
           meetingViewModel = meetingViewModel,
-          onNotificationsEnabledChange = { notificationsEnabled = it },
           uri = uriImage)
     }
     composeTestRule.waitForIdle()

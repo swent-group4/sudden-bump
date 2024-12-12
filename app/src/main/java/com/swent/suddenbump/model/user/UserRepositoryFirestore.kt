@@ -943,6 +943,44 @@ class UserRepositoryFirestore(
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
   }
+  /**
+   * Retrieves the online status of a specific user.
+   *
+   * @param uid The unique identifier of the user whose status is being checked.
+   * @param onSuccess Called with `true` if the user is online, `false` otherwise.
+   * @param onFailure Called with an exception if the retrieval fails.
+   */
+  override fun getUserStatus(
+      uid: String,
+      onSuccess: (Boolean) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnSuccessListener { document ->
+          if (document.exists()) {
+            val isOnline = document.getBoolean("isOnline") ?: false
+            onSuccess(isOnline)
+          } else {
+            onFailure(Exception("User not found"))
+          }
+        }
+        .addOnFailureListener { exception -> onFailure(exception) }
+  }
+
+  override fun updateUserStatus(
+      uid: String,
+      status: Boolean,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .update("isOnline", status)
+        .addOnFailureListener { onFailure(it) }
+        .addOnSuccessListener { onSuccess() }
+  }
 
   /**
    * Updates the timestamp for the specified user.
@@ -965,21 +1003,21 @@ class UserRepositoryFirestore(
         .addOnSuccessListener { onSuccess() }
   }
 
-  override fun isFriendsInRadius(
+  /**
+   * Filters a list of friends to find those within a specified radius of the user's location.
+   *
+   * @param userLocation The current location of the user.
+   * @param friends A list of User objects representing the user's friends.
+   * @param radius The radius within which to search for friends, in meters.
+   * @return A list of User objects representing friends within the specified radius.
+   */
+  override fun userFriendsInRadius(
       userLocation: Location,
       friends: List<User>,
-      radius: Double,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    var inRadius = false
-    friends.forEach { friend ->
-      inRadius = inRadius || userLocation.distanceTo(friend.lastKnownLocation.value) < radius
-    }
-    if (inRadius) {
-      onSuccess()
-    } else {
-      onFailure(Exception("No friends in radius"))
+      radius: Double
+  ): List<User> {
+    return friends.filter { friend ->
+      userLocation.distanceTo(friend.lastKnownLocation.value) <= radius
     }
   }
 
@@ -1089,6 +1127,28 @@ class UserRepositoryFirestore(
     } else {
       emptyList() // Return an empty list if no data is found
     }
+  }
+
+  override fun saveRadius(radius: Float) {
+    with(sharedPreferences.edit()) {
+      putString("radius", radius.toString())
+      apply()
+    }
+  }
+
+  override fun getSavedRadius(): Float {
+    return sharedPreferences.getString("radius", "5.0")!!.toFloat()
+  }
+
+  override fun saveNotificationStatus(status: Boolean) {
+    with(sharedPreferences.edit()) {
+      putBoolean("notificationStatus", status)
+      apply()
+    }
+  }
+
+  override fun getSavedNotificationStatus(): Boolean {
+    return sharedPreferences.getBoolean("notificationStatus", true)
   }
 
   /**

@@ -1,6 +1,7 @@
 package com.swent.suddenbump.model.meeting
 
 import com.google.firebase.Timestamp
+import com.swent.suddenbump.model.meeting_location.Location
 import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,7 +33,7 @@ class MeetingViewModelTest {
   private val meeting =
       Meeting(
           meetingId = "JhXlhoSvTmbtTFSVpNnA",
-          location = "Cafe",
+          location = Location(),
           date = Timestamp(Date(1725494400000)),
           friendId = "FPHuqGkCBo7Iinbo5OO9",
           creatorId = "P7vuP4bbEQB03OSR3QwJ",
@@ -91,7 +92,7 @@ class MeetingViewModelTest {
     val expiredMeeting =
         Meeting(
             meetingId = "expiredMeetingId",
-            location = "Park",
+            location = Location(),
             date = Timestamp(Date(System.currentTimeMillis() - 10000)), // 10 seconds ago
             friendId = "Friend1",
             creatorId = "Creator1",
@@ -99,7 +100,7 @@ class MeetingViewModelTest {
     val upcomingMeeting =
         Meeting(
             meetingId = "upcomingMeetingId",
-            location = "Library",
+            location = Location(),
             date = Timestamp(Date(System.currentTimeMillis() + 100000)), // 100 seconds ahead
             friendId = "Friend2",
             creatorId = "Creator2",
@@ -135,7 +136,7 @@ class MeetingViewModelTest {
     val meeting1 =
         Meeting(
             meetingId = "meeting1",
-            location = "Cafe",
+            location = Location(),
             date = Timestamp(Date()),
             friendId = "targetUserId",
             creatorId = "Creator1",
@@ -143,7 +144,7 @@ class MeetingViewModelTest {
     val meeting2 =
         Meeting(
             meetingId = "meeting2",
-            location = "Park",
+            location = Location(),
             date = Timestamp(Date()),
             friendId = "Friend2",
             creatorId = "targetUserId",
@@ -151,7 +152,7 @@ class MeetingViewModelTest {
     val meeting3 =
         Meeting(
             meetingId = "meeting3",
-            location = "Library",
+            location = Location(),
             date = Timestamp(Date()),
             friendId = "Friend3",
             creatorId = "Creator3",

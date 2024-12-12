@@ -35,6 +35,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.location.LocationGetter
 import com.swent.suddenbump.model.location.LocationPermission
 import com.swent.suddenbump.model.meeting.MeetingViewModel
+import com.swent.suddenbump.model.meeting_location.LocationViewModel
+import com.swent.suddenbump.model.meeting_location.NominatimLocationRepository
 import com.swent.suddenbump.model.notifications.NotificationsPermission
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
@@ -54,7 +56,6 @@ import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.overview.AccountScreen
 import com.swent.suddenbump.ui.overview.BlockedUsersScreen
-import com.swent.suddenbump.ui.overview.ConfidentialityScreen
 import com.swent.suddenbump.ui.overview.ConversationScreen
 import com.swent.suddenbump.ui.overview.DiscussionScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
@@ -62,6 +63,7 @@ import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.overview.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 import com.swent.suddenbump.ui.utils.isRunningTest
+import okhttp3.OkHttpClient
 
 class MainActivity : ComponentActivity() {
 
@@ -71,6 +73,9 @@ class MainActivity : ComponentActivity() {
   private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
   private lateinit var locationGetter: LocationGetter
   private var newLocation by mutableStateOf<Location?>(null)
+    val userViewModel: UserViewModel by viewModels {
+        UserViewModel.provideFactory(applicationContext)
+    }
 
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -142,6 +147,46 @@ class MainActivity : ComponentActivity() {
     }
   }
 
+  override fun onStart() {
+    super.onStart()
+    // Update online status when the activity starts
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = true,
+        onSuccess = { Log.d("UserStatus", "Online status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
+  }
+
+  override fun onStop() {
+    super.onStop()
+    // Update offline status when the activity stops
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = false,
+        onSuccess = { Log.d("UserStatus", "Offline status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
+  }
+
+  override fun onResume() {
+    // Update online status when the activity resumes
+    super.onResume()
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = true,
+        onSuccess = { Log.d("UserStatus", "Online status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
+  }
+
+  override fun onDestroy() {
+    // Update offline status when the activity is destroyed
+    super.onDestroy()
+    userViewModel.updateUserStatus(
+        uid = userViewModel.getCurrentUser().value.uid,
+        status = false,
+        onSuccess = { Log.d("UserStatus", "Offline status updated") },
+        onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
+  }
+
   private fun checkLocationPermissions(onResult: () -> Unit) {
 
     if (!isRunningTest()) {
@@ -172,9 +217,7 @@ class MainActivity : ComponentActivity() {
     val navigationActions = NavigationActions(navController)
 
     val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
-    val userViewModel: UserViewModel by viewModels {
-      UserViewModel.provideFactory(applicationContext)
-    }
+    val locationViewModel = LocationViewModel(NominatimLocationRepository(OkHttpClient()))
 
     newLocation?.let { it1 ->
       userViewModel.updateLocation(location = it1, onSuccess = {}, onFailure = {})
@@ -223,13 +266,12 @@ class MainActivity : ComponentActivity() {
         composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
         composable(Screen.CONV) { ConversationScreen(navigationActions) }
         composable(Screen.SETTINGS) {
-          SettingsScreen(
-              navigationActions, userViewModel, meetingViewModel, onNotificationsEnabledChange = {})
+          SettingsScreen(navigationActions, userViewModel, meetingViewModel)
         }
         composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
         composable(Screen.ADD_MEETING) {
-          AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
+          AddMeetingScreen(navigationActions, userViewModel, meetingViewModel, locationViewModel)
         }
       }
       navigation(
@@ -239,7 +281,9 @@ class MainActivity : ComponentActivity() {
         composable(Screen.CALENDAR) {
           CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
         }
-        composable(Screen.EDIT_MEETING) { EditMeetingScreen(navigationActions, meetingViewModel) }
+        composable(Screen.EDIT_MEETING) {
+          EditMeetingScreen(navigationActions, meetingViewModel, locationViewModel)
+        }
         composable(Screen.PENDING_MEETINGS) {
           PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
         }
@@ -249,7 +293,7 @@ class MainActivity : ComponentActivity() {
           startDestination = Screen.MAP,
           route = Route.MAP,
       ) {
-        composable(Screen.MAP) { MapScreen(navigationActions, userViewModel) }
+        composable(Screen.MAP) { MapScreen(navigationActions, userViewModel, meetingViewModel) }
       }
       navigation(
           startDestination = Screen.MESS,
@@ -260,9 +304,6 @@ class MainActivity : ComponentActivity() {
 
       // Add new screens from Settings.kt
       composable("AccountScreen") { AccountScreen(navigationActions, userViewModel) }
-      composable("ConfidentialityScreen") {
-        ConfidentialityScreen(navigationActions, userViewModel = userViewModel)
-      }
       composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
       composable("BlockedUsersScreen") { BlockedUsersScreen(navigationActions, userViewModel) }
     }

@@ -165,35 +165,37 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                         }
                   }
 
+              val textFieldColors =
+                  TextFieldDefaults.colors(
+                      focusedTextColor = Color.White,
+                      unfocusedTextColor = Color.White,
+                      disabledTextColor = Color.Gray,
+                      errorTextColor = Color.Red,
+                      cursorColor = Color.White,
+                      errorCursorColor = Color.Red,
+                      focusedIndicatorColor = Color.White,
+                      unfocusedIndicatorColor = Color.Gray,
+                      disabledIndicatorColor = Color.LightGray,
+                      errorIndicatorColor = Color.Red,
+                      focusedLabelColor = Color.White,
+                      unfocusedLabelColor = Color.Gray,
+                      disabledLabelColor = Color.LightGray,
+                      errorLabelColor = Color.Red,
+                      focusedPlaceholderColor = Color.White,
+                      unfocusedPlaceholderColor = Color.Gray,
+                      disabledPlaceholderColor = Color.LightGray,
+                      errorPlaceholderColor = Color.Red,
+                      focusedContainerColor = Color.Black,
+                      unfocusedContainerColor = Color.Black,
+                      disabledContainerColor = Color.DarkGray,
+                      errorContainerColor = Color.Black)
+
               // First name input field
               OutlinedTextField(
                   value = firstName,
                   onValueChange = { firstName = it },
                   label = { Text("First Name") },
-                  colors =
-                      TextFieldDefaults.colors(
-                          focusedTextColor = Color.White,
-                          unfocusedTextColor = Color.White,
-                          disabledTextColor = Color.Gray,
-                          errorTextColor = Color.Red,
-                          cursorColor = Color.White,
-                          errorCursorColor = Color.Red,
-                          focusedIndicatorColor = Color.White,
-                          unfocusedIndicatorColor = Color.Gray,
-                          disabledIndicatorColor = Color.LightGray,
-                          errorIndicatorColor = Color.Red,
-                          focusedLabelColor = Color.White,
-                          unfocusedLabelColor = Color.Gray,
-                          disabledLabelColor = Color.LightGray,
-                          errorLabelColor = Color.Red,
-                          focusedPlaceholderColor = Color.White,
-                          unfocusedPlaceholderColor = Color.Gray,
-                          disabledPlaceholderColor = Color.LightGray,
-                          errorPlaceholderColor = Color.Red,
-                          focusedContainerColor = Color.Black,
-                          unfocusedContainerColor = Color.Black,
-                          disabledContainerColor = Color.DarkGray,
-                          errorContainerColor = Color.Black),
+                  colors = textFieldColors,
                   modifier = Modifier.fillMaxWidth().testTag("firstNameField").padding(16.dp))
 
               // Last name input field
@@ -201,30 +203,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                   value = lastName,
                   onValueChange = { lastName = it },
                   label = { Text("Last Name") },
-                  colors =
-                      TextFieldDefaults.colors(
-                          focusedTextColor = Color.White,
-                          unfocusedTextColor = Color.White,
-                          disabledTextColor = Color.Gray,
-                          errorTextColor = Color.Red,
-                          cursorColor = Color.White,
-                          errorCursorColor = Color.Red,
-                          focusedIndicatorColor = Color.White,
-                          unfocusedIndicatorColor = Color.Gray,
-                          disabledIndicatorColor = Color.LightGray,
-                          errorIndicatorColor = Color.Red,
-                          focusedLabelColor = Color.White,
-                          unfocusedLabelColor = Color.Gray,
-                          disabledLabelColor = Color.LightGray,
-                          errorLabelColor = Color.Red,
-                          focusedPlaceholderColor = Color.White,
-                          unfocusedPlaceholderColor = Color.Gray,
-                          disabledPlaceholderColor = Color.LightGray,
-                          errorPlaceholderColor = Color.Red,
-                          focusedContainerColor = Color.Black,
-                          unfocusedContainerColor = Color.Black,
-                          disabledContainerColor = Color.DarkGray,
-                          errorContainerColor = Color.Black),
+                  colors = textFieldColors,
                   modifier = Modifier.fillMaxWidth().testTag("lastNameField").padding(16.dp))
 
               // Email input field (disabled)
@@ -233,30 +212,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                   onValueChange = {},
                   label = { Text("Email") },
                   enabled = false,
-                  colors =
-                      TextFieldDefaults.colors(
-                          focusedTextColor = Color.White,
-                          unfocusedTextColor = Color.White,
-                          disabledTextColor = Color.Gray,
-                          errorTextColor = Color.Red,
-                          cursorColor = Color.White,
-                          errorCursorColor = Color.Red,
-                          focusedIndicatorColor = Color.White,
-                          unfocusedIndicatorColor = Color.Gray,
-                          disabledIndicatorColor = Color.LightGray,
-                          errorIndicatorColor = Color.Red,
-                          focusedLabelColor = Color.White,
-                          unfocusedLabelColor = Color.Gray,
-                          disabledLabelColor = Color.LightGray,
-                          errorLabelColor = Color.Red,
-                          focusedPlaceholderColor = Color.White,
-                          unfocusedPlaceholderColor = Color.Gray,
-                          disabledPlaceholderColor = Color.LightGray,
-                          errorPlaceholderColor = Color.Red,
-                          focusedContainerColor = Color.Black,
-                          unfocusedContainerColor = Color.Black,
-                          disabledContainerColor = Color.Black,
-                          errorContainerColor = Color.Black),
+                  colors = textFieldColors,
                   modifier = Modifier.fillMaxWidth().testTag("emailField").padding(16.dp))
 
               // Phone number input field
@@ -267,30 +223,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                   modifier = Modifier.fillMaxWidth().testTag("phoneField").padding(16.dp),
                   visualTransformation = PhoneNumberVisualTransformation(),
                   placeholder = { Text("Use international prefix with +") },
-                  colors =
-                      TextFieldDefaults.colors(
-                          focusedTextColor = Color.White,
-                          unfocusedTextColor = Color.White,
-                          disabledTextColor = Color.Gray,
-                          errorTextColor = Color.Red,
-                          cursorColor = Color.White,
-                          errorCursorColor = Color.Red,
-                          focusedIndicatorColor = Color.White,
-                          unfocusedIndicatorColor = Color.Gray,
-                          disabledIndicatorColor = Color.LightGray,
-                          errorIndicatorColor = Color.Red,
-                          focusedLabelColor = Color.White,
-                          unfocusedLabelColor = Color.Gray,
-                          disabledLabelColor = Color.LightGray,
-                          errorLabelColor = Color.Red,
-                          focusedPlaceholderColor = Color.White,
-                          unfocusedPlaceholderColor = Color.Gray,
-                          disabledPlaceholderColor = Color.LightGray,
-                          errorPlaceholderColor = Color.Red,
-                          focusedContainerColor = Color.Black,
-                          unfocusedContainerColor = Color.Black,
-                          disabledContainerColor = Color.DarkGray,
-                          errorContainerColor = Color.Black),
+                  colors = textFieldColors,
                   keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Phone))
 
               // Button to send verification code
@@ -333,30 +266,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                     label = { Text("Verification Code") },
                     modifier = Modifier.fillMaxWidth().testTag("codeField").padding(16.dp),
                     placeholder = { Text("6-digit code received by SMS") },
-                    colors =
-                        TextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            disabledTextColor = Color.Gray,
-                            errorTextColor = Color.Red,
-                            cursorColor = Color.White,
-                            errorCursorColor = Color.Red,
-                            focusedIndicatorColor = Color.White,
-                            unfocusedIndicatorColor = Color.Gray,
-                            disabledIndicatorColor = Color.LightGray,
-                            errorIndicatorColor = Color.Red,
-                            focusedLabelColor = Color.White,
-                            unfocusedLabelColor = Color.Gray,
-                            disabledLabelColor = Color.LightGray,
-                            errorLabelColor = Color.Red,
-                            focusedPlaceholderColor = Color.White,
-                            unfocusedPlaceholderColor = Color.Gray,
-                            disabledPlaceholderColor = Color.LightGray,
-                            errorPlaceholderColor = Color.Red,
-                            focusedContainerColor = Color.Black,
-                            unfocusedContainerColor = Color.Black,
-                            disabledContainerColor = Color.DarkGray,
-                            errorContainerColor = Color.Black),
+                    colors = textFieldColors,
                     keyboardOptions =
                         KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number))
 
