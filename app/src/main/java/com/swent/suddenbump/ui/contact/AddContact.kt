@@ -15,12 +15,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,7 +28,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,7 +37,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.User
@@ -48,6 +44,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.model.user.UserWithFriendsInCommon
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,22 +73,7 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
   Scaffold(
       modifier = Modifier.testTag("addContactScreen"),
       topBar = {
-        CenterAlignedTopAppBar(
-            title = { Text("Add friends", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("backButton")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Go back")
-                  }
-            },
-            colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White))
+        CustomCenterAlignedTopBar(title = "Add friends", navigationActions = navigationActions)
       },
       content = { pd ->
         Column(

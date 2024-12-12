@@ -32,7 +32,6 @@ import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.model.meeting_location.LocationViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.theme.Purple40
 import com.swent.suddenbump.ui.utils.LocationField
 import com.swent.suddenbump.ui.utils.formatDateString
 import com.swent.suddenbump.ui.utils.showDatePickerDialog
@@ -114,83 +113,27 @@ fun AddMeetingScreen(
 
               Spacer(modifier = Modifier.height(16.dp))
 
-              Button(
-                  onClick = {
-                    try {
-                      // Log the input for debugging
-                      Log.d("AddMeetingScreen", "Raw date input: ${date.text}")
+              val addButtonHelper: (Timestamp) -> Unit = { meetingDate ->
 
-                      // Validate input length (must be exactly "DD/MM/YYYY")
-                      if (date.text.length != 10) {
-                        throw IllegalArgumentException("Date must be in the format DD/MM/YYYY")
-                      }
+                // Check if selectedLocation is a valid Location
+                if (selectedLocation == null) {
+                  throw IllegalArgumentException("Location must be selected")
+                }
 
-                      // Parse the date
-                      val dateFormat =
-                          SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
-                            isLenient = false // Strict parsing
-                          }
+                // Create and save the meeting
+                val newMeeting =
+                    Meeting(
+                        meetingId = meetingViewModel.getNewMeetingid(),
+                        friendId = friendId,
+                        location = selectedLocation,
+                        date = meetingDate,
+                        creatorId = userViewModel.getCurrentUser().value.uid,
+                        accepted = false)
+                meetingViewModel.addMeeting(newMeeting)
+                Toast.makeText(context, "Meeting request sent", Toast.LENGTH_SHORT).show()
+              }
 
-                      val parsedDate =
-                          dateFormat.parse(date.text)
-                              ?: throw IllegalArgumentException("Failed to parse date")
-
-                      // Log parsed date for debugging
-                      Log.d("AddMeetingScreen", "Parsed date: $parsedDate")
-
-                      // Check if the date is in the past
-                      val today =
-                          GregorianCalendar().apply {
-                            set(Calendar.HOUR_OF_DAY, 0)
-                            set(Calendar.MINUTE, 0)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                          }
-                      val inputCalendar =
-                          GregorianCalendar().apply {
-                            time = parsedDate
-                            set(Calendar.HOUR_OF_DAY, 0)
-                            set(Calendar.MINUTE, 0)
-                            set(Calendar.SECOND, 0)
-                            set(Calendar.MILLISECOND, 0)
-                          }
-
-                      if (inputCalendar.before(today)) {
-                        throw IllegalArgumentException("Date is in the past")
-                      }
-
-                      val meetingDate = Timestamp(inputCalendar.time)
-
-                      // Check if selectedLocation is a valid Location
-                      if (selectedLocation == null) {
-                        throw IllegalArgumentException("Location must be selected")
-                      }
-
-                      // Create and save the meeting
-                      val newMeeting =
-                          Meeting(
-                              meetingId = meetingViewModel.getNewMeetingid(),
-                              friendId = friendId,
-                              location = selectedLocation,
-                              date = meetingDate,
-                              creatorId = userViewModel.getCurrentUser().value.uid,
-                              accepted = false)
-                      meetingViewModel.addMeeting(newMeeting)
-                      Toast.makeText(context, "Meeting request sent", Toast.LENGTH_SHORT).show()
-                      navigationActions.goBack()
-                    } catch (e: IllegalArgumentException) {
-                      Log.e("AddMeetingScreen", "Invalid input: ${e.message}", e)
-                      Toast.makeText(context, "Invalid input: ${e.message}", Toast.LENGTH_SHORT)
-                          .show()
-                    } catch (e: Exception) {
-                      Log.e("AddMeetingScreen", "Error parsing date: ${date.text}", e)
-                      Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
-                    }
-                  },
-                  colors = ButtonDefaults.buttonColors(Purple40),
-                  modifier = Modifier.fillMaxWidth().testTag("Save Meeting")) {
-                    Text("Ask to Meet")
-                  }
+              AddAndEditMeetingButton(true, date, context, navigationActions, addButtonHelper)
 
               // Show Date Picker Dialog if needed
               if (showDatePicker) {

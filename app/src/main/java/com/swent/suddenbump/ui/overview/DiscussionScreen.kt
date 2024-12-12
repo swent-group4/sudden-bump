@@ -6,8 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,11 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 import com.swent.suddenbump.ui.utils.CustomTopBar
 
 data class SectionData(
@@ -51,24 +49,7 @@ fun DiscussionScreen(navigationActions: NavigationActions, userViewModel: UserVi
   // Scaffold to define the screen layout
   Scaffold(
       modifier = Modifier.testTag("discussionScreen").background(Color.Black),
-      topBar = {
-        CenterAlignedTopAppBar(
-            title = { Text("Discussions", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            navigationIcon = {
-              IconButton(
-                  onClick = { navigationActions.goBack() },
-                  modifier = Modifier.testTag("backButton")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Go back")
-                  }
-            },
-            colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Black,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White))
-      },
+      topBar = { CustomCenterAlignedTopBar("Discussions", navigationActions = navigationActions) },
       content = { paddingValues ->
         Column(
             modifier =
