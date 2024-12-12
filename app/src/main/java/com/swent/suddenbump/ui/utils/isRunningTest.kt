@@ -26,3 +26,4 @@ var isUsingMockFileDownloadTask = false
 lateinit var testableFileDownloadTask: TaskSnapshot
 
 var isUsingMockException = false
+var isUITest = false

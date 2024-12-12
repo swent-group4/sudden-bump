@@ -10,8 +10,10 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.utils.isUITest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -78,6 +80,11 @@ class OverviewScreenTest {
 
     locationSharedWithState = MutableStateFlow<List<User>>(emptyList())
     every { userViewModel.locationSharedWith } returns locationSharedWithState
+  }
+
+  @After
+  fun tearDown() {
+    isUITest = false
   }
 
   @Test
@@ -166,6 +173,7 @@ class OverviewScreenTest {
 
   @Test
   fun testIconToggleButton_ShowsCorrectIconAndTogglesState() {
+    isUITest = true
 
     val currentUser = user1
     val friend = user2

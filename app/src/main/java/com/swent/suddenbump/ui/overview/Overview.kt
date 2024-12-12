@@ -129,7 +129,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
               if (groupedFriends?.isNotEmpty() == true) {
-                userViewModel.scheduleWorker(context)
+                if (!com.swent.suddenbump.ui.utils.isUITest) userViewModel.scheduleWorker(context)
                 groupedFriends!!
                     .entries
                     .sortedBy { it.key.ordinal }
