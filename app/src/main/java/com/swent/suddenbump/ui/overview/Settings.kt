@@ -137,6 +137,13 @@ fun SettingsScreen(
       })
 }
 
+/**
+ * A composable function that displays a slider for adjusting the radius.
+ *
+ * @param radius The current radius value.
+ * @param onRadiusChange A callback function to handle changes in the radius value.
+ * @param modifier A [Modifier] for this composable.
+ */
 @Composable
 fun RadiusSlider(radius: Float, onRadiusChange: (Float) -> Unit, modifier: Modifier = Modifier) {
   Column(
@@ -150,7 +157,7 @@ fun RadiusSlider(radius: Float, onRadiusChange: (Float) -> Unit, modifier: Modif
             text = "Adjust Radius",
             style =
                 MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold, color = VibrantPurple),
+                    fontWeight = FontWeight.Bold, color = Color.Black),
             modifier = Modifier.padding(bottom = 8.dp))
         Slider(
             value = radius,
