@@ -2821,6 +2821,58 @@ class UserRepositoryFirestoreTest {
     verify(mocked).addOnSuccessListener(any())
   }
 
+  @Test
+  fun getSharedByFriends_callsDocumentSnapshotToUserList() {
+    val mocked = mock(Task::class.java) as Task<DocumentSnapshot>
+    `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(mocked)
+    `when`(mocked.isSuccessful).thenReturn(true)
+    `when`(mocked.isCanceled).thenReturn(false)
+    `when`(mocked.addOnFailureListener(any())).thenReturn(mocked)
+    doAnswer { invocation ->
+          val listener = invocation.arguments[0] as OnSuccessListener<DocumentSnapshot>
+          listener.onSuccess(mockUserDocumentSnapshot)
+          mocked
+        }
+        .`when`(mocked)
+        .addOnSuccessListener(any())
+    `when`(mocked.result).thenReturn(mockUserDocumentSnapshot)
+    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("locationSharedBy" to listOf(user)))
+
+    userRepositoryFirestore.getBlockedFriends(
+        uid = user.uid,
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
+
+    verify(mocked).addOnSuccessListener(any())
+  }
+
+  @Test
+  fun getSharedWithFriends_callsDocumentSnapshotToUserList() {
+    val mocked = mock(Task::class.java) as Task<DocumentSnapshot>
+    `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(mocked)
+    `when`(mocked.isSuccessful).thenReturn(true)
+    `when`(mocked.isCanceled).thenReturn(false)
+    `when`(mocked.addOnFailureListener(any())).thenReturn(mocked)
+    doAnswer { invocation ->
+          val listener = invocation.arguments[0] as OnSuccessListener<DocumentSnapshot>
+          listener.onSuccess(mockUserDocumentSnapshot)
+          mocked
+        }
+        .`when`(mocked)
+        .addOnSuccessListener(any())
+    `when`(mocked.result).thenReturn(mockUserDocumentSnapshot)
+    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("locationSharedWith" to listOf(user)))
+
+    userRepositoryFirestore.getBlockedFriends(
+        uid = user.uid,
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
+
+    verify(mocked).addOnSuccessListener(any())
+  }
+
   /**
    * This test verifies that when we create a new User account, the Firestore `set()` is called on
    * the document reference. This does NOT CHECK the actual data being added
