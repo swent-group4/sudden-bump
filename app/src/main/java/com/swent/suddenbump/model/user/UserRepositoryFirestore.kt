@@ -1291,6 +1291,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     val uidList = helper.documentSnapshotToList(uidJsonList)
 
     val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
+    println(tasks.toString())
     Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
       var counterFriend = 0
       var friendsListMutable = emptyList<User>()
