@@ -229,7 +229,7 @@ class EndToEndTest2 {
             startDestination = Screen.MAP,
             route = Route.MAP,
         ) {
-          composable(Screen.MAP) { MapScreen(navigationActions, userViewModel) }
+          composable(Screen.MAP) { MapScreen(navigationActions, userViewModel, meetingViewModel) }
         }
         navigation(
             startDestination = Screen.MESS,

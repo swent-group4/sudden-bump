@@ -216,7 +216,7 @@ fun DayRow(
                                       .testTag("profileImage"))
                           Column {
                             Text(
-                                text = "Meet $friendName at ${meeting.location}",
+                                text = "Meet $friendName at ${meeting.location?.name}",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = Color.White,
                                 modifier = Modifier.testTag("meetText"))
