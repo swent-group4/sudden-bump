@@ -161,6 +161,11 @@ fun AddMeetingScreen(
 
                       val meetingDate = Timestamp(inputCalendar.time)
 
+                      // Check if selectedLocation is a valid Location
+                      if (selectedLocation == null) {
+                        throw IllegalArgumentException("Location must be selected")
+                      }
+
                       // Create and save the meeting
                       val newMeeting =
                           Meeting(
@@ -174,8 +179,8 @@ fun AddMeetingScreen(
                       Toast.makeText(context, "Meeting request sent", Toast.LENGTH_SHORT).show()
                       navigationActions.goBack()
                     } catch (e: IllegalArgumentException) {
-                      Log.e("AddMeetingScreen", "Invalid date input: ${date.text}", e)
-                      Toast.makeText(context, "Invalid date: ${e.message}", Toast.LENGTH_SHORT)
+                      Log.e("AddMeetingScreen", "Invalid input: ${e.message}", e)
+                      Toast.makeText(context, "Invalid input: ${e.message}", Toast.LENGTH_SHORT)
                           .show()
                     } catch (e: Exception) {
                       Log.e("AddMeetingScreen", "Error parsing date: ${date.text}", e)

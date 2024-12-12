@@ -293,10 +293,11 @@ fun FriendsMarkers(userViewModel: UserViewModel, onFriendMarkerInfoWindowClick: 
         icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN),
         content = {
           // Custom info window content displaying friend's name in blue
-          Column { Text(
-              text = friend.firstName,
-              color = androidx.compose.ui.graphics.Color.White,
-              fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+          Column {
+            Text(
+                text = friend.firstName,
+                color = androidx.compose.ui.graphics.Color.White,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
           }
         })
   }

@@ -119,7 +119,9 @@ class UiUtilsTest {
         listOf(
             Location(12.34, 56.78, "Location 1"),
             Location(34.56, 78.90, "Location 2"),
-            Location(90.12, 34.56, "Location 3"))
+            Location(90.12, 34.56, "Location 3"),
+            Location(11.11, 22.22, "Location 4"),
+            Location(33.33, 44.44, "Location 5"))
 
     var locationQuery = ""
     var showDropdown = true
@@ -147,11 +149,25 @@ class UiUtilsTest {
     composeTestRule.onNodeWithTag("DropDownMenu").assertExists()
     composeTestRule.onNodeWithTag("Location").assertIsDisplayed()
 
-    // Select the first suggestion
-    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[0].performClick()
+    // Verify initial suggestions are displayed
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[0].assertExists()
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[1].assertExists()
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[2].assertExists()
+
+    // Verify the "More..." button exists
+    composeTestRule.onNodeWithTag("MoreButton").assertExists()
+    composeTestRule.onNodeWithTag("MoreButton").performClick()
+    composeTestRule.waitForIdle()
+
+    // Verify more suggestions are displayed after clicking "More..."
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[3].assertExists()
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[4].assertExists()
+
+    // Select the fourth suggestion
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[3].performClick()
     composeTestRule.waitForIdle()
 
     // Verify the selected location is updated
-    assert(selectedLocation?.name == "Location 1")
+    assert(selectedLocation?.name == "Location 4")
   }
 }

@@ -13,7 +13,7 @@ import org.json.JSONException
  *
  * @param client An instance of [OkHttpClient] used for making HTTP requests.
  */
-class NominatimLocationRepository(val client: OkHttpClient) : LocationRepository {
+class NominatimLocationRepository(private val client: OkHttpClient) : LocationRepository {
   /**
    * Searches for locations matching the given query using the Nominatim API.
    *

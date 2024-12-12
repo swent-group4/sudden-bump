@@ -155,6 +155,11 @@ fun EditMeetingScreen(
 
                       val meetingDate = Timestamp(inputCalendar.time)
 
+                      // Check if selectedLocation is a valid Location
+                      if (selectedLocation == null || locationQuery != selectedLocation?.name) {
+                        throw IllegalArgumentException("Location must be selected")
+                      }
+
                       // Save the updated meeting
                       val updatedMeeting =
                           meeting.copy(location = selectedLocation, date = meetingDate)
@@ -164,8 +169,8 @@ fun EditMeetingScreen(
                           .show()
                       navigationActions.goBack()
                     } catch (e: IllegalArgumentException) {
-                      Log.e("EditMeetingScreen", "Invalid date input: ${date.text}", e)
-                      Toast.makeText(context, "Invalid date: ${e.message}", Toast.LENGTH_SHORT)
+                      Log.e("EditMeetingScreen", "Invalid input: ${e.message}", e)
+                      Toast.makeText(context, "Invalid input: ${e.message}", Toast.LENGTH_SHORT)
                           .show()
                     } catch (e: Exception) {
                       Log.e("EditMeetingScreen", "Error parsing date: ${date.text}", e)

@@ -8,6 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -172,6 +174,9 @@ fun LocationField(
     onDropdownChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+  // State to track the number of items displayed
+  val maxItemsToShow = remember { mutableStateOf(3) }
+
   ExposedDropdownMenuBox(
       expanded = showDropdown && locationSuggestions.isNotEmpty(),
       onExpandedChange = { onDropdownChange(it) } // Toggle dropdown visibility
@@ -181,6 +186,7 @@ fun LocationField(
             onValueChange = {
               onLocationQueryChange(it)
               onDropdownChange(true) // Show dropdown when user starts typing
+              maxItemsToShow.value = 3 // Reset to show initial 3 items when query changes
             },
             label = { Text("Location") },
             textStyle = TextStyle(color = Color.White),
@@ -197,7 +203,7 @@ fun LocationField(
             expanded = showDropdown && locationSuggestions.isNotEmpty(),
             onDismissRequest = { onDropdownChange(false) },
             modifier = Modifier.background(Color.Black).testTag("DropDownMenu")) {
-              locationSuggestions.filterNotNull().take(3).forEach { location ->
+              locationSuggestions.filterNotNull().take(maxItemsToShow.value).forEach { location ->
                 DropdownMenuItem(
                     text = {
                       Text(
@@ -219,6 +225,14 @@ fun LocationField(
                     },
                     modifier =
                         Modifier.padding(8.dp).background(Color.Black).testTag("DropDownMenuItem"))
+              }
+              if (locationSuggestions.size > maxItemsToShow.value) {
+                DropdownMenuItem(
+                    text = { Text(text = "More...", color = Color.White) },
+                    onClick = {
+                      maxItemsToShow.value += 3 // Show 3 more items
+                    },
+                    modifier = Modifier.padding(8.dp).background(Color.Black).testTag("MoreButton"))
               }
             }
       }
