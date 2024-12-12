@@ -112,7 +112,7 @@ class AddMeetingScreenTest {
   }
 
   @Test
-  fun saveButton_savesMeeting() {
+  fun doesNotSubmitWithInvalidLocation() {
     `when`(meetingRepository.getNewMeetingId()).thenReturn("mockedMeetingId")
     // Arrange
     composeTestRule.setContent {
@@ -120,12 +120,12 @@ class AddMeetingScreenTest {
     }
 
     // Act
-    composeTestRule.onNodeWithTag("Location").performTextInput("Central Park")
+    composeTestRule.onNodeWithTag("Location").performTextInput("loc")
     composeTestRule.onNodeWithTag("Date").performTextInput("25122024")
     composeTestRule.onNodeWithTag("Save Meeting").performClick()
     composeTestRule.waitForIdle() // Ensure all actions are processed
 
     // Assert: Check addMeeting is called with any arguments
-    verify(meetingRepository).addMeeting(any(), any(), any())
+    verify(meetingRepository, never()).addMeeting(any(), any(), any())
   }
 }
