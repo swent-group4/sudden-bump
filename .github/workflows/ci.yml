@@ -16,7 +16,6 @@ on:
       - 202-displaying-messages-preview-in-the-messages-screen
       - 270-add-meetings-settings
       - 281-change-meeting-location-to-real-addresses
-      - 269-allowing-offline-mode
 
   pull_request:
     types:
