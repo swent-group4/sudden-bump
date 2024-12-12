@@ -89,7 +89,7 @@ class OverviewScreenTest {
 
   @Test
   fun testRequiredComponentsAreDisplayed() {
-      isUITest = true
+    isUITest = true
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
     composeTestRule.onNodeWithTag("settingsFab").assertIsDisplayed()
@@ -99,7 +99,7 @@ class OverviewScreenTest {
 
   @Test
   fun testDisplaysFriendsWithinCategories() {
-      isUITest = true
+    isUITest = true
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
     composeTestRule.waitForIdle()
@@ -139,7 +139,7 @@ class OverviewScreenTest {
 
   @Test
   fun testSettingsButtonNavigatesToSettings() {
-      isUITest = true
+    isUITest = true
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("settingsFab").performClick()
     verify { navigationActions.navigateTo(Screen.SETTINGS) }
@@ -147,7 +147,7 @@ class OverviewScreenTest {
 
   @Test
   fun testAddContactButtonNavigatesToAddContact() {
-      isUITest = true
+    isUITest = true
 
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
@@ -156,7 +156,7 @@ class OverviewScreenTest {
 
   @Test
   fun testUserRowClickNavigatesToContact() {
-      isUITest = true
+    isUITest = true
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag(user1.uid).performClick()
     verify { navigationActions.navigateTo(Screen.CONTACT) }
@@ -166,7 +166,7 @@ class OverviewScreenTest {
   @Test
   fun havingProfilePictureDisplaysComponent() {
 
-      isUITest = true
+    isUITest = true
 
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
