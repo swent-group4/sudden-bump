@@ -18,8 +18,10 @@ class WorkerScheduler(private val context: Context) {
       return
     }
 
+    // Prepare input data for the worker
     val inputData = workDataOf("uid" to uid)
 
+    // Create a periodic work request to run every 15 minutes
     val workRequest =
         PeriodicWorkRequestBuilder<LocationUpdateWorker>(15, TimeUnit.MINUTES)
             .setInputData(inputData)
@@ -30,6 +32,7 @@ class WorkerScheduler(private val context: Context) {
                     .build())
             .build()
 
+    // Enqueue the work request with a unique name to avoid duplication
     WorkManager.getInstance(context.applicationContext)
         .enqueueUniquePeriodicWork(
             "LocationUpdateWorker", ExistingPeriodicWorkPolicy.REPLACE, workRequest)

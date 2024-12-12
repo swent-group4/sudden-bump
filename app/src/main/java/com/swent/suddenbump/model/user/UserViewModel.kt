@@ -585,22 +585,43 @@ open class UserViewModel(
     return false
   }
 
+  /**
+   * Retrieves a new unique identifier (UID).
+   *
+   * @return A new UID as a String.
+   */
   fun getNewUid(): String {
     return repository.getNewUid()
   }
 
+  /**
+   * Saves the user's login status.
+   *
+   * @param userId The unique identifier of the user.
+   */
   fun saveUserLoginStatus(userId: String) {
     repository.saveLoginStatus(userId)
   }
 
+  /**
+   * Retrieves the saved UID of the user.
+   *
+   * @return The saved UID as a String.
+   */
   fun getSavedUid(): String {
     return repository.getSavedUid()
   }
 
+  /**
+   * Checks if the user is logged in.
+   *
+   * @return True if the user is logged in, false otherwise.
+   */
   fun isUserLoggedIn(): Boolean {
     return repository.isUserLoggedIn()
   }
 
+  /** Logs out the current user and resets the ViewModel state. */
   fun logout() {
     repository.logoutUser()
     _user.value = userDummy2
