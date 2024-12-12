@@ -18,9 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
@@ -78,7 +75,9 @@ class MainActivity : ComponentActivity() {
   private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
   lateinit var locationGetter: LocationGetter
   var newLocation = MutableStateFlow<Pair<Double, Double>?>(null)
-    private lateinit var userViewModel: UserViewModel
+  private val userViewModelActivity: UserViewModel by viewModels {
+    UserViewModel.provideFactory(this)
+  }
 
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -159,8 +158,8 @@ class MainActivity : ComponentActivity() {
   override fun onStart() {
     super.onStart()
     // Update online status when the activity starts
-    userViewModel.updateUserStatus(
-        uid = userViewModel.getCurrentUser().value.uid,
+    userViewModelActivity.updateUserStatus(
+        uid = userViewModelActivity.getCurrentUser().value.uid,
         status = true,
         onSuccess = { Log.d("UserStatus", "Online status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
@@ -169,8 +168,8 @@ class MainActivity : ComponentActivity() {
   override fun onStop() {
     super.onStop()
     // Update offline status when the activity stops
-    userViewModel.updateUserStatus(
-        uid = userViewModel.getCurrentUser().value.uid,
+    userViewModelActivity.updateUserStatus(
+        uid = userViewModelActivity.getCurrentUser().value.uid,
         status = false,
         onSuccess = { Log.d("UserStatus", "Offline status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
@@ -179,8 +178,8 @@ class MainActivity : ComponentActivity() {
   override fun onResume() {
     // Update online status when the activity resumes
     super.onResume()
-    userViewModel.updateUserStatus(
-        uid = userViewModel.getCurrentUser().value.uid,
+    userViewModelActivity.updateUserStatus(
+        uid = userViewModelActivity.getCurrentUser().value.uid,
         status = true,
         onSuccess = { Log.d("UserStatus", "Online status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
@@ -189,8 +188,8 @@ class MainActivity : ComponentActivity() {
   override fun onDestroy() {
     // Update offline status when the activity is destroyed
     super.onDestroy()
-    userViewModel.updateUserStatus(
-        uid = userViewModel.getCurrentUser().value.uid,
+    userViewModelActivity.updateUserStatus(
+        uid = userViewModelActivity.getCurrentUser().value.uid,
         status = false,
         onSuccess = { Log.d("UserStatus", "Offline status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
