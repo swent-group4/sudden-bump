@@ -67,7 +67,6 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.theme.Blue
 import java.text.SimpleDateFormat
 import java.util.Locale
 import retrofit2.Retrofit
@@ -294,7 +293,11 @@ fun FriendsMarkers(userViewModel: UserViewModel, onFriendMarkerInfoWindowClick: 
         icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
         content = {
           // Custom info window content displaying friend's name in blue
-          Column { Text(text = friend.firstName, color = Blue) }
+          Column { Text(
+              text = friend.firstName,
+              color = androidx.compose.ui.graphics.Color.White,
+              fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+          }
         })
   }
 }
