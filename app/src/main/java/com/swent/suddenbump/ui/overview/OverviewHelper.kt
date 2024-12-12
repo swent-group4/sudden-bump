@@ -16,14 +16,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.swent.suddenbump.ui.navigation.NavigationActions
 
 /**
- * A composable function that displays a top app bar for the Settings and Account screen.
+ * A composable function that displays a top app bar for the some screen in Overview.
  *
  * @param title The title to be displayed in the top app bar.
  * @param navigationActions An instance of [NavigationActions] to handle navigation events.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsAndAccountScreenTopBar(title: String, navigationActions: NavigationActions) {
+fun OverviewScreenTopBar(title: String, navigationActions: NavigationActions) {
   CenterAlignedTopAppBar(
       title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
       navigationIcon = {

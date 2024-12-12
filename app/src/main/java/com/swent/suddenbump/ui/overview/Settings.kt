@@ -54,7 +54,7 @@ fun SettingsScreen(
 
   Scaffold(
       modifier = Modifier.testTag("settingsScreen"),
-      topBar = { SettingsAndAccountScreenTopBar("Settings", navigationActions) },
+      topBar = { OverviewScreenTopBar("Settings", navigationActions) },
       content = { paddingValues ->
         LazyColumn(
             modifier =

@@ -25,9 +25,7 @@ fun AccountScreen(navigationActions: NavigationActions) {
 
   Scaffold(
       modifier = Modifier.testTag("accountScreen"),
-      topBar = {
-        SettingsAndAccountScreenTopBar(title = "Account", navigationActions = navigationActions)
-      },
+      topBar = { OverviewScreenTopBar(title = "Account", navigationActions = navigationActions) },
       content = { paddingValues ->
         LazyColumn(
             modifier =

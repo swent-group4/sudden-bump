@@ -37,8 +37,7 @@ fun ConfidentialityScreen(navigationActions: NavigationActions, userViewModel: U
   Scaffold(
       modifier = Modifier.testTag("confidentialityScreen"),
       topBar = {
-        SettingsAndAccountScreenTopBar(
-            title = "Confidentiality", navigationActions = navigationActions)
+        OverviewScreenTopBar(title = "Confidentiality", navigationActions = navigationActions)
       },
       content = { paddingValues ->
         Column(
