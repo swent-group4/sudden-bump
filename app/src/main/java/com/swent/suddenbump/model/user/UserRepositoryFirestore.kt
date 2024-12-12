@@ -24,8 +24,6 @@ import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 
 /**
  * A Firebase Firestore-backed implementation of the UserRepository interface, managing user
@@ -896,8 +894,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           if (result.data?.get("blockedList") == null) {
             emptyList<User>()
           } else {
-            onSuccess(
-                documentSnapshotToUserList(result.data?.get("blockedList").toString(), onFailure))
+            documentSnapshotToUserList(
+                result.data?.get("blockedList").toString(), onSuccess = { onSuccess(it) })
           }
         }
   }
@@ -1306,9 +1304,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           if (result.data?.get("locationSharedBy") == null) {
             emptyList<User>()
           } else {
-            onSuccess(
-                documentSnapshotToUserList(
-                    result.data?.get("locationSharedBy").toString(), onFailure))
+            documentSnapshotToUserList(
+                result.data?.get("locationSharedBy").toString(), onSuccess = { onSuccess(it) })
           }
         }
   }
@@ -1333,9 +1330,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           if (result.data?.get("locationSharedWith") == null) {
             emptyList<User>()
           } else {
-            onSuccess(
-                documentSnapshotToUserList(
-                    result.data?.get("locationSharedWith").toString(), onFailure))
+            documentSnapshotToUserList(
+                result.data?.get("locationSharedWith").toString(), onSuccess = { onSuccess(it) })
           }
         }
   }
@@ -1350,30 +1346,39 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    */
   private fun documentSnapshotToUserList(
       uidJsonList: String,
-      onFailure: (Exception) -> Unit
-  ): List<User> {
+      onSuccess: (List<User>) -> Unit,
+  ) {
     val uidList = helper.documentSnapshotToList(uidJsonList)
-    val userList = emptyList<User>().toMutableList()
 
-    for (uid in uidList) {
-      runBlocking {
-        try {
-          val documentSnapshot = db.collection(usersCollectionPath).document(uid).get().await()
+    val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
+    println(tasks.toString())
+    Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
+      var counterFriend = 0
+      var friendsListMutable = emptyList<User>()
+      for (doc in documents) {
+        var profilePicture: ImageBitmap? = null
+        val path = helper.uidToProfilePicturePath(doc.data!!["uid"].toString(), profilePicturesRef)
+        imageRepository.downloadImageAsync(
+            path,
+            onSuccess = { image ->
+              profilePicture = image
+              val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
+              friendsListMutable = friendsListMutable + userFriend
 
-          if (documentSnapshot.exists()) {
-            val path = helper.uidToProfilePicturePath(uid, profilePicturesRef)
-            var profilePicture: ImageBitmap? = null
-            imageRepository.downloadImage(
-                path, onSuccess = { pp -> profilePicture = pp }, onFailure = { e -> onFailure(e) })
-            val user = helper.documentSnapshotToUser(documentSnapshot, profilePicture)
-            userList += user
-          } else {}
-        } catch (e: Exception) {
-          Log.e(logTag, e.toString())
-        }
+              counterFriend++
+              if (counterFriend == documents.size) {
+                onSuccess(friendsListMutable)
+              }
+            },
+            onFailure = {
+              Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
+              counterFriend++
+              if (counterFriend == documents.size) {
+                onSuccess(friendsListMutable)
+              }
+            })
       }
     }
-    return userList
   }
 
   override fun unblockUser(

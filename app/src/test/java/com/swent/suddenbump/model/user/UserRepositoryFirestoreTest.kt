@@ -35,6 +35,8 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
+import kotlin.reflect.full.declaredFunctions
+import kotlin.reflect.jvm.isAccessible
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -3000,6 +3002,177 @@ class UserRepositoryFirestoreTest {
         onFailure = { fail("Failure callback should not be called") })
 
     verify(timeout(100)) { (mockUserQuerySnapshot).documents }
+  }
+
+  @Test
+  fun getUserBlockedFriends_callsDocumentSnapshotToUserList() {
+    val mocked = mock(Task::class.java) as Task<DocumentSnapshot>
+    `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(mocked)
+    `when`(mocked.isSuccessful).thenReturn(true)
+    `when`(mocked.isCanceled).thenReturn(false)
+    `when`(mocked.addOnFailureListener(any())).thenReturn(mocked)
+    doAnswer { invocation ->
+          val listener = invocation.arguments[0] as OnSuccessListener<DocumentSnapshot>
+          listener.onSuccess(mockUserDocumentSnapshot)
+          mocked
+        }
+        .`when`(mocked)
+        .addOnSuccessListener(any())
+    `when`(mocked.result).thenReturn(mockUserDocumentSnapshot)
+    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("blockedList" to listOf(user)))
+
+    userRepositoryFirestore.getBlockedFriends(
+        uid = user.uid,
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
+
+    verify(mocked).addOnSuccessListener(any())
+  }
+
+  @Test
+  fun getSharedByFriends_callsDocumentSnapshotToUserList() {
+    val mocked = mock(Task::class.java) as Task<DocumentSnapshot>
+    `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(mocked)
+    `when`(mocked.isSuccessful).thenReturn(true)
+    `when`(mocked.isCanceled).thenReturn(false)
+    `when`(mocked.addOnFailureListener(any())).thenReturn(mocked)
+    doAnswer { invocation ->
+          val listener = invocation.arguments[0] as OnSuccessListener<DocumentSnapshot>
+          listener.onSuccess(mockUserDocumentSnapshot)
+          mocked
+        }
+        .`when`(mocked)
+        .addOnSuccessListener(any())
+    `when`(mocked.result).thenReturn(mockUserDocumentSnapshot)
+    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("locationSharedBy" to listOf(user)))
+
+    userRepositoryFirestore.getSharedByFriends(
+        uid = user.uid,
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
+
+    verify(mocked).addOnSuccessListener(any())
+  }
+
+  @Test
+  fun getSharedWithFriends_callsDocumentSnapshotToUserList() {
+    val mocked = mock(Task::class.java) as Task<DocumentSnapshot>
+    `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(mocked)
+    `when`(mocked.isSuccessful).thenReturn(true)
+    `when`(mocked.isCanceled).thenReturn(false)
+    `when`(mocked.addOnFailureListener(any())).thenReturn(mocked)
+    doAnswer { invocation ->
+          val listener = invocation.arguments[0] as OnSuccessListener<DocumentSnapshot>
+          listener.onSuccess(mockUserDocumentSnapshot)
+          mocked
+        }
+        .`when`(mocked)
+        .addOnSuccessListener(any())
+    `when`(mocked.result).thenReturn(mockUserDocumentSnapshot)
+    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("locationSharedWith" to listOf(user)))
+
+    userRepositoryFirestore.getSharedWithFriends(
+        uid = user.uid,
+        onSuccess = {},
+        onFailure = { fail("Failure callback should not be called") })
+
+    verify(mocked).addOnSuccessListener(any())
+  }
+
+  @Test
+  fun documentSnapshotToUserListWorks() {
+    mockStatic(Tasks::class.java).use { mockedStatic ->
+      val profilePicture = mock(ImageBitmap::class.java)
+      val mockImage = mock(ImageBitmap::class.java)
+      val mockTaskList = mock(Task::class.java) as Task<List<DocumentSnapshot>>
+
+      // Mock the data of the friend's document
+      `when`(mockedFriendsDocumentSnapshot.data)
+          .thenReturn(
+              mapOf(
+                  "uid" to user.uid,
+                  "firstName" to user.firstName,
+                  "lastName" to user.lastName,
+                  "phoneNumber" to user.phoneNumber,
+                  "emailAddress" to user.emailAddress))
+
+      val uidJsonList = user.uid
+      val uidList = listOf(user.uid)
+      // Mock documentSnapshotToUser behavior
+      val helperMocked = mock(UserRepositoryFirestoreHelper::class.java)
+      `when`(helperMocked.documentSnapshotToList(uidJsonList)).thenReturn(uidList)
+      // Inject the mock helper into the repository
+      val helperField = UserRepositoryFirestore::class.java.getDeclaredField("helper")
+      helperField.isAccessible = true
+      helperField.set(userRepositoryFirestore, helper)
+
+      // Access the private field for imageRepository in the UserRepositoryFirestore class
+      val imageRepositoryField =
+          UserRepositoryFirestore::class.java.getDeclaredField("imageRepository")
+      imageRepositoryField.isAccessible = true // Make the field accessible
+      imageRepositoryField.set(
+          userRepositoryFirestore, mockImageRepository) // Inject the mock image repository
+
+      // Mock Task
+      val mocked = mock(Task::class.java) as Task<DocumentSnapshot>
+
+      `when`(mockUserCollectionReference.document(any())).thenReturn(mockUserDocumentReference)
+      `when`(mockUserDocumentReference.get()).thenReturn(mocked)
+      `when`(mocked.isSuccessful).thenReturn(true)
+      `when`(mocked.isCanceled).thenReturn(false)
+      `when`(mocked.result).thenReturn(mockUserDocumentSnapshot)
+      `when`(mocked.addOnFailureListener(any())).thenReturn(mocked)
+      doAnswer { invocation ->
+            val listener = invocation.arguments[0] as OnSuccessListener<DocumentSnapshot>
+            listener.onSuccess(mockUserDocumentSnapshot)
+            mocked
+          }
+          .`when`(mocked)
+          .addOnSuccessListener(any())
+      `when`(mocked.result).thenReturn(mockUserDocumentSnapshot)
+
+      // Mocking Tasks.whenAllSuccess to handle multiple tasks
+      `when`(Tasks.whenAllSuccess<DocumentSnapshot>(any<List<Task<DocumentSnapshot>>>()))
+          .thenReturn(mockTaskList)
+
+      val mockedList = mock(List::class.java) as List<DocumentSnapshot>
+      val mockedIterator = mock(Iterator::class.java) as Iterator<DocumentSnapshot>
+      `when`(mockedList.iterator()).thenReturn(mockedIterator)
+      `when`(mockedIterator.hasNext()).thenReturn(true, false)
+      `when`(mockedIterator.next()).thenReturn(mockedFriendsDocumentSnapshot)
+
+      // Answering the call to addOnSuccessListener on the list of tasks (for friends)
+      doAnswer { invocation ->
+            val listener = invocation.arguments[0] as OnSuccessListener<List<DocumentSnapshot>>
+            listener.onSuccess(mockedList) // Simulate success with a list of friend
+            // documents
+            mockTaskList // Return the mock task list
+          }
+          .`when`(mockTaskList)
+          .addOnSuccessListener(any()) // Mock the success listener for this task list
+
+      // Simulate no failure listener being called for the mockTaskList
+      doAnswer { mockTaskList }.`when`(mockTaskList).addOnFailureListener(any())
+
+      doAnswer { invocation ->
+            val onSuccess = invocation.getArgument<(ImageBitmap) -> Unit>(1)
+            onSuccess(mockImage)
+          }
+          .`when`(mockImageRepository)
+          .downloadImageAsync(any(), any(), any())
+
+      val urfClass = userRepositoryFirestore::class
+      val documentSnapshotToUserListFunction =
+          urfClass.declaredFunctions.first { it.name == "documentSnapshotToUserList" }
+      documentSnapshotToUserListFunction.isAccessible = true
+      documentSnapshotToUserListFunction.call(
+          userRepositoryFirestore, uidJsonList, { it: List<User> -> println(it) })
+
+      verify(mockImageRepository).downloadImageAsync(any(), any(), any())
+    }
   }
 
   /**
