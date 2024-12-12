@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,6 +64,8 @@ import kotlinx.coroutines.launch
 fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val currentUser by userViewModel.getCurrentUser().collectAsState()
   val groupedFriends by userViewModel.groupedFriends.collectAsState()
+
+  val context = LocalContext.current
 
   // Charge les emplacements des amis lorsque l'écran est composé
   LaunchedEffect(Unit) {
@@ -126,6 +129,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
               if (groupedFriends?.isNotEmpty() == true) {
+                userViewModel.scheduleWorker(context)
                 groupedFriends!!
                     .entries
                     .sortedBy { it.key.ordinal }

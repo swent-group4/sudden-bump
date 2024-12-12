@@ -5,7 +5,6 @@ import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
-import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -114,6 +113,8 @@ open class UserViewModel(
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
+  private var isScheduled = false
+
   // Change the type to allow null values
   val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
       combine(_user, _userFriends) { user, friends ->
@@ -176,13 +177,16 @@ open class UserViewModel(
     repository.getUserAccount(
         onSuccess = { user ->
           _user.value = user
+          Log.i("SPECIAL", "getUserAccountDone")
+          Log.i("SPECIAL", "user : ${_user.value}")
           saveUserLoginStatus(_user.value.uid)
-          scheduleLocationUpdateWorker(getApplicationContext(), _user.value.uid)
           repository.getUserFriends(
               uid = _user.value.uid,
               onSuccess = { friendsList ->
                 Log.d(logTag, friendsList.toString())
                 _userFriends.value = friendsList
+                Log.i("SPECIAL", "getUserFriendsDone")
+                Log.i("SPECIAL", "friends : ${_userFriends.value}")
                 repository.getBlockedFriends(
                     uid = _user.value.uid,
                     onSuccess = { blockedFriendsList ->
@@ -190,7 +194,10 @@ open class UserViewModel(
                     },
                     onFailure = { e -> Log.e(logTag, e.toString()) })
               },
-              onFailure = { e -> Log.e(logTag, e.toString()) })
+              onFailure = { e ->
+                Log.i("SPECIAL", "getUserFriendsFail")
+                Log.e(logTag, e.toString())
+              })
           repository.getSentFriendRequests(
               uid = _user.value.uid,
               onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
@@ -502,27 +509,29 @@ open class UserViewModel(
   }
 
   fun loadFriends() {
-    repository.getUserFriends(
-        uid = _user.value.uid,
-        onSuccess = { friends ->
-          // Update the state with the locations of friends
-          _userFriends.value = friends
-          Log.d("UserViewModel", "On success load Friends ${_userFriends.value}")
-        },
-        onFailure = { error ->
-          // Handle the error, e.g., log or show error message
-          Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
-        })
-    Log.d("UserViewModel", "Loading sharedLocationWith...")
-    repository.getSharedWithFriends(
-        uid = _user.value.uid,
-        onSuccess = { list ->
-          _locationSharedWith.value = list
-          Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
-        },
-        onFailure = { error ->
-          Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
-        })
+    if (_user.value.uid != userDummy2.uid) {
+      repository.getUserFriends(
+          uid = _user.value.uid,
+          onSuccess = { friends ->
+            // Update the state with the locations of friends
+            _userFriends.value = friends
+            Log.d("UserViewModel", "On success load Friends ${_userFriends.value}")
+          },
+          onFailure = { error ->
+            // Handle the error, e.g., log or show error message
+            Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
+          })
+      Log.d("UserViewModel", "Loading sharedLocationWith...")
+      repository.getSharedWithFriends(
+          uid = _user.value.uid,
+          onSuccess = { list ->
+            _locationSharedWith.value = list
+            Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
+          },
+          onFailure = { error ->
+            Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
+          })
+    }
   }
 
   fun getSelectedContact(): StateFlow<User> {
@@ -781,6 +790,13 @@ open class UserViewModel(
             onSuccess()
           },
           onFailure = onFailure)
+    }
+  }
+
+  fun scheduleWorker(context: Context, uid: String = _user.value.uid) {
+    if (!isScheduled) {
+      isScheduled = true
+      scheduleLocationUpdateWorker(context, uid)
     }
   }
 }

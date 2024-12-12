@@ -63,7 +63,6 @@ import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.ui.utils.isUsingMockViewModel
 import com.swent.suddenbump.ui.utils.testableMeetingViewModel
 import com.swent.suddenbump.ui.utils.testableUserViewModel
-import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -260,7 +259,7 @@ class MainActivity : ComponentActivity() {
               },
               onFailure = { e -> Log.e("MainActivity", e.toString()) })
           // Schedule the LocationUpdateWorker
-          scheduleLocationUpdateWorker(this, uid)
+          userViewModel.scheduleWorker(this)
           Route.OVERVIEW
         } else {
           Route.AUTH
