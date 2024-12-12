@@ -52,8 +52,7 @@ fun EditMeetingScreen(
 
   // State for dropdown visibility
   var showDropdown by remember { mutableStateOf(false) }
-    val locationSuggestions =
-        locationQuery?.let { RetrofitInstance.geocodingApi.geocode(it, BuildConfig.MAPS_API_KEY) }
+    val locationSuggestions by locationViewModel.locationSuggestions
   val context = LocalContext.current
 
   Scaffold(
@@ -80,18 +79,16 @@ fun EditMeetingScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
               // Location field
-            if (locationSuggestions != null) {
-                LocationField(
-                    locationQuery = locationQuery,
-                    onLocationQueryChange = {
-                        locationQuery = it
-                        locationViewModel.fetchLocationSuggestions(it)
-                    },
-                    locationSuggestions = locationSuggestions.results,
-                    onLocationSelected = { selectedLocation = it },
-                    showDropdown = showDropdown,
-                    onDropdownChange = { showDropdown = it })
-            }
+            LocationField(
+                locationQuery = locationQuery,
+                onLocationQueryChange = {
+                    locationQuery = it
+                    locationViewModel.fetchLocationSuggestions(it)
+                },
+                locationSuggestions = locationSuggestions,
+                onLocationSelected = { selectedLocation = it },
+                showDropdown = showDropdown,
+                onDropdownChange = { showDropdown = it })
 
               // Date Field
               OutlinedTextField(

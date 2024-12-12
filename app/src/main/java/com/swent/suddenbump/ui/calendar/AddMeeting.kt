@@ -89,6 +89,7 @@ fun AddMeetingScreen(
                   locationQuery = locationQuery,
                   onLocationQueryChange = {
                     locationQuery = it
+                      Log.d("LocationField", "locationQuery: $locationQuery")
                     locationViewModel.fetchLocationSuggestions(it)
                   },
                   locationSuggestions = locationSuggestions,

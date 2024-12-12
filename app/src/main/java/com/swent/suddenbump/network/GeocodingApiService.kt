@@ -12,7 +12,7 @@ interface GeocodingApiService {
   ): GeocodingResponse
 
     @GET("geocode/json")
-    fun geocode(
+    suspend fun geocode(
         @Query("address") address: String,
         @Query("key") apiKey: String
     ): GeocodingResponse

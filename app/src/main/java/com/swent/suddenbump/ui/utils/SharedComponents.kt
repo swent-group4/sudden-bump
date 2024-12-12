@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.utils
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -191,8 +192,12 @@ fun LocationField(
             value = locationQuery ?: "",
             onValueChange = {
               onLocationQueryChange(it)
+                Log.d("LocationField", "onValueChange: $it")
+                if(locationSuggestions.isNotEmpty()) {
+                    Log.d("LocationField", "location Suggestions: ${locationSuggestions.first().address_components.first().short_name}")
+                }
               onDropdownChange(true) // Show dropdown when user starts typing
-              maxItemsToShow.value = 3 // Reset to show initial 3 items when query changes
+              maxItemsToShow.intValue = 3 // Reset to show initial 3 items when query changes
             },
             label = { Text("Location") },
             textStyle = TextStyle(color = Color.White),
@@ -209,7 +214,7 @@ fun LocationField(
             expanded = showDropdown && locationSuggestions.isNotEmpty(),
             onDismissRequest = { onDropdownChange(false) },
             modifier = Modifier.background(Color.Black).testTag("DropDownMenu")) {
-              locationSuggestions.take(maxItemsToShow.value).forEach { Result ->
+              locationSuggestions.take(maxItemsToShow.intValue).forEach { Result ->
                 DropdownMenuItem(
                     text = {
                       Text(
@@ -232,11 +237,11 @@ fun LocationField(
                     modifier =
                         Modifier.padding(8.dp).background(Color.Black).testTag("DropDownMenuItem"))
               }
-              if (locationSuggestions.size > maxItemsToShow.value) {
+              if (locationSuggestions.size > maxItemsToShow.intValue) {
                 DropdownMenuItem(
                     text = { Text(text = "More...", color = Color.White) },
                     onClick = {
-                      maxItemsToShow.value += 3 // Show 3 more items
+                      maxItemsToShow.intValue += 3 // Show 3 more items
                     },
                     modifier = Modifier.padding(8.dp).background(Color.Black).testTag("MoreButton"))
               }
