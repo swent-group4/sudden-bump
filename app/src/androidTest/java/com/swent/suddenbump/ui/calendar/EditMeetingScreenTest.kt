@@ -188,4 +188,17 @@ class EditMeetingScreenTest {
 
     verify(meetingRepository, never()).updateMeeting(anyOrNull(), anyOrNull(), anyOrNull())
   }
+
+  @Test
+  fun doesNotSubmitWithInvalidLocation() {
+    // Arrange
+    meetingViewModel.selectMeeting(meeting)
+    composeTestRule.setContent { EditMeetingScreen(navigationActions, meetingViewModel) }
+
+    composeTestRule.onNodeWithTag("Location").performTextClearance()
+    composeTestRule.onNodeWithTag("Location").performTextInput("loc")
+    composeTestRule.onNodeWithTag("Save Changes").performClick()
+
+    verify(meetingRepository, never()).updateMeeting(anyOrNull(), anyOrNull(), anyOrNull())
+  }
 }
