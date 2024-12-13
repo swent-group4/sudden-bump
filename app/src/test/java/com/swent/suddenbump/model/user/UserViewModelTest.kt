@@ -632,6 +632,8 @@ class UserViewModelTest {
       onSuccess(friendsList)
     }
 
+    userViewModel.setUser(user.copy(uid = "1"), {}, {})
+
     // Act
     runBlocking { userViewModel.loadFriends() }
 
@@ -647,6 +649,8 @@ class UserViewModelTest {
     val exception = Exception(errorMessage)
     val userRepository: UserRepository = mock() // Mock the UserRepository
     userViewModel = UserViewModel(userRepository, chatRepository) // Instantiate the ViewModel
+
+    userViewModel.setUser(user.copy(uid = "1"), {}, {})
 
     // Mock repository method to simulate a failure
     whenever(userRepository.getUserFriends(any(), any(), any())).thenAnswer {

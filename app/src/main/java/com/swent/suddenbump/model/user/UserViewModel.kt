@@ -113,6 +113,8 @@ open class UserViewModel(
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
+  private var isScheduled = false
+
   // Change the type to allow null values
   val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
       combine(_user, _userFriends) { user, friends ->
@@ -509,27 +511,29 @@ open class UserViewModel(
   }
 
   fun loadFriends() {
-    repository.getUserFriends(
-        uid = _user.value.uid,
-        onSuccess = { friends ->
-          // Update the state with the locations of friends
-          _userFriends.value = friends
-          Log.d("UserViewModel", "On success load Friends ${_userFriends.value}")
-        },
-        onFailure = { error ->
-          // Handle the error, e.g., log or show error message
-          Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
-        })
-    Log.d("UserViewModel", "Loading sharedLocationWith...")
-    repository.getSharedWithFriends(
-        uid = _user.value.uid,
-        onSuccess = { list ->
-          _locationSharedWith.value = list
-          Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
-        },
-        onFailure = { error ->
-          Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
-        })
+    if (_user.value.uid != userDummy2.uid) {
+      repository.getUserFriends(
+          uid = _user.value.uid,
+          onSuccess = { friends ->
+            // Update the state with the locations of friends
+            _userFriends.value = friends
+            Log.d("UserViewModel", "On success load Friends ${_userFriends.value}")
+          },
+          onFailure = { error ->
+            // Handle the error, e.g., log or show error message
+            Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
+          })
+      Log.d("UserViewModel", "Loading sharedLocationWith...")
+      repository.getSharedWithFriends(
+          uid = _user.value.uid,
+          onSuccess = { list ->
+            _locationSharedWith.value = list
+            Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
+          },
+          onFailure = { error ->
+            Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
+          })
+    }
   }
 
   fun getSelectedContact(): StateFlow<User> {

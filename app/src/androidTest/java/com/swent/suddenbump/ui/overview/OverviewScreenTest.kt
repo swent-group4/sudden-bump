@@ -10,8 +10,10 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.utils.isUITest
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -80,8 +82,14 @@ class OverviewScreenTest {
     every { userViewModel.locationSharedWith } returns locationSharedWithState
   }
 
+  @After
+  fun tearDown() {
+    isUITest = false
+  }
+
   @Test
   fun testRequiredComponentsAreDisplayed() {
+    isUITest = true
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
     composeTestRule.onNodeWithTag("settingsFab").assertIsDisplayed()
@@ -91,6 +99,7 @@ class OverviewScreenTest {
 
   @Test
   fun testDisplaysFriendsWithinCategories() {
+    isUITest = true
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
     composeTestRule.waitForIdle()
@@ -130,6 +139,7 @@ class OverviewScreenTest {
 
   @Test
   fun testSettingsButtonNavigatesToSettings() {
+    isUITest = true
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("settingsFab").performClick()
     verify { navigationActions.navigateTo(Screen.SETTINGS) }
@@ -137,6 +147,8 @@ class OverviewScreenTest {
 
   @Test
   fun testAddContactButtonNavigatesToAddContact() {
+    isUITest = true
+
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
     verify { navigationActions.navigateTo(Screen.ADD_CONTACT) }
@@ -144,6 +156,7 @@ class OverviewScreenTest {
 
   @Test
   fun testUserRowClickNavigatesToContact() {
+    isUITest = true
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag(user1.uid).performClick()
     verify { navigationActions.navigateTo(Screen.CONTACT) }
@@ -152,6 +165,8 @@ class OverviewScreenTest {
 
   @Test
   fun havingProfilePictureDisplaysComponent() {
+
+    isUITest = true
 
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
@@ -166,6 +181,7 @@ class OverviewScreenTest {
 
   @Test
   fun testIconToggleButton_ShowsCorrectIconAndTogglesState() {
+    isUITest = true
 
     val currentUser = user1
     val friend = user2
