@@ -211,6 +211,8 @@ interface UserRepository {
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  fun scheduleWorker(uid: String)
 }
 
 data class UserWithFriendsInCommon(val user: User, val friendsInCommon: Int)

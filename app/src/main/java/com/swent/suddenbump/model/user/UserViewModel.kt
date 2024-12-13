@@ -16,7 +16,7 @@ import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.network.RetrofitInstance
 import com.swent.suddenbump.ui.utils.isRunningTest
-import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
+import com.swent.suddenbump.worker.WorkerScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -159,11 +159,18 @@ open class UserViewModel(
    */
   companion object {
     fun provideFactory(context: Context): ViewModelProvider.Factory {
+      val appContext = context.applicationContext
+
       return object : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-          val userRepository = UserRepositoryFirestore(Firebase.firestore, context)
-          return UserViewModel(userRepository, ChatRepositoryFirestore(Firebase.firestore)) as T
+          val preferencesManager = SharedPreferencesManager(appContext)
+          val workerScheduler = WorkerScheduler(appContext)
+          val userRepository =
+              UserRepositoryFirestore(Firebase.firestore, preferencesManager, workerScheduler)
+          val chatRepository = ChatRepositoryFirestore(Firebase.firestore)
+
+          return UserViewModel(userRepository, chatRepository) as T
         }
       }
     }
@@ -177,16 +184,13 @@ open class UserViewModel(
     repository.getUserAccount(
         onSuccess = { user ->
           _user.value = user
-          Log.i("SPECIAL", "getUserAccountDone")
-          Log.i("SPECIAL", "user : ${_user.value}")
           saveUserLoginStatus(_user.value.uid)
+          scheduleWorker(_user.value.uid)
           repository.getUserFriends(
               uid = _user.value.uid,
               onSuccess = { friendsList ->
                 Log.d(logTag, friendsList.toString())
                 _userFriends.value = friendsList
-                Log.i("SPECIAL", "getUserFriendsDone")
-                Log.i("SPECIAL", "friends : ${_userFriends.value}")
                 repository.getBlockedFriends(
                     uid = _user.value.uid,
                     onSuccess = { blockedFriendsList ->
@@ -194,10 +198,7 @@ open class UserViewModel(
                     },
                     onFailure = { e -> Log.e(logTag, e.toString()) })
               },
-              onFailure = { e ->
-                Log.i("SPECIAL", "getUserFriendsFail")
-                Log.e(logTag, e.toString())
-              })
+              onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getSentFriendRequests(
               uid = _user.value.uid,
               onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
@@ -224,6 +225,7 @@ open class UserViewModel(
    * @param onFailure Called with an exception if the operation fails.
    */
   fun setCurrentUser(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    scheduleWorker(uid)
     repository.getUserAccount(
         uid,
         onSuccess = {
@@ -613,18 +615,38 @@ open class UserViewModel(
     return false
   }
 
+  /**
+   * Retrieves a new unique identifier (UID).
+   *
+   * @return A new UID as a String.
+   */
   fun getNewUid(): String {
     return repository.getNewUid()
   }
 
+  /**
+   * Saves the user's login status.
+   *
+   * @param userId The unique identifier of the user.
+   */
   fun saveUserLoginStatus(userId: String) {
     repository.saveLoginStatus(userId)
   }
 
+  /**
+   * Retrieves the saved UID of the user.
+   *
+   * @return The saved UID as a String.
+   */
   fun getSavedUid(): String {
     return repository.getSavedUid()
   }
 
+  /**
+   * Checks if the user is logged in.
+   *
+   * @return True if the user is logged in, false otherwise.
+   */
   fun saveRadius(radius: Float) {
     repository.saveRadius(radius)
   }
@@ -645,8 +667,23 @@ open class UserViewModel(
     return repository.isUserLoggedIn()
   }
 
+  /** Logs out the current user and resets the ViewModel state. */
   fun logout() {
     repository.logoutUser()
+    _user.value = userDummy2
+    _messages.value = emptyList()
+    _userFriends.value = emptyList()
+    _userFriendRequests.value = emptyList()
+    _sentFriendRequests.value = emptyList()
+    _recommendedFriends.value = emptyList()
+    _blockedFriends.value = emptyList()
+    _locationSharedWith.value = emptyList()
+    _phoneNumber.value = ""
+    _chatSummaries.value = emptyList()
+    _verificationId.value = ""
+    _verificationStatus.value = ""
+    _userProfilePictureChanging.value = false
+    _selectedContact.value = userDummy1
   }
 
   private val _messages = MutableStateFlow<List<Message>>(emptyList())
@@ -809,10 +846,7 @@ open class UserViewModel(
     }
   }
 
-  fun scheduleWorker(context: Context, uid: String = _user.value.uid) {
-    if (!isScheduled) {
-      isScheduled = true
-      scheduleLocationUpdateWorker(context, uid)
-    }
+  fun scheduleWorker(uid: String) {
+    repository.scheduleWorker(uid)
   }
 }

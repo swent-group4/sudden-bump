@@ -318,7 +318,7 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                             lastKnownLocation = baseLocation),
                         onSuccess = {
                           userViewModel.saveUserLoginStatus(newUid)
-                          userViewModel.scheduleWorker(context, newUid)
+                          userViewModel.scheduleWorker(newUid)
                           navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
                         },
                         onFailure = {

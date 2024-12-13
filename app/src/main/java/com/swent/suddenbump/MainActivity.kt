@@ -19,8 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -66,7 +64,6 @@ import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.ui.utils.isUsingMockViewModel
 import com.swent.suddenbump.ui.utils.testableMeetingViewModel
 import com.swent.suddenbump.ui.utils.testableUserViewModel
-import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import okhttp3.OkHttpClient
@@ -80,7 +77,7 @@ class MainActivity : ComponentActivity() {
   lateinit var locationGetter: LocationGetter
   var newLocation = MutableStateFlow<Pair<Double, Double>?>(null)
   private val userViewModelActivity: UserViewModel by viewModels {
-    UserViewModel.provideFactory(this)
+    UserViewModel.provideFactory(applicationContext)
   }
 
   @SuppressLint("SuspiciousIndentation")
@@ -232,7 +229,9 @@ class MainActivity : ComponentActivity() {
     val meetingViewModelFactory: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
     val meetingViewModel: MeetingViewModel =
         if (isUsingMockViewModel) testableMeetingViewModel else meetingViewModelFactory
-    val userViewModelFactory: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
+    val userViewModelFactory: UserViewModel by viewModels {
+      UserViewModel.provideFactory(applicationContext)
+    }
     val userViewModel: UserViewModel =
         if (isUsingMockViewModel) testableUserViewModel else userViewModelFactory
 
@@ -262,8 +261,6 @@ class MainActivity : ComponentActivity() {
                 Log.i("MainActivity", "User set: ${userViewModel.getCurrentUser().value}")
               },
               onFailure = { e -> Log.e("MainActivity", e.toString()) })
-          // Schedule the LocationUpdateWorker
-          scheduleLocationUpdateWorker(this, uid)
           Route.OVERVIEW
         } else {
           Route.AUTH
@@ -331,7 +328,7 @@ class MainActivity : ComponentActivity() {
       }
 
       // Add new screens from Settings.kt
-      composable("AccountScreen") { AccountScreen(navigationActions) }
+      composable("AccountScreen") { AccountScreen(navigationActions, userViewModel) }
       composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
       composable("BlockedUsersScreen") { BlockedUsersScreen(navigationActions, userViewModel) }
     }

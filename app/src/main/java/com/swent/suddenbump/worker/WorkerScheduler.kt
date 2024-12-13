@@ -5,21 +5,18 @@ import android.util.Log
 import androidx.work.*
 import java.util.concurrent.TimeUnit
 
-/** Object responsible for scheduling the LocationUpdateWorker. */
-object WorkerScheduler {
+class WorkerScheduler(private val context: Context) {
 
   /**
    * Schedules the LocationUpdateWorker to run periodically.
    *
-   * @param context The application context.
    * @param uid The user ID.
    */
-  fun scheduleLocationUpdateWorker(context: Context, uid: String) {
+  fun scheduleWorker(uid: String) {
     if (uid.isEmpty()) {
       Log.d("WorkerSuddenBump", "User ID not found")
       return
     }
-    Log.d("WorkerSuddenBump", "Uid $uid ")
 
     // Prepare input data for the worker
     val inputData = workDataOf("uid" to uid)
@@ -36,10 +33,13 @@ object WorkerScheduler {
             .build()
 
     // Enqueue the work request with a unique name to avoid duplication
-    WorkManager.getInstance(context)
+    WorkManager.getInstance(context.applicationContext)
         .enqueueUniquePeriodicWork(
             "LocationUpdateWorker", ExistingPeriodicWorkPolicy.REPLACE, workRequest)
+  }
 
-    Log.d("WorkerSuddenBump", "LocationUpdateWorker scheduled")
+  fun unscheduleLocationUpdateWorker() {
+    WorkManager.getInstance(context.applicationContext)
+        .cancelUniqueWork("LocationUpdateWorker") // Use the same unique name used during scheduling
   }
 }
