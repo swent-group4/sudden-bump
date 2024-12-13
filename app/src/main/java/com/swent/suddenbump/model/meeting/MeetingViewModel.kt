@@ -65,17 +65,17 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
     repositoryMeeting.getMeetings(
         onSuccess = { meetingsList ->
           Log.i(
-              "MeetingsUserViewModel",
+              "MeetingViewModel",
               "Meetings retrieved successfully: ${meetingsList.size} meetings found")
           meetingsList.forEach { meeting ->
             Log.i(
-                "MeetingsUserViewModel",
+                "MeetingViewModel",
                 "Meeting details - ID: ${meeting.meetingId}, Friend ID: ${meeting.friendId}, Location: ${meeting.location}, Date: ${meeting.date}")
           }
           _meetings.value = meetingsList
         },
         onFailure = { exception ->
-          Log.e("MeetingsUserViewModel", "Failed to retrieve meetings: ${exception.message}")
+          Log.e("MeetingViewModel", "Failed to retrieve meetings: ${exception.message}")
           _error.value = exception
         })
   }

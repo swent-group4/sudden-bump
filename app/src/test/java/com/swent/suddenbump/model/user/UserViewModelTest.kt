@@ -1079,4 +1079,28 @@ class UserViewModelTest {
     // User should still be in blocked list since unblock failed
     assert(userViewModel.getBlockedFriends().value.contains(blockedUser))
   }
+
+  @Test
+  fun saveRadiusCallsRepositoryWithCorrectValue() {
+    // Arrange
+    val radius = 10.5f
+
+    // Act
+    userViewModel.saveRadius(radius)
+
+    // Assert
+    verify(userRepository).saveRadius(radius)
+  }
+
+  @Test
+  fun saveNotificationStatusCallsRepositoryWithCorrectValue() {
+    // Arrange
+    val notificationStatus = true
+
+    // Act
+    userViewModel.saveNotificationStatus(notificationStatus)
+
+    // Assert
+    verify(userRepository).saveNotificationStatus(notificationStatus)
+  }
 }

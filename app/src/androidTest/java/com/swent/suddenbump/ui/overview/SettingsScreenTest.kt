@@ -22,6 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.verify
 
 @RunWith(AndroidJUnit4::class)
 class SettingsScreenTest {
@@ -57,8 +58,7 @@ class SettingsScreenTest {
       SettingsScreen(
           navigationActions = navigationActions,
           userViewModel = userViewModel,
-          meetingViewModel = meetingViewModel,
-          onNotificationsEnabledChange = { notificationsEnabled = it })
+          meetingViewModel = meetingViewModel)
     }
   }
 
@@ -67,11 +67,41 @@ class SettingsScreenTest {
     setContentDefault()
     composeTestRule.waitForIdle()
 
+    // Verify that the settings screen container is displayed
     composeTestRule.onNodeWithTag("settingsScreen").assertIsDisplayed()
+
+    // Verify that the top bar title is displayed
     composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+
+    // Verify other required components
     composeTestRule.onNodeWithTag("profilePicture").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+      composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+      composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+  }
+
+  @Test
+  fun goBackButtonCallsNavActions() {
+    setContentDefault()
+    composeTestRule.waitForIdle()
+
+    // Verify that the back button is displayed
+    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+
+    // Perform click on the back button
+    composeTestRule.onNodeWithTag("backButton").performClick()
+
+    // Verify the goBack action is triggered
+    verify(navigationActions).goBack()
+  }
+
+  @Test
+  fun accountButtonNavigatesToAccountScreen() {
+    setContentDefault()
+    composeTestRule.waitForIdle()
+
+    // Verify that the Account option navigates to the Account screen
+    composeTestRule.onNodeWithTag("AccountOption").performClick()
+    verify(navigationActions).navigateTo("AccountScreen")
   }
 
   @Test
@@ -96,76 +126,86 @@ class SettingsScreenTest {
   }
 
   @Test
-  fun addPhotoButtonIsDisplayedWhenProfilePictureIsNull() {
-    val userWithoutProfilePicture =
-        User(
-            uid = "2",
-            firstName = "Test",
-            lastName = "User",
-            phoneNumber = "+1234567891",
-            profilePicture = null,
-            emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
-    userViewModel.setUser(userWithoutProfilePicture, {}, {})
-
+  fun discussionsButtonNavigatesToDiscussionsScreen() {
     setContentDefault()
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+    // Verify that the Discussions option navigates to the Discussions screen
+    composeTestRule.onNodeWithTag("DiscussionsOption").performClick()
+    verify(navigationActions).navigateTo("DiscussionsScreen")
   }
 
-  @Test
-  fun removePhotoButtonClearsProfilePicture() {
-    val userWithProfilePicture =
-        User(
-            uid = "3",
-            firstName = "Alice",
-            lastName = "Brown",
-            phoneNumber = "+1234567892",
-            profilePicture = ImageBitmap(100, 100),
-            emailAddress = "alice.brown@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
-    userViewModel.setUser(userWithProfilePicture, {}, {})
+    @Test
+    fun addPhotoButtonIsDisplayedWhenProfilePictureIsNull() {
+        val userWithoutProfilePicture =
+            User(
+                uid = "2",
+                firstName = "Test",
+                lastName = "User",
+                phoneNumber = "+1234567891",
+                profilePicture = null,
+                emailAddress = "test.user@example.com",
+                lastKnownLocation = MutableStateFlow(locationDummy))
+        userViewModel.setUser(userWithoutProfilePicture, {}, {})
 
-    setContentDefault()
-    composeTestRule.waitForIdle()
+        setContentDefault()
+        composeTestRule.waitForIdle()
 
-    // Perform click on the remove photo button
-    composeTestRule.onNodeWithTag("removePhotoButton").performClick()
+        composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+    }
 
-    // Verify that the profile picture is cleared
-    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("nullProfilePicture").assertIsDisplayed()
-  }
+    @Test
+    fun removePhotoButtonClearsProfilePicture() {
+        val userWithProfilePicture =
+            User(
+                uid = "3",
+                firstName = "Alice",
+                lastName = "Brown",
+                phoneNumber = "+1234567892",
+                profilePicture = ImageBitmap(100, 100),
+                emailAddress = "alice.brown@example.com",
+                lastKnownLocation = MutableStateFlow(locationDummy))
+        userViewModel.setUser(userWithProfilePicture, {}, {})
 
-  @Test
-  fun addPhotoButtonTransitionsToEditPhotoAfterAddingPicture() {
-    setContentDefault()
-    composeTestRule.waitForIdle()
+        setContentDefault()
+        composeTestRule.waitForIdle()
 
-    // Verify initial state
-    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+        // Perform click on the remove photo button
+        composeTestRule.onNodeWithTag("removePhotoButton").performClick()
 
-    // Simulate adding a photo
-    val userWithProfilePicture =
-        User(
-            uid = "4",
-            firstName = "Bob",
-            lastName = "Smith",
-            phoneNumber = "+1234567893",
-            profilePicture = ImageBitmap(100, 100),
-            emailAddress = "bob.smith@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
-    userViewModel.setUser(userWithProfilePicture, {}, {})
+        // Verify that the profile picture is cleared
+        composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("nullProfilePicture").assertIsDisplayed()
+    }
 
-    composeTestRule.waitForIdle()
+    @Test
+    fun addPhotoButtonTransitionsToEditPhotoAfterAddingPicture() {
+        setContentDefault()
+        composeTestRule.waitForIdle()
 
-    // Verify transition to edit photo state
-    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("removePhotoButton").assertIsDisplayed()
-  }
+        // Verify initial state
+        composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+
+        // Simulate adding a photo
+        val userWithProfilePicture =
+            User(
+                uid = "4",
+                firstName = "Bob",
+                lastName = "Smith",
+                phoneNumber = "+1234567893",
+                profilePicture = ImageBitmap(100, 100),
+                emailAddress = "bob.smith@example.com",
+                lastKnownLocation = MutableStateFlow(locationDummy))
+        userViewModel.setUser(userWithProfilePicture, {}, {})
+
+        composeTestRule.waitForIdle()
+
+        // Verify transition to edit photo state
+        composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("removePhotoButton").assertIsDisplayed()
+    }
 }

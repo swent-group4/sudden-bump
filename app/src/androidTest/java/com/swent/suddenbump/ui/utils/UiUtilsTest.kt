@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import org.junit.Rule
 import org.junit.Test
@@ -110,5 +111,63 @@ class UiUtilsTest {
     // Simulate a click and verify the action
     composeTestRule.onNodeWithTag(testTag).performClick()
     assert(optionClicked) { "Account option was not clicked!" }
+  }
+
+  @Test
+  fun testLocationFieldDisplaysAndHandlesSelection() {
+    val locationSuggestions =
+        listOf(
+            Location(12.34, 56.78, "Location 1"),
+            Location(34.56, 78.90, "Location 2"),
+            Location(90.12, 34.56, "Location 3"),
+            Location(11.11, 22.22, "Location 4"),
+            Location(33.33, 44.44, "Location 5"))
+
+    var locationQuery = ""
+    var showDropdown = true
+    var selectedLocation: Location? = null
+
+    composeTestRule.setContent {
+      LocationField(
+          locationQuery = locationQuery,
+          onLocationQueryChange = { locationQuery = it },
+          locationSuggestions = locationSuggestions,
+          onLocationSelected = { selectedLocation = it },
+          showDropdown = showDropdown,
+          onDropdownChange = { showDropdown = it })
+    }
+
+    // Verify the text field exists
+    composeTestRule.onNodeWithTag("Location").assertExists()
+    composeTestRule.onNodeWithTag("Location").assertIsDisplayed()
+
+    // Simulate user typing to trigger the dropdown
+    composeTestRule.onNodeWithTag("Location").performTextInput("Loc")
+    composeTestRule.waitForIdle()
+
+    // Verify the dropdown menu is displayed
+    composeTestRule.onNodeWithTag("DropDownMenu").assertExists()
+    composeTestRule.onNodeWithTag("Location").assertIsDisplayed()
+
+    // Verify initial suggestions are displayed
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[0].assertExists()
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[1].assertExists()
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[2].assertExists()
+
+    // Verify the "More..." button exists
+    composeTestRule.onNodeWithTag("MoreButton").assertExists()
+    composeTestRule.onNodeWithTag("MoreButton").performClick()
+    composeTestRule.waitForIdle()
+
+    // Verify more suggestions are displayed after clicking "More..."
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[3].assertExists()
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[4].assertExists()
+
+    // Select the fourth suggestion
+    composeTestRule.onAllNodesWithTag("DropDownMenuItem")[3].performClick()
+    composeTestRule.waitForIdle()
+
+    // Verify the selected location is updated
+    assert(selectedLocation?.name == "Location 4")
   }
 }
