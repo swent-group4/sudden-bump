@@ -272,8 +272,7 @@ open class UserViewModel(
           startListeningForBlockedUsers(user.uid)
           onSuccess()
         },
-        onFailure
-    )
+        onFailure)
   }
 
   /**
@@ -332,8 +331,7 @@ open class UserViewModel(
           // The real-time listeners will handle the state updates
           onSuccess()
         },
-        onFailure
-    )
+        onFailure)
   }
 
   /**
@@ -357,8 +355,7 @@ open class UserViewModel(
           // The real-time listeners will handle the state updates
           onSuccess()
         },
-        onFailure
-    )
+        onFailure)
   }
 
   /**
@@ -382,8 +379,7 @@ open class UserViewModel(
           // The real-time listeners will handle the state updates
           onSuccess()
         },
-        onFailure
-    )
+        onFailure)
   }
 
   /**
@@ -452,8 +448,7 @@ open class UserViewModel(
           // The real-time listener will handle the state update
           onSuccess()
         },
-        onFailure
-    )
+        onFailure)
   }
 
   fun unblockUser(
@@ -469,8 +464,7 @@ open class UserViewModel(
           // The real-time listener will handle the state update
           onSuccess()
         },
-        onFailure
-    )
+        onFailure)
   }
 
   fun getBlockedFriends(): StateFlow<List<User>> {
@@ -842,13 +836,8 @@ open class UserViewModel(
   private fun startListeningForFriendRequests(uid: String) {
     repository.startListeningForFriendRequests(
         uid,
-        onFriendRequestsChanged = { requests ->
-          _userFriendRequests.value = requests
-        },
-        onError = { e ->
-          Log.e("UserViewModel", "Error listening for friend requests", e)
-        }
-    )
+        onFriendRequestsChanged = { requests -> _userFriendRequests.value = requests },
+        onError = { e -> Log.e("UserViewModel", "Error listening for friend requests", e) })
   }
 
   /**
@@ -859,13 +848,8 @@ open class UserViewModel(
   private fun startListeningForSentRequests(uid: String) {
     repository.startListeningForSentRequests(
         uid,
-        onSentRequestsChanged = { requests ->
-          _userSentFriendRequests.value = requests
-        },
-        onError = { e ->
-          Log.e("UserViewModel", "Error listening for sent friend requests", e)
-        }
-    )
+        onSentRequestsChanged = { requests -> _userSentFriendRequests.value = requests },
+        onError = { e -> Log.e("UserViewModel", "Error listening for sent friend requests", e) })
   }
 
   /**
@@ -876,13 +860,8 @@ open class UserViewModel(
   private fun startListeningForBlockedUsers(uid: String) {
     repository.startListeningForBlockedUsers(
         uid,
-        onBlockedUsersChanged = { users ->
-          _blockedFriends.value = users
-        },
-        onError = { e ->
-          Log.e("UserViewModel", "Error listening for blocked users", e)
-        }
-    )
+        onBlockedUsersChanged = { users -> _blockedFriends.value = users },
+        onError = { e -> Log.e("UserViewModel", "Error listening for blocked users", e) })
   }
 
   override fun onCleared() {
@@ -895,11 +874,6 @@ open class UserViewModel(
 
   fun updateRecommendedFriends(user: User, onFailure: (Exception) -> Unit = {}) {
     repository.getRecommendedFriends(
-        user.uid,
-        onSuccess = { recommended ->
-          _recommendedFriends.value = recommended
-        },
-        onFailure
-    )
+        user.uid, onSuccess = { recommended -> _recommendedFriends.value = recommended }, onFailure)
   }
 }

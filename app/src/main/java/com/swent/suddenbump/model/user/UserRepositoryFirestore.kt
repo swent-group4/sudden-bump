@@ -533,19 +533,18 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                 if (uid !in mutableFriendRequestsUidList) {
                   mutableFriendRequestsUidList.add(uid)
                   mutableSentFriendRequestsUidList.add(fid)
-                  
+
                   // Use a transaction to ensure atomic updates
                   db.runTransaction { transaction ->
-                    val fidRef = db.collection(usersCollectionPath).document(fid)
-                    val uidRef = db.collection(usersCollectionPath).document(uid)
-                    
-                    transaction.update(fidRef, "friendRequests", mutableFriendRequestsUidList)
-                    transaction.update(uidRef, "sentFriendRequests", mutableSentFriendRequestsUidList)
-                  }.addOnSuccessListener {
-                    onSuccess()
-                  }.addOnFailureListener { e ->
-                    onFailure(e)
-                  }
+                        val fidRef = db.collection(usersCollectionPath).document(fid)
+                        val uidRef = db.collection(usersCollectionPath).document(uid)
+
+                        transaction.update(fidRef, "friendRequests", mutableFriendRequestsUidList)
+                        transaction.update(
+                            uidRef, "sentFriendRequests", mutableSentFriendRequestsUidList)
+                      }
+                      .addOnSuccessListener { onSuccess() }
+                      .addOnFailureListener { e -> onFailure(e) }
                 } else {
                   onFailure(Exception("Friend request already exists"))
                 }
@@ -866,19 +865,21 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           blockedUserSentRequests.remove(currentUser.uid)
 
           // Update current user data
-          transaction.update(currentUserRef, mapOf(
-              "blockedList" to currentUserBlockedList,
-              "friendsList" to currentUserFriendsList,
-              "friendRequests" to currentUserFriendRequests,
-              "sentFriendRequests" to currentUserSentRequests
-          ))
+          transaction.update(
+              currentUserRef,
+              mapOf(
+                  "blockedList" to currentUserBlockedList,
+                  "friendsList" to currentUserFriendsList,
+                  "friendRequests" to currentUserFriendRequests,
+                  "sentFriendRequests" to currentUserSentRequests))
 
           // Update blocked user data
-          transaction.update(blockedUserRef, mapOf(
-              "friendsList" to blockedUserFriendsList,
-              "friendRequests" to blockedUserFriendRequests,
-              "sentFriendRequests" to blockedUserSentRequests
-          ))
+          transaction.update(
+              blockedUserRef,
+              mapOf(
+                  "friendsList" to blockedUserFriendsList,
+                  "friendRequests" to blockedUserFriendRequests,
+                  "sentFriendRequests" to blockedUserSentRequests))
         }
         .addOnSuccessListener { onSuccess() }
         .addOnFailureListener { exception -> onFailure(exception) }
@@ -1423,16 +1424,16 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     friendRequestsListener?.remove()
 
     // Set up new listener
-    friendRequestsListener = db.collection(usersCollectionPath)
-        .document(uid)
-        .addSnapshotListener { snapshot, error ->
+    friendRequestsListener =
+        db.collection(usersCollectionPath).document(uid).addSnapshotListener { snapshot, error ->
           if (error != null) {
             onError(error)
             return@addSnapshotListener
           }
 
           if (snapshot != null && snapshot.exists()) {
-            val friendRequests = snapshot.data?.get("friendRequests") as? List<String> ?: emptyList()
+            val friendRequests =
+                snapshot.data?.get("friendRequests") as? List<String> ?: emptyList()
             if (friendRequests.isEmpty()) {
               onFriendRequestsChanged(emptyList())
             } else {
@@ -1441,26 +1442,23 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                   .whereIn("uid", friendRequests)
                   .get()
                   .addOnSuccessListener { querySnapshot ->
-                    val users = querySnapshot.documents.mapNotNull { doc ->
-                      try {
-                        helper.documentSnapshotToUser(doc, null)
-                      } catch (e: Exception) {
-                        null
-                      }
-                    }
+                    val users =
+                        querySnapshot.documents.mapNotNull { doc ->
+                          try {
+                            helper.documentSnapshotToUser(doc, null)
+                          } catch (e: Exception) {
+                            null
+                          }
+                        }
                     onFriendRequestsChanged(users)
                   }
-                  .addOnFailureListener { e ->
-                    onError(e)
-                  }
+                  .addOnFailureListener { e -> onError(e) }
             }
           }
         }
   }
 
-  /**
-   * Stops listening for friend request changes.
-   */
+  /** Stops listening for friend request changes. */
   override fun stopListeningForFriendRequests() {
     friendRequestsListener?.remove()
     friendRequestsListener = null
@@ -1482,16 +1480,16 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     sentRequestsListener?.remove()
 
     // Set up new listener
-    sentRequestsListener = db.collection(usersCollectionPath)
-        .document(uid)
-        .addSnapshotListener { snapshot, error ->
+    sentRequestsListener =
+        db.collection(usersCollectionPath).document(uid).addSnapshotListener { snapshot, error ->
           if (error != null) {
             onError(error)
             return@addSnapshotListener
           }
 
           if (snapshot != null && snapshot.exists()) {
-            val sentRequests = snapshot.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
+            val sentRequests =
+                snapshot.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
             if (sentRequests.isEmpty()) {
               onSentRequestsChanged(emptyList())
             } else {
@@ -1500,26 +1498,23 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                   .whereIn("uid", sentRequests)
                   .get()
                   .addOnSuccessListener { querySnapshot ->
-                    val users = querySnapshot.documents.mapNotNull { doc ->
-                      try {
-                        helper.documentSnapshotToUser(doc, null)
-                      } catch (e: Exception) {
-                        null
-                      }
-                    }
+                    val users =
+                        querySnapshot.documents.mapNotNull { doc ->
+                          try {
+                            helper.documentSnapshotToUser(doc, null)
+                          } catch (e: Exception) {
+                            null
+                          }
+                        }
                     onSentRequestsChanged(users)
                   }
-                  .addOnFailureListener { e ->
-                    onError(e)
-                  }
+                  .addOnFailureListener { e -> onError(e) }
             }
           }
         }
   }
 
-  /**
-   * Stops listening for sent friend request changes.
-   */
+  /** Stops listening for sent friend request changes. */
   override fun stopListeningForSentRequests() {
     sentRequestsListener?.remove()
     sentRequestsListener = null
@@ -1533,38 +1528,37 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   ) {
     // Use a transaction to ensure all updates are atomic
     db.runTransaction { transaction ->
-      val uidRef = db.collection(usersCollectionPath).document(uid)
-      val fidRef = db.collection(usersCollectionPath).document(fid)
+          val uidRef = db.collection(usersCollectionPath).document(uid)
+          val fidRef = db.collection(usersCollectionPath).document(fid)
 
-      val uidDoc = transaction.get(uidRef)
-      val fidDoc = transaction.get(fidRef)
+          val uidDoc = transaction.get(uidRef)
+          val fidDoc = transaction.get(fidRef)
 
-      // Get current lists
-      val userFriendRequests = uidDoc.data?.get("friendRequests") as? List<String> ?: emptyList()
-      val userFriends = uidDoc.data?.get("friendsList") as? List<String> ?: emptyList()
-      val friendSentRequests = fidDoc.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
-      val friendFriends = fidDoc.data?.get("friendsList") as? List<String> ?: emptyList()
+          // Get current lists
+          val userFriendRequests =
+              uidDoc.data?.get("friendRequests") as? List<String> ?: emptyList()
+          val userFriends = uidDoc.data?.get("friendsList") as? List<String> ?: emptyList()
+          val friendSentRequests =
+              fidDoc.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
+          val friendFriends = fidDoc.data?.get("friendsList") as? List<String> ?: emptyList()
 
-      // Update lists
-      val newUserFriendRequests = userFriendRequests.filter { it != fid }
-      val newUserFriends = userFriends + fid
-      val newFriendSentRequests = friendSentRequests.filter { it != uid }
-      val newFriendFriends = friendFriends + uid
+          // Update lists
+          val newUserFriendRequests = userFriendRequests.filter { it != fid }
+          val newUserFriends = userFriends + fid
+          val newFriendSentRequests = friendSentRequests.filter { it != uid }
+          val newFriendFriends = friendFriends + uid
 
-      // Apply all updates in the transaction
-      transaction.update(uidRef, mapOf(
-          "friendRequests" to newUserFriendRequests,
-          "friendsList" to newUserFriends
-      ))
-      transaction.update(fidRef, mapOf(
-          "sentFriendRequests" to newFriendSentRequests,
-          "friendsList" to newFriendFriends
-      ))
-    }.addOnSuccessListener {
-      onSuccess()
-    }.addOnFailureListener { e ->
-      onFailure(e)
-    }
+          // Apply all updates in the transaction
+          transaction.update(
+              uidRef,
+              mapOf("friendRequests" to newUserFriendRequests, "friendsList" to newUserFriends))
+          transaction.update(
+              fidRef,
+              mapOf(
+                  "sentFriendRequests" to newFriendSentRequests, "friendsList" to newFriendFriends))
+        }
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { e -> onFailure(e) }
   }
 
   override fun declineFriendRequest(
@@ -1575,28 +1569,28 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   ) {
     // Use a transaction to ensure all updates are atomic
     db.runTransaction { transaction ->
-      val uidRef = db.collection(usersCollectionPath).document(uid)
-      val fidRef = db.collection(usersCollectionPath).document(fid)
+          val uidRef = db.collection(usersCollectionPath).document(uid)
+          val fidRef = db.collection(usersCollectionPath).document(fid)
 
-      val uidDoc = transaction.get(uidRef)
-      val fidDoc = transaction.get(fidRef)
+          val uidDoc = transaction.get(uidRef)
+          val fidDoc = transaction.get(fidRef)
 
-      // Get current lists
-      val userFriendRequests = uidDoc.data?.get("friendRequests") as? List<String> ?: emptyList()
-      val friendSentRequests = fidDoc.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
+          // Get current lists
+          val userFriendRequests =
+              uidDoc.data?.get("friendRequests") as? List<String> ?: emptyList()
+          val friendSentRequests =
+              fidDoc.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
 
-      // Update lists
-      val newUserFriendRequests = userFriendRequests.filter { it != fid }
-      val newFriendSentRequests = friendSentRequests.filter { it != uid }
+          // Update lists
+          val newUserFriendRequests = userFriendRequests.filter { it != fid }
+          val newFriendSentRequests = friendSentRequests.filter { it != uid }
 
-      // Apply all updates in the transaction
-      transaction.update(uidRef, "friendRequests", newUserFriendRequests)
-      transaction.update(fidRef, "sentFriendRequests", newFriendSentRequests)
-    }.addOnSuccessListener {
-      onSuccess()
-    }.addOnFailureListener { e ->
-      onFailure(e)
-    }
+          // Apply all updates in the transaction
+          transaction.update(uidRef, "friendRequests", newUserFriendRequests)
+          transaction.update(fidRef, "sentFriendRequests", newFriendSentRequests)
+        }
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { e -> onFailure(e) }
   }
 
   /**
@@ -1615,9 +1609,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
     blockedUsersListener?.remove()
 
     // Set up new listener
-    blockedUsersListener = db.collection(usersCollectionPath)
-        .document(uid)
-        .addSnapshotListener { snapshot, error ->
+    blockedUsersListener =
+        db.collection(usersCollectionPath).document(uid).addSnapshotListener { snapshot, error ->
           if (error != null) {
             onError(error)
             return@addSnapshotListener
@@ -1633,26 +1626,23 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                   .whereIn("uid", blockedList)
                   .get()
                   .addOnSuccessListener { querySnapshot ->
-                    val users = querySnapshot.documents.mapNotNull { doc ->
-                      try {
-                        helper.documentSnapshotToUser(doc, null)
-                      } catch (e: Exception) {
-                        null
-                      }
-                    }
+                    val users =
+                        querySnapshot.documents.mapNotNull { doc ->
+                          try {
+                            helper.documentSnapshotToUser(doc, null)
+                          } catch (e: Exception) {
+                            null
+                          }
+                        }
                     onBlockedUsersChanged(users)
                   }
-                  .addOnFailureListener { e ->
-                    onError(e)
-                  }
+                  .addOnFailureListener { e -> onError(e) }
             }
           }
         }
   }
 
-  /**
-   * Stops listening for blocked users changes.
-   */
+  /** Stops listening for blocked users changes. */
   override fun stopListeningForBlockedUsers() {
     blockedUsersListener?.remove()
     blockedUsersListener = null
