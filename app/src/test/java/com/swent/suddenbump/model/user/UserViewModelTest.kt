@@ -26,6 +26,7 @@ import kotlinx.coroutines.test.setMain
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -631,6 +632,8 @@ class UserViewModelTest {
       onSuccess(friendsList)
     }
 
+    userViewModel.setUser(user.copy(uid = "1"), {}, {})
+
     // Act
     runBlocking { userViewModel.loadFriends() }
 
@@ -646,6 +649,8 @@ class UserViewModelTest {
     val exception = Exception(errorMessage)
     val userRepository: UserRepository = mock() // Mock the UserRepository
     userViewModel = UserViewModel(userRepository, chatRepository) // Instantiate the ViewModel
+
+    userViewModel.setUser(user.copy(uid = "1"), {}, {})
 
     // Mock repository method to simulate a failure
     whenever(userRepository.getUserFriends(any(), any(), any())).thenAnswer {
@@ -1078,6 +1083,35 @@ class UserViewModelTest {
     assertEquals(error, failureException)
     // User should still be in blocked list since unblock failed
     assert(userViewModel.getBlockedFriends().value.contains(blockedUser))
+  }
+
+  @Test
+  fun logoutShouldCallRepositoryAndResetViewModelState() = runTest {
+    // Mock repository behavior
+    `when`(userRepository.logoutUser()).then {}
+
+    // Call the logout method
+    userViewModel.logout()
+
+    // Verify repository's logoutUser() is called
+    verify(userRepository).logoutUser()
+
+    // Assert that all ViewModel fields are reset correctly
+    with(userViewModel) {
+      assertEquals(userDummy2, getCurrentUser().value)
+      assertTrue(messages.value.isEmpty())
+      assertTrue(getUserFriends().value.isEmpty())
+      assertTrue(getUserFriendRequests().value.isEmpty())
+      assertTrue(getSentFriendRequests().value.isEmpty())
+      assertTrue(getUserRecommendedFriends().value.isEmpty())
+      assertTrue(getBlockedFriends().value.isEmpty())
+      assertTrue(locationSharedWith.value.isEmpty())
+      assertEquals("", phoneNumber.value)
+      assertTrue(chatSummaries.value.isEmpty())
+      assertEquals("", verificationId.value)
+      assertEquals("", verificationStatus.value)
+      assertEquals(userDummy1, getSelectedContact().value)
+    }
   }
 
   @Test

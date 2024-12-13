@@ -5,7 +5,6 @@ import android.location.Location
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
-import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -17,7 +16,7 @@ import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.network.RetrofitInstance
 import com.swent.suddenbump.ui.utils.isRunningTest
-import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
+import com.swent.suddenbump.worker.WorkerScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -114,6 +113,8 @@ open class UserViewModel(
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
+  private var isScheduled = false
+
   // Change the type to allow null values
   val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
       combine(_user, _userFriends) { user, friends ->
@@ -158,11 +159,18 @@ open class UserViewModel(
    */
   companion object {
     fun provideFactory(context: Context): ViewModelProvider.Factory {
+      val appContext = context.applicationContext
+
       return object : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-          val userRepository = UserRepositoryFirestore(Firebase.firestore, context)
-          return UserViewModel(userRepository, ChatRepositoryFirestore(Firebase.firestore)) as T
+          val preferencesManager = SharedPreferencesManager(appContext)
+          val workerScheduler = WorkerScheduler(appContext)
+          val userRepository =
+              UserRepositoryFirestore(Firebase.firestore, preferencesManager, workerScheduler)
+          val chatRepository = ChatRepositoryFirestore(Firebase.firestore)
+
+          return UserViewModel(userRepository, chatRepository) as T
         }
       }
     }
@@ -177,7 +185,7 @@ open class UserViewModel(
         onSuccess = { user ->
           _user.value = user
           saveUserLoginStatus(_user.value.uid)
-          scheduleLocationUpdateWorker(getApplicationContext(), _user.value.uid)
+          scheduleWorker(_user.value.uid)
           repository.getUserFriends(
               uid = _user.value.uid,
               onSuccess = { friendsList ->
@@ -217,6 +225,7 @@ open class UserViewModel(
    * @param onFailure Called with an exception if the operation fails.
    */
   fun setCurrentUser(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    scheduleWorker(uid)
     repository.getUserAccount(
         uid,
         onSuccess = {
@@ -502,27 +511,29 @@ open class UserViewModel(
   }
 
   fun loadFriends() {
-    repository.getUserFriends(
-        uid = _user.value.uid,
-        onSuccess = { friends ->
-          // Update the state with the locations of friends
-          _userFriends.value = friends
-          Log.d("UserViewModel", "On success load Friends ${_userFriends.value}")
-        },
-        onFailure = { error ->
-          // Handle the error, e.g., log or show error message
-          Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
-        })
-    Log.d("UserViewModel", "Loading sharedLocationWith...")
-    repository.getSharedWithFriends(
-        uid = _user.value.uid,
-        onSuccess = { list ->
-          _locationSharedWith.value = list
-          Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
-        },
-        onFailure = { error ->
-          Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
-        })
+    if (_user.value.uid != userDummy2.uid) {
+      repository.getUserFriends(
+          uid = _user.value.uid,
+          onSuccess = { friends ->
+            // Update the state with the locations of friends
+            _userFriends.value = friends
+            Log.d("UserViewModel", "On success load Friends ${_userFriends.value}")
+          },
+          onFailure = { error ->
+            // Handle the error, e.g., log or show error message
+            Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
+          })
+      Log.d("UserViewModel", "Loading sharedLocationWith...")
+      repository.getSharedWithFriends(
+          uid = _user.value.uid,
+          onSuccess = { list ->
+            _locationSharedWith.value = list
+            Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
+          },
+          onFailure = { error ->
+            Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
+          })
+    }
   }
 
   fun getSelectedContact(): StateFlow<User> {
@@ -604,18 +615,38 @@ open class UserViewModel(
     return false
   }
 
+  /**
+   * Retrieves a new unique identifier (UID).
+   *
+   * @return A new UID as a String.
+   */
   fun getNewUid(): String {
     return repository.getNewUid()
   }
 
+  /**
+   * Saves the user's login status.
+   *
+   * @param userId The unique identifier of the user.
+   */
   fun saveUserLoginStatus(userId: String) {
     repository.saveLoginStatus(userId)
   }
 
+  /**
+   * Retrieves the saved UID of the user.
+   *
+   * @return The saved UID as a String.
+   */
   fun getSavedUid(): String {
     return repository.getSavedUid()
   }
 
+  /**
+   * Checks if the user is logged in.
+   *
+   * @return True if the user is logged in, false otherwise.
+   */
   fun saveRadius(radius: Float) {
     repository.saveRadius(radius)
   }
@@ -636,8 +667,23 @@ open class UserViewModel(
     return repository.isUserLoggedIn()
   }
 
+  /** Logs out the current user and resets the ViewModel state. */
   fun logout() {
     repository.logoutUser()
+    _user.value = userDummy2
+    _messages.value = emptyList()
+    _userFriends.value = emptyList()
+    _userFriendRequests.value = emptyList()
+    _sentFriendRequests.value = emptyList()
+    _recommendedFriends.value = emptyList()
+    _blockedFriends.value = emptyList()
+    _locationSharedWith.value = emptyList()
+    _phoneNumber.value = ""
+    _chatSummaries.value = emptyList()
+    _verificationId.value = ""
+    _verificationStatus.value = ""
+    _userProfilePictureChanging.value = false
+    _selectedContact.value = userDummy1
   }
 
   private val _messages = MutableStateFlow<List<Message>>(emptyList())
@@ -798,5 +844,9 @@ open class UserViewModel(
           },
           onFailure = onFailure)
     }
+  }
+
+  fun scheduleWorker(uid: String) {
+    repository.scheduleWorker(uid)
   }
 }

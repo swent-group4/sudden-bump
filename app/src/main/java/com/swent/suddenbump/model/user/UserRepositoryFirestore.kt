@@ -1,6 +1,5 @@
 package com.swent.suddenbump.model.user
 
-import android.content.Context
 import android.location.Location
 import android.location.LocationManager
 import android.util.Log
@@ -22,10 +21,9 @@ import com.google.gson.reflect.TypeToken
 import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
+import com.swent.suddenbump.worker.WorkerScheduler
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 
 /**
  * A Firebase Firestore-backed implementation of the UserRepository interface, managing user
@@ -35,8 +33,11 @@ import kotlinx.coroutines.tasks.await
  * @property db The Firestore database instance used to perform CRUD operations.
  * @property context Application context, used for accessing shared preferences.
  */
-class UserRepositoryFirestore(private val db: FirebaseFirestore, private val context: Context) :
-    UserRepository {
+class UserRepositoryFirestore(
+    private val db: FirebaseFirestore,
+    private val sharedPreferencesManager: SharedPreferencesManager,
+    private val workerScheduler: WorkerScheduler
+) : UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
   val helper = UserRepositoryFirestoreHelper()
@@ -51,9 +52,6 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
 
   private lateinit var verificationId: String
-
-  private val sharedPreferences =
-      context.getSharedPreferences("SuddenBumpLocalDB", Context.MODE_PRIVATE)
 
   /**
    * Initializes the repository by setting up the image repository.
@@ -896,8 +894,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           if (result.data?.get("blockedList") == null) {
             emptyList<User>()
           } else {
-            onSuccess(
-                documentSnapshotToUserList(result.data?.get("blockedList").toString(), onFailure))
+            documentSnapshotToUserList(
+                result.data?.get("blockedList").toString(), onSuccess = { onSuccess(it) })
           }
         }
   }
@@ -1095,11 +1093,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    * @param uid The unique identifier of the user to save.
    */
   override fun saveLoginStatus(uid: String) {
-    with(sharedPreferences.edit()) {
-      putBoolean("isLoggedIn", true)
-      putString("userId", uid)
-      apply()
-    }
+    sharedPreferencesManager.saveBoolean("isLoggedIn", true)
+    sharedPreferencesManager.saveString("userId", uid)
   }
 
   /**
@@ -1108,13 +1103,13 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    * @return The saved user ID as a String, or an empty string if no user is logged in.
    */
   override fun getSavedUid(): String {
-    return sharedPreferences.getString("userId", null) ?: ""
+    return sharedPreferencesManager.getString("userId")
   }
 
   override fun saveNotifiedFriends(friendsUID: List<String>) {
     val gson = Gson()
     val jsonString = gson.toJson(friendsUID) // Convert list to JSON string
-    sharedPreferences.edit().putString("notified_friends", jsonString).apply()
+    sharedPreferencesManager.saveString("notified_friends", jsonString)
   }
 
   /**
@@ -1124,8 +1119,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    */
   override fun getSavedAlreadyNotifiedFriends(): List<String> {
     val gson = Gson()
-    val jsonString = sharedPreferences.getString("notified_friends", null)
-    return if (jsonString != null) {
+    val jsonString = sharedPreferencesManager.getString("notified_friends")
+    return if (jsonString != "") {
       gson.fromJson(jsonString, object : TypeToken<List<String>>() {}.type)
     } else {
       emptyList() // Return an empty list if no data is found
@@ -1133,25 +1128,19 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
   }
 
   override fun saveRadius(radius: Float) {
-    with(sharedPreferences.edit()) {
-      putString("radius", radius.toString())
-      apply()
-    }
+    sharedPreferencesManager.saveString("radius", radius.toString())
   }
 
   override fun getSavedRadius(): Float {
-    return sharedPreferences.getString("radius", "5.0")!!.toFloat()
+    return sharedPreferencesManager.getString("radius", "5.0").toFloat()
   }
 
   override fun saveNotificationStatus(status: Boolean) {
-    with(sharedPreferences.edit()) {
-      putBoolean("notificationStatus", status)
-      apply()
-    }
+    sharedPreferencesManager.saveBoolean("notificationStatus", status)
   }
 
   override fun getSavedNotificationStatus(): Boolean {
-    return sharedPreferences.getBoolean("notificationStatus", true)
+    return sharedPreferencesManager.getBoolean("notificationStatus", true)
   }
 
   /**
@@ -1160,18 +1149,15 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    * @return `true` if the user is logged in, `false` otherwise.
    */
   override fun isUserLoggedIn(): Boolean {
-    return sharedPreferences.getBoolean("isLoggedIn", false)
+    return sharedPreferencesManager.getBoolean("isLoggedIn")
   }
 
   /**
    * Logs out the current user by updating shared preferences to remove login status and user ID.
    */
   override fun logoutUser() {
-    with(sharedPreferences.edit()) {
-      putBoolean("isLoggedIn", false)
-      putString("userId", null)
-      apply()
-    }
+    workerScheduler.unscheduleLocationUpdateWorker()
+    sharedPreferencesManager.clearPreferences()
   }
 
   /**
@@ -1306,9 +1292,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           if (result.data?.get("locationSharedBy") == null) {
             emptyList<User>()
           } else {
-            onSuccess(
-                documentSnapshotToUserList(
-                    result.data?.get("locationSharedBy").toString(), onFailure))
+            documentSnapshotToUserList(
+                result.data?.get("locationSharedBy").toString(), onSuccess = { onSuccess(it) })
           }
         }
   }
@@ -1333,9 +1318,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           if (result.data?.get("locationSharedWith") == null) {
             emptyList<User>()
           } else {
-            onSuccess(
-                documentSnapshotToUserList(
-                    result.data?.get("locationSharedWith").toString(), onFailure))
+            documentSnapshotToUserList(
+                result.data?.get("locationSharedWith").toString(), onSuccess = { onSuccess(it) })
           }
         }
   }
@@ -1350,30 +1334,39 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
    */
   private fun documentSnapshotToUserList(
       uidJsonList: String,
-      onFailure: (Exception) -> Unit
-  ): List<User> {
+      onSuccess: (List<User>) -> Unit,
+  ) {
     val uidList = helper.documentSnapshotToList(uidJsonList)
-    val userList = emptyList<User>().toMutableList()
 
-    for (uid in uidList) {
-      runBlocking {
-        try {
-          val documentSnapshot = db.collection(usersCollectionPath).document(uid).get().await()
+    val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
+    println(tasks.toString())
+    Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
+      var counterFriend = 0
+      var friendsListMutable = emptyList<User>()
+      for (doc in documents) {
+        var profilePicture: ImageBitmap? = null
+        val path = helper.uidToProfilePicturePath(doc.data!!["uid"].toString(), profilePicturesRef)
+        imageRepository.downloadImageAsync(
+            path,
+            onSuccess = { image ->
+              profilePicture = image
+              val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
+              friendsListMutable = friendsListMutable + userFriend
 
-          if (documentSnapshot.exists()) {
-            val path = helper.uidToProfilePicturePath(uid, profilePicturesRef)
-            var profilePicture: ImageBitmap? = null
-            imageRepository.downloadImage(
-                path, onSuccess = { pp -> profilePicture = pp }, onFailure = { e -> onFailure(e) })
-            val user = helper.documentSnapshotToUser(documentSnapshot, profilePicture)
-            userList += user
-          } else {}
-        } catch (e: Exception) {
-          Log.e(logTag, e.toString())
-        }
+              counterFriend++
+              if (counterFriend == documents.size) {
+                onSuccess(friendsListMutable)
+              }
+            },
+            onFailure = {
+              Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
+              counterFriend++
+              if (counterFriend == documents.size) {
+                onSuccess(friendsListMutable)
+              }
+            })
       }
     }
-    return userList
   }
 
   override fun unblockUser(
@@ -1397,6 +1390,10 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
               .addOnFailureListener { e -> onFailure(e) }
         }
         .addOnFailureListener { e -> onFailure(e) }
+  }
+
+  override fun scheduleWorker(uid: String) {
+    workerScheduler.scheduleWorker(uid)
   }
 }
 

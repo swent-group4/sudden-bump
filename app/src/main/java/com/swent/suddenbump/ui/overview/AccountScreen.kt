@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.overview
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,19 +10,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.utils.AccountOption
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
 @Composable
-fun AccountScreen(navigationActions: NavigationActions) {
+fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   var selectedLanguage by remember { mutableStateOf("English") }
   var isLanguageMenuExpanded by remember { mutableStateOf(false) }
+
+  val context = LocalContext.current
 
   Scaffold(
       modifier = Modifier.testTag("accountScreen"),
@@ -73,7 +79,11 @@ fun AccountScreen(navigationActions: NavigationActions) {
                 AccountOption(
                     label = "Log out",
                     backgroundColor = Pink40,
-                    onClick = { navigationActions.navigateTo("AccountScreen") },
+                    onClick = {
+                      userViewModel.logout()
+                      navigationActions.navigateTo(Route.AUTH)
+                      Toast.makeText(context, "Logged out successfully !", Toast.LENGTH_LONG).show()
+                    },
                     testTag = "logoutSection")
               }
             }

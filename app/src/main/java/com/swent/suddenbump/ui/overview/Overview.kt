@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +56,8 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
@@ -62,8 +65,15 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
   val currentUser by userViewModel.getCurrentUser().collectAsState()
   val groupedFriends by userViewModel.groupedFriends.collectAsState()
 
+  val context = LocalContext.current
+
   // Charge les emplacements des amis lorsque l'écran est composé
-  LaunchedEffect(Unit) { userViewModel.loadFriends() }
+  LaunchedEffect(Unit) {
+    CoroutineScope(Dispatchers.IO).launch {
+      Log.i("FirebaseDownload", "Request made !")
+      userViewModel.loadFriends()
+    }
+  }
 
   Scaffold(
       topBar = {
@@ -171,6 +181,7 @@ fun CategoryHeader(category: DistanceCategory) {
             modifier = Modifier.padding(start = 8.dp))
       }
 }
+
 // Modify UserRow to fetch and display city and country
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable

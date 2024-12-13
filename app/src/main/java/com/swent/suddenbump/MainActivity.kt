@@ -18,9 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -63,7 +61,11 @@ import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.overview.SettingsScreen
 import com.swent.suddenbump.ui.theme.SampleAppTheme
 import com.swent.suddenbump.ui.utils.isRunningTest
-import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
+import com.swent.suddenbump.ui.utils.isUsingMockViewModel
+import com.swent.suddenbump.ui.utils.testableMeetingViewModel
+import com.swent.suddenbump.ui.utils.testableUserViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import okhttp3.OkHttpClient
 
 class MainActivity : ComponentActivity() {
@@ -72,9 +74,11 @@ class MainActivity : ComponentActivity() {
 
   private lateinit var locationPermissionLauncher: ActivityResultLauncher<Array<String>>
   private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
-  private lateinit var locationGetter: LocationGetter
-  private var newLocation by mutableStateOf<Location?>(null)
-  private val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
+  lateinit var locationGetter: LocationGetter
+  var newLocation = MutableStateFlow<Pair<Double, Double>?>(null)
+  private val userViewModelActivity: UserViewModel by viewModels {
+    UserViewModel.provideFactory(applicationContext)
+  }
 
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,7 +90,13 @@ class MainActivity : ComponentActivity() {
             object : LocationGetter.LocationListener {
               override fun onLocationResult(location: Location?) {
                 // Handle location update
-                newLocation = location
+                location?.let {
+                  val coordinatesPair = it.latitude to it.longitude
+                  if (coordinatesPair != newLocation.value) {
+                    Log.d("UserViewModel", "UPDATING")
+                    newLocation.value = coordinatesPair
+                  }
+                }
               }
 
               override fun onLocationFailure(message: String) {
@@ -149,8 +159,8 @@ class MainActivity : ComponentActivity() {
   override fun onStart() {
     super.onStart()
     // Update online status when the activity starts
-    userViewModel.updateUserStatus(
-        uid = userViewModel.getCurrentUser().value.uid,
+    userViewModelActivity.updateUserStatus(
+        uid = userViewModelActivity.getCurrentUser().value.uid,
         status = true,
         onSuccess = { Log.d("UserStatus", "Online status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
@@ -159,8 +169,8 @@ class MainActivity : ComponentActivity() {
   override fun onStop() {
     super.onStop()
     // Update offline status when the activity stops
-    userViewModel.updateUserStatus(
-        uid = userViewModel.getCurrentUser().value.uid,
+    userViewModelActivity.updateUserStatus(
+        uid = userViewModelActivity.getCurrentUser().value.uid,
         status = false,
         onSuccess = { Log.d("UserStatus", "Offline status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
@@ -169,8 +179,8 @@ class MainActivity : ComponentActivity() {
   override fun onResume() {
     // Update online status when the activity resumes
     super.onResume()
-    userViewModel.updateUserStatus(
-        uid = userViewModel.getCurrentUser().value.uid,
+    userViewModelActivity.updateUserStatus(
+        uid = userViewModelActivity.getCurrentUser().value.uid,
         status = true,
         onSuccess = { Log.d("UserStatus", "Online status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
@@ -179,8 +189,8 @@ class MainActivity : ComponentActivity() {
   override fun onDestroy() {
     // Update offline status when the activity is destroyed
     super.onDestroy()
-    userViewModel.updateUserStatus(
-        uid = userViewModel.getCurrentUser().value.uid,
+    userViewModelActivity.updateUserStatus(
+        uid = userViewModelActivity.getCurrentUser().value.uid,
         status = false,
         onSuccess = { Log.d("UserStatus", "Offline status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating offline status: ${e.message}") })
@@ -215,12 +225,30 @@ class MainActivity : ComponentActivity() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
 
-    val meetingViewModel: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
     val locationViewModel = LocationViewModel(NominatimLocationRepository(OkHttpClient()))
-    val userViewModel: UserViewModel by viewModels { UserViewModel.provideFactory(this) }
+    val meetingViewModelFactory: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
+    val meetingViewModel: MeetingViewModel =
+        if (isUsingMockViewModel) testableMeetingViewModel else meetingViewModelFactory
+    val userViewModelFactory: UserViewModel by viewModels {
+      UserViewModel.provideFactory(applicationContext)
+    }
+    val userViewModel: UserViewModel =
+        if (isUsingMockViewModel) testableUserViewModel else userViewModelFactory
 
-    newLocation?.let { it1 ->
-      userViewModel.updateLocation(location = it1, onSuccess = {}, onFailure = {})
+    LaunchedEffect(newLocation.asStateFlow()) {
+      Log.d("UserviewModel", "coordinates : $newLocation")
+      newLocation.asStateFlow().collect { newValue ->
+        newValue?.let { (latitudeCoord, longitudeCoord) ->
+          userViewModel.updateLocation(
+              location =
+                  Location("GPS").apply {
+                    latitude = latitudeCoord // Latitude fictive
+                    longitude = longitudeCoord // Longitude fictive
+                  },
+              onSuccess = {},
+              onFailure = {})
+        }
+      }
     }
 
     val startRoute =
@@ -233,8 +261,6 @@ class MainActivity : ComponentActivity() {
                 Log.i("MainActivity", "User set: ${userViewModel.getCurrentUser().value}")
               },
               onFailure = { e -> Log.e("MainActivity", e.toString()) })
-          // Schedule the LocationUpdateWorker
-          scheduleLocationUpdateWorker(this, uid)
           Route.OVERVIEW
         } else {
           Route.AUTH
@@ -258,9 +284,6 @@ class MainActivity : ComponentActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
               checkNotificationPermission()
             }
-          }
-          newLocation?.let { it1 ->
-            userViewModel.updateLocation(location = it1, onSuccess = {}, onFailure = {})
           }
           OverviewScreen(navigationActions, userViewModel)
         }
@@ -305,7 +328,7 @@ class MainActivity : ComponentActivity() {
       }
 
       // Add new screens from Settings.kt
-      composable("AccountScreen") { AccountScreen(navigationActions) }
+      composable("AccountScreen") { AccountScreen(navigationActions, userViewModel) }
       composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
       composable("BlockedUsersScreen") { BlockedUsersScreen(navigationActions, userViewModel) }
     }

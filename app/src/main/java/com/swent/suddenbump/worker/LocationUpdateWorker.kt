@@ -12,6 +12,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.swent.suddenbump.model.meeting.MeetingRepositoryFirestore
+import com.swent.suddenbump.model.user.SharedPreferencesManager
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.ui.calendar.showMeetingScheduledNotification
@@ -48,7 +49,11 @@ class LocationUpdateWorker(
         // Get the current location
         val location: Location = getCurrentLocation()
         // Initialize UserRepository
-        val repository = UserRepositoryFirestore(Firebase.firestore, applicationContext)
+        val repository =
+            UserRepositoryFirestore(
+                Firebase.firestore,
+                SharedPreferencesManager(applicationContext),
+                WorkerScheduler(applicationContext))
         val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
         val alreadyNotifiedFriends = repository.getSavedAlreadyNotifiedFriends().toMutableList()
 
