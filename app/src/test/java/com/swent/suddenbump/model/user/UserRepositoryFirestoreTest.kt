@@ -131,7 +131,7 @@ class UserRepositoryFirestoreTest {
           uid = "1",
           firstName = "Alexandre",
           lastName = "Carel",
-          phoneNumber = "+33 6 59 20 70 02",
+          phoneNumber = "+33659207002",
           null,
           emailAddress = "alexandre.carel@epfl.ch",
           lastKnownLocation = location)
