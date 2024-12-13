@@ -35,6 +35,7 @@ import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 @Composable
 fun BlockedUsersScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val blockedUsers = userViewModel.getBlockedFriends().collectAsState()
+  val currentUser = userViewModel.getCurrentUser().collectAsState()
 
   Scaffold(
       modifier = Modifier.testTag("blockedUsersScreen"),
@@ -52,9 +53,10 @@ fun BlockedUsersScreen(navigationActions: NavigationActions, userViewModel: User
               } else {
                 BlockedUsersList(
                     blockedUsers = blockedUsers.value,
-                    onUnblock = { user ->
+                    onUnblock = { blockedUser ->
                       userViewModel.unblockUser(
-                          blockedUser = user,
+                          user = currentUser.value,
+                          blockedUser = blockedUser,
                           onSuccess = {
                             // The list will be automatically updated through the StateFlow
                           },

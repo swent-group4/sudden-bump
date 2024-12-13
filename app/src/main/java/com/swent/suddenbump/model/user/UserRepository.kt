@@ -211,6 +211,76 @@ interface UserRepository {
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
+
+  fun startListeningForFriendRequests(
+      uid: String,
+      onFriendRequestsChanged: (List<User>) -> Unit,
+      onError: (Exception) -> Unit
+  )
+
+  fun stopListeningForFriendRequests()
+
+  /**
+   * Starts listening for sent friend request changes in real-time.
+   *
+   * @param uid The user ID to listen for sent friend request changes
+   * @param onSentRequestsChanged Callback when sent friend requests change
+   * @param onError Callback when an error occurs
+   */
+  fun startListeningForSentRequests(
+      uid: String,
+      onSentRequestsChanged: (List<User>) -> Unit,
+      onError: (Exception) -> Unit
+  )
+
+  /** Stops listening for sent friend request changes. */
+  fun stopListeningForSentRequests()
+
+  /**
+   * Starts listening for blocked users changes in real-time.
+   *
+   * @param uid The user ID to listen for blocked users changes
+   * @param onBlockedUsersChanged Callback when blocked users list changes
+   * @param onError Callback when an error occurs
+   */
+  fun startListeningForBlockedUsers(
+      uid: String,
+      onBlockedUsersChanged: (List<User>) -> Unit,
+      onError: (Exception) -> Unit
+  )
+
+  /** Stops listening for blocked users changes. */
+  fun stopListeningForBlockedUsers()
+
+  /**
+   * Accepts a friend request from another user.
+   *
+   * @param uid The user ID accepting the friend request
+   * @param fid The friend ID whose request is being accepted
+   * @param onSuccess Called when the friend request is successfully accepted
+   * @param onFailure Called with an exception if acceptance fails
+   */
+  fun acceptFriendRequest(
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
+  /**
+   * Declines a friend request from another user.
+   *
+   * @param uid The user ID declining the friend request
+   * @param fid The friend ID whose request is being declined
+   * @param onSuccess Called when the friend request is successfully declined
+   * @param onFailure Called with an exception if declining fails
+   */
+  fun declineFriendRequest(
+      uid: String,
+      fid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 }
 
 data class UserWithFriendsInCommon(val user: User, val friendsInCommon: Int)

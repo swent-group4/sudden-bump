@@ -16,7 +16,6 @@ import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
 import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.network.RetrofitInstance
-import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.worker.WorkerScheduler.scheduleLocationUpdateWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -82,18 +81,14 @@ open class UserViewModel(
           "martin.vetterli@epfl.ch",
           locationDummy)
 
-  private val _user: MutableStateFlow<User> = MutableStateFlow(userDummy2)
+  private val _user = MutableStateFlow<User>(userDummy2)
 
-  private val _userFriendRequests: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(userDummy1))
-  private val _sentFriendRequests: MutableStateFlow<List<User>> =
-      MutableStateFlow(listOf(userDummy1))
-  private val _userFriends: MutableStateFlow<List<User>> =
-      if (!isRunningTest()) MutableStateFlow(emptyList()) else MutableStateFlow(listOf(testUser))
-  private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
-      if (!isRunningTest()) MutableStateFlow(emptyList())
-      else MutableStateFlow(listOf(UserWithFriendsInCommon(userDummy1, 1)))
-  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
+  private val _userFriendRequests = MutableStateFlow<List<User>>(emptyList())
+  private val _userSentFriendRequests = MutableStateFlow<List<User>>(emptyList())
+  private val _userFriends = MutableStateFlow<List<User>>(emptyList())
+  private val _blockedFriends = MutableStateFlow<List<User>>(emptyList())
+  private val _recommendedFriends = MutableStateFlow<List<UserWithFriendsInCommon>>(emptyList())
+
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
   private val _friendIsOnline: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -148,6 +143,12 @@ open class UserViewModel(
   /** Initializes the ViewModel by configuring the repository. */
   init {
     repository.init { Log.i(logTag, "Repository successfully initialized!") }
+    // Start listening for friend requests when ViewModel is created
+    getCurrentUser().value?.let { user ->
+      startListeningForFriendRequests(user.uid)
+      startListeningForSentRequests(user.uid)
+      startListeningForBlockedUsers(user.uid)
+    }
   }
 
   /**
@@ -193,7 +194,7 @@ open class UserViewModel(
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getSentFriendRequests(
               uid = _user.value.uid,
-              onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
+              onSuccess = { sentRequestsList -> _userSentFriendRequests.value = sentRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getUserFriendRequests(
               uid = _user.value.uid,
@@ -237,7 +238,7 @@ open class UserViewModel(
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getSentFriendRequests(
               uid = _user.value.uid,
-              onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
+              onSuccess = { sentRequestsList -> _userSentFriendRequests.value = sentRequestsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getUserFriendRequests(
               uid = _user.value.uid,
@@ -261,8 +262,18 @@ open class UserViewModel(
    * @param onFailure Called with an exception if the update fails.
    */
   fun setUser(user: User, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-    _user.value = user
-    repository.updateUserAccount(user, onSuccess, onFailure)
+    repository.updateUserAccount(
+        user,
+        onSuccess = {
+          _user.value = user
+          // Start listening for updates for the new user
+          startListeningForFriendRequests(user.uid)
+          startListeningForSentRequests(user.uid)
+          startListeningForBlockedUsers(user.uid)
+          onSuccess()
+        },
+        onFailure
+    )
   }
 
   /**
@@ -309,14 +320,20 @@ open class UserViewModel(
    * @param onFailure Called with an exception if the operation fails.
    */
   fun acceptFriendRequest(
-      user: User = _user.value,
+      user: User,
       friend: User,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.createFriend(user.uid, friend.uid, onSuccess, onFailure)
-    _userFriendRequests.value = _userFriendRequests.value.minus(friend)
-    _userFriends.value = _userFriends.value.plus(friend)
+    repository.acceptFriendRequest(
+        user.uid,
+        friend.uid,
+        onSuccess = {
+          // The real-time listeners will handle the state updates
+          onSuccess()
+        },
+        onFailure
+    )
   }
 
   /**
@@ -328,13 +345,20 @@ open class UserViewModel(
    * @param onFailure Called with an exception if the operation fails.
    */
   fun declineFriendRequest(
-      user: User = _user.value,
+      user: User,
       friend: User,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.deleteFriendRequest(user.uid, friend.uid, onSuccess, onFailure)
-    _userFriendRequests.value = _userFriendRequests.value.minus(friend)
+    repository.declineFriendRequest(
+        user.uid,
+        friend.uid,
+        onSuccess = {
+          // The real-time listeners will handle the state updates
+          onSuccess()
+        },
+        onFailure
+    )
   }
 
   /**
@@ -346,13 +370,20 @@ open class UserViewModel(
    * @param onFailure Called with an exception if the operation fails.
    */
   fun sendFriendRequest(
-      user: User = _user.value,
+      user: User,
       friend: User,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    repository.createFriendRequest(user.uid, friend.uid, onSuccess, onFailure)
-    _sentFriendRequests.value = _sentFriendRequests.value.plus(friend)
+    repository.createFriendRequest(
+        user.uid,
+        friend.uid,
+        onSuccess = {
+          // The real-time listeners will handle the state updates
+          onSuccess()
+        },
+        onFailure
+    )
   }
 
   /**
@@ -405,20 +436,41 @@ open class UserViewModel(
   }
 
   fun getSentFriendRequests(): StateFlow<List<User>> {
-    return _sentFriendRequests.asStateFlow()
+    return _userSentFriendRequests.asStateFlow()
   }
 
   fun blockUser(
-      user: User = _user.value,
+      user: User,
       blockedUser: User,
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    _blockedFriends.value = _blockedFriends.value.plus(blockedUser)
-    _userFriends.value = _userFriends.value.minus(blockedUser)
-    _userFriendRequests.value = _userFriendRequests.value.minus(blockedUser)
-    _sentFriendRequests.value = _sentFriendRequests.value.minus(blockedUser)
-    return repository.blockUser(user, blockedUser, onSuccess, onFailure)
+    repository.blockUser(
+        user,
+        blockedUser,
+        onSuccess = {
+          // The real-time listener will handle the state update
+          onSuccess()
+        },
+        onFailure
+    )
+  }
+
+  fun unblockUser(
+      user: User,
+      blockedUser: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.unblockUser(
+        user.uid,
+        blockedUser.uid,
+        onSuccess = {
+          // The real-time listener will handle the state update
+          onSuccess()
+        },
+        onFailure
+    )
   }
 
   fun getBlockedFriends(): StateFlow<List<User>> {
@@ -782,21 +834,72 @@ open class UserViewModel(
     repository.getSharedByFriends(uid, onSuccess, onFailure)
   }
 
-  fun unblockUser(
-      blockedUser: User,
-      onSuccess: () -> Unit = {},
-      onFailure: (Exception) -> Unit = {}
-  ) {
-    viewModelScope.launch {
-      repository.unblockUser(
-          currentUserId = _user.value.uid,
-          blockedUserId = blockedUser.uid,
-          onSuccess = {
-            // Remove user from blocked list in local state
-            _blockedFriends.value = _blockedFriends.value.filter { it.uid != blockedUser.uid }
-            onSuccess()
-          },
-          onFailure = onFailure)
-    }
+  /**
+   * Starts listening for friend request changes in real-time.
+   *
+   * @param uid The user ID to listen for friend request changes
+   */
+  private fun startListeningForFriendRequests(uid: String) {
+    repository.startListeningForFriendRequests(
+        uid,
+        onFriendRequestsChanged = { requests ->
+          _userFriendRequests.value = requests
+        },
+        onError = { e ->
+          Log.e("UserViewModel", "Error listening for friend requests", e)
+        }
+    )
+  }
+
+  /**
+   * Starts listening for sent friend request changes in real-time.
+   *
+   * @param uid The user ID to listen for sent friend request changes
+   */
+  private fun startListeningForSentRequests(uid: String) {
+    repository.startListeningForSentRequests(
+        uid,
+        onSentRequestsChanged = { requests ->
+          _userSentFriendRequests.value = requests
+        },
+        onError = { e ->
+          Log.e("UserViewModel", "Error listening for sent friend requests", e)
+        }
+    )
+  }
+
+  /**
+   * Starts listening for blocked users changes in real-time.
+   *
+   * @param uid The user ID to listen for blocked users changes
+   */
+  private fun startListeningForBlockedUsers(uid: String) {
+    repository.startListeningForBlockedUsers(
+        uid,
+        onBlockedUsersChanged = { users ->
+          _blockedFriends.value = users
+        },
+        onError = { e ->
+          Log.e("UserViewModel", "Error listening for blocked users", e)
+        }
+    )
+  }
+
+  override fun onCleared() {
+    super.onCleared()
+    // Stop listening when ViewModel is cleared
+    repository.stopListeningForFriendRequests()
+    repository.stopListeningForSentRequests()
+    repository.stopListeningForBlockedUsers()
+  }
+
+  fun updateRecommendedFriends(user: User, onFailure: (Exception) -> Unit = {}) {
+    repository.getRecommendedFriends(
+        user.uid,
+        onSuccess = { recommended ->
+          _recommendedFriends.value = recommended
+        },
+        onFailure
+    )
   }
 }
