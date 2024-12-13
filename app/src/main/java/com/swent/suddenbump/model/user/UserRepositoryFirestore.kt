@@ -748,7 +748,7 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
       onSuccess: (List<UserWithFriendsInCommon>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    // Fetch the user's friends list and blocked list from the database
+    // Fetch the user's friends list, blocked list, and friend requests from the database
     db.collection(usersCollectionPath)
         .document(uid)
         .get()
@@ -757,6 +757,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
           val currentUserFriendsList =
               userDocument.data?.get("friendsList") as? List<String> ?: emptyList()
           val blockedList = userDocument.data?.get("blockedList") as? List<String> ?: emptyList()
+          val friendRequests =
+              userDocument.data?.get("friendRequests") as? List<String> ?: emptyList()
 
           // Fetch all users from the database
           db.collection(usersCollectionPath)
@@ -775,6 +777,8 @@ class UserRepositoryFirestore(private val db: FirebaseFirestore, private val con
                       if (document.id != uid &&
                           document.id !in currentUserFriendsList &&
                           document.id !in blockedList &&
+                          document.id !in
+                              friendRequests && // Exclude users who sent friend requests
                           uid !in otherUserBlockedList) {
                         // Calculate number of friends in common
                         val commonFriendsCount =
