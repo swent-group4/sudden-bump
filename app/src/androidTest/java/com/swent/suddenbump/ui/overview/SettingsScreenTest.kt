@@ -75,8 +75,8 @@ class SettingsScreenTest {
 
     // Verify other required components
     composeTestRule.onNodeWithTag("profilePicture").assertIsDisplayed()
-      composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-      composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
   }
 
   @Test
@@ -135,77 +135,77 @@ class SettingsScreenTest {
     verify(navigationActions).navigateTo("DiscussionsScreen")
   }
 
-    @Test
-    fun addPhotoButtonIsDisplayedWhenProfilePictureIsNull() {
-        val userWithoutProfilePicture =
-            User(
-                uid = "2",
-                firstName = "Test",
-                lastName = "User",
-                phoneNumber = "+1234567891",
-                profilePicture = null,
-                emailAddress = "test.user@example.com",
-                lastKnownLocation = MutableStateFlow(locationDummy))
-        userViewModel.setUser(userWithoutProfilePicture, {}, {})
+  @Test
+  fun addPhotoButtonIsDisplayedWhenProfilePictureIsNull() {
+    val userWithoutProfilePicture =
+        User(
+            uid = "2",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "+1234567891",
+            profilePicture = null,
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(userWithoutProfilePicture, {}, {})
 
-        setContentDefault()
-        composeTestRule.waitForIdle()
+    setContentDefault()
+    composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
-    }
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+  }
 
-    @Test
-    fun removePhotoButtonClearsProfilePicture() {
-        val userWithProfilePicture =
-            User(
-                uid = "3",
-                firstName = "Alice",
-                lastName = "Brown",
-                phoneNumber = "+1234567892",
-                profilePicture = ImageBitmap(100, 100),
-                emailAddress = "alice.brown@example.com",
-                lastKnownLocation = MutableStateFlow(locationDummy))
-        userViewModel.setUser(userWithProfilePicture, {}, {})
+  @Test
+  fun removePhotoButtonClearsProfilePicture() {
+    val userWithProfilePicture =
+        User(
+            uid = "3",
+            firstName = "Alice",
+            lastName = "Brown",
+            phoneNumber = "+1234567892",
+            profilePicture = ImageBitmap(100, 100),
+            emailAddress = "alice.brown@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(userWithProfilePicture, {}, {})
 
-        setContentDefault()
-        composeTestRule.waitForIdle()
+    setContentDefault()
+    composeTestRule.waitForIdle()
 
-        // Perform click on the remove photo button
-        composeTestRule.onNodeWithTag("removePhotoButton").performClick()
+    // Perform click on the remove photo button
+    composeTestRule.onNodeWithTag("removePhotoButton").performClick()
 
-        // Verify that the profile picture is cleared
-        composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("nullProfilePicture").assertIsDisplayed()
-    }
+    // Verify that the profile picture is cleared
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("nullProfilePicture").assertIsDisplayed()
+  }
 
-    @Test
-    fun addPhotoButtonTransitionsToEditPhotoAfterAddingPicture() {
-        setContentDefault()
-        composeTestRule.waitForIdle()
+  @Test
+  fun addPhotoButtonTransitionsToEditPhotoAfterAddingPicture() {
+    setContentDefault()
+    composeTestRule.waitForIdle()
 
-        // Verify initial state
-        composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+    // Verify initial state
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
 
-        // Simulate adding a photo
-        val userWithProfilePicture =
-            User(
-                uid = "4",
-                firstName = "Bob",
-                lastName = "Smith",
-                phoneNumber = "+1234567893",
-                profilePicture = ImageBitmap(100, 100),
-                emailAddress = "bob.smith@example.com",
-                lastKnownLocation = MutableStateFlow(locationDummy))
-        userViewModel.setUser(userWithProfilePicture, {}, {})
+    // Simulate adding a photo
+    val userWithProfilePicture =
+        User(
+            uid = "4",
+            firstName = "Bob",
+            lastName = "Smith",
+            phoneNumber = "+1234567893",
+            profilePicture = ImageBitmap(100, 100),
+            emailAddress = "bob.smith@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(userWithProfilePicture, {}, {})
 
-        composeTestRule.waitForIdle()
+    composeTestRule.waitForIdle()
 
-        // Verify transition to edit photo state
-        composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
-        composeTestRule.onNodeWithTag("removePhotoButton").assertIsDisplayed()
-    }
+    // Verify transition to edit photo state
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("removePhotoButton").assertIsDisplayed()
+  }
 }

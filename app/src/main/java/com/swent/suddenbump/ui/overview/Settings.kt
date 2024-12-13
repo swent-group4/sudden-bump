@@ -35,11 +35,11 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.DividerColor
 import com.swent.suddenbump.ui.theme.Purple40
+import com.swent.suddenbump.ui.theme.VibrantPurple
+import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 import com.yalantis.ucrop.UCrop
 import java.io.File
 import kotlinx.coroutines.launch
-import com.swent.suddenbump.ui.theme.VibrantPurple
-import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,9 +49,9 @@ fun SettingsScreen(
     meetingViewModel: MeetingViewModel,
     uri: Uri? = null
 ) {
-    var notificationsEnabled by remember {
-        mutableStateOf(userViewModel.getSavedNotificationStatus())
-    }
+  var notificationsEnabled by remember {
+    mutableStateOf(userViewModel.getSavedNotificationStatus())
+  }
   var radius by remember { mutableStateOf(userViewModel.getSavedRadius()) }
 
   Scaffold(
