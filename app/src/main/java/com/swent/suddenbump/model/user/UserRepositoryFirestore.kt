@@ -1130,25 +1130,19 @@ class UserRepositoryFirestore(
   }
 
   override fun saveRadius(radius: Float) {
-    with(sharedPreferences.edit()) {
-      putString("radius", radius.toString())
-      apply()
-    }
+    sharedPreferencesManager.saveString("radius", radius.toString())
   }
 
   override fun getSavedRadius(): Float {
-    return sharedPreferences.getString("radius", "5.0")!!.toFloat()
+    return sharedPreferencesManager.getString("radius", "5.0").toFloat()
   }
 
   override fun saveNotificationStatus(status: Boolean) {
-    with(sharedPreferences.edit()) {
-      putBoolean("notificationStatus", status)
-      apply()
-    }
+    sharedPreferencesManager.saveBoolean("notificationStatus", status)
   }
 
   override fun getSavedNotificationStatus(): Boolean {
-    return sharedPreferences.getBoolean("notificationStatus", true)
+    return sharedPreferencesManager.getBoolean("notificationStatus", true)
   }
 
   /**

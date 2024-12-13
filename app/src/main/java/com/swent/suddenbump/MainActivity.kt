@@ -73,9 +73,9 @@ class MainActivity : ComponentActivity() {
   private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
   private lateinit var locationGetter: LocationGetter
   private var newLocation by mutableStateOf<Location?>(null)
-    val userViewModel: UserViewModel by viewModels {
-        UserViewModel.provideFactory(applicationContext)
-    }
+  val userViewModel: UserViewModel by viewModels {
+    UserViewModel.provideFactory(applicationContext)
+  }
 
   @SuppressLint("SuspiciousIndentation")
   override fun onCreate(savedInstanceState: Bundle?) {

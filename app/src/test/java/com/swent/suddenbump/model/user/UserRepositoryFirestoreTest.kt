@@ -42,6 +42,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.MockedStatic
@@ -153,12 +154,21 @@ class UserRepositoryFirestoreTest {
     `when`(sharedPreferences.edit()).thenReturn(sharedPreferencesEditor)
     `when`(sharedPreferencesEditor.putString(anyString(), anyString()))
         .thenReturn(sharedPreferencesEditor)
+    `when`(sharedPreferencesEditor.putBoolean(anyString(), anyBoolean()))
+        .thenReturn(sharedPreferencesEditor)
 
     `when`(mockSharedPreferencesManager.saveString(anyString(), anyString())).thenAnswer {
         invocation ->
       val key = invocation.arguments[0] as String
       val value = invocation.arguments[1] as String
       sharedPreferencesEditor.putString(key, value).apply()
+    }
+
+    `when`(mockSharedPreferencesManager.saveBoolean(anyString(), anyBoolean())).thenAnswer {
+        invocation ->
+      val key = invocation.arguments[0] as String
+      val value = invocation.arguments[1] as Boolean
+      sharedPreferencesEditor.putBoolean(key, value).apply()
     }
 
     userRepositoryFirestore =
