@@ -113,9 +113,6 @@ open class UserViewModel(
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
-  private var isScheduled = false
-
-  // Change the type to allow null values
   val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
       combine(_user, _userFriends) { user, friends ->
             // Only compute grouped friends if friends are loaded
@@ -141,7 +138,7 @@ open class UserViewModel(
                 }
               }
             } else {
-              null // Indicate that friends are not yet loaded
+              null// Indicate that friends are not yet loaded
             }
           }
           .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -415,6 +412,26 @@ open class UserViewModel(
 
   fun getSentFriendRequests(): StateFlow<List<User>> {
     return _sentFriendRequests.asStateFlow()
+  }
+  fun deleteFriend(
+        user: User = _user.value,
+        friend: User,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+  ) {
+        repository.deleteFriend(
+            currentUserId = user.uid,
+            friendUserId = friend.uid,
+            onSuccess = {
+                // Update local state
+                _userFriends.value = _userFriends.value.filter { it.uid != friend.uid }
+                onSuccess()
+            },
+            onFailure = { e -> onFailure(e) }
+        )
+      if(isLocationShared(user.uid, friend.uid) == true) {
+        stopSharingLocationWithFriend(user.uid, friend, onSuccess, onFailure)
+      }
   }
 
   fun blockUser(

@@ -72,7 +72,12 @@ interface UserRepository {
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   )
-
+  fun deleteFriend(
+        currentUserId: String,
+        friendUserId: String,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+  )
   fun getUserFriendRequests(
       uid: String,
       onSuccess: (List<User>) -> Unit,
