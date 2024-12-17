@@ -22,14 +22,12 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import io.mockk.mockk
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.verify
 
