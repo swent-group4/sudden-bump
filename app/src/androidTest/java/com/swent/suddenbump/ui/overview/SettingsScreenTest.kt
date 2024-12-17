@@ -1,12 +1,17 @@
 package com.swent.suddenbump.ui.overview
 
+import android.content.Context
+import android.graphics.Bitmap
 import android.location.Location
+import android.net.Uri
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.meeting.MeetingRepository
@@ -16,11 +21,15 @@ import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import io.mockk.mockk
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.verify
 
@@ -60,6 +69,14 @@ class SettingsScreenTest {
           userViewModel = userViewModel,
           meetingViewModel = meetingViewModel)
     }
+  }
+
+  private fun createMockImageUri(context: Context, bitmap: Bitmap): Uri {
+    val file = File(context.cacheDir, "test_image.png")
+    FileOutputStream(file).use { outputStream ->
+      bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+    }
+    return Uri.fromFile(file)
   }
 
   @Test
@@ -207,5 +224,119 @@ class SettingsScreenTest {
     composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
     composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
     composeTestRule.onNodeWithTag("removePhotoButton").assertIsDisplayed()
+  }
+
+  @Test
+  fun launchedEffectUpdatesProfilePictureSuccessfully() {
+    // Arrange: Mock User with no profile picture
+    val initialUser =
+        User(
+            uid = "1",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(initialUser, {}, {})
+
+    // Create a mock Uri for the image
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+    val mockUri = createMockImageUri(context, mockBitmap)
+
+    // Act: Set up the screen and simulate the profile picture Uri update
+    composeTestRule.setContent {
+      SettingsScreen(
+          navigationActions = navigationActions,
+          userViewModel = userViewModel,
+          meetingViewModel = meetingViewModel)
+    }
+
+    composeTestRule.waitForIdle()
+
+    // Trigger the profile picture update (simulate UI behavior)
+    userViewModel.setUser(
+        initialUser.copy(profilePicture = mockBitmap.asImageBitmap()),
+        onSuccess = {},
+        onFailure = {})
+
+    composeTestRule.waitForIdle()
+
+    // Assert: Verify the updated profile picture is displayed
+    composeTestRule.onNodeWithTag("nonNullProfilePicture").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
+  }
+
+  @Test
+  fun launchedEffectHandlesImageLoadingFailureGracefully() {
+    // Arrange: Mock User with no profile picture
+    val initialUser =
+        User(
+            uid = "2",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(initialUser, {}, {})
+
+    // Act: Set up the screen and simulate the failure
+    composeTestRule.setContent {
+      SettingsScreen(
+          navigationActions = navigationActions,
+          userViewModel = userViewModel,
+          meetingViewModel = meetingViewModel)
+    }
+
+    composeTestRule.waitForIdle()
+
+    // Simulate updating the profile picture with the invalid Uri
+    userViewModel.setUser(initialUser.copy(profilePicture = null), onSuccess = {}, onFailure = {})
+
+    // Assert: Verify fallback UI is displayed (no crash occurs)
+    composeTestRule.onNodeWithTag("nullProfilePicture").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+  }
+
+  @Test
+  fun profilePictureUriLoadsSuccessfullyAndUpdatesViewModel() {
+    // Arrange: Mock user and initialize the ViewModel
+    val initialUser =
+        User(
+            uid = "1",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(initialUser, {}, {})
+
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+
+    // Write a bitmap to a temporary file and get its Uri
+    val croppedImageUri = run {
+      val tempFile = File.createTempFile("cropped_image", ".png", context.cacheDir)
+      FileOutputStream(tempFile).use { outputStream ->
+        mockBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+      }
+      Uri.fromFile(tempFile)
+    }
+
+    // Act: Render the ProfileSection composable and simulate the crop result
+    composeTestRule.setContent { ProfileSection(userViewModel = userViewModel) }
+    composeTestRule.waitForIdle()
+
+    // Simulate the result of UCrop being returned
+    composeTestRule.runOnIdle {
+      userViewModel.setUser(initialUser.copy(profilePicture = mockBitmap.asImageBitmap()), {}, {})
+    }
+
+    // Assert: Verify the updated profile picture is displayed
+    composeTestRule.onNodeWithTag("nonNullProfilePicture").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
   }
 }
