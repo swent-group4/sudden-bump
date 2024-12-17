@@ -94,26 +94,24 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                       showDialog = true
                     },
                     text = { Text("Block User") })
-                  if (isFriend) {
-                      DropdownMenuItem(
-                          modifier = Modifier.testTag("deleteFriendButton"),
-                          onClick = {
-                              expanded = false
-                              // Show a confirmation dialog or directly call deleteFriend
-                              // For simplicity, directly call deleteFriend here:
-                              userViewModel.deleteFriend(
-                                  user = userViewModel.getCurrentUser().value,
-                                  friend = user,
-                                  onSuccess = {
-                                      // After deletion, navigate back or update UI
-                                      navigationActions.goBack()
-                                  },
-                                  onFailure = { println("Error deleting friend: ${it.message}") }
-                              )
-                          },
-                          text = { Text("Delete Friend") }
-                      )
-                  }
+                if (isFriend) {
+                  DropdownMenuItem(
+                      modifier = Modifier.testTag("deleteFriendButton"),
+                      onClick = {
+                        expanded = false
+                        // Show a confirmation dialog or directly call deleteFriend
+                        // For simplicity, directly call deleteFriend here:
+                        userViewModel.deleteFriend(
+                            user = userViewModel.getCurrentUser().value,
+                            friend = user,
+                            onSuccess = {
+                              // After deletion, navigate back or update UI
+                              navigationActions.goBack()
+                            },
+                            onFailure = { println("Error deleting friend: ${it.message}") })
+                      },
+                      text = { Text("Delete Friend") })
+                }
               }
             },
             colors =

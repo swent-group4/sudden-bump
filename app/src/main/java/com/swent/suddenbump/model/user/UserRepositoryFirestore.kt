@@ -711,40 +711,40 @@ class UserRepositoryFirestore(
               .addOnFailureListener { e -> onFailure(e) }
         }
   }
-    override fun deleteFriend(
-        currentUserId: String,
-        friendUserId: String,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        val currentUserRef = db.collection(usersCollectionPath).document(currentUserId)
-        val friendUserRef = db.collection(usersCollectionPath).document(friendUserId)
 
-        db.runTransaction { transaction ->
-            val currentUserSnapshot = transaction.get(currentUserRef)
-            val friendUserSnapshot = transaction.get(friendUserRef)
+  override fun deleteFriend(
+      currentUserId: String,
+      friendUserId: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    val currentUserRef = db.collection(usersCollectionPath).document(currentUserId)
+    val friendUserRef = db.collection(usersCollectionPath).document(friendUserId)
 
-            val currentUserData = currentUserSnapshot.data ?: throw Exception("Current user not found")
-            val friendUserData = friendUserSnapshot.data ?: throw Exception("Friend user not found")
+    db.runTransaction { transaction ->
+          val currentUserSnapshot = transaction.get(currentUserRef)
+          val friendUserSnapshot = transaction.get(friendUserRef)
 
-            val currentUserFriendsList =
-                (currentUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
-            val friendUserFriendsList =
-                (friendUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
+          val currentUserData =
+              currentUserSnapshot.data ?: throw Exception("Current user not found")
+          val friendUserData = friendUserSnapshot.data ?: throw Exception("Friend user not found")
 
-            // Remove friend from current user's friend list
-            currentUserFriendsList.remove(friendUserId)
-            // Remove current user from friend's friend list
-            friendUserFriendsList.remove(currentUserId)
+          val currentUserFriendsList =
+              (currentUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
+          val friendUserFriendsList =
+              (friendUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
 
-            transaction.update(currentUserRef, "friendsList", currentUserFriendsList)
-            transaction.update(friendUserRef, "friendsList", friendUserFriendsList)
-        }.addOnSuccessListener {
-            onSuccess()
-        }.addOnFailureListener { e ->
-            onFailure(e)
+          // Remove friend from current user's friend list
+          currentUserFriendsList.remove(friendUserId)
+          // Remove current user from friend's friend list
+          friendUserFriendsList.remove(currentUserId)
+
+          transaction.update(currentUserRef, "friendsList", currentUserFriendsList)
+          transaction.update(friendUserRef, "friendsList", friendUserFriendsList)
         }
-    }
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { e -> onFailure(e) }
+  }
 
   /**
    * Sets the list of friends for the specified user.

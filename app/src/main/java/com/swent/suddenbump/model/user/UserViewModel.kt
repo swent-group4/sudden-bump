@@ -138,7 +138,7 @@ open class UserViewModel(
                 }
               }
             } else {
-              null// Indicate that friends are not yet loaded
+              null // Indicate that friends are not yet loaded
             }
           }
           .stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -413,25 +413,32 @@ open class UserViewModel(
   fun getSentFriendRequests(): StateFlow<List<User>> {
     return _sentFriendRequests.asStateFlow()
   }
+
   fun deleteFriend(
-        user: User = _user.value,
-        friend: User,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
+      user: User = _user.value,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
   ) {
-        repository.deleteFriend(
-            currentUserId = user.uid,
-            friendUserId = friend.uid,
-            onSuccess = {
-                // Update local state
-                _userFriends.value = _userFriends.value.filter { it.uid != friend.uid }
-                onSuccess()
-            },
-            onFailure = { e -> onFailure(e) }
-        )
-      if(isLocationShared(user.uid, friend.uid) == true) {
-        stopSharingLocationWithFriend(user.uid, friend, onSuccess, onFailure)
-      }
+    repository.deleteFriend(
+        currentUserId = user.uid,
+        friendUserId = friend.uid,
+        onSuccess = {
+          try {
+            stopSharingLocationWithFriend(user.uid, friend, onSuccess, onFailure)
+          } catch (e: Exception) {
+            Log.e(logTag, "Your location is not shared with this friend")
+          }
+          try {
+            stopSharingLocationWithFriend(friend.uid, user, onSuccess, onFailure)
+          } catch (e: Exception) {
+            Log.e(logTag, "This friend is not sharing location to you")
+          }
+          // Update local state
+          _userFriends.value = _userFriends.value.filter { it.uid != friend.uid }
+          onSuccess()
+        },
+        onFailure = { e -> onFailure(e) })
   }
 
   fun blockUser(

@@ -2877,6 +2877,67 @@ class UserRepositoryFirestoreTest {
     assertEquals(exception, failureException)
   }
 
+  @Test
+  fun deleteUserAccount_shouldCallOnSuccessWhenDeletionSucceeds() {
+    // Arrange
+    val uid = "test_user_id"
+    val mockDeleteTask = Tasks.forResult<Void>(null) // Simulate successful deletion
+
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.delete()).thenReturn(mockDeleteTask)
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Act
+    userRepositoryFirestore.deleteUserAccount(
+        uid = uid, onSuccess = { onSuccessCalled = true }, onFailure = { onFailureCalled = true })
+
+    // Ensure tasks have completed
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue("Expected onSuccess to be called", onSuccessCalled)
+    assertFalse("Expected onFailure not to be called", onFailureCalled)
+    verify(mockUserDocumentReference).delete()
+  }
+
+  @Test
+  fun deleteUserAccount_shouldCallOnFailureWhenDeletionFails() {
+    // Arrange
+    val uid = "test_user_id"
+    val exception = Exception("Deletion failed")
+    val mockDeleteTask = Tasks.forException<Void>(exception) // Simulate failed deletion
+
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.delete()).thenReturn(mockDeleteTask)
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var caughtException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.deleteUserAccount(
+        uid = uid,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = {
+          onFailureCalled = true
+          caughtException = it
+        })
+
+    // Ensure tasks have completed
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertFalse("Expected onSuccess not to be called", onSuccessCalled)
+    assertTrue("Expected onFailure to be called", onFailureCalled)
+    assertNotNull("Exception should be passed to onFailure", caughtException)
+    assertEquals("Deletion failed", caughtException?.message)
+    verify(mockUserDocumentReference).delete()
+  }
+
   /**
    * This test verifies that when fetching a User, the Firestore `get()` is called on the collection
    * reference and not the document reference.

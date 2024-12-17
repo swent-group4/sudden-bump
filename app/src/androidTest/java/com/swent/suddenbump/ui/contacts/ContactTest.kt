@@ -202,4 +202,37 @@ class ContactScreenTest {
     // Verify the profile picture image
     composeTestRule.onNodeWithTag("profileImageNotNull").assertIsDisplayed()
   }
+
+  @Test
+  fun testDeleteFriendOption() {
+    // Arrange
+    // Ensure the user is a friend so that the "Delete Friend" option is visible
+    every { userViewModel.getUserFriends() } returns MutableStateFlow(listOf(friend.value))
+    every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
+    every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
+
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
+
+    // Act
+    // Open the dropdown menu
+    composeTestRule.onNodeWithTag("moreOptionsButton").performClick()
+
+    // Verify "Delete Friend" option is displayed
+    composeTestRule.onNodeWithTag("deleteFriendButton").assertIsDisplayed()
+
+    // Mock the successful deletion scenario
+    // We'll just rely on the relaxed mock behavior and verify calls via mocking
+    composeTestRule.onNodeWithTag("deleteFriendButton").performClick()
+
+    // Assert
+    // Verify that deleteFriend was called with the correct user and friend
+    verify {
+      userViewModel.deleteFriend(
+          user = match { it.uid == currentUser.value.uid },
+          friend = match { it.uid == friend.value.uid },
+          onSuccess = any(),
+          onFailure = any())
+    }
+  }
 }
