@@ -90,18 +90,36 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                         )
                     }
 
-                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                        DropdownMenuItem(
-                            modifier = Modifier.testTag("blockUserButton"),
-                            onClick = {
-                                expanded = false
-                                showDialog = true
+              DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                DropdownMenuItem(
+                    modifier = Modifier.testTag("blockUserButton"),
+                    onClick = {
+                      expanded = false
+                      showDialog = true
+                    },
+                    text = { Text("Block User") })
+                if (isFriend) {
+                  DropdownMenuItem(
+                      modifier = Modifier.testTag("deleteFriendButton"),
+                      onClick = {
+                        expanded = false
+                        // Show a confirmation dialog or directly call deleteFriend
+                        // For simplicity, directly call deleteFriend here:
+                        userViewModel.deleteFriend(
+                            user = userViewModel.getCurrentUser().value,
+                            friend = user,
+                            onSuccess = {
+                              // After deletion, navigate back or update UI
+                              navigationActions.goBack()
                             },
-                            text = { Text("Block User") }
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
+                            onFailure = { println("Error deleting friend: ${it.message}") })
+                      },
+                      text = { Text("Delete Friend") })
+                }
+              }
+            },
+            colors =
+                TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Black,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White

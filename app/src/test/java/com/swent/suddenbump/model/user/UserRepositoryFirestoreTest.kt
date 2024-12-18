@@ -2877,6 +2877,67 @@ class UserRepositoryFirestoreTest {
     assertEquals(exception, failureException)
   }
 
+  @Test
+  fun deleteUserAccount_shouldCallOnSuccessWhenDeletionSucceeds() {
+    // Arrange
+    val uid = "test_user_id"
+    val mockDeleteTask = Tasks.forResult<Void>(null) // Simulate successful deletion
+
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.delete()).thenReturn(mockDeleteTask)
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Act
+    userRepositoryFirestore.deleteUserAccount(
+        uid = uid, onSuccess = { onSuccessCalled = true }, onFailure = { onFailureCalled = true })
+
+    // Ensure tasks have completed
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue("Expected onSuccess to be called", onSuccessCalled)
+    assertFalse("Expected onFailure not to be called", onFailureCalled)
+    verify(mockUserDocumentReference).delete()
+  }
+
+  @Test
+  fun deleteUserAccount_shouldCallOnFailureWhenDeletionFails() {
+    // Arrange
+    val uid = "test_user_id"
+    val exception = Exception("Deletion failed")
+    val mockDeleteTask = Tasks.forException<Void>(exception) // Simulate failed deletion
+
+    whenever(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    whenever(mockUserCollectionReference.document(uid)).thenReturn(mockUserDocumentReference)
+    whenever(mockUserDocumentReference.delete()).thenReturn(mockDeleteTask)
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var caughtException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.deleteUserAccount(
+        uid = uid,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = {
+          onFailureCalled = true
+          caughtException = it
+        })
+
+    // Ensure tasks have completed
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertFalse("Expected onSuccess not to be called", onSuccessCalled)
+    assertTrue("Expected onFailure to be called", onFailureCalled)
+    assertNotNull("Exception should be passed to onFailure", caughtException)
+    assertEquals("Deletion failed", caughtException?.message)
+    verify(mockUserDocumentReference).delete()
+  }
+
   /**
    * This test verifies that when fetching a User, the Firestore `get()` is called on the collection
    * reference and not the document reference.
@@ -2970,6 +3031,99 @@ class UserRepositoryFirestoreTest {
         onFailure = { fail("Failure callback should not be called") })
 
     verify(mocked).addOnSuccessListener(any())
+  }
+
+  @Test
+  fun deleteFriend_shouldCallOnSuccessWhenTransactionSucceeds() {
+    // Arrange
+    val currentUserId = "currentUserId"
+    val friendUserId = "friendUserId"
+
+    val currentUserRef = mock(DocumentReference::class.java)
+    val friendUserRef = mock(DocumentReference::class.java)
+    val currentUserSnapshot = mock(DocumentSnapshot::class.java)
+    val friendUserSnapshot = mock(DocumentSnapshot::class.java)
+
+    // Mock initial lists
+    val currentUserData = mapOf("friendsList" to listOf(friendUserId))
+    val friendUserData = mapOf("friendsList" to listOf(currentUserId))
+
+    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
+    `when`(mockUserCollectionReference.document(currentUserId)).thenReturn(currentUserRef)
+    `when`(mockUserCollectionReference.document(friendUserId)).thenReturn(friendUserRef)
+
+    `when`(transaction.get(currentUserRef)).thenReturn(currentUserSnapshot)
+    `when`(transaction.get(friendUserRef)).thenReturn(friendUserSnapshot)
+
+    `when`(currentUserSnapshot.data).thenReturn(currentUserData)
+    `when`(friendUserSnapshot.data).thenReturn(friendUserData)
+
+    // Mock runTransaction to succeed
+    `when`(mockFirestore.runTransaction<Void>(any())).thenAnswer { invocation ->
+      val transactionFunction = invocation.arguments[0]
+      when (transactionFunction) {
+        is com.google.firebase.firestore.Transaction.Function<*> -> {
+          transactionFunction.apply(transaction)
+        }
+      }
+      Tasks.forResult(null)
+    }
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Act
+    userRepositoryFirestore.deleteFriend(
+        currentUserId = currentUserId,
+        friendUserId = friendUserId,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { onFailureCalled = true })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertTrue(onSuccessCalled)
+    assertFalse(onFailureCalled)
+
+    // Verify that transaction updates were attempted
+    verify(transaction).get(currentUserRef)
+    verify(transaction).get(friendUserRef)
+
+    // Both should have removed each other from their friends list
+    verify(transaction).update(currentUserRef, "friendsList", emptyList<String>())
+    verify(transaction).update(friendUserRef, "friendsList", emptyList<String>())
+  }
+
+  @Test
+  fun deleteFriend_shouldCallOnFailureWhenTransactionFails() {
+    // Arrange
+    val currentUserId = "currentUserId"
+    val friendUserId = "friendUserId"
+    val exception = Exception("Transaction failed")
+
+    `when`(mockFirestore.runTransaction<Void>(any())).thenReturn(Tasks.forException(exception))
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var caughtException: Exception? = null
+
+    // Act
+    userRepositoryFirestore.deleteFriend(
+        currentUserId = currentUserId,
+        friendUserId = friendUserId,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = {
+          onFailureCalled = true
+          caughtException = it
+        })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertNotNull(caughtException)
+    assertEquals("Transaction failed", caughtException?.message)
   }
 
   @Test
