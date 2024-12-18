@@ -149,7 +149,7 @@ fun PendingMeetingRow(
                 text = dayFormat.format(meeting.date.toDate()),
                 style = MaterialTheme.typography.titleLarge,
                 color = Color.White,
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier.padding(end = 8.dp).testTag("meetingDate")
             )
             // Buttons Row
             Row(
@@ -223,7 +223,8 @@ fun PendingMeetingRow(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(8.dp)
+                    .testTag("meetingCard"),
                 colors = CardDefaults.cardColors(containerColor = Pinkish)
             ) {
                 Row(
