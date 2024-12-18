@@ -70,7 +70,13 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
   ) {
     val imageRef = storage.reference.child(path)
     val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
-    localFile.createNewFile()
+    // Ensure the parent directories exist
+    localFile.parentFile?.mkdirs()
+
+    // Create the file
+    if (!localFile.exists()) {
+      localFile.createNewFile()
+    }
 
     runBlocking { downloadImageFactory(path, imageRef, localFile, onSuccess, onFailure) }
   }
@@ -111,8 +117,12 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
   ) {
     val imageRef = storage.reference.child(path)
     val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
-    localFile.createNewFile()
+    localFile.parentFile?.mkdirs()
 
+    // Create the file
+    if (!localFile.exists()) {
+      localFile.createNewFile()
+    }
     CoroutineScope(Dispatchers.IO).launch {
       downloadImageFactory(path, imageRef, localFile, onSuccess, onFailure)
     }
