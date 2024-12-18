@@ -108,6 +108,47 @@ class ContactScreenTest {
   }
 
   @Test
+  fun testUnsendFriendRequest() {
+    // Arrange
+    // Set scenario: user is in sentFriendRequests
+    every { userViewModel.getUserFriends() } returns MutableStateFlow(emptyList())
+    every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
+    every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(listOf(friend.value))
+
+    // Mock unsendFriendRequest to immediately call onSuccess
+    every {
+      userViewModel.unsendFriendRequest(
+          user = any(), friend = any(), onSuccess = captureLambda(), onFailure = any())
+    } answers
+        {
+          lambda<() -> Unit>().invoke() // call onSuccess immediately
+        }
+
+    // Act
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+
+    // The "Requested" button should be displayed since it's a sent friend request scenario
+    composeTestRule.onNodeWithTag("unsendFriendRequestButton").assertIsDisplayed()
+
+    // Perform click on the "Requested" button
+    composeTestRule.onNodeWithTag("unsendFriendRequestButton").performClick()
+
+    // Assert
+    // Verify that unsendFriendRequest was called with the correct arguments
+    verify {
+      userViewModel.unsendFriendRequest(
+          user = match { it.uid == currentUser.value.uid },
+          friend = match { it.uid == friend.value.uid },
+          onSuccess = any(),
+          onFailure = any())
+    }
+
+    // If you want to check UI updates, depending on how the flows are updated,
+    // you might need to wait for the recomposition or flow update.
+    // For now, we've verified that the action is triggered correctly.
+  }
+
+  @Test
   fun testFriendRequestVersion() {
     // User is not a friend but in friend requests
     every { userViewModel.getUserFriends() } returns MutableStateFlow(emptyList())
