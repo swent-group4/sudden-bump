@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.utils
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,12 +16,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.R
 import com.swent.suddenbump.model.meeting_location.Location
+import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
@@ -213,7 +217,7 @@ fun LocationField(
             onValueChange = {
               onLocationQueryChange(it)
               onDropdownChange(true) // Show dropdown when user starts typing
-              maxItemsToShow.value = 3 // Reset to show initial 3 items when query changes
+              maxItemsToShow.intValue = 3 // Reset to show initial 3 items when query changes
             },
             label = { Text("Location") },
             textStyle = TextStyle(color = Color.White),
@@ -263,4 +267,34 @@ fun LocationField(
               }
             }
       }
+}
+
+/**
+ * Composable that displays a user's profile image.
+ *
+ * @param user The user whose profile image is to be displayed.
+ */
+@Composable
+fun UserProfileImage(user: User) {
+    if (user.profilePicture != null) {
+        Image(
+            bitmap = user.profilePicture,
+            contentDescription = "Existing profile pictures",
+            modifier = Modifier
+                .width(50.dp)
+                .height(50.dp)
+                .padding(8.dp)
+                .testTag("profileImageNotNull_${user.uid}")
+        )
+    } else {
+        Image(
+            painter = painterResource(R.drawable.profile),
+            contentDescription = "Non-Existing profile pictures",
+            modifier = Modifier
+                .width(50.dp)
+                .height(50.dp)
+                .padding(8.dp)
+                .testTag("profileImage_${user.uid}")
+        )
+    }
 }

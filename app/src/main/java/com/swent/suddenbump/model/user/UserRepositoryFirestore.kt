@@ -188,7 +188,7 @@ class UserRepositoryFirestore(
                   val path =
                       helper.uidToProfilePicturePath(
                           resultEmail.data!!["uid"].toString(), profilePicturesRef)
-                  imageRepository.downloadImage(
+                  imageRepository.downloadImageAsync(
                       path,
                       onSuccess = {
                         onSuccess(helper.documentSnapshotToUser(resultUser.result, it))
@@ -220,7 +220,7 @@ class UserRepositoryFirestore(
         .addOnCompleteListener { resultUser ->
           if (resultUser.isSuccessful) {
             val path = helper.uidToProfilePicturePath(uid, profilePicturesRef)
-            imageRepository.downloadImage(
+            imageRepository.downloadImageAsync(
                 path,
                 onSuccess = { image ->
                   onSuccess(helper.documentSnapshotToUser(resultUser.result, image))
@@ -1336,40 +1336,39 @@ class UserRepositoryFirestore(
       uidJsonList: String,
       onSuccess: (List<User>) -> Unit,
   ) {
-    val uidList = helper.documentSnapshotToList(uidJsonList)
+      val uidList = helper.documentSnapshotToList(uidJsonList)
 
-    val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
-    println(tasks.toString())
-    Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
-      var counterFriend = 0
-      var friendsListMutable = emptyList<User>()
-      for (doc in documents) {
-        var profilePicture: ImageBitmap? = null
-        val path = helper.uidToProfilePicturePath(doc.data!!["uid"].toString(), profilePicturesRef)
-        imageRepository.downloadImageAsync(
-            path,
-            onSuccess = { image ->
-              profilePicture = image
-              val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
-              friendsListMutable = friendsListMutable + userFriend
-
-              counterFriend++
-              if (counterFriend == documents.size) {
-                onSuccess(friendsListMutable)
+      val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
+      Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
+          var counterFriend = 0
+          val friendsListMutable = mutableListOf<User>()
+          for (doc in documents) {
+              var profilePicture: ImageBitmap? = null
+              val path =
+                  doc.data?.get("uid")?.let {
+                      helper.uidToProfilePicturePath(it.toString(), profilePicturesRef)
+                  }
+              if (path != null) {
+                  imageRepository.downloadImageAsync(
+                      path,
+                      onSuccess = { image ->
+                          profilePicture = image
+                          val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
+                          friendsListMutable.add(userFriend)
+                          counterFriend++
+                          onSuccess(friendsListMutable)
+                      },
+                      onFailure = {
+                          Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
+                          counterFriend++
+                          onSuccess(friendsListMutable)
+                      })
               }
-            },
-            onFailure = {
-              Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
-              counterFriend++
-              if (counterFriend == documents.size) {
-                onSuccess(friendsListMutable)
-              }
-            })
+          }
       }
-    }
   }
 
-  override fun unblockUser(
+    override fun unblockUser(
       currentUserId: String,
       blockedUserId: String,
       onSuccess: () -> Unit,

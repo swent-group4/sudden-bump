@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
@@ -33,6 +32,9 @@ import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.theme.Gray
+import com.swent.suddenbump.ui.theme.Pinkish
+import com.swent.suddenbump.ui.utils.UserProfileImage
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -167,7 +169,7 @@ fun DayRow(
       modifier =
           Modifier.fillMaxWidth()
               .padding(8.dp)
-              .background(com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium)
+              .background(Gray, MaterialTheme.shapes.medium)
               .padding(8.dp)
               .testTag("dayRow")) {
         Text(
@@ -189,12 +191,10 @@ fun DayRow(
                           .clickable {
                             meetingViewModel.selectMeeting(meeting)
                             navigationActions.navigateTo(Screen.EDIT_MEETING)
-                          }
-                          .background(
-                              com.swent.suddenbump.ui.theme.Purple40, MaterialTheme.shapes.medium),
+                          },
                   colors =
                       CardDefaults.cardColors(
-                          containerColor = com.swent.suddenbump.ui.theme.Pink40)) {
+                          containerColor = Pinkish)) {
                     val friend =
                         userFriends.find {
                           it.uid == meeting.friendId || it.uid == meeting.creatorId
@@ -206,14 +206,9 @@ fun DayRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(12.dp)) {
-                          AsyncImage(
-                              model = "https://avatar.iran.liara.run/public/42",
-                              contentDescription = null,
-                              modifier =
-                                  Modifier.width(50.dp)
-                                      .height(50.dp)
-                                      .padding(8.dp)
-                                      .testTag("profileImage"))
+                        if (friend != null) {
+                            UserProfileImage(friend)
+                        }
                           Column {
                             Text(
                                 text = "Meet $friendName at ${meeting.location?.name}",
@@ -286,13 +281,4 @@ fun generateDayList(startDate: Calendar, endDate: Calendar): List<Calendar> {
 fun getMonthYearString(date: Date): String {
   val formatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
   return formatter.format(date)
-}
-
-fun formatDate(date: Date?): String {
-  return if (date != null) {
-    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    formatter.format(date)
-  } else {
-    "Invalid Date"
-  }
 }
