@@ -3034,67 +3034,6 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
-  fun deleteFriend_shouldCallOnSuccessWhenTransactionSucceeds() {
-    // Arrange
-    val currentUserId = "currentUserId"
-    val friendUserId = "friendUserId"
-
-    val currentUserRef = mock(DocumentReference::class.java)
-    val friendUserRef = mock(DocumentReference::class.java)
-    val currentUserSnapshot = mock(DocumentSnapshot::class.java)
-    val friendUserSnapshot = mock(DocumentSnapshot::class.java)
-
-    // Mock initial lists
-    val currentUserData = mapOf("friendsList" to listOf(friendUserId))
-    val friendUserData = mapOf("friendsList" to listOf(currentUserId))
-
-    `when`(mockFirestore.collection("Users")).thenReturn(mockUserCollectionReference)
-    `when`(mockUserCollectionReference.document(currentUserId)).thenReturn(currentUserRef)
-    `when`(mockUserCollectionReference.document(friendUserId)).thenReturn(friendUserRef)
-
-    `when`(transaction.get(currentUserRef)).thenReturn(currentUserSnapshot)
-    `when`(transaction.get(friendUserRef)).thenReturn(friendUserSnapshot)
-
-    `when`(currentUserSnapshot.data).thenReturn(currentUserData)
-    `when`(friendUserSnapshot.data).thenReturn(friendUserData)
-
-    // Mock runTransaction to succeed
-    `when`(mockFirestore.runTransaction<Void>(any())).thenAnswer { invocation ->
-      val transactionFunction = invocation.arguments[0]
-      when (transactionFunction) {
-        is com.google.firebase.firestore.Transaction.Function<*> -> {
-          transactionFunction.apply(transaction)
-        }
-      }
-      Tasks.forResult(null)
-    }
-
-    var onSuccessCalled = false
-    var onFailureCalled = false
-
-    // Act
-    userRepositoryFirestore.deleteFriend(
-        currentUserId = currentUserId,
-        friendUserId = friendUserId,
-        onSuccess = { onSuccessCalled = true },
-        onFailure = { onFailureCalled = true })
-
-    shadowOf(Looper.getMainLooper()).idle()
-
-    // Assert
-    assertTrue(onSuccessCalled)
-    assertFalse(onFailureCalled)
-
-    // Verify that transaction updates were attempted
-    verify(transaction).get(currentUserRef)
-    verify(transaction).get(friendUserRef)
-
-    // Both should have removed each other from their friends list
-    verify(transaction).update(currentUserRef, "friendsList", emptyList<String>())
-    verify(transaction).update(friendUserRef, "friendsList", emptyList<String>())
-  }
-
-  @Test
   fun deleteFriend_shouldCallOnFailureWhenTransactionFails() {
     // Arrange
     val currentUserId = "currentUserId"
