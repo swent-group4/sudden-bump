@@ -861,9 +861,11 @@ open class UserViewModel(
     repository.deleteFriendRequest(
         uid = friend.uid, // the one who originally received the request
         fid = user.uid, // the one who originally sent the request
-        onSuccess = { onSuccess() },
+        onSuccess = {
+          _sentFriendRequests.value = _sentFriendRequests.value.minus(friend)
+          onSuccess()
+        },
         onFailure = onFailure)
-    _sentFriendRequests.value = _sentFriendRequests.value.minus(friend)
   }
 
   fun unblockUser(
