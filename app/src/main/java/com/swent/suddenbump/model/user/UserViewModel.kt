@@ -852,22 +852,19 @@ open class UserViewModel(
     repository.getSharedByFriends(uid, onSuccess, onFailure)
   }
 
-    fun unsendFriendRequest(
-        user: User = _user.value,
-        friend: User,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        repository.deleteFriendRequest(
-            uid = friend.uid, // the one who originally received the request
-            fid = user.uid, // the one who originally sent the request
-            onSuccess = {
-                onSuccess()
-            },
-            onFailure = onFailure
-        )
-        _sentFriendRequests.value = _sentFriendRequests.value.minus(friend)
-    }
+  fun unsendFriendRequest(
+      user: User = _user.value,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.deleteFriendRequest(
+        uid = friend.uid, // the one who originally received the request
+        fid = user.uid, // the one who originally sent the request
+        onSuccess = { onSuccess() },
+        onFailure = onFailure)
+    _sentFriendRequests.value = _sentFriendRequests.value.minus(friend)
+  }
 
   fun unblockUser(
       blockedUser: User,
