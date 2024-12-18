@@ -50,7 +50,7 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-  fun createFriend(uid: String, fid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
+    fun createFriend(uid: String, fid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit)
 
