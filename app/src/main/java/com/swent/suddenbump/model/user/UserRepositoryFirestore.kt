@@ -1340,7 +1340,6 @@ class UserRepositoryFirestore(
 
     val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
     Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
-      var counterFriend = 0
       val friendsListMutable = mutableListOf<User>()
       for (doc in documents) {
         var profilePicture: ImageBitmap? = null
@@ -1348,6 +1347,7 @@ class UserRepositoryFirestore(
             doc.data?.get("uid")?.let {
               helper.uidToProfilePicturePath(it.toString(), profilePicturesRef)
             }
+
         if (path != null) {
           imageRepository.downloadImageAsync(
               path,
@@ -1355,12 +1355,10 @@ class UserRepositoryFirestore(
                 profilePicture = image
                 val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
                 friendsListMutable.add(userFriend)
-                counterFriend++
                 onSuccess(friendsListMutable)
               },
               onFailure = {
                 Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
-                counterFriend++
                 onSuccess(friendsListMutable)
               })
         }
