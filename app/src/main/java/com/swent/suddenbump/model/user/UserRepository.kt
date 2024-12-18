@@ -18,6 +18,13 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
+  fun addUserDataListener(
+      uid: String,
+      onDataChanged:
+          (friendRequests: List<User>, sentFriendRequests: List<User>, friends: List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
   fun verifyUnusedPhoneNumber(
       phoneNumber: String,
       onSuccess: (Boolean) -> Unit,
@@ -50,7 +57,7 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-    fun createFriend(uid: String, fid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
+  fun createFriend(uid: String, fid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit)
 
   fun getUserAccount(onSuccess: (User) -> Unit, onFailure: (Exception) -> Unit)
 

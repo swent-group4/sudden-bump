@@ -491,72 +491,75 @@ class UserRepositoryFirestore(
               .addOnSuccessListener { onSuccess() }
         }
   }
-    /**
-     * Sets up a real-time listener on the user's document. Whenever the user's friendRequests,
-     * sentFriendRequests, or friendsList fields change (e.g., when sending/unsending friend requests
-     * or accepting/declining friend requests), the provided callbacks will be triggered with the
-     * updated lists.
-     *
-     * @param uid The user's UID.
-     * @param onDataChanged Called whenever the user's data changes, providing updated friend requests,
-     * sent friend requests, and friends.
-     * @param onFailure Called with an exception if the listener fails.
-     */
-    fun addUserDataListener(
-        uid: String,
-        onDataChanged: (friendRequests: List<User>, sentFriendRequests: List<User>, friends: List<User>) -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        db.collection(usersCollectionPath)
-            .document(uid)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    onFailure(e)
-                    return@addSnapshotListener
-                }
+  /**
+   * Sets up a real-time listener on the user's document. Whenever the user's friendRequests,
+   * sentFriendRequests, or friendsList fields change (e.g., when sending/unsending friend requests
+   * or accepting/declining friend requests), the provided callbacks will be triggered with the
+   * updated lists.
+   *
+   * @param uid The user's UID.
+   * @param onDataChanged Called whenever the user's data changes, providing updated friend
+   *   requests, sent friend requests, and friends.
+   * @param onFailure Called with an exception if the listener fails.
+   */
+  override fun addUserDataListener(
+      uid: String,
+      onDataChanged:
+          (friendRequests: List<User>, sentFriendRequests: List<User>, friends: List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    db.collection(usersCollectionPath).document(uid).addSnapshotListener { snapshot, e ->
+      if (e != null) {
+        onFailure(e)
+        return@addSnapshotListener
+      }
 
-                if (snapshot != null && snapshot.exists()) {
-                    val data = snapshot.data ?: emptyMap<String, Any>()
+      if (snapshot != null && snapshot.exists()) {
+        val data = snapshot.data ?: emptyMap<String, Any>()
 
-                    val friendRequestsUidList = data["friendRequests"] as? List<String> ?: emptyList()
-                    val sentFriendRequestsUidList = data["sentFriendRequests"] as? List<String> ?: emptyList()
-                    val friendsUidList = data["friendsList"] as? List<String> ?: emptyList()
+        val friendRequestsUidList = data["friendRequests"] as? List<String> ?: emptyList()
+        val sentFriendRequestsUidList = data["sentFriendRequests"] as? List<String> ?: emptyList()
+        val friendsUidList = data["friendsList"] as? List<String> ?: emptyList()
 
-                    // Fetch all users in parallel: friendRequests, sentFriendRequests, and friends
-                    val friendRequestsTasks = friendRequestsUidList.map { fid ->
-                        db.collection(usersCollectionPath).document(fid).get()
-                    }
-                    val sentRequestsTasks = sentFriendRequestsUidList.map { fid ->
-                        db.collection(usersCollectionPath).document(fid).get()
-                    }
-                    val friendsTasks = friendsUidList.map { fid ->
-                        db.collection(usersCollectionPath).document(fid).get()
-                    }
-
-                    Tasks.whenAllSuccess<DocumentSnapshot>(friendRequestsTasks + sentRequestsTasks + friendsTasks)
-                        .addOnSuccessListener { documents ->
-                            // documents is a list of all the fetched snapshots in order (friendRequests, then sentRequests, then friends)
-                            val friendRequestsDocs = documents.take(friendRequestsUidList.size)
-                            val sentRequestsDocs = documents.drop(friendRequestsUidList.size).take(sentFriendRequestsUidList.size)
-                            val friendsDocs = documents.drop(friendRequestsUidList.size + sentFriendRequestsUidList.size)
-
-                            val friendRequestsList = friendRequestsDocs.mapNotNull { doc -> helper.documentSnapshotToUser(doc, null) }
-                            val sentRequestsList = sentRequestsDocs.mapNotNull { doc -> helper.documentSnapshotToUser(doc, null) }
-                            val friendsList = friendsDocs.mapNotNull { doc -> helper.documentSnapshotToUser(doc, null) }
-
-                            onDataChanged(friendRequestsList, sentRequestsList, friendsList)
-                        }
-                        .addOnFailureListener { ex ->
-                            onFailure(ex)
-                        }
-
-                } else {
-                    // Document doesn't exist (e.g. user might have been deleted)
-                    onDataChanged(emptyList(), emptyList(), emptyList())
-                }
+        // Fetch all users in parallel: friendRequests, sentFriendRequests, and friends
+        val friendRequestsTasks =
+            friendRequestsUidList.map { fid ->
+              db.collection(usersCollectionPath).document(fid).get()
             }
-    }
+        val sentRequestsTasks =
+            sentFriendRequestsUidList.map { fid ->
+              db.collection(usersCollectionPath).document(fid).get()
+            }
+        val friendsTasks =
+            friendsUidList.map { fid -> db.collection(usersCollectionPath).document(fid).get() }
 
+        Tasks.whenAllSuccess<DocumentSnapshot>(
+                friendRequestsTasks + sentRequestsTasks + friendsTasks)
+            .addOnSuccessListener { documents ->
+              // documents is a list of all the fetched snapshots in order (friendRequests, then
+              // sentRequests, then friends)
+              val friendRequestsDocs = documents.take(friendRequestsUidList.size)
+              val sentRequestsDocs =
+                  documents.drop(friendRequestsUidList.size).take(sentFriendRequestsUidList.size)
+              val friendsDocs =
+                  documents.drop(friendRequestsUidList.size + sentFriendRequestsUidList.size)
+
+              val friendRequestsList =
+                  friendRequestsDocs.mapNotNull { doc -> helper.documentSnapshotToUser(doc, null) }
+              val sentRequestsList =
+                  sentRequestsDocs.mapNotNull { doc -> helper.documentSnapshotToUser(doc, null) }
+              val friendsList =
+                  friendsDocs.mapNotNull { doc -> helper.documentSnapshotToUser(doc, null) }
+
+              onDataChanged(friendRequestsList, sentRequestsList, friendsList)
+            }
+            .addOnFailureListener { ex -> onFailure(ex) }
+      } else {
+        // Document doesn't exist (e.g. user might have been deleted)
+        onDataChanged(emptyList(), emptyList(), emptyList())
+      }
+    }
+  }
 
   /**
    * Sends a friend request from the specified user to the target friend.
@@ -572,43 +575,43 @@ class UserRepositoryFirestore(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-      db.collection(usersCollectionPath)
-          .document(fid)
-          .get()
-          .addOnFailureListener { e -> onFailure(e) }
-          .addOnSuccessListener { result ->
-              val friendRequestsUidList =
-                  result.data?.get("friendRequests") as? List<String> ?: emptyList()
+    db.collection(usersCollectionPath)
+        .document(fid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val friendRequestsUidList =
+              result.data?.get("friendRequests") as? List<String> ?: emptyList()
 
-              db.collection(usersCollectionPath)
-                  .document(uid)
-                  .get()
-                  .addOnFailureListener { e -> onFailure(e) }
-                  .addOnSuccessListener { userResult ->
-                      val sentFriendRequestsUidList =
-                          userResult.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
-                      val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
-                      val mutableSentFriendRequestsUidList = sentFriendRequestsUidList.toMutableList()
+          db.collection(usersCollectionPath)
+              .document(uid)
+              .get()
+              .addOnFailureListener { e -> onFailure(e) }
+              .addOnSuccessListener { userResult ->
+                val sentFriendRequestsUidList =
+                    userResult.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
+                val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
+                val mutableSentFriendRequestsUidList = sentFriendRequestsUidList.toMutableList()
 
-                      if (uid !in mutableFriendRequestsUidList) {
-                          mutableFriendRequestsUidList.add(uid)
-                          mutableSentFriendRequestsUidList.add(fid)
-                          db.collection(usersCollectionPath)
-                              .document(fid)
-                              .update("friendRequests", mutableFriendRequestsUidList)
-                              .addOnFailureListener { e -> onFailure(e) }
-                              .addOnSuccessListener {
-                                  db.collection(usersCollectionPath)
-                                      .document(uid)
-                                      .update("sentFriendRequests", mutableSentFriendRequestsUidList)
-                                      .addOnFailureListener { e -> onFailure(e) }
-                                      .addOnSuccessListener { onSuccess() }
-                              }
-                      } else {
-                          onFailure(Exception("Friend request already exists"))
+                if (uid !in mutableFriendRequestsUidList) {
+                  mutableFriendRequestsUidList.add(uid)
+                  mutableSentFriendRequestsUidList.add(fid)
+                  db.collection(usersCollectionPath)
+                      .document(fid)
+                      .update("friendRequests", mutableFriendRequestsUidList)
+                      .addOnFailureListener { e -> onFailure(e) }
+                      .addOnSuccessListener {
+                        db.collection(usersCollectionPath)
+                            .document(uid)
+                            .update("sentFriendRequests", mutableSentFriendRequestsUidList)
+                            .addOnFailureListener { e -> onFailure(e) }
+                            .addOnSuccessListener { onSuccess() }
                       }
-                  }
-          }
+                } else {
+                  onFailure(Exception("Friend request already exists"))
+                }
+              }
+        }
   }
 
   /**
@@ -625,49 +628,51 @@ class UserRepositoryFirestore(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-      db.collection(usersCollectionPath)
-          .document(uid)
-          .get()
-          .addOnFailureListener { e -> onFailure(e) }
-          .addOnSuccessListener { result ->
-              val friendRequestsUidList =
-                  result.data?.get("friendRequests") as? List<String> ?: emptyList()
-              val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { e -> onFailure(e) }
+        .addOnSuccessListener { result ->
+          val friendRequestsUidList =
+              result.data?.get("friendRequests") as? List<String> ?: emptyList()
+          val mutableFriendRequestsUidList = friendRequestsUidList.toMutableList()
 
-              if (fid in mutableFriendRequestsUidList) {
-                  mutableFriendRequestsUidList.remove(fid)
+          if (fid in mutableFriendRequestsUidList) {
+            mutableFriendRequestsUidList.remove(fid)
+            db.collection(usersCollectionPath)
+                .document(uid)
+                .update("friendRequests", mutableFriendRequestsUidList)
+                .addOnFailureListener { e -> onFailure(e) }
+                .addOnSuccessListener {
                   db.collection(usersCollectionPath)
-                      .document(uid)
-                      .update("friendRequests", mutableFriendRequestsUidList)
+                      .document(fid)
+                      .get()
                       .addOnFailureListener { e -> onFailure(e) }
-                      .addOnSuccessListener {
+                      .addOnSuccessListener { friendResult ->
+                        val sentFriendRequestsUidList =
+                            friendResult.data?.get("sentFriendRequests") as? List<String>
+                                ?: emptyList()
+                        val mutableSentFriendRequestsUidList =
+                            sentFriendRequestsUidList.toMutableList()
+
+                        if (uid in mutableSentFriendRequestsUidList) {
+                          mutableSentFriendRequestsUidList.remove(uid)
                           db.collection(usersCollectionPath)
                               .document(fid)
-                              .get()
+                              .update("sentFriendRequests", mutableSentFriendRequestsUidList)
                               .addOnFailureListener { e -> onFailure(e) }
-                              .addOnSuccessListener { friendResult ->
-                                  val sentFriendRequestsUidList =
-                                      friendResult.data?.get("sentFriendRequests") as? List<String> ?: emptyList()
-                                  val mutableSentFriendRequestsUidList = sentFriendRequestsUidList.toMutableList()
-
-                                  if (uid in mutableSentFriendRequestsUidList) {
-                                      mutableSentFriendRequestsUidList.remove(uid)
-                                      db.collection(usersCollectionPath)
-                                          .document(fid)
-                                          .update("sentFriendRequests", mutableSentFriendRequestsUidList)
-                                          .addOnFailureListener { e -> onFailure(e) }
-                                          .addOnSuccessListener { onSuccess() }
-                                  } else {
-                                      onFailure(Exception("User ID not found in friend's sentFriendRequests list"))
-                                  }
-                              }
+                              .addOnSuccessListener { onSuccess() }
+                        } else {
+                          onFailure(
+                              Exception("User ID not found in friend's sentFriendRequests list"))
+                        }
                       }
-              } else {
-                  onFailure(Exception("Friend ID not found in user's friendRequests list"))
-              }
+                }
+          } else {
+            onFailure(Exception("Friend ID not found in user's friendRequests list"))
           }
+        }
   }
-
 
   /**
    * Sets the list of sent friend requests for the specified user.

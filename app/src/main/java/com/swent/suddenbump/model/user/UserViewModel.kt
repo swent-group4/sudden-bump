@@ -183,27 +183,26 @@ open class UserViewModel(
           _user.value = user
           saveUserLoginStatus(_user.value.uid)
           scheduleWorker(_user.value.uid)
-          repository.getUserFriends(
+
+          // Set up the real-time listener now that we know the user's UID
+          repository.addUserDataListener(
               uid = _user.value.uid,
-              onSuccess = { friendsList ->
-                Log.d(logTag, friendsList.toString())
-                _userFriends.value = friendsList
-                repository.getBlockedFriends(
-                    uid = _user.value.uid,
-                    onSuccess = { blockedFriendsList ->
-                      _blockedFriends.value = blockedFriendsList
-                    },
-                    onFailure = { e -> Log.e(logTag, e.toString()) })
+              onDataChanged = { friendRequests, sentFriendRequests, friends ->
+                // Update local state flows with real-time data
+                _userFriendRequests.value = friendRequests
+                _sentFriendRequests.value = sentFriendRequests
+                _userFriends.value = friends
+                // If needed, you can also refresh recommended friends, blocked friends, etc.
+                // or handle them in a similar manner.
               },
-              onFailure = { e -> Log.e(logTag, e.toString()) })
-          repository.getSentFriendRequests(
+              onFailure = { e -> Log.e(logTag, "Real-time listener failed: ${e.message}") })
+
+          // Additional one-time fetches if needed (optional since we have real-time updates)
+          repository.getBlockedFriends(
               uid = _user.value.uid,
-              onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
+              onSuccess = { blockedFriendsList -> _blockedFriends.value = blockedFriendsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
-          repository.getUserFriendRequests(
-              uid = _user.value.uid,
-              onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
-              onFailure = { e -> Log.e(logTag, e.toString()) })
+
           repository.getRecommendedFriends(
               uid = _user.value.uid,
               onSuccess = { recommendedFriendsList ->
@@ -227,33 +226,44 @@ open class UserViewModel(
         uid,
         onSuccess = {
           _user.value = it
-          repository.getUserFriends(
+
+          // Set up the real-time listener once we know the user
+          repository.addUserDataListener(
               uid = _user.value.uid,
-              onSuccess = { friendsList ->
-                Log.i(logTag, friendsList.toString())
-                _userFriends.value = friendsList
-                repository.getBlockedFriends(
-                    uid = _user.value.uid,
-                    onSuccess = { blockedFriendsList ->
-                      _blockedFriends.value = blockedFriendsList
-                      onSuccess()
-                    },
-                    onFailure = { e -> Log.e(logTag, e.toString()) })
+              onDataChanged = { friendRequests, sentFriendRequests, friends ->
+                _userFriendRequests.value = friendRequests
+                _sentFriendRequests.value = sentFriendRequests
+                _userFriends.value = friends
               },
-              onFailure = { e -> Log.e(logTag, e.toString()) })
-          repository.getSentFriendRequests(
+              onFailure = { e -> Log.e(logTag, "Real-time listener failed: ${e.message}") })
+
+          // Additional one-time fetches if needed
+          repository.getBlockedFriends(
               uid = _user.value.uid,
-              onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
-              onFailure = { e -> Log.e(logTag, e.toString()) })
-          repository.getUserFriendRequests(
-              uid = _user.value.uid,
-              onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
+              onSuccess = { blockedFriendsList ->
+                _blockedFriends.value = blockedFriendsList
+                onSuccess()
+              },
               onFailure = { e -> Log.e(logTag, e.toString()) })
           repository.getRecommendedFriends(
               uid = _user.value.uid,
               onSuccess = { recommendedFriendsList ->
                 _recommendedFriends.value = recommendedFriendsList
               },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
+          repository.getUserFriendRequests(
+              uid = _user.value.uid,
+              onSuccess = { friendRequestsList -> _userFriendRequests.value = friendRequestsList },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
+
+          repository.getSentFriendRequests(
+              uid = _user.value.uid,
+              onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
+
+          repository.getUserFriends(
+              uid = _user.value.uid,
+              onSuccess = { friendsList -> _userFriends.value = friendsList },
               onFailure = { e -> Log.e(logTag, e.toString()) })
         },
         onFailure)
@@ -343,25 +353,21 @@ open class UserViewModel(
     _userFriendRequests.value = _userFriendRequests.value.minus(friend)
   }
 
-    fun unsendFriendRequest(
-        user: User = _user.value,
-        friend: User,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        repository.deleteFriendRequest(
-            uid = friend.uid, // the one who originally received the request
-            fid = user.uid, // the one who originally sent the request
-            onSuccess = {
-                onSuccess()
-            },
-            onFailure = onFailure
-        )
-        _sentFriendRequests.value = _sentFriendRequests.value.minus(friend)
-    }
+  fun unsendFriendRequest(
+      user: User = _user.value,
+      friend: User,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    repository.deleteFriendRequest(
+        uid = friend.uid, // the one who originally received the request
+        fid = user.uid, // the one who originally sent the request
+        onSuccess = { onSuccess() },
+        onFailure = onFailure)
+    _sentFriendRequests.value = _sentFriendRequests.value.minus(friend)
+  }
 
-
-    /**
+  /**
    * Sends a friend request to another user.
    *
    * @param user The current user sending the request.

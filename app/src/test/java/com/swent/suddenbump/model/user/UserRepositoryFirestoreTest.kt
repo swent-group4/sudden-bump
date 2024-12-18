@@ -3127,6 +3127,253 @@ class UserRepositoryFirestoreTest {
   }
 
   @Test
+  fun getUserFriendRequests_nonEmptyList_shouldFetchEachFriendAndCallOnSuccess() {
+    val userUid = "user123"
+    val friendUids = listOf("friend1", "friend2")
+
+    // Mock user document snapshot with a non-empty friendRequests list
+    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("friendRequests" to friendUids))
+    `when`(mockUserCollectionReference.document(userUid)).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(mockUserDocumentSnapshot))
+
+    // Mock friend documents
+    val friend1Snapshot = mock(DocumentSnapshot::class.java)
+    val friend2Snapshot = mock(DocumentSnapshot::class.java)
+
+    val friend1Ref = mock(DocumentReference::class.java)
+    val friend2Ref = mock(DocumentReference::class.java)
+
+    `when`(mockUserCollectionReference.document("friend1")).thenReturn(friend1Ref)
+    `when`(mockUserCollectionReference.document("friend2")).thenReturn(friend2Ref)
+
+    `when`(friend1Ref.get()).thenReturn(Tasks.forResult(friend1Snapshot))
+    `when`(friend2Ref.get()).thenReturn(Tasks.forResult(friend2Snapshot))
+
+    val friend1 =
+        User(
+            "friend1",
+            "F1",
+            "Test",
+            "+111",
+            null,
+            "f1@test.com",
+            MutableStateFlow(Location("mock")))
+    val friend2 =
+        User(
+            "friend2",
+            "F2",
+            "Test",
+            "+222",
+            null,
+            "f2@test.com",
+            MutableStateFlow(Location("mock")))
+
+    `when`(friend1Snapshot.exists()).thenReturn(true)
+    `when`(friend2Snapshot.exists()).thenReturn(true)
+
+    `when`(helper.documentSnapshotToUser(friend1Snapshot, null)).thenReturn(friend1)
+    `when`(helper.documentSnapshotToUser(friend2Snapshot, null)).thenReturn(friend2)
+
+    var onSuccessCalled = false
+    var resultList: List<User>? = null
+
+    userRepositoryFirestore.getUserFriendRequests(
+        uid = userUid,
+        onSuccess = {
+          onSuccessCalled = true
+          resultList = it
+        },
+        onFailure = { fail("Should not fail") })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertTrue(onSuccessCalled)
+    assertNotNull(resultList)
+    assertEquals(2, resultList!!.size)
+    assertTrue(resultList!!.contains(friend1))
+    assertTrue(resultList!!.contains(friend2))
+  }
+
+  @Test
+  fun getSentFriendRequests_nonEmptyList_shouldFetchEachFriendAndCallOnSuccess() {
+    val userUid = "user123"
+    val sentFriendUids = listOf("sentFriend1", "sentFriend2")
+
+    // Mock user document snapshot with a non-empty sentFriendRequests list
+    val userDocSnapshot = mock(DocumentSnapshot::class.java)
+    `when`(userDocSnapshot.data).thenReturn(mapOf("sentFriendRequests" to sentFriendUids))
+
+    `when`(mockUserCollectionReference.document(userUid)).thenReturn(mockUserDocumentReference)
+    `when`(mockUserDocumentReference.get()).thenReturn(Tasks.forResult(userDocSnapshot))
+
+    // Mock friend documents
+    val friend1Snapshot = mock(DocumentSnapshot::class.java)
+    val friend2Snapshot = mock(DocumentSnapshot::class.java)
+
+    val friend1Ref = mock(DocumentReference::class.java)
+    val friend2Ref = mock(DocumentReference::class.java)
+
+    `when`(mockUserCollectionReference.document("sentFriend1")).thenReturn(friend1Ref)
+    `when`(mockUserCollectionReference.document("sentFriend2")).thenReturn(friend2Ref)
+
+    `when`(friend1Ref.get()).thenReturn(Tasks.forResult(friend1Snapshot))
+    `when`(friend2Ref.get()).thenReturn(Tasks.forResult(friend2Snapshot))
+
+    val friend1 =
+        User(
+            "sentFriend1",
+            "SF1",
+            "Test",
+            "+111",
+            null,
+            "sf1@test.com",
+            MutableStateFlow(Location("mock")))
+    val friend2 =
+        User(
+            "sentFriend2",
+            "SF2",
+            "Test",
+            "+222",
+            null,
+            "sf2@test.com",
+            MutableStateFlow(Location("mock")))
+
+    `when`(friend1Snapshot.exists()).thenReturn(true)
+    `when`(friend2Snapshot.exists()).thenReturn(true)
+
+    `when`(helper.documentSnapshotToUser(friend1Snapshot, null)).thenReturn(friend1)
+    `when`(helper.documentSnapshotToUser(friend2Snapshot, null)).thenReturn(friend2)
+
+    var onSuccessCalled = false
+    var resultList: List<User>? = null
+
+    userRepositoryFirestore.getSentFriendRequests(
+        uid = userUid,
+        onSuccess = {
+          onSuccessCalled = true
+          resultList = it
+        },
+        onFailure = { fail("Should not fail") })
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    assertTrue(onSuccessCalled)
+    assertNotNull(resultList)
+    assertEquals(2, resultList!!.size)
+    assertTrue(resultList!!.contains(friend1))
+    assertTrue(resultList!!.contains(friend2))
+  }
+
+  @Test
+  fun addUserDataListener_shouldInvokeOnDataChangedWithFetchedData() {
+    val userUid = "userWithListener"
+    val friendRequests = listOf("friendReq1")
+    val sentRequests = listOf("sentReq1")
+    val friends = listOf("friend1")
+
+    // Mock snapshot data
+    val snapshot = mock(DocumentSnapshot::class.java)
+    `when`(snapshot.exists()).thenReturn(true)
+    `when`(snapshot.data)
+        .thenReturn(
+            mapOf(
+                "friendRequests" to friendRequests,
+                "sentFriendRequests" to sentRequests,
+                "friendsList" to friends))
+
+    val userRef = mock(DocumentReference::class.java)
+    `when`(mockUserCollectionReference.document(userUid)).thenReturn(userRef)
+
+    // Mock friend documents
+    val friendReqSnapshot = mock(DocumentSnapshot::class.java)
+    val sentReqSnapshot = mock(DocumentSnapshot::class.java)
+    val friendSnapshot = mock(DocumentSnapshot::class.java)
+
+    val friendReqUser =
+        User(
+            "friendReq1",
+            "FR1",
+            "Test",
+            "+111",
+            null,
+            "fr1@test.com",
+            MutableStateFlow(Location("mock")))
+    val sentReqUser =
+        User(
+            "sentReq1",
+            "SR1",
+            "Test",
+            "+222",
+            null,
+            "sr1@test.com",
+            MutableStateFlow(Location("mock")))
+    val friendUser =
+        User(
+            "friend1",
+            "F1",
+            "Test",
+            "+333",
+            null,
+            "f1@test.com",
+            MutableStateFlow(Location("mock")))
+
+    `when`(helper.documentSnapshotToUser(friendReqSnapshot, null)).thenReturn(friendReqUser)
+    `when`(helper.documentSnapshotToUser(sentReqSnapshot, null)).thenReturn(sentReqUser)
+    `when`(helper.documentSnapshotToUser(friendSnapshot, null)).thenReturn(friendUser)
+
+    // Mock tasks
+    val friendReqRef = mock(DocumentReference::class.java)
+    val sentReqRef = mock(DocumentReference::class.java)
+    val friendRef = mock(DocumentReference::class.java)
+
+    `when`(mockUserCollectionReference.document("friendReq1")).thenReturn(friendReqRef)
+    `when`(mockUserCollectionReference.document("sentReq1")).thenReturn(sentReqRef)
+    `when`(mockUserCollectionReference.document("friend1")).thenReturn(friendRef)
+
+    `when`(friendReqRef.get()).thenReturn(Tasks.forResult(friendReqSnapshot))
+    `when`(sentReqRef.get()).thenReturn(Tasks.forResult(sentReqSnapshot))
+    `when`(friendRef.get()).thenReturn(Tasks.forResult(friendSnapshot))
+
+    var capturedListener: ((DocumentSnapshot?, FirebaseException?) -> Unit)? = null
+    `when`(userRef.addSnapshotListener(any())).thenAnswer { invocation ->
+      capturedListener =
+          invocation.arguments[0] as ((DocumentSnapshot?, FirebaseException?) -> Unit)
+      null
+    }
+
+    var friendRequestsResult: List<User>? = null
+    var sentRequestsResult: List<User>? = null
+    var friendsResult: List<User>? = null
+    var onFailureCalled = false
+
+    // Act
+    userRepositoryFirestore.addUserDataListener(
+        uid = userUid,
+        onDataChanged = { fr, sr, f ->
+          friendRequestsResult = fr
+          sentRequestsResult = sr
+          friendsResult = f
+        },
+        onFailure = { onFailureCalled = true })
+
+    // Simulate a snapshot event
+    capturedListener?.invoke(snapshot, null)
+
+    shadowOf(Looper.getMainLooper()).idle()
+
+    // Assert
+    assertNotNull(friendRequestsResult)
+    assertNotNull(sentRequestsResult)
+    assertNotNull(friendsResult)
+
+    assertTrue(friendRequestsResult!!.contains(friendReqUser))
+    assertTrue(sentRequestsResult!!.contains(sentReqUser))
+    assertTrue(friendsResult!!.contains(friendUser))
+
+    assertFalse(onFailureCalled)
+  }
+
+  @Test
   fun documentSnapshotToUserListWorks() {
     mockStatic(Tasks::class.java).use { mockedStatic ->
       val profilePicture = mock(ImageBitmap::class.java)
