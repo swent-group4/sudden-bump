@@ -349,10 +349,6 @@ open class UserViewModel(
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        // Here, 'user' is the one who sent the request initially
-        // and 'friend' is the one who received it.
-        // deleteFriendRequest(uid, fid) expects 'uid' as the one who *received* the request,
-        // and 'fid' as the one who *sent* it. Since we are unsending, we flip them:
         repository.deleteFriendRequest(
             uid = friend.uid, // the one who originally received the request
             fid = user.uid, // the one who originally sent the request
