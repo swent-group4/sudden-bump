@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
@@ -81,6 +82,7 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     backgroundColor = Pink40,
                     onClick = {
                       userViewModel.logout()
+                      FirebaseAuth.getInstance().signOut()
                       navigationActions.navigateTo(Route.AUTH)
                       Toast.makeText(context, "Logged out successfully !", Toast.LENGTH_LONG).show()
                     },
