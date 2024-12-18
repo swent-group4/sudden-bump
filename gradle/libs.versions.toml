@@ -74,6 +74,7 @@ navigationTesting = "2.8.4"
 retrofit = "2.10.0"
 okhttpLoggingInterceptor = "4.9.1"
 kotlinxCoroutinesAndroid = "1.6.0"
+uiTestJunit4Android = "1.7.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -154,6 +155,7 @@ retrofit-converter-scalars = { group = "com.squareup.retrofit2", name = "convert
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 # Optional: Logging interceptor for debugging
 okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttpLoggingInterceptor" }
+androidx-ui-test-junit4-android = { group = "androidx.compose.ui", name = "ui-test-junit4-android", version.ref = "uiTestJunit4Android" }
 
 
 [plugins]
