@@ -851,7 +851,14 @@ open class UserViewModel(
   ) {
     repository.getSharedByFriends(uid, onSuccess, onFailure)
   }
-
+  /**
+   * Un-send the friend request sent to the user's friend.
+   *
+   * @param user The user of the person unsending the request
+   * @param friend The friend to which the user is undoing the request
+   * @param onSuccess Called with a list of User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   fun unsendFriendRequest(
       user: User = _user.value,
       friend: User,
