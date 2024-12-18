@@ -99,23 +99,6 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                             },
                             text = { Text("Block User") }
                         )
-                        if (isFriend) {
-                            DropdownMenuItem(
-                                modifier = Modifier.testTag("deleteFriendButton"),
-                                onClick = {
-                                    expanded = false
-                                    userViewModel.deleteFriend(
-                                        user = currentUser,
-                                        friend = user,
-                                        onSuccess = {
-                                            navigationActions.goBack()
-                                        },
-                                        onFailure = { println("Error deleting friend: ${it.message}") }
-                                    )
-                                },
-                                text = { Text("Delete Friend") }
-                            )
-                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
