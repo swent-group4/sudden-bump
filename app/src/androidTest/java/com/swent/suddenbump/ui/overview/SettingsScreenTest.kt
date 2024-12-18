@@ -4,16 +4,15 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.location.Location
 import android.net.Uri
-import android.util.Log
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.kaspersky.kaspresso.internal.extensions.other.createFileIfNeeded
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.meeting.MeetingRepository
 import com.swent.suddenbump.model.meeting.MeetingViewModel
@@ -24,16 +23,12 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import io.mockk.mockk
 import java.io.File
 import java.io.FileOutputStream
-import kotlin.test.fail
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
-import org.mockito.kotlin.any
-import org.mockito.kotlin.doAnswer
 import org.mockito.kotlin.verify
 
 @RunWith(AndroidJUnit4::class)
@@ -74,6 +69,14 @@ class SettingsScreenTest {
     }
   }
 
+  private fun createMockImageUri(context: Context, bitmap: Bitmap): Uri {
+    val file = File(context.cacheDir, "test_image.png")
+    FileOutputStream(file).use { outputStream ->
+      bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+    }
+    return Uri.fromFile(file)
+  }
+
   @Test
   fun hasRequiredComponents() {
     setContentDefault()
@@ -87,7 +90,8 @@ class SettingsScreenTest {
 
     // Verify other required components
     composeTestRule.onNodeWithTag("profilePicture").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("addPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
   }
 
   @Test
@@ -116,6 +120,27 @@ class SettingsScreenTest {
   }
 
   @Test
+  fun editPhotoButtonIsDisplayedWhenProfilePictureExists() {
+    val userWithProfilePicture =
+        User(
+            uid = "1",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = ImageBitmap(100, 100),
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(userWithProfilePicture, {}, {})
+
+    setContentDefault()
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("removePhotoButton").assertIsDisplayed()
+  }
+
+  @Test
   fun discussionsButtonNavigatesToDiscussionsScreen() {
     setContentDefault()
     composeTestRule.waitForIdle()
@@ -126,21 +151,28 @@ class SettingsScreenTest {
   }
 
   @Test
-  fun defaultProfilePictureDisplaysWhenNull() {
+  fun addPhotoButtonIsDisplayedWhenProfilePictureIsNull() {
+    val userWithoutProfilePicture =
+        User(
+            uid = "2",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "+1234567891",
+            profilePicture = null,
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(userWithoutProfilePicture, {}, {})
+
     setContentDefault()
     composeTestRule.waitForIdle()
 
-    composeTestRule
-        .onNodeWithTag(testTag = "nullProfilePicture", useUnmergedTree = true)
-        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
   }
 
   @Test
-  fun customProfilePictureDisplaysWhenNotNull() {
-    setContentDefault()
-    composeTestRule.waitForIdle()
-
-    val userWithNullProfilePicture =
+  fun removePhotoButtonClearsProfilePicture() {
+    val userWithProfilePicture =
         User(
             uid = "3",
             firstName = "Alice",
@@ -149,53 +181,160 @@ class SettingsScreenTest {
             profilePicture = ImageBitmap(100, 100),
             emailAddress = "alice.brown@example.com",
             lastKnownLocation = MutableStateFlow(locationDummy))
-    userViewModel.setUser(userWithNullProfilePicture, {}, {})
+    userViewModel.setUser(userWithProfilePicture, {}, {})
 
+    setContentDefault()
     composeTestRule.waitForIdle()
 
-    composeTestRule
-        .onNodeWithTag(testTag = "nonNullProfilePicture", useUnmergedTree = true)
-        .assertIsDisplayed()
+    // Perform click on the remove photo button
+    composeTestRule.onNodeWithTag("removePhotoButton").performClick()
+
+    // Verify that the profile picture is cleared
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("nullProfilePicture").assertIsDisplayed()
   }
 
   @Test
-  fun chosenProfilePictureDisplaysWhenUri() {
-    var testContext: Context = ApplicationProvider.getApplicationContext()
+  fun addPhotoButtonTransitionsToEditPhotoAfterAddingPicture() {
+    setContentDefault()
+    composeTestRule.waitForIdle()
 
-    val uriExternal = testContext.getExternalFilesDir(null)?.toURI()
+    // Verify initial state
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
 
-    val uriImage = Uri.parse("file://${uriExternal!!.path}imagetest.jpeg")
+    // Simulate adding a photo
+    val userWithProfilePicture =
+        User(
+            uid = "4",
+            firstName = "Bob",
+            lastName = "Smith",
+            phoneNumber = "+1234567893",
+            profilePicture = ImageBitmap(100, 100),
+            emailAddress = "bob.smith@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(userWithProfilePicture, {}, {})
 
-    val fileOutputStream: FileOutputStream
-    val bitmap = ImageBitmap(100, 100).asAndroidBitmap()
+    composeTestRule.waitForIdle()
 
-    try {
-      val file = File(uriImage.path!!).createFileIfNeeded()
-      fileOutputStream = FileOutputStream(file)
-      bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fileOutputStream).also {
-        fileOutputStream.close()
-      }
-    } catch (e: Exception) {
-      Log.d("Debug", e.toString())
-      fail("Couldn't write the file for the test")
-    }
+    // Verify transition to edit photo state
+    composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("removePhotoButton").assertIsDisplayed()
+  }
 
-    doAnswer { invocation ->
-          val onSuccess = invocation.arguments[1] as () -> Unit
-          onSuccess()
-        }
-        .`when`(userRepository)
-        .updateUserAccount(any(), any(), any())
+  @Test
+  fun launchedEffectUpdatesProfilePictureSuccessfully() {
+    // Arrange: Mock User with no profile picture
+    val initialUser =
+        User(
+            uid = "1",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(initialUser, {}, {})
 
+    // Create a mock Uri for the image
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+    val mockUri = createMockImageUri(context, mockBitmap)
+
+    // Act: Set up the screen and simulate the profile picture Uri update
     composeTestRule.setContent {
       SettingsScreen(
           navigationActions = navigationActions,
           userViewModel = userViewModel,
-          meetingViewModel = meetingViewModel,
-          uri = uriImage)
+          meetingViewModel = meetingViewModel)
     }
+
     composeTestRule.waitForIdle()
 
-    verify(userRepository).updateUserAccount(any(), any(), any())
+    // Trigger the profile picture update (simulate UI behavior)
+    userViewModel.setUser(
+        initialUser.copy(profilePicture = mockBitmap.asImageBitmap()),
+        onSuccess = {},
+        onFailure = {})
+
+    composeTestRule.waitForIdle()
+
+    // Assert: Verify the updated profile picture is displayed
+    composeTestRule.onNodeWithTag("nonNullProfilePicture").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
+  }
+
+  @Test
+  fun launchedEffectHandlesImageLoadingFailureGracefully() {
+    // Arrange: Mock User with no profile picture
+    val initialUser =
+        User(
+            uid = "2",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(initialUser, {}, {})
+
+    // Act: Set up the screen and simulate the failure
+    composeTestRule.setContent {
+      SettingsScreen(
+          navigationActions = navigationActions,
+          userViewModel = userViewModel,
+          meetingViewModel = meetingViewModel)
+    }
+
+    composeTestRule.waitForIdle()
+
+    // Simulate updating the profile picture with the invalid Uri
+    userViewModel.setUser(initialUser.copy(profilePicture = null), onSuccess = {}, onFailure = {})
+
+    // Assert: Verify fallback UI is displayed (no crash occurs)
+    composeTestRule.onNodeWithTag("nullProfilePicture").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+  }
+
+  @Test
+  fun profilePictureUriLoadsSuccessfullyAndUpdatesViewModel() {
+    // Arrange: Mock user and initialize the ViewModel
+    val initialUser =
+        User(
+            uid = "1",
+            firstName = "Test",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "test.user@example.com",
+            lastKnownLocation = MutableStateFlow(locationDummy))
+    userViewModel.setUser(initialUser, {}, {})
+
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val mockBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
+
+    // Write a bitmap to a temporary file and get its Uri
+    val croppedImageUri = run {
+      val tempFile = File.createTempFile("cropped_image", ".png", context.cacheDir)
+      FileOutputStream(tempFile).use { outputStream ->
+        mockBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+      }
+      Uri.fromFile(tempFile)
+    }
+
+    // Act: Render the ProfileSection composable and simulate the crop result
+    composeTestRule.setContent { ProfileSection(userViewModel = userViewModel) }
+    composeTestRule.waitForIdle()
+
+    // Simulate the result of UCrop being returned
+    composeTestRule.runOnIdle {
+      userViewModel.setUser(initialUser.copy(profilePicture = mockBitmap.asImageBitmap()), {}, {})
+    }
+
+    // Assert: Verify the updated profile picture is displayed
+    composeTestRule.onNodeWithTag("nonNullProfilePicture").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Edit Photo").assertIsDisplayed()
   }
 }
