@@ -3,7 +3,6 @@ package com.swent.suddenbump.model.user
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
@@ -13,8 +12,9 @@ import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
-import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.network.RetrofitInstance
+import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.worker.WorkerScheduler
 import kotlinx.coroutines.Dispatchers
@@ -36,14 +36,9 @@ open class UserViewModel(
     private val chatRepository: ChatRepository
 ) : ViewModel() {
 
-  private val chatSummaryDummy =
-      ChatSummary("1", "message content", "chat456", Timestamp.now(), 0, listOf("1", "2"))
-
   private val logTag = "UserViewModel"
   private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
   val chatSummaries: StateFlow<List<ChatSummary>> = _chatSummaries.asStateFlow()
-  private val profilePicture = ImageBitMapIO()
-  val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
   private val locationDummy =
       MutableStateFlow(
@@ -97,8 +92,12 @@ open class UserViewModel(
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
   private val _friendIsOnline: MutableStateFlow<Boolean> = MutableStateFlow(false)
   val friendIsOnline = _friendIsOnline.asStateFlow()
-  private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
 
+  private val _statusMessage = MutableLiveData<String>()
+  val statusMessage: LiveData<String>
+    get() = _statusMessage
+
+  private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
   val locationSharedWith: StateFlow<List<User>> = _locationSharedWith.asStateFlow()
 
   // LiveData for verification status
@@ -500,6 +499,7 @@ open class UserViewModel(
   fun getUserStatus(uid: String, onSuccess: (Boolean) -> Unit, onFailure: (Exception) -> Unit) {
     repository.getUserStatus(uid, onSuccess, onFailure)
   }
+
   /**
    * Updates the user's online status in the repository.
    *
@@ -517,6 +517,7 @@ open class UserViewModel(
     _friendIsOnline.value = status
     repository.updateUserStatus(uid, status, onSuccess, onFailure)
   }
+
   /**
    * Updates the user's last activity timestamp in the repository.
    *
@@ -710,6 +711,221 @@ open class UserViewModel(
     _selectedContact.value = userDummy1
   }
 
+  fun deleteUserAccount(navigationActions: NavigationActions) {
+    val currentUser = _user.value
+    val uidToDelete = currentUser.uid
+
+    // Capture these lists before logout since logout clears them
+    val friends = _userFriends.value.toList()
+    val receivedRequests = _userFriendRequests.value.toList()
+    val sentRequests = _sentFriendRequests.value.toList()
+    val blockedUsers = _blockedFriends.value.toList()
+
+    logout()
+    navigationActions.navigateTo(Route.AUTH)
+
+    try {
+      // Remove from friends
+      for (friend in friends) {
+        deleteFriend(
+            user = currentUser,
+            friend = friend,
+            onSuccess = {},
+            onFailure = { e -> Log.e(logTag, "Failed to delete friend: ${e.message}") })
+      }
+
+      // Decline received requests
+      for (requester in receivedRequests) {
+        declineFriendRequest(
+            user = currentUser,
+            friend = requester,
+            onSuccess = { {} },
+            onFailure = { e -> Log.e(logTag, "Failed to decline friend request: ${e.message}") })
+      }
+
+      // Unsend sent requests
+      for (requestedFriend in sentRequests) {
+        unsendFriendRequest(
+            user = currentUser,
+            friend = requestedFriend,
+            onSuccess = {},
+            onFailure = { e -> Log.e(logTag, "Failed to unsend friend request: ${e.message}") })
+      }
+
+      // 3. After all references are removed, delete the user account
+      repository.deleteUserAccount(
+          uid = uidToDelete,
+          onSuccess = {
+            Log.i(logTag, "User account successfully deleted!")
+            // Optionally show a UI message or navigate
+          },
+          onFailure = { exception ->
+            Log.e(logTag, "Failed to delete user account: ${exception.message}")
+          })
+    } catch (e: Exception) {
+      Log.e(logTag, "Error during user account deletion cleanup: ${e.message}")
+      // Even if cleanup failed, we attempt to delete the user account
+      repository.deleteUserAccount(
+          uid = uidToDelete,
+          onSuccess = { Log.i(logTag, "User account deleted with partial cleanup!") },
+          onFailure = { exception ->
+            Log.e(logTag, "Failed to delete user account after error: ${exception.message}")
+          })
+    }
+  }
+
+  /*
+  fun deleteUserAccount() {
+      val currentUser = _user.value
+
+      // Lists we need to process
+      val friends = _userFriends.value
+      val receivedRequests = _userFriendRequests.value
+      val sentRequests = _sentFriendRequests.value
+      val locationSharedWith = _locationSharedWith.value
+
+      viewModelScope.launch {
+          coroutineScope {
+              val jobs = mutableListOf<Deferred<Unit>>()
+
+              // 1. Remove user from all their friends' friendsList
+              //    Using deleteFriend will also remove the user from the friend's list.
+              for (friend in friends) {
+                  jobs.add(async {
+                      suspendCancellableCoroutine<Unit> { continuation ->
+                          deleteFriend(
+                              user = currentUser,
+                              friend = friend,
+                              onSuccess = { continuation.resume(Unit) {} },
+                              onFailure = { e ->
+                                  Log.e(logTag, "Failed to delete friend: ${e.message}")
+                                  continuation.resume(Unit) {}
+                              }
+                          )
+                      }
+                  })
+              }
+
+              // 2. For each received friend request, decline it.
+              //    Declining will remove the user from their sentFriendRequests list.
+              for (requester in receivedRequests) {
+                  jobs.add(async {
+                      suspendCancellableCoroutine<Unit> { continuation ->
+                          declineFriendRequest(
+                              user = currentUser,
+                              friend = requester,
+                              onSuccess = { continuation.resume(Unit) {} },
+                              onFailure = { e ->
+                                  Log.e(logTag, "Failed to decline friend request: ${e.message}")
+                                  continuation.resume(Unit) {}
+                              }
+                          )
+                      }
+                  })
+              }
+
+              // 3. For each sent friend request, unsend it.
+              //    Unsend will remove the user from their friendRequests list.
+              for (requestedFriend in sentRequests) {
+                  jobs.add(async {
+                      suspendCancellableCoroutine<Unit> { continuation ->
+                          unsendFriendRequest(
+                              user = currentUser,
+                              friend = requestedFriend,
+                              onSuccess = { continuation.resume(Unit) {} },
+                              onFailure = { e ->
+                                  Log.e(logTag, "Failed to unsend friend request: ${e.message}")
+                                  continuation.resume(Unit) {}
+                              }
+                          )
+                      }
+                  })
+              }
+
+              // 4. Stop sharing location with all in locationSharedWith.
+              for (friend in locationSharedWith) {
+                  jobs.add(async {
+                      suspendCancellableCoroutine<Unit> { continuation ->
+                          stopSharingLocationWithFriend(
+                              uid = currentUser.uid,
+                              friend = friend,
+                              onSuccess = { continuation.resume(Unit) {} },
+                              onFailure = { e ->
+                                  Log.e(logTag, "Failed to stop sharing location: ${e.message}")
+                                  continuation.resume(Unit) {}
+                              }
+                          )
+                      }
+                  })
+              }
+
+              // Run all above tasks in parallel and wait for them to complete
+              jobs.awaitAll()
+          }
+
+          // Now that the main cleanup is done, we need to handle locationSharedBy.
+
+          getLocationSharedBy(
+              uid = currentUser.uid,
+              onSuccess = { locationSharedBy ->
+                  viewModelScope.launch {
+                      coroutineScope {
+                          val jobs = mutableListOf<Deferred<Unit>>()
+
+                          // 5. For each user who shares location with the current user (locationSharedBy),
+                          //    make them stop sharing their location with the current user.
+                          for (friend in locationSharedBy) {
+                              jobs.add(async {
+                                  suspendCancellableCoroutine<Unit> { continuation ->
+                                      stopSharingLocationWithFriend(
+                                          uid = friend.uid,
+                                          friend = currentUser,
+                                          onSuccess = { continuation.resume(Unit) {} },
+                                          onFailure = { e ->
+                                              Log.e(logTag, "Failed to make friend stop sharing location: ${e.message}")
+                                              continuation.resume(Unit) {}
+                                          }
+                                      )
+                                  }
+                              })
+                          }
+
+                          // Run these tasks in parallel
+                          jobs.awaitAll()
+
+                          // After all cleanup, logout and delete the user account
+                          finalizeAccountDeletion(currentUser.uid)
+                      }
+                  }
+              },
+              onFailure = { e ->
+                  // If we fail to retrieve locationSharedBy, log the error and proceed anyway.
+                  Log.e(logTag, "Failed to retrieve locationSharedBy: ${e.message}")
+
+                  // Even if we can't clean up locationSharedBy properly, we finalize deletion.
+                  finalizeAccountDeletion(currentUser.uid)
+              }
+          )
+      }
+  }*/
+
+  private fun finalizeAccountDeletion(uid: String) {
+    // First logout the user and clear local state
+    logout()
+
+    // Now call the repository method to delete the account from Firestore and related data
+    repository.deleteUserAccount(
+        uid = uid,
+        onSuccess = {
+          // Show a success message
+          _statusMessage.postValue("User account successfully deleted!")
+        },
+        onFailure = { exception ->
+          // Handle the failure
+          _statusMessage.postValue("Failed to delete user account: ${exception.message}")
+        })
+  }
+
   private val _messages = MutableStateFlow<List<Message>>(emptyList())
   val messages: StateFlow<List<Message>> = _messages
 
@@ -851,6 +1067,7 @@ open class UserViewModel(
   ) {
     repository.getSharedByFriends(uid, onSuccess, onFailure)
   }
+
   /**
    * Un-send the friend request sent to the user's friend.
    *

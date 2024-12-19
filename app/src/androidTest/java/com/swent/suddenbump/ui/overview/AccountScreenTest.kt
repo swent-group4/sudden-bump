@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.model.chat.ChatRepository
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -28,6 +29,7 @@ class AccountScreenTest {
   @Mock private lateinit var userViewModel: UserViewModel
   @Mock private lateinit var userRepository: UserRepository
   @Mock private lateinit var chatRepository: ChatRepository
+  @Mock private lateinit var meetingViewModel: MeetingViewModel
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -36,12 +38,16 @@ class AccountScreenTest {
     userRepository = mock(UserRepository::class.java)
     navigationActions = mock(NavigationActions::class.java)
     chatRepository = mock(ChatRepository::class.java)
+    meetingViewModel = mock(MeetingViewModel::class.java)
 
     doNothing().`when`(userRepository).logoutUser()
 
     userViewModel = UserViewModel(userRepository, chatRepository)
     composeTestRule.setContent {
-      AccountScreen(navigationActions = navigationActions, userViewModel = userViewModel)
+      AccountScreen(
+          navigationActions = navigationActions,
+          userViewModel = userViewModel,
+          meetingViewModel = meetingViewModel)
     }
   }
 

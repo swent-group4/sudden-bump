@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,6 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
@@ -23,11 +25,26 @@ import com.swent.suddenbump.ui.utils.AccountOption
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 
 @Composable
-fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+fun AccountScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel,
+    meetingViewModel: MeetingViewModel
+) {
   var selectedLanguage by remember { mutableStateOf("English") }
   var isLanguageMenuExpanded by remember { mutableStateOf(false) }
 
   val context = LocalContext.current
+
+  // State to show/hide the delete account confirmation dialog
+  var showDeleteAccountDialog by remember { mutableStateOf(false) }
+
+  // Observe status messages from the ViewModel
+  val statusMessage by userViewModel.statusMessage.observeAsState()
+
+  // Show a Toast when statusMessage changes
+  LaunchedEffect(statusMessage) {
+    statusMessage?.let { message -> Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+  }
 
   Scaffold(
       modifier = Modifier.testTag("accountScreen"),
@@ -44,13 +61,12 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
               item {
                 // Language Section with Pop-Up Menu
-                Box(modifier = Modifier.testTag("languageSection")) { // Only one testTag here
+                Box(modifier = Modifier.testTag("languageSection")) {
                   AccountOption(
                       label = "Language",
                       backgroundColor = Color.White,
                       onClick = { isLanguageMenuExpanded = true },
-                      testTag = "" // Remove redundant tag from the child
-                      )
+                      testTag = "")
                   DropdownMenu(
                       expanded = isLanguageMenuExpanded,
                       onDismissRequest = { isLanguageMenuExpanded = false }) {
@@ -71,7 +87,7 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                 AccountOption(
                     label = "Delete Account",
                     backgroundColor = Pink40,
-                    onClick = { navigationActions.navigateTo("AccountScreen") },
+                    onClick = { showDeleteAccountDialog = true },
                     testTag = "deleteAccountSection")
               }
 
@@ -88,6 +104,38 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
               }
             }
       })
+
+  // Confirmation dialog for deleting the account
+  if (showDeleteAccountDialog) {
+    AlertDialog(
+        onDismissRequest = { showDeleteAccountDialog = false },
+        title = { Text(text = "Delete Account") },
+        text = { Text(text = "Are you sure you want to delete your account?") },
+        confirmButton = {
+          Button(
+              onClick = {
+                showDeleteAccountDialog = false
+                val currentUserUid = userViewModel.getCurrentUser().value.uid
+                meetingViewModel.deleteMeetingsForUser(userId = currentUserUid)
+                userViewModel.deleteUserAccount(
+                    navigationActions) // Calls the repository deletion internally
+              },
+              colors =
+                  ButtonDefaults.buttonColors(
+                      containerColor = Color.Red, contentColor = Color.White)) {
+                Text("Yes")
+              }
+        },
+        dismissButton = {
+          Button(
+              onClick = { showDeleteAccountDialog = false },
+              colors =
+                  ButtonDefaults.buttonColors(
+                      containerColor = Color.Gray, contentColor = Color.White)) {
+                Text("No")
+              }
+        })
+  }
 }
 
 @Composable
