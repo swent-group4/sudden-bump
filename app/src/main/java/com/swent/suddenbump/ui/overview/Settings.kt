@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -276,7 +278,7 @@ fun ProfileSection(userViewModel: UserViewModel) {
                   onFailure = { Log.e("Profile", "Failed to remove profile picture") })
             },
             modifier = Modifier.testTag("removePhotoButton"),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+            colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)) {
               Text(
                   text = "Remove Photo",
                   style =
@@ -354,22 +356,32 @@ fun DeleteAllButton(onClick: () -> Unit, toDelete: String, confirmationText: Str
       onClick = { showDialog = true }, // Show the confirmation dialog when clicked
       colors =
           ButtonDefaults.buttonColors(
-              containerColor = Pink40, // Background color of the button
+              containerColor = Purple40, // Background color of the button
               contentColor = Color.White // Text color of the button
               ),
       shape = RoundedCornerShape(8.dp), // Match the less-rounded style of "Delete Account"
       modifier =
           Modifier.fillMaxWidth() // Make the button span the full width of the column
               .testTag("deleteAllButton_$toDelete") // Tag for testing this button
-              .padding(horizontal = 16.dp) // Padding to keep space on the sides
+              .padding(horizontal = 8.dp) // Padding to keep space on the sides
       ) {
         // Text displayed on the button
-        Text(
-            text = "Delete all $toDelete",
-            style =
-                MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold // Bold font for emphasis
-                    ))
+      Row(
+          verticalAlignment = Alignment.CenterVertically, // Center align icon and text
+          horizontalArrangement = Arrangement.spacedBy(8.dp) // Add spacing between icon and text
+      ) {
+          Icon(
+              imageVector = Icons.Default.Delete, // Use a default trash icon
+              contentDescription = "Delete Icon", // Accessibility description
+              tint = Color.White // Match the icon color to the text
+          )
+          Text(
+              text = "Delete all $toDelete",
+              style = MaterialTheme.typography.bodyLarge.copy(
+                  fontWeight = FontWeight.Bold // Bold font for emphasis
+              )
+          )
+      }
       }
 
   // Confirmation Dialog
