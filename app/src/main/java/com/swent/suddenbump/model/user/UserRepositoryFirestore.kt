@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class UserRepositoryFirestore(
     private val db: FirebaseFirestore,
     private val sharedPreferencesManager: SharedPreferencesManager,
-    private val workerScheduler: WorkerScheduler
+    private val workerScheduler: WorkerScheduler,
 ) : UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
@@ -49,7 +49,8 @@ class UserRepositoryFirestore(
   private val storage = Firebase.storage("gs://sudden-bump-swent.appspot.com")
   private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
 
-  override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
+  override val imageRepository: ImageRepository =
+      ImageRepositoryFirebaseStorage(storage, sharedPreferencesManager)
 
   private lateinit var verificationId: String
 
@@ -716,6 +717,9 @@ class UserRepositoryFirestore(
                       },
                       onFailure = {
                         Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
+                        val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
+                        friendsListMutable = friendsListMutable + userFriend
+
                         counterFriend++
                         if (counterFriend == documents.size) {
                           onSuccess(friendsListMutable)
