@@ -92,6 +92,7 @@ open class UserViewModel(
   private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
       if (!isRunningTest()) MutableStateFlow(emptyList())
       else MutableStateFlow(listOf(UserWithFriendsInCommon(userDummy1, 1)))
+  private val _allNonBlockedUsers: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
   private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
@@ -210,6 +211,10 @@ open class UserViewModel(
                 _recommendedFriends.value = recommendedFriendsList
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
+          repository.getAllNonBlockedUsers(
+              uid = _user.value.uid,
+              onSuccess = { nonBlockedUsers -> _allNonBlockedUsers.value = nonBlockedUsers },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
         },
         onFailure = { e -> Log.e(logTag, e.toString()) })
   }
@@ -254,6 +259,10 @@ open class UserViewModel(
               onSuccess = { recommendedFriendsList ->
                 _recommendedFriends.value = recommendedFriendsList
               },
+              onFailure = { e -> Log.e(logTag, e.toString()) })
+          repository.getAllNonBlockedUsers(
+              uid = _user.value.uid,
+              onSuccess = { nonBlockedUsers -> _allNonBlockedUsers.value = nonBlockedUsers },
               onFailure = { e -> Log.e(logTag, e.toString()) })
         },
         onFailure)
@@ -408,6 +417,10 @@ open class UserViewModel(
 
   fun getUserRecommendedFriends(): StateFlow<List<UserWithFriendsInCommon>> {
     return _recommendedFriends.asStateFlow()
+  }
+
+  fun getAllNonBlockedUsers(): StateFlow<List<User>> {
+    return _allNonBlockedUsers.asStateFlow()
   }
 
   fun getSentFriendRequests(): StateFlow<List<User>> {

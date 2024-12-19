@@ -862,6 +862,54 @@ class UserRepositoryFirestore(
         }
   }
 
+  override fun getAllNonBlockedUsers(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    // Fetch the user's blocked list from the database
+    db.collection(usersCollectionPath)
+        .document(uid)
+        .get()
+        .addOnFailureListener { onFailure(it) }
+        .addOnSuccessListener { userDocument ->
+          val blockedList = userDocument.data?.get("blockedList") as? List<String> ?: emptyList()
+
+          // Fetch all users from the database
+          db.collection(usersCollectionPath)
+              .get()
+              .addOnFailureListener { onFailure(it) }
+              .addOnSuccessListener { result ->
+                val nonBlockedUsers =
+                    result.documents.mapNotNull { document ->
+                      // Check if the user is not in the blocked list
+                      if (document.id != uid && document.id !in blockedList) {
+                        var profilePicture: ImageBitmap? = null
+                        val path =
+                            helper.uidToProfilePicturePath(
+                                document.data!!["uid"].toString(), profilePicturesRef)
+                        imageRepository.downloadImage(
+                            path,
+                            onSuccess = { image ->
+                              profilePicture = image
+                              Log.d(
+                                  logTag,
+                                  "Successfully retrieved image for id : ${document.id}, picture : $profilePicture")
+                            },
+                            onFailure = {
+                              Log.e(logTag, "Failed to retrieve image for id : ${document.id}")
+                            })
+                        // Create User object
+                        helper.documentSnapshotToUser(document, profilePicture)
+                      } else {
+                        null
+                      }
+                    }
+                onSuccess(nonBlockedUsers)
+              }
+        }
+  }
+
   /**
    * Blocks a specific user by deleting him from all the current user lists i.e. friends,
    * sentRequests and requests. Adds the user to the blocked list.

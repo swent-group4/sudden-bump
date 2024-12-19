@@ -88,6 +88,8 @@ class AddContactScreenTest {
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(listOf(user2))
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getBlockedFriends() } returns MutableStateFlow(emptyList())
+    every { userViewModel.getAllNonBlockedUsers() } returns
+        MutableStateFlow(listOf(user1.user, user2))
 
     composeTestRule.setContent { AddContactScreen(navigationActions, userViewModel) }
   }
@@ -193,12 +195,11 @@ class UserRowsTest {
   fun testUserRecommendedRowInitialState() {
     composeTestRule.setContent {
       UserRecommendedRow(
-          currentUser = currentUser,
-          userWithFriends = testUser,
+          user = testUser.user,
+          friendsInCommon = testUser.friendsInCommon,
           navigationActions = navigationActions,
           userViewModel = userViewModel,
-          sentFriendRequests = emptyList(),
-          friendRequests = emptyList())
+      )
     }
 
     composeTestRule.onNodeWithText("John D.").assertIsDisplayed()
@@ -211,12 +212,10 @@ class UserRowsTest {
   fun testUserRecommendedRowClickNavigation() {
     composeTestRule.setContent {
       UserRecommendedRow(
-          currentUser = currentUser,
-          userWithFriends = testUser,
+          user = testUser.user,
+          friendsInCommon = testUser.friendsInCommon,
           navigationActions = navigationActions,
-          userViewModel = userViewModel,
-          sentFriendRequests = emptyList(),
-          friendRequests = emptyList())
+          userViewModel = userViewModel)
     }
 
     composeTestRule.onRoot().performClick()

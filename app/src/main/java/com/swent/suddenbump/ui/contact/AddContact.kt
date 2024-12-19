@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -37,7 +36,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
-import com.swent.suddenbump.model.user.UserWithFriendsInCommon
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.Pinkish
@@ -61,7 +59,9 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
             !friendRequests.value.map { user: User -> user.uid }.contains(it.user.uid)
       }
 
-  val filteredUsers =
+  val allNonBlockedUsers = userViewModel.getAllNonBlockedUsers().collectAsState().value
+
+  val sortedRecommendedUsers =
       recommendedUsers
           .filter { data ->
             data.user.firstName.contains(searchQuery.text, ignoreCase = true) ||
@@ -69,6 +69,15 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
           }
           .sortedByDescending { it.friendsInCommon }
           .take(5)
+
+  val filteredUsers =
+      allNonBlockedUsers.filter { user ->
+        user.firstName.contains(searchQuery.text, ignoreCase = true) ||
+            user.lastName.contains(searchQuery.text, ignoreCase = true)
+      }
+
+  println("Non blocked users: $allNonBlockedUsers")
+  println("Filtered users: $filteredUsers")
 
   Scaffold(
       modifier = Modifier.testTag("addContactScreen"),
@@ -156,7 +165,7 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                         color = Pinkish,
                         modifier = Modifier.padding(start = 8.dp))
                   }
-              if (filteredUsers.isNotEmpty()) {
+              if (searchQuery.text.isEmpty() && recommendedUsers.isNotEmpty()) {
                 LazyColumn(
                     modifier =
                         Modifier.fillMaxWidth()
@@ -164,14 +173,61 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                             .background(Color.White)
                             .padding(16.dp)
                             .testTag("userList")) {
-                      itemsIndexed(filteredUsers) { index, data ->
+                      itemsIndexed(sortedRecommendedUsers) { index, data ->
                         UserRecommendedRow(
-                            userWithFriends = data,
+                            user = data.user,
+                            friendsInCommon = data.friendsInCommon,
                             navigationActions = navigationActions,
                             userViewModel = userViewModel,
-                            currentUser = userViewModel.getCurrentUser().collectAsState().value,
-                            sentFriendRequests = sentFriendRequests,
-                            friendRequests = friendRequests.value)
+                        )
+                        if (index < filteredUsers.size - 1) {
+                          HorizontalDivider(
+                              color = Color.Gray,
+                              thickness = 0.5.dp,
+                              modifier = Modifier.padding(vertical = 4.dp).testTag("divider"))
+                        }
+                      }
+                    }
+              } else if (recommendedUsers.isEmpty() &&
+                  filteredUsers.isNotEmpty() &&
+                  searchQuery.text.isEmpty()) {
+                LazyColumn(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White)
+                            .padding(16.dp)
+                            .testTag("userList")) {
+                      itemsIndexed(filteredUsers.take(5)) { index, data ->
+                        UserRecommendedRow(
+                            user = data,
+                            friendsInCommon = 0,
+                            navigationActions = navigationActions,
+                            userViewModel = userViewModel,
+                        )
+                        if (index < filteredUsers.size - 1) {
+                          HorizontalDivider(
+                              color = Color.Gray,
+                              thickness = 0.5.dp,
+                              modifier = Modifier.padding(vertical = 4.dp).testTag("divider"))
+                        }
+                      }
+                    }
+              } else if (filteredUsers.isNotEmpty() && searchQuery.text.isNotEmpty()) {
+                LazyColumn(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White)
+                            .padding(16.dp)
+                            .testTag("userList")) {
+                      itemsIndexed(filteredUsers.take(5)) { index, data ->
+                        UserRecommendedRow(
+                            user = data,
+                            friendsInCommon = 0,
+                            navigationActions = navigationActions,
+                            userViewModel = userViewModel,
+                        )
                         if (index < filteredUsers.size - 1) {
                           HorizontalDivider(
                               color = Color.Gray,
@@ -257,23 +313,16 @@ fun UserRequestRow(
 
 @Composable
 fun UserRecommendedRow(
-    currentUser: User,
-    userWithFriends: UserWithFriendsInCommon,
+    user: User,
+    friendsInCommon: Int,
     navigationActions: NavigationActions,
     userViewModel: UserViewModel,
-    sentFriendRequests: List<User>,
-    friendRequests: List<User>
 ) {
-  var showButton by remember {
-    mutableStateOf(
-        (!sentFriendRequests.map { user: User -> user.uid }.contains(userWithFriends.user.uid)) &&
-            !friendRequests.map { user: User -> user.uid }.contains(userWithFriends.user.uid))
-  }
   Row(
       modifier =
           Modifier.fillMaxWidth()
               .clickable {
-                userViewModel.setSelectedContact(userWithFriends.user)
+                userViewModel.setSelectedContact(user)
                 navigationActions.navigateTo(Screen.CONTACT)
               }
               .testTag("recommendedUserRow"),
@@ -282,31 +331,19 @@ fun UserRecommendedRow(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-              UserProfileImage(userWithFriends.user, 40)
+              UserProfileImage(user, 40)
               Text(
-                  text =
-                      "${userWithFriends.user.firstName} ${userWithFriends.user.lastName.first()}.",
+                  text = "${user.firstName} ${user.lastName.first()}.",
                   style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                   modifier = Modifier.testTag("userName"))
 
-              Text(
-                  text = "${userWithFriends.friendsInCommon} friends in common",
-                  style = MaterialTheme.typography.bodyMedium,
-                  color = Color.Gray,
-                  modifier = Modifier.testTag("friendsInCommon"))
-            }
-        if (showButton) {
-          IconButton(
-              onClick = {
-                userViewModel.sendFriendRequest(
-                    currentUser, userWithFriends.user, { showButton = false }, {})
-              },
-              modifier = Modifier.testTag("denyButton")) {
-                Icon(
-                    imageVector = Icons.Default.AddCircle,
-                    contentDescription = "Send friend request",
-                    tint = com.swent.suddenbump.ui.theme.Purple40)
+              if (friendsInCommon > 0) {
+                Text(
+                    text = "${friendsInCommon} friends in common",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    modifier = Modifier.testTag("friendsInCommon"))
               }
-        }
+            }
       }
 }

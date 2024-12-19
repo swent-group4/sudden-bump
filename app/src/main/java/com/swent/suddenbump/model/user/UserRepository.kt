@@ -108,6 +108,12 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
+  fun getAllNonBlockedUsers(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
+
   fun getBlockedFriends(
       uid: String,
       onSuccess: (List<User>) -> Unit,
