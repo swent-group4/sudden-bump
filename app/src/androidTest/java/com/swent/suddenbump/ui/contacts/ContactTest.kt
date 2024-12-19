@@ -83,7 +83,7 @@ class ContactScreenTest {
 
     composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag("profileImage").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
     composeTestRule.onNodeWithTag("userName").assertIsDisplayed()
     composeTestRule.onNodeWithTag("phoneCard").assertIsDisplayed()
     composeTestRule.onNodeWithTag("emailCard").assertIsDisplayed()

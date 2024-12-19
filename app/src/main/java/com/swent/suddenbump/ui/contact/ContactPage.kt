@@ -50,8 +50,6 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
   val user = userViewModel.getSelectedContact().collectAsState().value
   var showDialog by remember { mutableStateOf(false) }
 
-  val currentUser = userViewModel.getCurrentUser().collectAsState().value
-
   // Check states from the ViewModel flows:
   val friendsList = userViewModel.getUserFriends().collectAsState().value
   val friendRequests = userViewModel.getUserFriendRequests().collectAsState().value
