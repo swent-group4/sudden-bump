@@ -85,7 +85,7 @@ class ContactScreenTest {
 
     composeTestRule.onNodeWithText("Contact").assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag("profileImage").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
 
     composeTestRule.onNodeWithTag("userName").assertIsDisplayed()
 
@@ -200,6 +200,6 @@ class ContactScreenTest {
     composeTestRule.waitForIdle()
 
     // Verify the profile picture image
-    composeTestRule.onNodeWithTag("profileImageNotNull").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
   }
 }

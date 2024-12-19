@@ -14,16 +14,19 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
@@ -40,6 +43,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -56,6 +60,7 @@ import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.theme.Gray
 import com.swent.suddenbump.ui.theme.Pinkish
 import com.swent.suddenbump.ui.theme.violetColor
 import com.swent.suddenbump.ui.utils.UserProfileImage
@@ -122,48 +127,92 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
             selectedItem = navigationActions.currentRoute())
       },
       content = { pd ->
-        LazyColumn(
-            modifier =
-                Modifier.fillMaxHeight()
-                    .background(Color.Black)
-                    .padding(pd)
-                    .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally) {
+          LazyColumn(
+              modifier = Modifier
+                  .fillMaxSize()
+                  .background(Color.Black)
+                  .padding(pd)
+                  .padding(horizontal = 8.dp),
+              horizontalAlignment = Alignment.CenterHorizontally
+          ) {
               if (groupedFriends?.isNotEmpty() == true) {
-                groupedFriends!!
-                    .entries
-                    .sortedBy { it.key.ordinal }
-                    .forEach { (category, friendsList) ->
-                      item { CategoryHeader(category) }
-                      items(friendsList) { (friend, _) ->
-                        UserRow(
-                            user = friend,
-                            navigationActions = navigationActions,
-                            userViewModel = userViewModel)
+                  groupedFriends!!
+                      .entries
+                      .sortedBy { it.key.ordinal }
+                      .forEach { (category, friendsList) ->
+                          item { CategoryHeader(category) }
+                          item {
+                              Box(
+                                  modifier = Modifier
+                                      .fillMaxWidth()
+                                      .clip(RoundedCornerShape(10.dp))
+                                      .background(Color.White)
+                                      .padding(8.dp)
+                                      .testTag("userList")
+                              ) {
+                                  LazyColumn(
+                                      modifier = Modifier
+                                          .fillMaxWidth()
+                                          .heightIn(max = 400.dp) // Constrain height of the inner LazyColumn
+                                  ) {
+                                      items(friendsList.size) { index ->
+                                          val (friend, _) = friendsList[index]
+                                          Column(
+                                              modifier = Modifier.fillMaxWidth() // Add vertical space around each user
+                                          ) {
+                                              UserRow(
+                                                  user = friend,
+                                                  navigationActions = navigationActions,
+                                                  userViewModel = userViewModel,
+                                              )
+                                              // Add a divider after each user except the last one
+                                              if (index < friendsList.size - 1) {
+                                                  HorizontalDivider(
+                                                      color = Color.Gray,
+                                                      thickness = 0.5.dp,
+                                                      modifier = Modifier
+                                                          .fillMaxWidth()
+                                                          .testTag("divider")
+                                                          .padding(vertical = 4.dp)
+                                                  )
+                                              }
+                                          }
+                                      }
+                                  }
+                              }
+                          }
                       }
-                    }
               } else if (groupedFriends == null) {
-                item {
-                  Box(
-                      modifier = Modifier.fillMaxSize().padding(vertical = 8.dp),
-                      contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(
-                            color = Color.White, modifier = Modifier.testTag("loadingFriends"))
+                  item {
+                      Box(
+                          modifier = Modifier
+                              .fillMaxSize()
+                              .padding(vertical = 4.dp),
+                          contentAlignment = Alignment.Center
+                      ) {
+                          CircularProgressIndicator(
+                              color = Color.White,
+                              modifier = Modifier.testTag("loadingFriends")
+                          )
                       }
-                }
+                  }
               } else {
-                item {
-                  Text(
-                      text = "No friends nearby, add friends to see their location",
-                      color = Color.White,
-                      modifier =
-                          Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 8.dp),
-                      style = MaterialTheme.typography.titleLarge,
-                      textAlign = TextAlign.Center)
-                }
+                  item {
+                      Text(
+                          text = "No friends nearby, add friends to see their location",
+                          color = Color.White,
+                          modifier = Modifier
+                              .testTag("noFriends")
+                              .fillMaxWidth()
+                              .padding(vertical = 4.dp),
+                          style = MaterialTheme.typography.titleLarge,
+                          textAlign = TextAlign.Center
+                      )
+                  }
               }
-            }
-      })
+          }
+      }
+  )
 }
 
 @Composable
@@ -209,7 +258,8 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                 userViewModel.setSelectedContact(user)
                 navigationActions.navigateTo(Screen.CONTACT)
               }
-              .testTag(user.uid),
+              .testTag(user.uid)
+              .padding(vertical = 4.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Row(
@@ -220,11 +270,11 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                 Text(
                     text = "${user.firstName} ${user.lastName.first()}.",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White)
+                    color = Color.Black)
                 Text(
                     text = locationText,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White)
+                    color = Gray)
               }
             }
         IconToggleButton(
