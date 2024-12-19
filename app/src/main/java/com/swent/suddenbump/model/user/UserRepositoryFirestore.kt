@@ -190,7 +190,7 @@ class UserRepositoryFirestore(
                   val path =
                       helper.uidToProfilePicturePath(
                           resultEmail.data!!["uid"].toString(), profilePicturesRef)
-                  imageRepository.downloadImage(
+                  imageRepository.downloadImageAsync(
                       path,
                       onSuccess = {
                         onSuccess(helper.documentSnapshotToUser(resultUser.result, it))
@@ -222,7 +222,7 @@ class UserRepositoryFirestore(
         .addOnCompleteListener { resultUser ->
           if (resultUser.isSuccessful) {
             val path = helper.uidToProfilePicturePath(uid, profilePicturesRef)
-            imageRepository.downloadImage(
+            imageRepository.downloadImageAsync(
                 path,
                 onSuccess = { image ->
                   onSuccess(helper.documentSnapshotToUser(resultUser.result, image))
@@ -712,6 +712,40 @@ class UserRepositoryFirestore(
               }
               .addOnFailureListener { e -> onFailure(e) }
         }
+  }
+
+  override fun deleteFriend(
+      currentUserId: String,
+      friendUserId: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    val currentUserRef = db.collection(usersCollectionPath).document(currentUserId)
+    val friendUserRef = db.collection(usersCollectionPath).document(friendUserId)
+
+    db.runTransaction { transaction ->
+          val currentUserSnapshot = transaction.get(currentUserRef)
+          val friendUserSnapshot = transaction.get(friendUserRef)
+
+          val currentUserData =
+              currentUserSnapshot.data ?: throw Exception("Current user not found")
+          val friendUserData = friendUserSnapshot.data ?: throw Exception("Friend user not found")
+
+          val currentUserFriendsList =
+              (currentUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
+          val friendUserFriendsList =
+              (friendUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
+
+          // Remove friend from current user's friend list
+          currentUserFriendsList.remove(friendUserId)
+          // Remove current user from friend's friend list
+          friendUserFriendsList.remove(currentUserId)
+
+          transaction.update(currentUserRef, "friendsList", currentUserFriendsList)
+          transaction.update(friendUserRef, "friendsList", friendUserFriendsList)
+        }
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { e -> onFailure(e) }
   }
 
   /**
@@ -1341,32 +1375,29 @@ class UserRepositoryFirestore(
     val uidList = helper.documentSnapshotToList(uidJsonList)
 
     val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
-    println(tasks.toString())
     Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
-      var counterFriend = 0
-      var friendsListMutable = emptyList<User>()
+      val friendsListMutable = mutableListOf<User>()
       for (doc in documents) {
         var profilePicture: ImageBitmap? = null
-        val path = helper.uidToProfilePicturePath(doc.data!!["uid"].toString(), profilePicturesRef)
-        imageRepository.downloadImageAsync(
-            path,
-            onSuccess = { image ->
-              profilePicture = image
-              val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
-              friendsListMutable = friendsListMutable + userFriend
+        val path =
+            doc.data?.get("uid")?.let {
+              helper.uidToProfilePicturePath(it.toString(), profilePicturesRef)
+            }
 
-              counterFriend++
-              if (counterFriend == documents.size) {
+        if (path != null) {
+          imageRepository.downloadImageAsync(
+              path,
+              onSuccess = { image ->
+                profilePicture = image
+                val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
+                friendsListMutable.add(userFriend)
                 onSuccess(friendsListMutable)
-              }
-            },
-            onFailure = {
-              Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
-              counterFriend++
-              if (counterFriend == documents.size) {
+              },
+              onFailure = {
+                Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
                 onSuccess(friendsListMutable)
-              }
-            })
+              })
+        }
       }
     }
   }
