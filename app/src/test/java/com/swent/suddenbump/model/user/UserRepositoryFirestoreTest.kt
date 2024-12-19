@@ -116,6 +116,8 @@ class UserRepositoryFirestoreTest {
   @Mock private lateinit var sharedPreferences: SharedPreferences
   @Mock private lateinit var sharedPreferencesEditor: SharedPreferences.Editor
 
+  @Mock private lateinit var mockContext: Context
+
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
   private val helper = UserRepositoryFirestoreHelper()
 
@@ -174,7 +176,8 @@ class UserRepositoryFirestoreTest {
     }
 
     userRepositoryFirestore =
-        UserRepositoryFirestore(mockFirestore, mockSharedPreferencesManager, mockWorkerScheduler)
+        UserRepositoryFirestore(
+            mockFirestore, mockSharedPreferencesManager, mockWorkerScheduler, mockContext)
 
     `when`(mockTaskVoid.isSuccessful).thenReturn(true)
     `when`(mockTaskVoid.isCanceled).thenReturn(false)

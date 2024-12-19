@@ -13,9 +13,11 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.StorageTask
 import com.kaspersky.kaspresso.internal.extensions.other.createFileIfNeeded
+import com.swent.suddenbump.ui.utils.isMockUsingOnlineDefaultValue
 import com.swent.suddenbump.ui.utils.isUsingMockException
 import com.swent.suddenbump.ui.utils.isUsingMockFileDownloadTask
 import com.swent.suddenbump.ui.utils.testableFileDownloadTask
+import com.swent.suddenbump.ui.utils.testableOnlineDefaultValue
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.coroutines.cancellation.CancellationException
@@ -50,6 +52,8 @@ class ImageRepositoryFirebaseStorageTest {
 
   @Mock private lateinit var mockStorageTask: StorageTask<TaskSnapshot>
 
+  @Mock private lateinit var mockContext: Context
+
   @Before
   fun setUp() {
     MockitoAnnotations.openMocks(this)
@@ -61,7 +65,7 @@ class ImageRepositoryFirebaseStorageTest {
       FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
 
-    mockImageRepository = ImageRepositoryFirebaseStorage(mockFirebaseStorage)
+    mockImageRepository = ImageRepositoryFirebaseStorage(mockFirebaseStorage, mockContext)
   }
 
   @Test
@@ -105,9 +109,14 @@ class ImageRepositoryFirebaseStorageTest {
       `when`(mockFileDownloadTask.await()).thenReturn(mockTaskSnapshot)
       `when`(mockTaskSnapshot.task).thenReturn(mockStorageTask)
 
+      isMockUsingOnlineDefaultValue = true
+      testableOnlineDefaultValue = true
+
       val results =
           mockImageRepository.downloadImage(
               "/imagetest.jpeg", { println() }, { fail("Fetching should not fail") })
+
+      isMockUsingOnlineDefaultValue = false
     }
 
     verify(mockFirebaseStorage).reference

@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.user
 
+import android.content.Context
 import android.location.Location
 import android.location.LocationManager
 import android.util.Log
@@ -36,7 +37,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class UserRepositoryFirestore(
     private val db: FirebaseFirestore,
     private val sharedPreferencesManager: SharedPreferencesManager,
-    private val workerScheduler: WorkerScheduler
+    private val workerScheduler: WorkerScheduler,
+    private val context: Context
 ) : UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
@@ -49,7 +51,7 @@ class UserRepositoryFirestore(
   private val storage = Firebase.storage("gs://sudden-bump-swent.appspot.com")
   private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
 
-  override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
+  override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage, context)
 
   private lateinit var verificationId: String
 

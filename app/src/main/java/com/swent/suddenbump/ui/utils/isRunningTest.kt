@@ -27,3 +27,6 @@ lateinit var testableFileDownloadTask: TaskSnapshot
 
 var isUsingMockException = false
 var isUITest = false
+var isMockUsingOfflineMode = false
+var isMockUsingOnlineDefaultValue = false
+var testableOnlineDefaultValue = false
