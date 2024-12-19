@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.image
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -9,6 +10,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.google.firebase.storage.FileDownloadTask.TaskSnapshot
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.swent.suddenbump.ui.utils.isInternetAvailable
 import com.swent.suddenbump.ui.utils.isUsingMockException
 import com.swent.suddenbump.ui.utils.isUsingMockFileDownloadTask
 import com.swent.suddenbump.ui.utils.testableFileDownloadTask
@@ -24,7 +26,10 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 
-class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : ImageRepository {
+class ImageRepositoryFirebaseStorage(
+    private val storage: FirebaseStorage,
+    private val context: Context
+) : ImageRepository {
 
   val profilePicturesPath = "/data/data/com.swent.suddenbump/files/"
 
@@ -182,47 +187,61 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
       onFailure: (Exception) -> Unit
   ) {
     val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
-    try {
-      val timeoutMillis = 1_500L
-      withTimeout(timeoutMillis) {
-        val fileDownloadTask: TaskSnapshot =
-            if (!isUsingMockFileDownloadTask) imageRef.getFile(localFile).await()
-            else testableFileDownloadTask
-        if (fileDownloadTask.task.isCanceled) {
-          fileInputStream.close()
-          Log.e("FirebaseDownload", "Download failed : $path")
-          val storageTask = fileDownloadTask.task
-          onFailure(fileDownloadTask.task.exception!!)
-        } else {
-          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-          Log.i(
-              "FirebaseDownload",
-              "Finished online : ${profilePicturesPath + path.substringAfterLast('/')}")
-          onSuccess(bitmap.asImageBitmap())
-        }
-      }
-    } catch (e: CancellationException) {
-      Log.e("FirebaseDownload", "Download timed out", e)
+    if (!isInternetAvailable(context)) {
+      Log.i("FirebaseDownload", "Offline mode : $path")
+      offlineDownloadImageFactory(path, onSuccess, onFailure, fileInputStream)
+    } else {
       try {
-        if (isUsingMockException) {
-          isUsingMockException = false
-          throw Exception("TEST")
+        val timeoutMillis = 1_500L
+        withTimeout(timeoutMillis) {
+          val fileDownloadTask: TaskSnapshot =
+              if (!isUsingMockFileDownloadTask) imageRef.getFile(localFile).await()
+              else testableFileDownloadTask
+          if (fileDownloadTask.task.isCanceled) {
+            fileInputStream.close()
+            Log.e("FirebaseDownload", "Download failed : $path")
+            val storageTask = fileDownloadTask.task
+            onFailure(fileDownloadTask.task.exception!!)
+          } else {
+            val bitmap =
+                BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+            Log.i(
+                "FirebaseDownload",
+                "Finished online : ${profilePicturesPath + path.substringAfterLast('/')}")
+            onSuccess(bitmap.asImageBitmap())
+          }
         }
-        val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-        Log.i(
-            "FirebaseDownload",
-            "Finished offline : ${profilePicturesPath + path.substringAfterLast('/')}")
-        onSuccess(bitmap.asImageBitmap())
-      } catch (e2: Exception) {
-        Log.e("FirebaseDownload", "Failed to download file locally", e2)
-        println(e2)
+      } catch (e: CancellationException) {
+        Log.e("FirebaseDownload", "Download timed out", e)
+        offlineDownloadImageFactory(path, onSuccess, onFailure, fileInputStream)
+      } catch (e: Exception) {
+        Log.e("FirebaseDownload", "Failed to download file", e)
         withContext(Dispatchers.IO) { fileInputStream.close() }
         onFailure(e)
       }
-    } catch (e: Exception) {
-      Log.e("FirebaseDownload", "Failed to download file", e)
+    }
+  }
+
+  private suspend fun offlineDownloadImageFactory(
+      path: String,
+      onSuccess: (ImageBitmap) -> Unit,
+      onFailure: (Exception) -> Unit,
+      fileInputStream: FileInputStream
+  ) {
+    try {
+      if (isUsingMockException) {
+        throw Exception("TEST")
+      }
+      val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+      Log.i(
+          "FirebaseDownload",
+          "Finished offline : ${profilePicturesPath + path.substringAfterLast('/')}")
+      onSuccess(bitmap.asImageBitmap())
+    } catch (e2: Exception) {
+      Log.e("FirebaseDownload", "Failed to download file locally", e2)
+      println(e2)
       withContext(Dispatchers.IO) { fileInputStream.close() }
-      onFailure(e)
+      onFailure(e2)
     }
   }
 }

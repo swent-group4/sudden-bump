@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swent.suddenbump.model.chat.ChatSummary
+import com.swent.suddenbump.model.chat.convertLastSenderUidToDisplay
 import com.swent.suddenbump.model.chat.convertParticipantsUidToDisplay
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
@@ -181,7 +182,12 @@ fun MessageItem(
               horizontalArrangement = Arrangement.SpaceBetween,
               modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "You: ${message.content}",
+                    text =
+                        convertLastSenderUidToDisplay(
+                            message,
+                            viewModel.getCurrentUser().collectAsState().value,
+                            viewModel.getUserFriends().collectAsState().value) +
+                            " : ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
                     maxLines = 1,

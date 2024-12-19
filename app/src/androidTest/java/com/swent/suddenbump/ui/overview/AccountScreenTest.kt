@@ -12,6 +12,8 @@ import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
+import com.swent.suddenbump.ui.utils.isMockUsingOnlineDefaultValue
+import com.swent.suddenbump.ui.utils.testableOnlineDefaultValue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -38,6 +40,9 @@ class AccountScreenTest {
     chatRepository = mock(ChatRepository::class.java)
 
     doNothing().`when`(userRepository).logoutUser()
+
+    isMockUsingOnlineDefaultValue = true
+    testableOnlineDefaultValue = true
 
     userViewModel = UserViewModel(userRepository, chatRepository)
     composeTestRule.setContent {

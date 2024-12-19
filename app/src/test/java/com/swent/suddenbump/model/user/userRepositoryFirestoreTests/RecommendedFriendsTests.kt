@@ -141,7 +141,8 @@ class RecommendedFriendsTests {
     }
 
     userRepositoryFirestore =
-        UserRepositoryFirestore(mockFirestore, mockSharedPreferencesManager, mockWorkerScheduler)
+        UserRepositoryFirestore(
+            mockFirestore, mockSharedPreferencesManager, mockWorkerScheduler, mockContext)
 
     `when`(mockTaskVoid.isSuccessful).thenReturn(true)
     `when`(mockTaskVoid.isCanceled).thenReturn(false)

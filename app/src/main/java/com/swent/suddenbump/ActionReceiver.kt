@@ -16,7 +16,8 @@ class ActionReceiver(
       NotificationManagerCompat.from(it)
     },
     private val userRepositoryFactory: (Context) -> UserRepositoryFirestore = {
-      UserRepositoryFirestore(Firebase.firestore, SharedPreferencesManager(it), WorkerScheduler(it))
+      UserRepositoryFirestore(
+          Firebase.firestore, SharedPreferencesManager(it), WorkerScheduler(it), it)
     }
 ) : BroadcastReceiver() {
 
