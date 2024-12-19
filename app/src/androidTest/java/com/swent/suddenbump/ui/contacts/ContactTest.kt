@@ -2,7 +2,6 @@ package com.swent.suddenbump.ui.contacts
 
 import android.location.Location
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.test.*
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -63,8 +62,6 @@ class ContactScreenTest {
     navigationActions = mockk(relaxed = true)
     userViewModel = mockk(relaxed = true)
 
-    // Initialize the content once before all tests
-    //        composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
     every { navigationActions.currentRoute() } returns Route.OVERVIEW
 
     // By default in test user is a friend
@@ -78,20 +75,18 @@ class ContactScreenTest {
   @Test
   fun testInitialScreenState() {
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
-    composeTestRule.waitForIdle()
 
     composeTestRule.onNodeWithTag("contactScreen").assertIsDisplayed()
-
     composeTestRule.onNodeWithText("Contact").assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag("profileImage").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
 
+    composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
     composeTestRule.onNodeWithTag("userName").assertIsDisplayed()
-
     composeTestRule.onNodeWithTag("phoneCard").assertIsDisplayed()
-
     composeTestRule.onNodeWithTag("emailCard").assertIsDisplayed()
 
+    // Since user is friend by default, "Send a message" should show
     composeTestRule.onNodeWithTag("sendMessageButton").assertIsDisplayed()
   }
 
@@ -110,19 +105,56 @@ class ContactScreenTest {
   @Test
   fun testSendMessageButtonClick() {
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
-    composeTestRule.waitForIdle()
 
-    // Verify the send message button is displayed
-    composeTestRule.onNodeWithTag("sendMessageButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("sendMessageButton").performClick()
+    composeTestRule.onNodeWithTag("sendMessageButton").assertIsDisplayed().performClick()
 
     verify { navigationActions.navigateTo(Screen.CHAT) }
   }
 
   @Test
+  fun testUnsendFriendRequest() {
+    // Arrange
+    // Set scenario: user is in sentFriendRequests
+    every { userViewModel.getUserFriends() } returns MutableStateFlow(emptyList())
+    every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
+    every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(listOf(friend.value))
+
+    // Mock unsendFriendRequest to immediately call onSuccess
+    every {
+      userViewModel.unsendFriendRequest(
+          user = any(), friend = any(), onSuccess = captureLambda(), onFailure = any())
+    } answers
+        {
+          lambda<() -> Unit>().invoke() // call onSuccess immediately
+        }
+
+    // Act
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+
+    // The "Requested" button should be displayed since it's a sent friend request scenario
+    composeTestRule.onNodeWithTag("unsendFriendRequestButton").assertIsDisplayed()
+
+    // Perform click on the "Requested" button
+    composeTestRule.onNodeWithTag("unsendFriendRequestButton").performClick()
+
+    // Assert
+    // Verify that unsendFriendRequest was called with the correct arguments
+    verify {
+      userViewModel.unsendFriendRequest(
+          user = match { it.uid == currentUser.value.uid },
+          friend = match { it.uid == friend.value.uid },
+          onSuccess = any(),
+          onFailure = any())
+    }
+    // For now, we've verified that the action is triggered correctly.
+  }
+
+  @Test
   fun testFriendRequestVersion() {
+    // User is not a friend but in friend requests
     every { userViewModel.getUserFriends() } returns MutableStateFlow(emptyList())
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(listOf(friend.value))
+    every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
 
@@ -132,24 +164,28 @@ class ContactScreenTest {
 
   @Test
   fun testSentFriendRequestVersion() {
+    // User is not a friend and not in friend requests, but in sentFriendRequests
     every { userViewModel.getUserFriends() } returns MutableStateFlow(emptyList())
+    every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(listOf(friend.value))
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
 
-    composeTestRule.onNodeWithTag("friendRequestSentText").assertIsDisplayed()
+    // Now should show "Requested" button with testTag "unsendFriendRequestButton"
+    composeTestRule.onNodeWithTag("unsendFriendRequestButton").assertIsDisplayed()
   }
 
   @Test
   fun testNoRelationVersion() {
-    // Setup non-friend state
-    every { userViewModel.getSelectedContact() } returns friend
+    // Not a friend, not friend request, not sent request
     every { userViewModel.getUserFriends() } returns MutableStateFlow(emptyList())
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
 
+    // Should show "Send Friend Request"
+    composeTestRule.onNodeWithTag("addToContactsButton").assertIsDisplayed()
     composeTestRule.onNodeWithTag("addToContactsButton").performClick()
   }
 
@@ -157,12 +193,9 @@ class ContactScreenTest {
   fun testBlockUserDialog() {
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
 
-    composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("moreOptionsButton").performClick()
+    composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed().performClick()
 
-    // Open dialog
-    composeTestRule.onNodeWithTag("blockUserButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("blockUserButton").performClick()
+    composeTestRule.onNodeWithTag("blockUserButton").assertIsDisplayed().performClick()
 
     // Verify dialog content
     composeTestRule.onNodeWithText("Block User").assertIsDisplayed()
@@ -173,12 +206,8 @@ class ContactScreenTest {
   fun testBlockUserDialogDismiss() {
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
 
-    composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("moreOptionsButton").performClick()
-
-    // Open dialog
-    composeTestRule.onNodeWithTag("blockUserButton").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("blockUserButton").performClick()
+    composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed().performClick()
+    composeTestRule.onNodeWithTag("blockUserButton").assertIsDisplayed().performClick()
 
     // Dismiss dialog
     composeTestRule.onNodeWithText("No").performClick()
@@ -199,108 +228,80 @@ class ContactScreenTest {
     composeTestRule.waitForIdle()
 
     // Verify the profile picture image
-    composeTestRule.onNodeWithTag("profileImageNotNull").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
   }
 
   @Test
   fun testDeleteFriendSuccessFlow() {
-    // Make sure user is friend so deleteFriend is visible
     every { userViewModel.getUserFriends() } returns MutableStateFlow(listOf(friend.value))
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
-    // When deleteFriend is called, immediately call onSuccess
     every {
       userViewModel.deleteFriend(
           user = any(), friend = any(), onSuccess = captureLambda(), onFailure = any())
     } answers
         {
-          lambda<() -> Unit>().invoke() // Invoke onSuccess immediately
+          lambda<() -> Unit>().invoke() // Immediately call onSuccess
         }
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
-    composeTestRule.waitForIdle()
 
-    // Open the dropdown menu and click "Delete Friend"
+    // Open menu and delete friend
     composeTestRule.onNodeWithTag("moreOptionsButton").performClick()
     composeTestRule.onNodeWithTag("deleteFriendButton").performClick()
 
-    // Verify navigationActions.goBack() was called (covering that line)
     verify { navigationActions.goBack() }
   }
 
   @Test
   fun testAcceptFriendRequestSuccessFlow() {
-    // Make sure user is in friendRequests list so "Accept" is displayed
     every { userViewModel.getUserFriends() } returns MutableStateFlow(emptyList())
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(listOf(friend.value))
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
-    // When acceptFriendRequest is called, call onSuccess immediately
     every {
       userViewModel.acceptFriendRequest(
           user = any(), friend = any(), onSuccess = captureLambda(), onFailure = any())
-    } answers
-        {
-          lambda<() -> Unit>().invoke() // trigger onSuccess
-        }
+    } answers { lambda<() -> Unit>().invoke() }
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
-    composeTestRule.waitForIdle()
 
-    // Click "Accept friend request"
+    // Accept friend request
     composeTestRule.onNodeWithText("Accept friend request").performClick()
-
-    // The onSuccess callback sets isFriend = true and isFriendRequest = false internally.
-    // We can't directly test local variable changes, but we know these lines are covered
-    // because onSuccess was triggered. If we had UI changes tied to these vars, we could
-    // verify them here. For now, we rely on code coverage tools and the triggered callback.
-    // If there's a UI side effect (like showing a "Send a message" button now), we could verify it.
+    // onSuccess called, scenario covered.
   }
 
   @Test
   fun testDeclineFriendRequestSuccessFlow() {
-    // Make sure user is in friendRequests list
     every { userViewModel.getUserFriends() } returns MutableStateFlow(emptyList())
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(listOf(friend.value))
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
-    // When declineFriendRequest is called, trigger onSuccess immediately
     every {
       userViewModel.declineFriendRequest(
           user = any(), friend = any(), onSuccess = captureLambda(), onFailure = any())
     } answers { lambda<() -> Unit>().invoke() }
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
-    composeTestRule.waitForIdle()
 
-    // Click "Decline friend request"
+    // Decline friend request
     composeTestRule.onNodeWithText("Decline friend request").performClick()
-
-    // onSuccess sets isFriend = false and isFriendRequest = false, covering those lines.
-    // Check if the UI changes: now the addToContactsButton might appear.
-    // Since it's local variable changes, we rely on coverage tools. If there's a UI side effect
-    // like
-    // showing "Send Friend Request" button now, we can verify it:
-    // composeTestRule.onNodeWithTag("addToContactsButton").assertIsDisplayed() // if UI updates
-    // accordingly
+    // onSuccess called, scenario covered.
   }
 
   @Test
   fun testBlockUserSuccessFlow() {
-    // User is friend by default
     every { userViewModel.getUserFriends() } returns MutableStateFlow(listOf(friend.value))
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
-    // When blockUser is called, trigger onSuccess
     every {
       userViewModel.blockUser(
           user = any(), blockedUser = any(), onSuccess = captureLambda(), onFailure = any())
     } answers { lambda<() -> Unit>().invoke() }
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
-    composeTestRule.waitForIdle()
 
     // Open dialog to block user
     composeTestRule.onNodeWithTag("moreOptionsButton").performClick()
@@ -309,34 +310,27 @@ class ContactScreenTest {
     // Click "Yes" to confirm blocking
     composeTestRule.onNodeWithText("Yes").performClick()
 
-    // Verify navigationActions.goBack() was called after blocking user
     verify { navigationActions.goBack() }
   }
 
   @Test
   fun testDeleteFriendOption() {
-    // Arrange
-    // Ensure the user is a friend so that the "Delete Friend" option is visible
     every { userViewModel.getUserFriends() } returns MutableStateFlow(listOf(friend.value))
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
-    composeTestRule.waitForIdle()
 
-    // Act
     // Open the dropdown menu
     composeTestRule.onNodeWithTag("moreOptionsButton").performClick()
 
     // Verify "Delete Friend" option is displayed
     composeTestRule.onNodeWithTag("deleteFriendButton").assertIsDisplayed()
 
-    // Mock the successful deletion scenario
-    // We'll just rely on the relaxed mock behavior and verify calls via mocking
+    // Perform click on "Delete Friend"
     composeTestRule.onNodeWithTag("deleteFriendButton").performClick()
 
-    // Assert
-    // Verify that deleteFriend was called with the correct user and friend
+    // Verify that deleteFriend was called with correct arguments
     verify {
       userViewModel.deleteFriend(
           user = match { it.uid == currentUser.value.uid },

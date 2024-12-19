@@ -35,8 +35,6 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.overview.AccountScreen
-import com.swent.suddenbump.ui.overview.ConversationScreen
-import com.swent.suddenbump.ui.overview.DiscussionScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.overview.SettingsScreen
@@ -201,7 +199,6 @@ class EndToEndTest2 {
           }
           composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
           composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
-          composable(Screen.CONV) { ConversationScreen(navigationActions) }
           composable(Screen.SETTINGS) {
             SettingsScreen(navigationActions, userViewModel, meetingViewModel)
           }
@@ -239,7 +236,6 @@ class EndToEndTest2 {
 
         // Add new screens from Settings.kt
         composable("AccountScreen") { AccountScreen(navigationActions, userViewModel) }
-        composable("DiscussionsScreen") { DiscussionScreen(navigationActions, userViewModel) }
       }
     }
 

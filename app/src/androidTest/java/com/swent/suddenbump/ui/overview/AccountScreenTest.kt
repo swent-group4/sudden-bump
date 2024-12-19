@@ -12,6 +12,8 @@ import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
+import com.swent.suddenbump.ui.utils.isMockUsingOnlineDefaultValue
+import com.swent.suddenbump.ui.utils.testableOnlineDefaultValue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -39,6 +41,9 @@ class AccountScreenTest {
 
     doNothing().`when`(userRepository).logoutUser()
 
+    isMockUsingOnlineDefaultValue = true
+    testableOnlineDefaultValue = true
+
     userViewModel = UserViewModel(userRepository, chatRepository)
     composeTestRule.setContent {
       AccountScreen(navigationActions = navigationActions, userViewModel = userViewModel)
@@ -49,9 +54,6 @@ class AccountScreenTest {
   fun hasRequiredComponents() {
     // Verify that the top bar title "Account" is displayed
     composeTestRule.onNodeWithText("Account").assertIsDisplayed()
-
-    // Verify that each key section is displayed
-    composeTestRule.onNodeWithTag("languageSection").assertIsDisplayed()
     composeTestRule.onNodeWithTag("deleteAccountSection").assertIsDisplayed()
     composeTestRule.onNodeWithTag("logoutSection").assertIsDisplayed()
   }
@@ -61,17 +63,6 @@ class AccountScreenTest {
     // Perform a click on the back button and verify that the goBack navigation action is triggered
     composeTestRule.onNodeWithTag("backButton").performClick()
     verify(navigationActions).goBack()
-  }
-
-  @Test
-  fun languageButtonOpensLanguageMenu() {
-    // Perform a click on the "Language" section
-    composeTestRule.onNodeWithTag("languageSection").performClick()
-
-    // Verify that the dropdown menu appears
-    composeTestRule.onNodeWithTag("languageMenuItem_English").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("languageMenuItem_French").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("languageMenuItem_German").assertIsDisplayed()
   }
 
   @Test

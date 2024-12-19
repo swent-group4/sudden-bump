@@ -17,6 +17,8 @@ on:
       - 270-add-meetings-settings
       - 281-change-meeting-location-to-real-addresses
       - 262-log-out
+      - 319-show-google-account-picker-after-sign-out
+      - 271-add-userspictures-to-the-meetings
 
   pull_request:
     types:

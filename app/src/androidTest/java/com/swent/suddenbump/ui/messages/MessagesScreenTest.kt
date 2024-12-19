@@ -70,12 +70,12 @@ class MessagesScreenTest {
       }
 
   private val chatSummaryDummy =
-      ChatSummary("chat1", "this is a message1", "chat456", Timestamp.now(), 0, listOf("1", "2"))
+      ChatSummary("chat1", "this is a message1", "1", Timestamp.now(), 0, listOf("1", "2"))
   private val chatSummaryDummy2 =
       ChatSummary(
           "chat2",
           "this is a message2",
-          "chat456",
+          "2",
           Timestamp(seconds = 1729515283, nanoseconds = 0),
           0,
           listOf("2", "3"))

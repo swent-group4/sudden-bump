@@ -1,7 +1,6 @@
 <resources>
-    <string name="app_name">Sudden Bump</string>
+    <string name="app_name">SuddenBump</string>
     <string name="title_activity_main">SuddenBump</string>
-    <string name="title_activity_second">SecondActivity</string>
     <string name="default_web_client_id">309404538142-bp43jqg0vol601h45qii4vm0d9a87nj9.apps.googleusercontent.com</string>
     <string name="default_firebase_storage" translatable="false">gs://sudden-bump-swent.appspot.com</string>
 </resources>

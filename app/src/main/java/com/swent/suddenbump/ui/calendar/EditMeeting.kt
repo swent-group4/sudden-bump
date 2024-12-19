@@ -132,7 +132,7 @@ fun EditMeetingScreen(
                     }
                   },
                   modifier = Modifier.fillMaxWidth().testTag("Delete Meeting"),
-                  colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Pink40),
+                  colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Gray),
               ) {
                 Text("Delete Meeting")
               }

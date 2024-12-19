@@ -68,6 +68,7 @@ fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                     Log.d("SignInScreen", "Account exists")
                     userViewModel.setCurrentUser()
                     navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
+                    Log.d("SignInScreen", "Current route: ${navigationActions.currentRoute()}")
                   }
                 },
                 onFailure = {
@@ -77,6 +78,7 @@ fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
           },
           onAuthError = {
             Log.e("SignInScreen", "Failed to sign in: ${it.statusCode}")
+            Log.e("SignInScreen", "MESSAGE : $it")
             Toast.makeText(context, "Login Failed!", Toast.LENGTH_LONG).show()
           })
   val token = stringResource(R.string.default_web_client_id)

@@ -174,30 +174,23 @@ class PendingMeetingsScreenTest {
       PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
     }
 
-    // Verify the userName text field
-    composeTestRule
-        .onNodeWithTag("userName", useUnmergedTree = true)
-        .assertExists()
-        .assertTextEquals("Mike T.")
-        .assertIsDisplayed()
-
     // Verify the meetingDetails text field
     composeTestRule
         .onNodeWithTag("meetingDetails", useUnmergedTree = true)
         .assertExists()
-        .assertTextEquals("Meet at Central Park on 2024-12-28")
+        .assertTextEquals("Mike T. invites you to meet at Central Park")
         .assertIsDisplayed()
 
     // Verify the profile image
     composeTestRule
-        .onNodeWithTag("profileImage", useUnmergedTree = true)
+        .onNodeWithTag("profileImage_creator1", useUnmergedTree = true)
         .assertExists()
         .assertIsDisplayed()
 
-    // Verify the divider
-    composeTestRule
-        .onNodeWithTag("divider", useUnmergedTree = true)
-        .assertExists()
-        .assertIsDisplayed()
+    // Verify meeting card
+    composeTestRule.onNodeWithTag("meetingCard").assertIsDisplayed()
+
+    // Verify meeting date
+    composeTestRule.onNodeWithTag("meetingDate").assertIsDisplayed()
   }
 }
