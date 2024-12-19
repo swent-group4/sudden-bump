@@ -30,7 +30,6 @@ import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.theme.Gray
-import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
 
 /**
