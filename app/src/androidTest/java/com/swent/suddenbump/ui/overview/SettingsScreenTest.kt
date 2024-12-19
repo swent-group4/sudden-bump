@@ -12,6 +12,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.model.chat.ChatRepository
@@ -97,6 +98,12 @@ class SettingsScreenTest {
     composeTestRule.onNodeWithTag("profilePicture").assertIsDisplayed()
     composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
     composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("AccountOption").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("RadiusSlider").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("BlockedUsersOption").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(4)
+    composeTestRule.onNodeWithTag("NotificationsSwitch").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(6)
     composeTestRule.onNodeWithTag("deleteAllButton_chats").assertIsDisplayed()
     composeTestRule.onNodeWithTag("deleteAllButton_meetings").assertIsDisplayed()
   }
@@ -151,6 +158,7 @@ class SettingsScreenTest {
   fun clickingDeleteAllChatsButtonShowsConfirmDialog() {
     setContentDefault()
     // Click the "Delete all chats" button
+    composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(6)
     composeTestRule.onNodeWithTag("deleteAllButton_chats").performClick()
     composeTestRule.waitForIdle() // Wait for UI to settle
     // Verify that the confirm delete dialog is displayed
@@ -166,6 +174,7 @@ class SettingsScreenTest {
     setContentDefault()
     withTimeout(5_000) { // 5-second timeout to avoid getting stuck
       // Click the "Delete all chats" button
+      composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(6)
       composeTestRule.onNodeWithTag("deleteAllButton_chats").performClick()
       composeTestRule.waitForIdle() // Wait for UI to settle
 
@@ -183,6 +192,7 @@ class SettingsScreenTest {
   fun clickingCancelButtonDismissesDialog() {
     setContentDefault()
     // Click the "Delete all chats" button
+    composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(6)
     composeTestRule.onNodeWithTag("deleteAllButton_chats").performClick()
     composeTestRule.waitForIdle() // Wait for UI to settle
 
