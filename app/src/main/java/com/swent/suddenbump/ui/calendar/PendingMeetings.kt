@@ -158,20 +158,11 @@ fun PendingMeetingRow(
                           meetingViewModel.updateMeeting(updatedMeeting)
                         },
                         modifier = Modifier.testTag("acceptButton").size(36.dp)) {
-                          Box {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Accept",
-                                tint = Pinkish,
-                                modifier =
-                                    Modifier.size(24.dp).offset(x = 1.dp, y = 1.dp) // Slight offset
-                                )
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Accept",
-                                tint = Pinkish,
-                                modifier = Modifier.size(24.dp))
-                          }
+                          Icon(
+                              imageVector = Icons.Default.Check,
+                              contentDescription = "Accept",
+                              tint = Color.White,
+                              modifier = Modifier.size(24.dp))
                         }
 
                     Spacer(modifier = Modifier.width(4.dp))
@@ -180,20 +171,11 @@ fun PendingMeetingRow(
                     IconButton(
                         onClick = { meetingViewModel.deleteMeeting(meeting.meetingId) },
                         modifier = Modifier.testTag("denyButton").size(36.dp)) {
-                          Box {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Decline",
-                                tint = Pinkish,
-                                modifier =
-                                    Modifier.size(24.dp).offset(x = 1.dp, y = 1.dp) // Slight offset
-                                )
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Decline",
-                                tint = Pinkish,
-                                modifier = Modifier.size(24.dp))
-                          }
+                          Icon(
+                              imageVector = Icons.Default.Close,
+                              contentDescription = "Decline",
+                              tint = Color.White,
+                              modifier = Modifier.size(24.dp))
                         }
                   }
             }
