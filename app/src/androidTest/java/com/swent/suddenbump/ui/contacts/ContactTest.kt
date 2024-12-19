@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.contact.ContactScreen
@@ -25,6 +26,7 @@ import org.junit.Test
 class ContactScreenTest {
   private lateinit var navigationActions: NavigationActions
   private lateinit var userViewModel: UserViewModel
+  private lateinit var meetingViewModel : MeetingViewModel
 
   private val friend =
       MutableStateFlow(
@@ -63,6 +65,7 @@ class ContactScreenTest {
   fun setUp() {
     navigationActions = mockk(relaxed = true)
     userViewModel = mockk(relaxed = true)
+    meetingViewModel = mockk(relaxed = true)
 
     every { navigationActions.currentRoute() } returns Route.OVERVIEW
 
@@ -76,7 +79,7 @@ class ContactScreenTest {
 
   @Test
   fun testInitialScreenState() {
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     composeTestRule.onNodeWithTag("contactScreen").assertIsDisplayed()
     composeTestRule.onNodeWithText("Contact").assertIsDisplayed()
@@ -91,7 +94,7 @@ class ContactScreenTest {
 
   @Test
   fun testNavigationBackButton() {
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     composeTestRule.onNodeWithTag("backButton").assertIsDisplayed().performClick()
 
@@ -100,7 +103,7 @@ class ContactScreenTest {
 
   @Test
   fun testSendMessageButtonClick() {
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     composeTestRule.onNodeWithTag("sendMessageButton").assertIsDisplayed().performClick()
 
@@ -125,7 +128,7 @@ class ContactScreenTest {
         }
 
     // Act
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     // The "Requested" button should be displayed since it's a sent friend request scenario
     composeTestRule.onNodeWithTag("unsendFriendRequestButton").assertIsDisplayed()
@@ -152,7 +155,7 @@ class ContactScreenTest {
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(listOf(friend.value))
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     composeTestRule.onNodeWithText("Accept friend request").assertIsDisplayed()
     composeTestRule.onNodeWithText("Decline friend request").assertIsDisplayed()
@@ -165,7 +168,7 @@ class ContactScreenTest {
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(listOf(friend.value))
 
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     // Now should show "Requested" button with testTag "unsendFriendRequestButton"
     composeTestRule.onNodeWithTag("unsendFriendRequestButton").assertIsDisplayed()
@@ -178,7 +181,7 @@ class ContactScreenTest {
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     // Should show "Send Friend Request"
     composeTestRule.onNodeWithTag("addToContactsButton").assertIsDisplayed()
@@ -187,7 +190,7 @@ class ContactScreenTest {
 
   @Test
   fun testBlockUserDialog() {
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed().performClick()
 
@@ -200,7 +203,7 @@ class ContactScreenTest {
 
   @Test
   fun testBlockUserDialogDismiss() {
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     composeTestRule.onNodeWithTag("moreOptionsButton").assertIsDisplayed().performClick()
     composeTestRule.onNodeWithTag("blockUserButton").assertIsDisplayed().performClick()
@@ -219,7 +222,7 @@ class ContactScreenTest {
 
     every { userViewModel.getSelectedContact() } returns userWithPicFlow
 
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     // Verify the profile picture image
     composeTestRule.onNodeWithTag("profileImageNotNull").assertIsDisplayed()
@@ -239,7 +242,7 @@ class ContactScreenTest {
           lambda<() -> Unit>().invoke() // Immediately call onSuccess
         }
 
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     // Open menu and delete friend
     composeTestRule.onNodeWithTag("moreOptionsButton").performClick()
@@ -259,7 +262,7 @@ class ContactScreenTest {
           user = any(), friend = any(), onSuccess = captureLambda(), onFailure = any())
     } answers { lambda<() -> Unit>().invoke() }
 
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     // Accept friend request
     composeTestRule.onNodeWithText("Accept friend request").performClick()
@@ -277,7 +280,7 @@ class ContactScreenTest {
           user = any(), friend = any(), onSuccess = captureLambda(), onFailure = any())
     } answers { lambda<() -> Unit>().invoke() }
 
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     // Decline friend request
     composeTestRule.onNodeWithText("Decline friend request").performClick()
@@ -295,7 +298,7 @@ class ContactScreenTest {
           user = any(), blockedUser = any(), onSuccess = captureLambda(), onFailure = any())
     } answers { lambda<() -> Unit>().invoke() }
 
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     // Open dialog to block user
     composeTestRule.onNodeWithTag("moreOptionsButton").performClick()
@@ -313,7 +316,7 @@ class ContactScreenTest {
     every { userViewModel.getUserFriendRequests() } returns MutableStateFlow(emptyList())
     every { userViewModel.getSentFriendRequests() } returns MutableStateFlow(emptyList())
 
-    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.setContent { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
 
     // Open the dropdown menu
     composeTestRule.onNodeWithTag("moreOptionsButton").performClick()

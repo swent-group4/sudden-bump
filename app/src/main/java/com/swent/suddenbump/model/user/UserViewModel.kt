@@ -719,7 +719,6 @@ open class UserViewModel(
     val friends = _userFriends.value.toList()
     val receivedRequests = _userFriendRequests.value.toList()
     val sentRequests = _sentFriendRequests.value.toList()
-    val blockedUsers = _blockedFriends.value.toList()
 
     logout()
     navigationActions.navigateTo(Route.AUTH)

@@ -293,7 +293,7 @@ class MainActivity : ComponentActivity() {
         composable(Screen.SETTINGS) {
           SettingsScreen(navigationActions, userViewModel, meetingViewModel)
         }
-        composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+        composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
         composable(Screen.ADD_MEETING) {
           AddMeetingScreen(navigationActions, userViewModel, meetingViewModel, locationViewModel)

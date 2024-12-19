@@ -1243,6 +1243,35 @@ class UserRepositoryFirestore(
                 val deleteEmailTask = emailRef.document(emailAddress).delete()
                 deletionTasks.add(deleteEmailTask)
             }
+
+            getBlockedBy(uid,
+                onSuccess = { usersWhoBlockedMe ->
+                    // For each user who blocked 'uid', remove 'uid' from their blockedList
+                    val unblockTasks = mutableListOf<com.google.android.gms.tasks.Task<Void>>()
+                    if (usersWhoBlockedMe.isEmpty()) {
+                    } else {
+                        for (blockingUser in usersWhoBlockedMe) {
+                            val blockingUserRef = db.collection(usersCollectionPath).document(blockingUser.uid)
+                            blockingUserRef.get()
+                                .addOnFailureListener { e ->
+                                    onFailure(e)
+                                }
+                                .addOnSuccessListener { docSnap ->
+                                    val blockedList = docSnap.get("blockedList") as? List<String> ?: emptyList()
+                                    val updatedBlockedList = blockedList.filter { it != uid }
+
+                                    val unblockTask = blockingUserRef.update("blockedList", updatedBlockedList)
+                                    unblockTasks.add(unblockTask)
+                                }
+                        }
+                    }
+                },
+                onFailure = { e ->
+                    // Failed to get the users who blocked me
+                    onFailure(e)
+                }
+            )
+
             // Step 4: Delete all chats where uid is in participants
             // This assumes your "chats" collection documents have a field "participants" which is an
             // array of user uids.
@@ -1433,8 +1462,40 @@ class UserRepositoryFirestore(
         onSuccess: (List<User>) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        //go in each document in collection "users" and if uid is in their field "blockedList"
+        db.collection(usersCollectionPath)
+            .get()
+            .addOnFailureListener { exception -> onFailure(exception) }
+            .addOnSuccessListener { querySnapshot ->
+                val blockingUsers = mutableListOf<String>()
+                for (doc in querySnapshot.documents) {
+                    val blockedList = doc.data?.get("blockedList") as? List<String> ?: emptyList()
+                    // If this user has our uid in their blockedList, add their uid to blockingUsers
+                    if (blockedList.contains(uid)) {
+                        val otherUserUid = doc.data?.get("uid")?.toString()
+                        if (otherUserUid != null) {
+                            blockingUsers.add(otherUserUid)
+                        }
+                    }
+                }
+
+                if (blockingUsers.isEmpty()) {
+                    // No one has blocked this user
+                    onSuccess(emptyList())
+                } else {
+                    // Convert the blockingUsers list to a JSON-like string format
+                    // For example, if blockingUsers = ["uid1","uid2"], we want "[uid1, uid2]"
+                    val uidJsonList = blockingUsers.joinToString(prefix = "[", postfix = "]", separator = ", ")
+
+                    documentSnapshotToUserList(
+                        uidJsonList,
+                        onSuccess = { userList ->
+                            onSuccess(userList)
+                        }
+                    )
+                }
+            }
     }
+
 
     /**
      * Retrieves the list of friends with whom the user has shared their location.
