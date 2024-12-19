@@ -15,9 +15,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.navigation.Route
+import com.swent.suddenbump.ui.navigation.TopLevelDestinations
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.utils.AccountOption
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
@@ -81,8 +85,30 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     backgroundColor = Pink40,
                     onClick = {
                       userViewModel.logout()
-                      navigationActions.navigateTo(Route.AUTH)
-                      Toast.makeText(context, "Logged out successfully !", Toast.LENGTH_LONG).show()
+                      FirebaseAuth.getInstance().signOut()
+                      val gso =
+                          GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                              .requestIdToken(context.getString(R.string.default_web_client_id))
+                              .requestEmail()
+                              .build()
+
+                      val googleSignInClient = GoogleSignIn.getClient(context, gso)
+
+                      // Sign out from Google account
+                      googleSignInClient.signOut().addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                          Toast.makeText(context, "Logged out successfully!", Toast.LENGTH_LONG)
+                              .show()
+                          navigationActions.navigateTo(TopLevelDestinations.AUTH)
+                        }
+                      }
+
+                      // Optional: Revoke access (forces account picker next time)
+                      googleSignInClient.revokeAccess().addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                          Toast.makeText(context, "Failed to log out!", Toast.LENGTH_LONG).show()
+                        }
+                      }
                     },
                     testTag = "logoutSection")
               }

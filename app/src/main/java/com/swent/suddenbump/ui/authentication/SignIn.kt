@@ -68,6 +68,7 @@ fun SignInScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
                     Log.d("SignInScreen", "Account exists")
                     userViewModel.setCurrentUser()
                     navigationActions.navigateTo(TopLevelDestinations.OVERVIEW)
+                    Log.d("SignInScreen", "Current route: ${navigationActions.currentRoute()}")
                   }
                 },
                 onFailure = {
