@@ -156,6 +156,8 @@ class CalendarMeetingsScreenTest {
 
   @Test
   fun asyncImageIsDisplayedForMeeting() {
-    composeTestRule.onNodeWithTag("profileImage", useUnmergedTree = true).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("profileImage_friendId2", useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }

@@ -115,6 +115,10 @@ class ChatScreenTest {
     // Since we already initialized mockViewModel and fakeNavigationActions in setUp(),
     // we can directly use them here.
 
+    val otherUser =
+        User("otherUserId", "Other", "User", "987654321", null, "other@example.com", location)
+    every { mockViewModel.user } returns otherUser
+
     // **Act**
     composeTestRule.setContent {
       ChatScreen(viewModel = mockViewModel, navigationActions = fakeNavigationActions)

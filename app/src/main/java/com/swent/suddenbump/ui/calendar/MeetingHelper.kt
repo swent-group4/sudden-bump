@@ -109,7 +109,7 @@ fun AddAndEditMeetingButton(
           Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
         }
       },
-      colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
+      colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Pinkish),
       modifier =
           Modifier.fillMaxWidth().testTag(if (addOrEdit) "Save Meeting" else "Save Changes")) {
         Text(if (addOrEdit) "Ask to Meet" else "Save Changes")

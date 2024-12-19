@@ -1,7 +1,6 @@
 package com.swent.suddenbump.ui.calendar
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,9 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.meeting.Meeting
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.User
@@ -27,6 +24,11 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.Gray
+import com.swent.suddenbump.ui.theme.Pinkish
+import com.swent.suddenbump.ui.utils.UserProfileImage
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 /**
  * Composable function to display the Pending Meetings screen.
@@ -52,7 +54,7 @@ fun PendingMeetingsScreen(
         CenterAlignedTopAppBar(
             title = {
               Text(
-                  "Pending Meetings",
+                  "Meeting Requests",
                   color = Color.White,
                   modifier = Modifier.testTag("Pending Meetings"))
             },
@@ -123,75 +125,88 @@ fun PendingMeetingRow(
     userFriends: List<User>,
     meetingViewModel: MeetingViewModel
 ) {
+  val dayFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
   val friend = userFriends.find { it.uid == meeting.friendId || it.uid == meeting.creatorId }
   val friendName = friend?.let { "${it.firstName} ${it.lastName.first()}." } ?: "Unknown Friend"
-  val formattedDate = formatDate(meeting.date.toDate())
 
   Column(
       modifier =
           Modifier.fillMaxWidth()
               .clip(RoundedCornerShape(10.dp))
-              .background(Color.White)
+              .background(Gray, MaterialTheme.shapes.medium)
               .padding(16.dp)
               .testTag("pendingMeetingRow")) {
         Row(
-            modifier =
-                Modifier.fillMaxWidth().clickable {
-                  // Handle row click if needed
-                },
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
+              // Date Text
+              Text(
+                  text = dayFormat.format(meeting.date.toDate()),
+                  style = MaterialTheme.typography.titleLarge,
+                  color = Color.White,
+                  modifier = Modifier.padding(end = 8.dp).testTag("meetingDate"))
+              // Buttons Row
               Row(
-                  horizontalArrangement = Arrangement.spacedBy(8.dp),
+                  horizontalArrangement = Arrangement.End,
                   verticalAlignment = Alignment.CenterVertically,
-                  modifier = Modifier.weight(1f)) {
-                    AsyncImage(
-                        model = "https://avatar.iran.liara.run/public/42",
-                        contentDescription = null,
-                        modifier =
-                            Modifier.width(50.dp)
-                                .height(50.dp)
-                                .padding(8.dp)
-                                .testTag("profileImage"))
-                    Column {
-                      Text(
-                          text = friendName,
-                          style =
-                              MaterialTheme.typography.titleMedium.copy(
-                                  fontWeight = FontWeight.Bold),
-                          modifier = Modifier.testTag("userName"))
-                      Text(
-                          text = "Meet at ${meeting.location?.name} on $formattedDate",
-                          style = MaterialTheme.typography.bodyMedium,
-                          color = Color.Gray,
-                          modifier = Modifier.testTag("meetingDetails"))
-                    }
+                  modifier = Modifier.fillMaxWidth()) {
+                    // Accept Button
+                    IconButton(
+                        onClick = {
+                          val updatedMeeting = meeting.copy(accepted = true)
+                          meetingViewModel.updateMeeting(updatedMeeting)
+                        },
+                        modifier = Modifier.testTag("acceptButton").size(36.dp)) {
+                          Icon(
+                              imageVector = Icons.Default.Check,
+                              contentDescription = "Accept",
+                              tint = Color.White,
+                              modifier = Modifier.size(24.dp))
+                        }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    // Decline Button
+                    IconButton(
+                        onClick = { meetingViewModel.deleteMeeting(meeting.meetingId) },
+                        modifier = Modifier.testTag("denyButton").size(36.dp)) {
+                          Icon(
+                              imageVector = Icons.Default.Close,
+                              contentDescription = "Decline",
+                              tint = Color.White,
+                              modifier = Modifier.size(24.dp))
+                        }
                   }
-              Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = {
-                      val updatedMeeting = meeting.copy(accepted = true)
-                      meetingViewModel.updateMeeting(updatedMeeting)
-                    },
-                    modifier = Modifier.testTag("acceptButton")) {
-                      Icon(
-                          imageVector = Icons.Default.Check,
-                          contentDescription = "Accept",
-                          tint = Color.Green)
-                    }
-                IconButton(
-                    onClick = { meetingViewModel.deleteMeeting(meeting.meetingId) },
-                    modifier = Modifier.testTag("denyButton")) {
-                      Icon(
-                          imageVector = Icons.Default.Close,
-                          contentDescription = "Decline",
-                          tint = Color.Red)
-                    }
-              }
             }
-        HorizontalDivider(
-            color = Color.Gray,
-            thickness = 0.5.dp,
-            modifier = Modifier.padding(vertical = 4.dp).testTag("divider"))
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Invitation Details Row
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()) {
+              Card(
+                  modifier = Modifier.fillMaxWidth().padding(8.dp).testTag("meetingCard"),
+                  colors = CardDefaults.cardColors(containerColor = Pinkish)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                          // Profile Image
+                          if (friend != null) {
+                            UserProfileImage(friend, 40)
+                          }
+
+                          // Invitation Text
+                          Text(
+                              text = "$friendName invites you to meet at ${meeting.location?.name}",
+                              style = MaterialTheme.typography.bodyMedium,
+                              color = Color.White,
+                              modifier = Modifier.testTag("meetingDetails"))
+                        }
+                  }
+            }
       }
 }
