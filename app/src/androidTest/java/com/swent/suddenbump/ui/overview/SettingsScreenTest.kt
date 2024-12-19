@@ -26,7 +26,6 @@ import com.swent.suddenbump.ui.navigation.Screen
 import io.mockk.mockk
 import java.io.File
 import java.io.FileOutputStream
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
