@@ -142,9 +142,6 @@ class ContactScreenTest {
           onSuccess = any(),
           onFailure = any())
     }
-
-    // If you want to check UI updates, depending on how the flows are updated,
-    // you might need to wait for the recomposition or flow update.
     // For now, we've verified that the action is triggered correctly.
   }
 
