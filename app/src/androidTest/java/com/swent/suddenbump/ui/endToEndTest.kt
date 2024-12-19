@@ -41,7 +41,6 @@ import com.swent.suddenbump.ui.overview.SettingsScreen
 import io.mockk.every
 import io.mockk.invoke
 import io.mockk.mockk
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -145,7 +144,7 @@ class EndToEndTest2 {
             phoneNumber = "1234567890",
             profilePicture = null,
             emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(userLocation))
+            lastKnownLocation = userLocation)
 
     val friend =
         User(
@@ -155,7 +154,7 @@ class EndToEndTest2 {
             phoneNumber = "0987654321",
             profilePicture = null,
             emailAddress = "friend.user@example.com",
-            lastKnownLocation = MutableStateFlow(friendLocation))
+            lastKnownLocation = friendLocation)
 
     // Mock getUserFriends to return a single friend
     every { mockFirestore.getUserFriends(any(), captureLambda(), any()) } answers

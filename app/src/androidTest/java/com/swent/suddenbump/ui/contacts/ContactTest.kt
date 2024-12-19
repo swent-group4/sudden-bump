@@ -36,11 +36,10 @@ class ContactScreenTest {
               profilePicture = null,
               emailAddress = "",
               lastKnownLocation =
-                  MutableStateFlow(
-                      Location("mock_provider").apply {
-                        latitude = 46.5180
-                        longitude = 6.5680
-                      })))
+                  Location("dummy").apply {
+                    latitude = 46.5180
+                    longitude = 6.5680
+                  }))
   private val currentUser =
       MutableStateFlow(
           User(
@@ -51,11 +50,10 @@ class ContactScreenTest {
               profilePicture = null,
               emailAddress = "",
               lastKnownLocation =
-                  MutableStateFlow(
-                      Location("mock_provider").apply {
-                        latitude = 46.5180
-                        longitude = 6.5680
-                      })))
+                  Location("mock_provider").apply {
+                    latitude = 46.5180
+                    longitude = 6.5680
+                  }))
 
   @get:Rule val composeTestRule = createComposeRule()
 

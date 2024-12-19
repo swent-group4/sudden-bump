@@ -114,11 +114,10 @@ class UserFriendsTests {
   val snapshot2: DocumentSnapshot = mock(DocumentSnapshot::class.java)
 
   private val location =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
   private val user =
       User(
           uid = "1",

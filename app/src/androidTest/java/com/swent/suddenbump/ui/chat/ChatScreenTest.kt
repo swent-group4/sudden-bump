@@ -25,11 +25,10 @@ class ChatScreenTest {
   private lateinit var fakeNavigationActions: FakeNavigationActions
   private lateinit var mockNavController: NavHostController
   private val location =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("dummy").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
 
   // **Set up method to initialize mocks before each test**
   @Before

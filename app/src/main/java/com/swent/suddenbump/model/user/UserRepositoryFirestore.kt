@@ -23,7 +23,6 @@ import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import com.swent.suddenbump.worker.WorkerScheduler
 import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * A Firebase Firestore-backed implementation of the UserRepository interface, managing user
@@ -1081,9 +1080,7 @@ class UserRepositoryFirestore(
       friends: List<User>,
       radius: Double
   ): List<User> {
-    return friends.filter { friend ->
-      userLocation.distanceTo(friend.lastKnownLocation.value) <= radius
-    }
+    return friends.filter { friend -> userLocation.distanceTo(friend.lastKnownLocation) <= radius }
   }
 
   /**
@@ -1500,7 +1497,7 @@ class UserRepositoryFirestoreHelper {
         "lastName" to user.lastName,
         "phoneNumber" to user.phoneNumber,
         "emailAddress" to user.emailAddress,
-        "lastKnownLocation" to locationToString(user.lastKnownLocation.value))
+        "lastKnownLocation" to locationToString(user.lastKnownLocation))
   }
 
   /**
@@ -1598,7 +1595,7 @@ class UserRepositoryFirestoreHelper {
         phoneNumber = document.data?.get("phoneNumber").toString(),
         emailAddress = document.data?.get("emailAddress").toString(),
         profilePicture = profilePicture,
-        lastKnownLocation = MutableStateFlow(lastKnownLocation ?: Location("")),
+        lastKnownLocation = lastKnownLocation ?: Location(""),
     )
   }
 
