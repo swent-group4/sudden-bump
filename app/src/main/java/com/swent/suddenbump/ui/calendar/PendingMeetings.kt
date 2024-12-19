@@ -236,7 +236,7 @@ fun PendingMeetingRow(
                 ) {
                     // Profile Image
                     if (friend != null) {
-                        UserProfileImage(friend)
+                        UserProfileImage(friend, 40)
                     }
 
                     // Invitation Text

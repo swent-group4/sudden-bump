@@ -45,6 +45,7 @@ import com.swent.suddenbump.model.user.UserWithFriendsInCommon
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
+import com.swent.suddenbump.ui.utils.UserProfileImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -208,11 +209,7 @@ fun UserRequestRow(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-              AsyncImage(
-                  model = "https://avatar.iran.liara.run/public/42",
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
+            UserProfileImage(user, 40)
               Text(
                   text = "${user.firstName} ${user.lastName.first()}.",
                   style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -286,11 +283,7 @@ fun UserRecommendedRow(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-              AsyncImage(
-                  model = "https://avatar.iran.liara.run/public/42",
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
+            UserProfileImage(userWithFriends.user, 40)
               Text(
                   text =
                       "${userWithFriends.user.firstName} ${userWithFriends.user.lastName.first()}.",

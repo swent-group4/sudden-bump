@@ -315,7 +315,20 @@ class UserRepositoryFirestore(
                 .addOnSuccessListener { documents ->
                   val friendRequestsList =
                       documents.mapNotNull { document ->
-                        helper.documentSnapshotToUser(document, null)
+                          var profilePicture: ImageBitmap? = null
+                          val path =
+                              helper.uidToProfilePicturePath(
+                                  document.data!!["uid"].toString(), profilePicturesRef)
+                          imageRepository.downloadImage(
+                              path,
+                              onSuccess = { image ->
+                                  profilePicture = image
+                                  Log.d(logTag, "Successfully retrieved image for id : ${document.id}, picture : $profilePicture")
+                              },
+                              onFailure = {
+                                  Log.e(logTag, "Failed to retrieve image for id : ${document.id}")
+                              })
+                        helper.documentSnapshotToUser(document, profilePicture)
                       }
                   onSuccess(friendRequestsList)
                 }
@@ -777,10 +790,22 @@ class UserRepositoryFirestore(
                         // Calculate number of friends in common
                         val commonFriendsCount =
                             currentUserFriendsList.intersect(otherUserFriendsList.toSet()).size
-
+                          var profilePicture: ImageBitmap? = null
+                          val path =
+                              helper.uidToProfilePicturePath(
+                                  document.data!!["uid"].toString(), profilePicturesRef)
+                          imageRepository.downloadImage(
+                              path,
+                              onSuccess = { image ->
+                                  profilePicture = image
+                                  Log.d(logTag, "Successfully retrieved image for id : ${document.id}, picture : $profilePicture")
+                              },
+                              onFailure = {
+                                  Log.e(logTag, "Failed to retrieve image for id : ${document.id}")
+                              })
                         // Create RecommendedFriend object with user and common friends count
                         UserWithFriendsInCommon(
-                            user = helper.documentSnapshotToUser(document, null),
+                            user = helper.documentSnapshotToUser(document, profilePicture),
                             friendsInCommon = commonFriendsCount)
                       } else {
                         null

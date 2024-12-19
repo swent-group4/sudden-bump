@@ -207,7 +207,7 @@ fun DayRow(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(12.dp)) {
                         if (friend != null) {
-                            UserProfileImage(friend)
+                            UserProfileImage(friend, 40)
                         }
                           Column {
                             Text(

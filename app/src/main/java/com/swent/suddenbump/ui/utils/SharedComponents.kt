@@ -1,9 +1,11 @@
 package com.swent.suddenbump.ui.utils
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -14,7 +16,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -26,6 +30,7 @@ import com.swent.suddenbump.R
 import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.Gray
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
 
@@ -275,26 +280,32 @@ fun LocationField(
  * @param user The user whose profile image is to be displayed.
  */
 @Composable
-fun UserProfileImage(user: User) {
-    if (user.profilePicture != null) {
-        Image(
-            bitmap = user.profilePicture,
-            contentDescription = "Existing profile pictures",
-            modifier = Modifier
-                .width(50.dp)
-                .height(50.dp)
-                .padding(8.dp)
-                .testTag("profileImageNotNull_${user.uid}")
-        )
-    } else {
-        Image(
-            painter = painterResource(R.drawable.profile),
-            contentDescription = "Non-Existing profile pictures",
-            modifier = Modifier
-                .width(50.dp)
-                .height(50.dp)
-                .padding(8.dp)
-                .testTag("profileImage_${user.uid}")
-        )
+fun UserProfileImage(user: User, size: Int) {
+    Box(
+        modifier = Modifier
+            .size(size.dp) // Set the size of the circular container
+            .clip(CircleShape) // Clip the content to a circle
+            .background(Gray)
+            .testTag("profileImage_${user.uid}")
+    ) {
+        if (user.profilePicture != null) {
+            Log.d("UserProfileImage", "User profile picture is not null")
+            Image(
+                bitmap = user.profilePicture,
+                contentDescription = "Existing profile picture",
+                modifier = Modifier.fillMaxSize(), // Ensure the image fills the Box
+                contentScale = ContentScale.Crop // Crop and scale the image to fit the circle
+            )
+        } else {
+            Log.d("UserProfileImage", "User profile picture is null")
+            Image(
+                painter = painterResource(R.drawable.profile),
+                contentDescription = "Non-Existing profile picture",
+                modifier = Modifier.fillMaxSize(), // Ensure the image fills the Box
+                contentScale = ContentScale.Crop // Crop and scale the image to fit the circle
+            )
+        }
     }
 }
+
+

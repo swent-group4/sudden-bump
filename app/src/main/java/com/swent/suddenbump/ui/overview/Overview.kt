@@ -56,6 +56,7 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.violetColor
+import com.swent.suddenbump.ui.utils.UserProfileImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -214,25 +215,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-              if (user.profilePicture != null) {
-                Image(
-                    bitmap = user.profilePicture,
-                    contentDescription = "Existing profile pictures",
-                    modifier =
-                        Modifier.width(50.dp)
-                            .height(50.dp)
-                            .padding(8.dp)
-                            .testTag("profileImageNotNull_${user.uid}"))
-              } else {
-                Image(
-                    painter = painterResource(R.drawable.profile),
-                    contentDescription = "Non-Existing profile pictures",
-                    modifier =
-                        Modifier.width(50.dp)
-                            .height(50.dp)
-                            .padding(8.dp)
-                            .testTag("profileImage_${user.uid}"))
-              }
+            UserProfileImage(user, 40)
               Column {
                 Text(
                     text = "${user.firstName} ${user.lastName.first()}.",

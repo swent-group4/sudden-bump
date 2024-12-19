@@ -44,6 +44,7 @@ import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.utils.UserProfileImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -59,7 +60,6 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
   var isFriendRequestSent =
       userViewModel.getSentFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
 
-  // a
   Scaffold(
       modifier = Modifier.fillMaxSize().background(Color.Black).testTag("contactScreen"),
       topBar = {
@@ -116,22 +116,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
               horizontalAlignment = Alignment.CenterHorizontally,
               verticalArrangement = Arrangement.Top,
           ) {
-            if (user.profilePicture != null) {
-              Image(
-                  bitmap = user.profilePicture,
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(150.dp)
-                          .height(150.dp)
-                          .padding(8.dp)
-                          .testTag("profileImageNotNull"))
-            } else {
-              AsyncImage(
-                  model = "https://avatar.iran.liara.run/public/42",
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
-            }
+            UserProfileImage(user, 120)
             Column(
                 Modifier.fillMaxWidth().padding(top = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
