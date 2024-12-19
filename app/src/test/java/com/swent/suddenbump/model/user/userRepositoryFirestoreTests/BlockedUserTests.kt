@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.user.userRepositoryFirestoreTests
 
+import android.content.Context
 import android.location.Location
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
@@ -87,6 +88,8 @@ class BlockedUserTests {
 
   @Mock private lateinit var mockFriendDocumentReference: DocumentReference
 
+  @Mock private lateinit var mockContext: Context
+
   @Mock private lateinit var mockFriendDocumentSnapshot: DocumentSnapshot
   @Mock private lateinit var transaction: Transaction
 
@@ -122,8 +125,11 @@ class BlockedUserTests {
       FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
 
+    mockContext = mock(Context::class.java)
+
     userRepositoryFirestore =
-        UserRepositoryFirestore(mockFirestore, mockSharedPreferencesManager, mockWorkerScheduler)
+        UserRepositoryFirestore(
+            mockFirestore, mockSharedPreferencesManager, mockWorkerScheduler, mockContext)
 
     `when`(mockTaskVoid.isSuccessful).thenReturn(true)
     `when`(mockTaskVoid.isCanceled).thenReturn(false)

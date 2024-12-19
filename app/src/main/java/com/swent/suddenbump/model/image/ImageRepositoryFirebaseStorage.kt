@@ -190,33 +190,35 @@ class ImageRepositoryFirebaseStorage(
     if (!isInternetAvailable(context)) {
       Log.i("FirebaseDownload", "Offline mode : $path")
       offlineDownloadImageFactory(path, onSuccess, onFailure, fileInputStream)
-    }
-    try {
-      val timeoutMillis = 1_500L
-      withTimeout(timeoutMillis) {
-        val fileDownloadTask: TaskSnapshot =
-            if (!isUsingMockFileDownloadTask) imageRef.getFile(localFile).await()
-            else testableFileDownloadTask
-        if (fileDownloadTask.task.isCanceled) {
-          fileInputStream.close()
-          Log.e("FirebaseDownload", "Download failed : $path")
-          val storageTask = fileDownloadTask.task
-          onFailure(fileDownloadTask.task.exception!!)
-        } else {
-          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-          Log.i(
-              "FirebaseDownload",
-              "Finished online : ${profilePicturesPath + path.substringAfterLast('/')}")
-          onSuccess(bitmap.asImageBitmap())
+    } else {
+      try {
+        val timeoutMillis = 1_500L
+        withTimeout(timeoutMillis) {
+          val fileDownloadTask: TaskSnapshot =
+              if (!isUsingMockFileDownloadTask) imageRef.getFile(localFile).await()
+              else testableFileDownloadTask
+          if (fileDownloadTask.task.isCanceled) {
+            fileInputStream.close()
+            Log.e("FirebaseDownload", "Download failed : $path")
+            val storageTask = fileDownloadTask.task
+            onFailure(fileDownloadTask.task.exception!!)
+          } else {
+            val bitmap =
+                BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+            Log.i(
+                "FirebaseDownload",
+                "Finished online : ${profilePicturesPath + path.substringAfterLast('/')}")
+            onSuccess(bitmap.asImageBitmap())
+          }
         }
+      } catch (e: CancellationException) {
+        Log.e("FirebaseDownload", "Download timed out", e)
+        offlineDownloadImageFactory(path, onSuccess, onFailure, fileInputStream)
+      } catch (e: Exception) {
+        Log.e("FirebaseDownload", "Failed to download file", e)
+        withContext(Dispatchers.IO) { fileInputStream.close() }
+        onFailure(e)
       }
-    } catch (e: CancellationException) {
-      Log.e("FirebaseDownload", "Download timed out", e)
-      offlineDownloadImageFactory(path, onSuccess, onFailure, fileInputStream)
-    } catch (e: Exception) {
-      Log.e("FirebaseDownload", "Failed to download file", e)
-      withContext(Dispatchers.IO) { fileInputStream.close() }
-      onFailure(e)
     }
   }
 

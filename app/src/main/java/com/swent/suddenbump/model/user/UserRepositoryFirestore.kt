@@ -703,6 +703,9 @@ class UserRepositoryFirestore(
                       },
                       onFailure = {
                         Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
+                        val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
+                        friendsListMutable = friendsListMutable + userFriend
+
                         counterFriend++
                         if (counterFriend == documents.size) {
                           onSuccess(friendsListMutable)

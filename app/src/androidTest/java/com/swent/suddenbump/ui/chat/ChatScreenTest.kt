@@ -101,6 +101,8 @@ class ChatScreenTest {
       ChatScreen(viewModel = mockViewModel, navigationActions = fakeNavigationActions)
     }
 
+    composeTestRule.waitForIdle()
+
     // **Assert**
     composeTestRule.onNodeWithText("Hello").assertIsDisplayed()
     composeTestRule.onNodeWithText("Hi there").assertIsDisplayed()
