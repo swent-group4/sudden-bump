@@ -39,7 +39,6 @@ import com.swent.suddenbump.ui.theme.PurpleGrey40
 import com.swent.suddenbump.ui.utils.PhoneNumberVisualTransformation
 import com.yalantis.ucrop.UCrop
 import java.io.File
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -75,13 +74,12 @@ fun SignUpScreen(navigationActions: NavigationActions, userViewModel: UserViewMo
   // Coroutine scope for launching coroutines
   val coroutineScope = rememberCoroutineScope()
 
-  // StateFlow for base location
+  // base location
   val baseLocation =
-      MutableStateFlow(
-          Location("providerName").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("incomplete").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
 
   // LiveData for verification status
   val verificationStatus by userViewModel.verificationStatus.observeAsState()

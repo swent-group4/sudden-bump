@@ -86,6 +86,9 @@ class LocationUpdateWorker(
                       repository.userFriendsInRadius(
                           userLocation = location, friends = friends, radius = radius.toDouble())
                   friendsInRadius.forEach { friend ->
+                    if (!(friend.lastKnownLocation.provider == "fused" ||
+                        friend.lastKnownLocation.provider == "GPS"))
+                        return@forEach
                     if (friend.uid !in alreadyNotifiedFriends) {
                       Log.d("WorkerSuddenBump", "alreadyNotifiedFriends: $alreadyNotifiedFriends")
                       showFriendNearbyNotification(applicationContext, user.uid, friend)

@@ -20,7 +20,6 @@ import com.swent.suddenbump.model.user.SharedPreferencesManager
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.worker.WorkerScheduler
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -96,11 +95,10 @@ class RadiusNotifsTests {
   val snapshot2: DocumentSnapshot = mock(DocumentSnapshot::class.java)
 
   private val location =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
   private val user =
       User(
           uid = "1",
@@ -250,9 +248,9 @@ class RadiusNotifsTests {
           longitude = -118.243683
         }
 
-    val friend1 = user.copy(lastKnownLocation = MutableStateFlow(friend1Location))
-    val friend2 = user.copy(lastKnownLocation = MutableStateFlow(friend2Location))
-    val friend3 = user.copy(lastKnownLocation = MutableStateFlow(friend3Location))
+    val friend1 = user.copy(lastKnownLocation = friend1Location)
+    val friend2 = user.copy(lastKnownLocation = friend2Location)
+    val friend3 = user.copy(lastKnownLocation = friend3Location)
 
     val friends = listOf(friend1, friend2, friend3)
     val radius = 5000.0 // 5 kilometers

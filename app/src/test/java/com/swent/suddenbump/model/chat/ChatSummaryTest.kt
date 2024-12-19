@@ -3,7 +3,6 @@ package com.swent.suddenbump.model.chat
 import android.location.Location
 import com.google.firebase.firestore.*
 import com.swent.suddenbump.model.user.User
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -16,11 +15,10 @@ class ChatSummaryTest {
   private val participants = listOf("uidUser1", "uidUser2")
 
   private val locationDummy =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0 // Set latitude
-            longitude = 0.0 // Set longitude
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0 // Set latitude
+        longitude = 0.0 // Set longitude
+      }
 
   private val userDummy1 =
       User(

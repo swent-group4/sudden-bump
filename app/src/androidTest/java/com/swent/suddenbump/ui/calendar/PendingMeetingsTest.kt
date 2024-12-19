@@ -75,7 +75,7 @@ class PendingMeetingsScreenTest {
             "+12345678",
             null,
             "user1@email.com",
-            MutableStateFlow(Location("mock_provider")))
+            Location("mock_provider"))
     val user2 =
         User(
             "creator2",
@@ -84,7 +84,7 @@ class PendingMeetingsScreenTest {
             "+123456789",
             null,
             "user2@email.com",
-            MutableStateFlow(Location("mock_provider")))
+            Location("mock_provider"))
 
     every { userViewModel.getUserFriends() } returns MutableStateFlow(listOf(user1, user2))
     every { userViewModel.getCurrentUser() } returns
@@ -96,7 +96,7 @@ class PendingMeetingsScreenTest {
                 "+1234567890",
                 null,
                 "current@gmail.com",
-                MutableStateFlow(Location("mock_provider"))))
+                Location("mock_provider")))
   }
 
   @Test

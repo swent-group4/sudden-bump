@@ -42,7 +42,7 @@ class MeetingsSettingsTest {
                 phoneNumber = "+123456789",
                 profilePicture = null,
                 emailAddress = "john.doe@example.com",
-                lastKnownLocation = MutableStateFlow(Location("mock_provider"))))
+                lastKnownLocation = Location("mock_provider")))
   }
 
   @Test

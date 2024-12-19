@@ -15,7 +15,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.GregorianCalendar
 import java.util.Locale
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,11 +30,10 @@ class NotificationTest {
   fun testShowFriendNearbyNotification() {
 
     val locationDummy =
-        MutableStateFlow(
-            Location("dummy").apply {
-              latitude = 0.0 // Latitude fictive
-              longitude = 0.0 // Longitude fictive
-            })
+        Location("dummy").apply {
+          latitude = 0.0 // Latitude fictive
+          longitude = 0.0 // Longitude fictive
+        }
 
     val userDummy1 =
         User(

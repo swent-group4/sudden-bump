@@ -23,7 +23,6 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import io.mockk.mockk
 import java.io.File
 import java.io.FileOutputStream
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -129,7 +128,7 @@ class SettingsScreenTest {
             phoneNumber = "+1234567890",
             profilePicture = ImageBitmap(100, 100),
             emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
+            lastKnownLocation = locationDummy)
     userViewModel.setUser(userWithProfilePicture, {}, {})
 
     setContentDefault()
@@ -160,7 +159,7 @@ class SettingsScreenTest {
             phoneNumber = "+1234567891",
             profilePicture = null,
             emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
+            lastKnownLocation = locationDummy)
     userViewModel.setUser(userWithoutProfilePicture, {}, {})
 
     setContentDefault()
@@ -180,7 +179,7 @@ class SettingsScreenTest {
             phoneNumber = "+1234567892",
             profilePicture = ImageBitmap(100, 100),
             emailAddress = "alice.brown@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
+            lastKnownLocation = locationDummy)
     userViewModel.setUser(userWithProfilePicture, {}, {})
 
     setContentDefault()
@@ -213,7 +212,7 @@ class SettingsScreenTest {
             phoneNumber = "+1234567893",
             profilePicture = ImageBitmap(100, 100),
             emailAddress = "bob.smith@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
+            lastKnownLocation = locationDummy)
     userViewModel.setUser(userWithProfilePicture, {}, {})
 
     composeTestRule.waitForIdle()
@@ -235,7 +234,7 @@ class SettingsScreenTest {
             phoneNumber = "+1234567890",
             profilePicture = null,
             emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
+            lastKnownLocation = locationDummy)
     userViewModel.setUser(initialUser, {}, {})
 
     // Create a mock Uri for the image
@@ -277,7 +276,7 @@ class SettingsScreenTest {
             phoneNumber = "+1234567890",
             profilePicture = null,
             emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
+            lastKnownLocation = locationDummy)
     userViewModel.setUser(initialUser, {}, {})
 
     // Act: Set up the screen and simulate the failure
@@ -309,7 +308,7 @@ class SettingsScreenTest {
             phoneNumber = "+1234567890",
             profilePicture = null,
             emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(locationDummy))
+            lastKnownLocation = locationDummy)
     userViewModel.setUser(initialUser, {}, {})
 
     val context = ApplicationProvider.getApplicationContext<Context>()
