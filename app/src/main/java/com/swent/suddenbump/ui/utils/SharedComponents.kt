@@ -1,6 +1,5 @@
 package com.swent.suddenbump.ui.utils
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -281,29 +280,26 @@ fun LocationField(
  */
 @Composable
 fun UserProfileImage(user: User, size: Int) {
-    Box(
-        modifier = Modifier
-            .size(size.dp) // Set the size of the circular container
-            .clip(CircleShape) // Clip the content to a circle
-            .background(Gray)
-            .testTag("profileImage_${user.uid}")
-    ) {
+  Box(
+      modifier =
+          Modifier.size(size.dp) // Set the size of the circular container
+              .clip(CircleShape) // Clip the content to a circle
+              .background(Gray)
+              .testTag("profileImage_${user.uid}")) {
         if (user.profilePicture != null) {
-            Image(
-                bitmap = user.profilePicture,
-                contentDescription = "Existing profile picture",
-                modifier = Modifier.fillMaxSize(), // Ensure the image fills the Box
-                contentScale = ContentScale.Crop // Crop and scale the image to fit the circle
-            )
+          Image(
+              bitmap = user.profilePicture,
+              contentDescription = "Existing profile picture",
+              modifier = Modifier.fillMaxSize(), // Ensure the image fills the Box
+              contentScale = ContentScale.Crop // Crop and scale the image to fit the circle
+              )
         } else {
-            Image(
-                painter = painterResource(R.drawable.profile),
-                contentDescription = "Non-Existing profile picture",
-                modifier = Modifier.fillMaxSize(), // Ensure the image fills the Box
-                contentScale = ContentScale.Crop // Crop and scale the image to fit the circle
-            )
+          Image(
+              painter = painterResource(R.drawable.profile),
+              contentDescription = "Non-Existing profile picture",
+              modifier = Modifier.fillMaxSize(), // Ensure the image fills the Box
+              contentScale = ContentScale.Crop // Crop and scale the image to fit the circle
+              )
         }
-    }
+      }
 }
-
-

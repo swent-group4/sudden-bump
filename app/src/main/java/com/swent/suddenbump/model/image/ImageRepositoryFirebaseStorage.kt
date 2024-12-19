@@ -1,6 +1,5 @@
 package com.swent.suddenbump.model.image
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -69,17 +68,17 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
       onSuccess: (ImageBitmap) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-      val imageRef = storage.reference.child(path)
-      val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
-      // Ensure the parent directories exist
-      localFile.parentFile?.mkdirs()
+    val imageRef = storage.reference.child(path)
+    val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
+    // Ensure the parent directories exist
+    localFile.parentFile?.mkdirs()
 
-      // Create the file
-      if (!localFile.exists()) {
-          localFile.createNewFile()
-      }
+    // Create the file
+    if (!localFile.exists()) {
+      localFile.createNewFile()
+    }
 
-      runBlocking { downloadImageFactory(path, imageRef, localFile, onSuccess, onFailure) }
+    runBlocking { downloadImageFactory(path, imageRef, localFile, onSuccess, onFailure) }
   }
 
   /**
@@ -116,21 +115,20 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
       onSuccess: (ImageBitmap) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-      val imageRef = storage.reference.child(path)
-      val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
-      localFile.parentFile?.mkdirs()
+    val imageRef = storage.reference.child(path)
+    val localFile = File(profilePicturesPath + path.substringAfterLast('/'))
+    localFile.parentFile?.mkdirs()
 
-      // Create the file
-      if (!localFile.exists()) {
-          localFile.createNewFile()
-      }
-      CoroutineScope(Dispatchers.IO).launch {
-          downloadImageFactory(path, imageRef, localFile, onSuccess, onFailure)
-      }
+    // Create the file
+    if (!localFile.exists()) {
+      localFile.createNewFile()
+    }
+    CoroutineScope(Dispatchers.IO).launch {
+      downloadImageFactory(path, imageRef, localFile, onSuccess, onFailure)
+    }
   }
 
-
-    /**
+  /**
    * Uploads an image to Firebase Storage asynchronously.
    *
    * This function takes an `ImageBitmap`, compresses it into a JPEG byte array, and uploads it to

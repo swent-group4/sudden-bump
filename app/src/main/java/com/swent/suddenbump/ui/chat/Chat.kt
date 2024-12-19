@@ -97,10 +97,10 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
             TopAppBar(
                 title = {
                   Row(verticalAlignment = Alignment.CenterVertically) {
-                      if (otherUser != null) {
-                          UserProfileImage(otherUser, 40)
-                      }
-                      Spacer(modifier = Modifier.width(8.dp))
+                    if (otherUser != null) {
+                      UserProfileImage(otherUser, 40)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         "${otherUser?.firstName?.replaceFirstChar { it.uppercase() }} ${otherUser?.lastName?.replaceFirstChar { it.uppercase() }}",
                         color = Color.White)

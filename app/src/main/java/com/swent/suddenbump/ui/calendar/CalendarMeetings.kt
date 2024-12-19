@@ -186,15 +186,11 @@ fun DayRow(
             filteredMeetings.forEach { meeting ->
               Card(
                   modifier =
-                      Modifier.fillMaxWidth()
-                          .padding(8.dp)
-                          .clickable {
-                            meetingViewModel.selectMeeting(meeting)
-                            navigationActions.navigateTo(Screen.EDIT_MEETING)
-                          },
-                  colors =
-                      CardDefaults.cardColors(
-                          containerColor = Pinkish)) {
+                      Modifier.fillMaxWidth().padding(8.dp).clickable {
+                        meetingViewModel.selectMeeting(meeting)
+                        navigationActions.navigateTo(Screen.EDIT_MEETING)
+                      },
+                  colors = CardDefaults.cardColors(containerColor = Pinkish)) {
                     val friend =
                         userFriends.find {
                           it.uid == meeting.friendId || it.uid == meeting.creatorId
@@ -206,9 +202,9 @@ fun DayRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(12.dp)) {
-                        if (friend != null) {
+                          if (friend != null) {
                             UserProfileImage(friend, 40)
-                        }
+                          }
                           Column {
                             Text(
                                 text = "Meet $friendName at ${meeting.location?.name}",

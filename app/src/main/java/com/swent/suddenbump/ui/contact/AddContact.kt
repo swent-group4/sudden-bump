@@ -7,10 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,7 +36,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.model.user.UserWithFriendsInCommon
@@ -60,7 +57,9 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
 
   val recommendedUsers =
       userViewModel.getUserRecommendedFriends().collectAsState().value.filter {
-        !blockedUsers.map { user: User -> user.uid }.contains(it.user.uid)
+        !blockedUsers.map { user: User -> user.uid }.contains(it.user.uid) &&
+            !sentFriendRequests.map { user: User -> user.uid }.contains(it.user.uid) &&
+            !friendRequests.value.map { user: User -> user.uid }.contains(it.user.uid)
       }
 
   val filteredUsers =
@@ -210,7 +209,7 @@ fun UserRequestRow(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            UserProfileImage(user, 40)
+              UserProfileImage(user, 40)
               Text(
                   text = "${user.firstName} ${user.lastName.first()}.",
                   style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -284,7 +283,7 @@ fun UserRecommendedRow(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            UserProfileImage(userWithFriends.user, 40)
+              UserProfileImage(userWithFriends.user, 40)
               Text(
                   text =
                       "${userWithFriends.user.firstName} ${userWithFriends.user.lastName.first()}.",

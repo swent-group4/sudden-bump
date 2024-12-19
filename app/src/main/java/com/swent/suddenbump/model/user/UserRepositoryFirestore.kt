@@ -315,19 +315,21 @@ class UserRepositoryFirestore(
                 .addOnSuccessListener { documents ->
                   val friendRequestsList =
                       documents.mapNotNull { document ->
-                          var profilePicture: ImageBitmap? = null
-                          val path =
-                              helper.uidToProfilePicturePath(
-                                  document.data!!["uid"].toString(), profilePicturesRef)
-                          imageRepository.downloadImage(
-                              path,
-                              onSuccess = { image ->
-                                  profilePicture = image
-                                  Log.d(logTag, "Successfully retrieved image for id : ${document.id}, picture : $profilePicture")
-                              },
-                              onFailure = {
-                                  Log.e(logTag, "Failed to retrieve image for id : ${document.id}")
-                              })
+                        var profilePicture: ImageBitmap? = null
+                        val path =
+                            helper.uidToProfilePicturePath(
+                                document.data!!["uid"].toString(), profilePicturesRef)
+                        imageRepository.downloadImage(
+                            path,
+                            onSuccess = { image ->
+                              profilePicture = image
+                              Log.d(
+                                  logTag,
+                                  "Successfully retrieved image for id : ${document.id}, picture : $profilePicture")
+                            },
+                            onFailure = {
+                              Log.e(logTag, "Failed to retrieve image for id : ${document.id}")
+                            })
                         helper.documentSnapshotToUser(document, profilePicture)
                       }
                   onSuccess(friendRequestsList)
@@ -725,6 +727,40 @@ class UserRepositoryFirestore(
         }
   }
 
+  override fun deleteFriend(
+      currentUserId: String,
+      friendUserId: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    val currentUserRef = db.collection(usersCollectionPath).document(currentUserId)
+    val friendUserRef = db.collection(usersCollectionPath).document(friendUserId)
+
+    db.runTransaction { transaction ->
+          val currentUserSnapshot = transaction.get(currentUserRef)
+          val friendUserSnapshot = transaction.get(friendUserRef)
+
+          val currentUserData =
+              currentUserSnapshot.data ?: throw Exception("Current user not found")
+          val friendUserData = friendUserSnapshot.data ?: throw Exception("Friend user not found")
+
+          val currentUserFriendsList =
+              (currentUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
+          val friendUserFriendsList =
+              (friendUserData["friendsList"] as? List<String>)?.toMutableList() ?: mutableListOf()
+
+          // Remove friend from current user's friend list
+          currentUserFriendsList.remove(friendUserId)
+          // Remove current user from friend's friend list
+          friendUserFriendsList.remove(currentUserId)
+
+          transaction.update(currentUserRef, "friendsList", currentUserFriendsList)
+          transaction.update(friendUserRef, "friendsList", friendUserFriendsList)
+        }
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { e -> onFailure(e) }
+  }
+
   /**
    * Sets the list of friends for the specified user.
    *
@@ -790,19 +826,21 @@ class UserRepositoryFirestore(
                         // Calculate number of friends in common
                         val commonFriendsCount =
                             currentUserFriendsList.intersect(otherUserFriendsList.toSet()).size
-                          var profilePicture: ImageBitmap? = null
-                          val path =
-                              helper.uidToProfilePicturePath(
-                                  document.data!!["uid"].toString(), profilePicturesRef)
-                          imageRepository.downloadImage(
-                              path,
-                              onSuccess = { image ->
-                                  profilePicture = image
-                                  Log.d(logTag, "Successfully retrieved image for id : ${document.id}, picture : $profilePicture")
-                              },
-                              onFailure = {
-                                  Log.e(logTag, "Failed to retrieve image for id : ${document.id}")
-                              })
+                        var profilePicture: ImageBitmap? = null
+                        val path =
+                            helper.uidToProfilePicturePath(
+                                document.data!!["uid"].toString(), profilePicturesRef)
+                        imageRepository.downloadImage(
+                            path,
+                            onSuccess = { image ->
+                              profilePicture = image
+                              Log.d(
+                                  logTag,
+                                  "Successfully retrieved image for id : ${document.id}, picture : $profilePicture")
+                            },
+                            onFailure = {
+                              Log.e(logTag, "Failed to retrieve image for id : ${document.id}")
+                            })
                         // Create RecommendedFriend object with user and common friends count
                         UserWithFriendsInCommon(
                             user = helper.documentSnapshotToUser(document, profilePicture),
@@ -1152,26 +1190,26 @@ class UserRepositoryFirestore(
     }
   }
 
-    override fun saveNotifiedMeeting(meetingUID: List<String>) {
-        val gson = Gson()
-        val jsonString = gson.toJson(meetingUID) // Convert list to JSON string
-        sharedPreferencesManager.saveString("notified_meetings", jsonString)
-    }
+  override fun saveNotifiedMeeting(meetingUID: List<String>) {
+    val gson = Gson()
+    val jsonString = gson.toJson(meetingUID) // Convert list to JSON string
+    sharedPreferencesManager.saveString("notified_meetings", jsonString)
+  }
 
-    /**
-     * Retrieves the saved meetings ID from shared preferences.
-     *
-     * @return The saved meetings ID as a String, or an empty string if no user is logged in.
-     */
-    override fun getSavedAlreadyNotifiedMeetings(): List<String> {
-        val gson = Gson()
-        val jsonString = sharedPreferencesManager.getString("notified_meetings")
-        return if (jsonString != "") {
-            gson.fromJson(jsonString, object : TypeToken<List<String>>() {}.type)
-        } else {
-            emptyList() // Return an empty list if no data is found
-        }
+  /**
+   * Retrieves the saved meetings ID from shared preferences.
+   *
+   * @return The saved meetings ID as a String, or an empty string if no user is logged in.
+   */
+  override fun getSavedAlreadyNotifiedMeetings(): List<String> {
+    val gson = Gson()
+    val jsonString = sharedPreferencesManager.getString("notified_meetings")
+    return if (jsonString != "") {
+      gson.fromJson(jsonString, object : TypeToken<List<String>>() {}.type)
+    } else {
+      emptyList() // Return an empty list if no data is found
     }
+  }
 
   override fun saveRadius(radius: Float) {
     sharedPreferencesManager.saveString("radius", radius.toString())
@@ -1382,39 +1420,37 @@ class UserRepositoryFirestore(
       uidJsonList: String,
       onSuccess: (List<User>) -> Unit,
   ) {
-      val uidList = helper.documentSnapshotToList(uidJsonList)
+    val uidList = helper.documentSnapshotToList(uidJsonList)
 
-      val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
-      Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
-          var counterFriend = 0
-          val friendsListMutable = mutableListOf<User>()
-          for (doc in documents) {
-              var profilePicture: ImageBitmap? = null
-              val path =
-                  doc.data?.get("uid")?.let {
-                      helper.uidToProfilePicturePath(it.toString(), profilePicturesRef)
-                  }
-              if (path != null) {
-                  imageRepository.downloadImageAsync(
-                      path,
-                      onSuccess = { image ->
-                          profilePicture = image
-                          val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
-                          friendsListMutable.add(userFriend)
-                          counterFriend++
-                          onSuccess(friendsListMutable)
-                      },
-                      onFailure = {
-                          Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
-                          counterFriend++
-                          onSuccess(friendsListMutable)
-                      })
-              }
-          }
+    val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
+    Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
+      val friendsListMutable = mutableListOf<User>()
+      for (doc in documents) {
+        var profilePicture: ImageBitmap? = null
+        val path =
+            doc.data?.get("uid")?.let {
+              helper.uidToProfilePicturePath(it.toString(), profilePicturesRef)
+            }
+
+        if (path != null) {
+          imageRepository.downloadImageAsync(
+              path,
+              onSuccess = { image ->
+                profilePicture = image
+                val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
+                friendsListMutable.add(userFriend)
+                onSuccess(friendsListMutable)
+              },
+              onFailure = {
+                Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
+                onSuccess(friendsListMutable)
+              })
+        }
       }
+    }
   }
 
-    override fun unblockUser(
+  override fun unblockUser(
       currentUserId: String,
       blockedUserId: String,
       onSuccess: () -> Unit,

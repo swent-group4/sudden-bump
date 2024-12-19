@@ -125,93 +125,78 @@ fun PendingMeetingRow(
     userFriends: List<User>,
     meetingViewModel: MeetingViewModel
 ) {
-    val dayFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
-    val friend = userFriends.find { it.uid == meeting.friendId || it.uid == meeting.creatorId }
-    val friendName = friend?.let { "${it.firstName} ${it.lastName.first()}." } ?: "Unknown Friend"
+  val dayFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
+  val friend = userFriends.find { it.uid == meeting.friendId || it.uid == meeting.creatorId }
+  val friendName = friend?.let { "${it.firstName} ${it.lastName.first()}." } ?: "Unknown Friend"
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(Gray, MaterialTheme.shapes.medium)
-            .padding(16.dp)
-            .testTag("pendingMeetingRow")
-    ) {
+  Column(
+      modifier =
+          Modifier.fillMaxWidth()
+              .clip(RoundedCornerShape(10.dp))
+              .background(Gray, MaterialTheme.shapes.medium)
+              .padding(16.dp)
+              .testTag("pendingMeetingRow")) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Date Text
-            Text(
-                text = dayFormat.format(meeting.date.toDate()),
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
-                modifier = Modifier.padding(end = 8.dp).testTag("meetingDate")
-            )
-            // Buttons Row
-            Row(
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                // Accept Button
-                IconButton(
-                    onClick = {
-                        val updatedMeeting = meeting.copy(accepted = true)
-                        meetingViewModel.updateMeeting(updatedMeeting)
-                    },
-                    modifier = Modifier
-                        .testTag("acceptButton")
-                        .size(36.dp)
-                ) {
-                    Box {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Accept",
-                            tint = Pinkish,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .offset(x = 1.dp, y = 1.dp) // Slight offset
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Accept",
-                            tint = Pinkish,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
+            verticalAlignment = Alignment.CenterVertically) {
+              // Date Text
+              Text(
+                  text = dayFormat.format(meeting.date.toDate()),
+                  style = MaterialTheme.typography.titleLarge,
+                  color = Color.White,
+                  modifier = Modifier.padding(end = 8.dp).testTag("meetingDate"))
+              // Buttons Row
+              Row(
+                  horizontalArrangement = Arrangement.End,
+                  verticalAlignment = Alignment.CenterVertically,
+                  modifier = Modifier.fillMaxWidth()) {
+                    // Accept Button
+                    IconButton(
+                        onClick = {
+                          val updatedMeeting = meeting.copy(accepted = true)
+                          meetingViewModel.updateMeeting(updatedMeeting)
+                        },
+                        modifier = Modifier.testTag("acceptButton").size(36.dp)) {
+                          Box {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Accept",
+                                tint = Pinkish,
+                                modifier =
+                                    Modifier.size(24.dp).offset(x = 1.dp, y = 1.dp) // Slight offset
+                                )
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Accept",
+                                tint = Pinkish,
+                                modifier = Modifier.size(24.dp))
+                          }
+                        }
 
-                Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
 
-                // Decline Button
-                IconButton(
-                    onClick = { meetingViewModel.deleteMeeting(meeting.meetingId) },
-                    modifier = Modifier
-                        .testTag("denyButton")
-                        .size(36.dp)
-                ) {
-                    Box {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Decline",
-                            tint = Pinkish,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .offset(x = 1.dp, y = 1.dp) // Slight offset
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Decline",
-                            tint = Pinkish,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                }
-
+                    // Decline Button
+                    IconButton(
+                        onClick = { meetingViewModel.deleteMeeting(meeting.meetingId) },
+                        modifier = Modifier.testTag("denyButton").size(36.dp)) {
+                          Box {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Decline",
+                                tint = Pinkish,
+                                modifier =
+                                    Modifier.size(24.dp).offset(x = 1.dp, y = 1.dp) // Slight offset
+                                )
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Decline",
+                                tint = Pinkish,
+                                modifier = Modifier.size(24.dp))
+                          }
+                        }
+                  }
             }
-        }
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -219,38 +204,27 @@ fun PendingMeetingRow(
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .testTag("meetingCard"),
-                colors = CardDefaults.cardColors(containerColor = Pinkish)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Profile Image
-                    if (friend != null) {
-                        UserProfileImage(friend, 40)
-                    }
+            modifier = Modifier.fillMaxWidth()) {
+              Card(
+                  modifier = Modifier.fillMaxWidth().padding(8.dp).testTag("meetingCard"),
+                  colors = CardDefaults.cardColors(containerColor = Pinkish)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                          // Profile Image
+                          if (friend != null) {
+                            UserProfileImage(friend, 40)
+                          }
 
-                    // Invitation Text
-                    Text(
-                        text = "$friendName invites you to meet at ${meeting.location?.name}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White,
-                        modifier = Modifier.testTag("meetingDetails")
-                    )
-                }
+                          // Invitation Text
+                          Text(
+                              text = "$friendName invites you to meet at ${meeting.location?.name}",
+                              style = MaterialTheme.typography.bodyMedium,
+                              color = Color.White,
+                              modifier = Modifier.testTag("meetingDetails"))
+                        }
+                  }
             }
-        }
-
-    }
+      }
 }
-

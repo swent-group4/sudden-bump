@@ -1,6 +1,5 @@
 package com.swent.suddenbump.ui.navigation
 
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,36 +22,23 @@ fun BottomNavigationMenu(
     tabList: List<TopLevelDestination>,
     selectedItem: String
 ) {
-    NavigationBar(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .testTag("bottomNavigationMenu"),
-        containerColor = Color.Black
-    ) {
+  NavigationBar(
+      modifier = Modifier.fillMaxWidth().height(60.dp).testTag("bottomNavigationMenu"),
+      containerColor = Color.Black) {
         tabList.forEach { tab ->
-            val tabScreen = tab.route + " Screen"
-            val isSelected = tabScreen == selectedItem
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = tab.icon,
-                        contentDescription = null,
-                        tint = if (isSelected) Purple40 else Color.White
-                    )
-                },
-                label = {
-                    Text(
-                        text = tab.textId,
-                        color = if (isSelected) Pinkish else Color.White
-                    )
-                },
-                selected = isSelected,
-                onClick = { onTabSelect(tab) },
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50.dp))
-                    .testTag(tab.textId)
-            )
+          val tabScreen = tab.route + " Screen"
+          val isSelected = tabScreen == selectedItem
+          NavigationBarItem(
+              icon = {
+                Icon(
+                    imageVector = tab.icon,
+                    contentDescription = null,
+                    tint = if (isSelected) Purple40 else Color.White)
+              },
+              label = { Text(text = tab.textId, color = if (isSelected) Pinkish else Color.White) },
+              selected = isSelected,
+              onClick = { onTabSelect(tab) },
+              modifier = Modifier.clip(RoundedCornerShape(50.dp)).testTag(tab.textId))
         }
-    }
+      }
 }

@@ -187,10 +187,10 @@ class PendingMeetingsScreenTest {
         .assertExists()
         .assertIsDisplayed()
 
-      // Verify meeting card
-      composeTestRule.onNodeWithTag("meetingCard").assertIsDisplayed()
+    // Verify meeting card
+    composeTestRule.onNodeWithTag("meetingCard").assertIsDisplayed()
 
-      // Verify meeting date
-      composeTestRule.onNodeWithTag("meetingDate").assertIsDisplayed()
+    // Verify meeting date
+    composeTestRule.onNodeWithTag("meetingDate").assertIsDisplayed()
   }
 }
