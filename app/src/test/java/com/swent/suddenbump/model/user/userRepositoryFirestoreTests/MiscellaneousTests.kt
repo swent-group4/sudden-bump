@@ -475,45 +475,44 @@ class MiscellaneousTests {
     verify(mockSharedPreferencesManager).clearPreferences()
   }
 
+  @Test
+  fun saveNotifiedMeetings_shouldSaveListAsJsonString() {
+    val meetingsID = listOf("meeting1", "meeting2", "meeting3")
+    val gson = Gson()
+    val expectedJson = gson.toJson(meetingsID)
 
-    @Test
-    fun saveNotifiedMeetings_shouldSaveListAsJsonString() {
-        val meetingsID = listOf("meeting1", "meeting2", "meeting3")
-        val gson = Gson()
-        val expectedJson = gson.toJson(meetingsID)
+    // Act
+    userRepositoryFirestore.saveNotifiedMeeting(meetingsID)
 
-        // Act
-        userRepositoryFirestore.saveNotifiedMeeting(meetingsID)
+    // Verify JSON string is saved in SharedPreferences
+    verify(sharedPreferencesEditor).putString("notified_meetings", expectedJson)
+    verify(sharedPreferencesEditor).apply()
+  }
 
-        // Verify JSON string is saved in SharedPreferences
-        verify(sharedPreferencesEditor).putString("notified_meetings", expectedJson)
-        verify(sharedPreferencesEditor).apply()
-    }
+  @Test
+  fun getSavedAlreadyNotifiedMeetings_shouldReturnSavedList() {
+    val meetingsID = listOf("meeting1", "meeting2", "meeting3")
+    val gson = Gson()
+    val jsonString = gson.toJson(meetingsID)
 
-    @Test
-    fun getSavedAlreadyNotifiedMeetings_shouldReturnSavedList() {
-        val meetingsID = listOf("meeting1", "meeting2", "meeting3")
-        val gson = Gson()
-        val jsonString = gson.toJson(meetingsID)
+    // Mock SharedPreferences to return the JSON string
+    `when`(mockSharedPreferencesManager.getString("notified_meetings")).thenReturn(jsonString)
+    // Act
+    val result = userRepositoryFirestore.getSavedAlreadyNotifiedMeetings()
 
-        // Mock SharedPreferences to return the JSON string
-        `when`(mockSharedPreferencesManager.getString("notified_meetings")).thenReturn(jsonString)
-        // Act
-        val result = userRepositoryFirestore.getSavedAlreadyNotifiedMeetings()
+    // Assert the result matches the expected list
+    assertEquals(meetingsID, result)
+  }
 
-        // Assert the result matches the expected list
-        assertEquals(meetingsID, result)
-    }
+  @Test
+  fun getSavedAlreadyNotifiedMeetings_shouldReturnEmptyListWhenNoData() {
+    // Mock SharedPreferences to return null
+    `when`(mockSharedPreferencesManager.getString("notified_meetings")).thenReturn("")
 
-    @Test
-    fun getSavedAlreadyNotifiedMeetings_shouldReturnEmptyListWhenNoData() {
-        // Mock SharedPreferences to return null
-        `when`(mockSharedPreferencesManager.getString("notified_meetings")).thenReturn("")
+    // Act
+    val result = userRepositoryFirestore.getSavedAlreadyNotifiedMeetings()
 
-        // Act
-        val result = userRepositoryFirestore.getSavedAlreadyNotifiedMeetings()
-
-        // Assert the result is an empty list
-        assertEquals(emptyList<String>(), result)
-    }
+    // Assert the result is an empty list
+    assertEquals(emptyList<String>(), result)
+  }
 }

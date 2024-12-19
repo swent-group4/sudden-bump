@@ -238,7 +238,8 @@ fun LocationField(
             expanded = showDropdown && locationSuggestions.isNotEmpty(),
             onDismissRequest = { onDropdownChange(false) },
             modifier = Modifier.background(Color.Black).testTag("DropDownMenu")) {
-              locationSuggestions.filterNotNull().take(maxItemsToShow.intValue).forEach { location ->
+              locationSuggestions.filterNotNull().take(maxItemsToShow.intValue).forEach { location
+                ->
                 DropdownMenuItem(
                     text = {
                       Text(

@@ -141,11 +141,8 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                               LazyColumn(
                                   modifier =
                                       Modifier.fillMaxWidth()
-                                          .heightIn(
-                                              max =
-                                                  400
-                                                      .dp) // Constrain height of the inner
-                                                           // LazyColumn
+                                          .heightIn(max = 400.dp) // Constrain height of the inner
+                                  // LazyColumn
                                   ) {
                                     items(friendsList.size) { index ->
                                       val (friend, _) = friendsList[index]
@@ -153,7 +150,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                                           modifier =
                                               Modifier
                                                   .fillMaxWidth() // Add vertical space around each
-                                                                  // user
+                                          // user
                                           ) {
                                             UserRow(
                                                 user = friend,
