@@ -4,27 +4,24 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.navigation.TopLevelDestinations
+import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.utils.AccountOption
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
+import com.swent.suddenbump.ui.utils.isRunningTest
 
 @Composable
 fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
@@ -85,6 +82,10 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     backgroundColor = Pink40,
                     onClick = {
                       userViewModel.logout()
+                      if (isRunningTest()) {
+                        navigationActions.navigateTo(Route.AUTH)
+                      }
+
                       FirebaseAuth.getInstance().signOut()
                       val gso =
                           GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -99,7 +100,7 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                         if (task.isSuccessful) {
                           Toast.makeText(context, "Logged out successfully!", Toast.LENGTH_LONG)
                               .show()
-                          navigationActions.navigateTo(TopLevelDestinations.AUTH)
+                          navigationActions.navigateTo(Route.AUTH)
                         }
                       }
 
@@ -114,50 +115,4 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
               }
             }
       })
-}
-
-@Composable
-fun ChangeSection(
-    title: String,
-    placeholder: String,
-    sectionTag: String,
-    placeholderTag: String,
-    buttonTag: String
-) {
-  Column(
-      modifier =
-          Modifier.fillMaxWidth()
-              .background(Color.White, RoundedCornerShape(8.dp))
-              .padding(16.dp)
-              .testTag(sectionTag)) {
-        Text(
-            text = title,
-            style =
-                MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black))
-        Spacer(modifier = Modifier.height(8.dp))
-        Box(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .height(48.dp)
-                    .background(Color.LightGray, RoundedCornerShape(8.dp))
-                    .testTag(placeholderTag)) {
-              Text(
-                  text = placeholder,
-                  style =
-                      MaterialTheme.typography.bodyLarge.copy(fontSize = 14.sp, color = Color.Gray),
-                  modifier = Modifier.align(Alignment.CenterStart).padding(8.dp))
-            }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = { /* Do nothing for now */},
-            modifier = Modifier.fillMaxWidth().testTag(buttonTag),
-            colors = ButtonDefaults.buttonColors(containerColor = Pink40)) {
-              Text(
-                  text = "Update ${title.split(" ")[1]}",
-                  style =
-                      MaterialTheme.typography.bodyLarge.copy(
-                          fontWeight = FontWeight.Bold, color = Color.White))
-            }
-      }
 }

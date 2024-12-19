@@ -13,8 +13,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +31,9 @@ import com.swent.suddenbump.R
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.DividerColor
+import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
 import com.swent.suddenbump.ui.theme.VibrantPurple
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
@@ -52,7 +52,7 @@ fun SettingsScreen(
   var notificationsEnabled by remember {
     mutableStateOf(userViewModel.getSavedNotificationStatus())
   }
-  var radius by remember { mutableStateOf(userViewModel.getSavedRadius()) }
+  var radius by remember { mutableFloatStateOf(userViewModel.getSavedRadius()) }
 
   Scaffold(
       modifier = Modifier.testTag("settingsScreen"),
@@ -71,7 +71,7 @@ fun SettingsScreen(
                 SettingsOption(
                     label = "Account",
                     backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("AccountScreen") },
+                    onClick = { navigationActions.navigateTo(Screen.ACCOUNT) },
                     modifier = Modifier.testTag("AccountOption"))
               }
               item {
@@ -82,13 +82,6 @@ fun SettingsScreen(
                       userViewModel.saveRadius(it)
                     },
                     modifier = Modifier.testTag("RadiusSlider"))
-              }
-              item {
-                SettingsOption(
-                    label = "Discussions",
-                    backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("DiscussionsScreen") },
-                    modifier = Modifier.testTag("DiscussionsOption"))
               }
               item {
                 SettingsOption(
@@ -107,10 +100,23 @@ fun SettingsScreen(
                     modifier = Modifier.testTag("NotificationsSwitch"))
               }
               item {
-                DeleteAllMeetingsItem(
-                    meetingViewModel,
-                    userViewModel,
-                    modifier = Modifier.testTag("DeleteAllMeetings"))
+                // Delete all meetings buttons
+                DeleteAllButton(
+                    onClick = {
+                      meetingViewModel.deleteMeetingsForUser(
+                          userViewModel.getCurrentUser().value.uid)
+                    },
+                    toDelete = "meetings",
+                    confirmationText =
+                        "Are you sure you want to delete all meetings in which you are participating? This action can't be undone.")
+              }
+              item {
+                // Delete all chats buttons
+                DeleteAllButton(
+                    onClick = { userViewModel.deleteAllMessages() },
+                    toDelete = "chats",
+                    confirmationText =
+                        "Are you sure you want to delete all conversations in which you participated? This action can't be undone.")
               }
             }
       })
@@ -207,7 +213,7 @@ fun ProfileSection(userViewModel: UserViewModel) {
         // Update the user profile in the ViewModel
         if (bitmap != null) {
           userViewModel.setUser(
-              currentUser!!.copy(profilePicture = bitmap),
+              currentUser.copy(profilePicture = bitmap),
               onSuccess = { Log.i("Profile", "Profile updated successfully") },
               onFailure = { Log.e("Profile", "Failed to update profile") })
         }
@@ -220,7 +226,7 @@ fun ProfileSection(userViewModel: UserViewModel) {
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     Spacer(modifier = Modifier.height(16.dp))
     Text(
-        text = currentUser?.firstName ?: "",
+        text = currentUser.firstName,
         style =
             MaterialTheme.typography.titleMedium.copy(
                 fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White),
@@ -233,7 +239,7 @@ fun ProfileSection(userViewModel: UserViewModel) {
                 .clip(CircleShape)
                 .background(Color.Gray)
                 .testTag("profilePicture")) {
-          currentUser?.profilePicture?.let {
+          currentUser.profilePicture?.let {
             Image(
                 bitmap = it,
                 contentDescription = "Profile Picture",
@@ -254,13 +260,13 @@ fun ProfileSection(userViewModel: UserViewModel) {
           modifier = Modifier.testTag("uploadPhotoButton"),
           colors = ButtonDefaults.buttonColors(containerColor = Purple40)) {
             Text(
-                text = if (currentUser?.profilePicture != null) "Edit Photo" else "Add Photo",
+                text = if (currentUser.profilePicture != null) "Edit Photo" else "Add Photo",
                 style =
                     MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Bold, color = Color.White))
           }
 
-      if (currentUser?.profilePicture != null) {
+      if (currentUser.profilePicture != null) {
         Button(
             onClick = {
               // Clear the profile picture
@@ -341,52 +347,29 @@ fun NotificationsSwitch(
 }
 
 @Composable
-fun DeleteAllMeetingsItem(
-    meetingViewModel: MeetingViewModel,
-    userViewModel: UserViewModel,
-    modifier: Modifier = Modifier
-) {
-
+fun DeleteAllButton(onClick: () -> Unit, toDelete: String, confirmationText: String) {
   var showDialog by remember { mutableStateOf(false) }
 
-  Row(
+  Button(
+      onClick = { showDialog = true }, // Show the confirmation dialog when clicked
+      colors =
+          ButtonDefaults.buttonColors(
+              containerColor = Pink40, // Background color of the button
+              contentColor = Color.White // Text color of the button
+              ),
+      shape = RoundedCornerShape(8.dp), // Match the less-rounded style of "Delete Account"
       modifier =
-          modifier
-              .fillMaxWidth()
-              .height(56.dp)
-              .padding(horizontal = 8.dp)
-              .background(Color.White, RoundedCornerShape(8.dp))
-              .padding(horizontal = 16.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically) {
+          Modifier.fillMaxWidth() // Make the button span the full width of the column
+              .testTag("deleteAllButton_$toDelete") // Tag for testing this button
+              .padding(horizontal = 16.dp) // Padding to keep space on the sides
+      ) {
+        // Text displayed on the button
         Text(
-            text = "Delete All Meetings",
+            text = "Delete all $toDelete",
             style =
                 MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Bold, color = Color.Black),
-            modifier = Modifier.testTag("deleteAllMeetingsText"))
-        Button(
-            onClick = { showDialog = true },
-            colors =
-                ButtonDefaults.buttonColors(containerColor = Purple40, contentColor = Color.Black),
-            shape = RoundedCornerShape(12.dp),
-            modifier =
-                Modifier.defaultMinSize(minWidth = 80.dp, minHeight = 40.dp)
-                    .padding(4.dp)
-                    .testTag("DeleteButton")) {
-              Row(
-                  horizontalArrangement = Arrangement.spacedBy(4.dp),
-                  verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete Icon",
-                        tint = Color.Black)
-                    Text(
-                        text = "Delete",
-                        style =
-                            MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
-                  }
-            }
+                    fontWeight = FontWeight.Bold // Bold font for emphasis
+                    ))
       }
 
   // Confirmation Dialog
@@ -394,34 +377,22 @@ fun DeleteAllMeetingsItem(
     AlertDialog(
         onDismissRequest = { showDialog = false },
         title = {
-          Text(text = "Delete All Meetings", modifier = Modifier.testTag("deleteAllMeetingsTitle"))
+          Text(
+              text = "Delete all $toDelete", modifier = Modifier.testTag("delete_${toDelete}_text"))
         },
         text = {
-          Text(
-              text = "Are you sure you want to delete all your scheduled meetings?",
-              modifier = Modifier.testTag("AreYouSureDeleteText"))
+          Text(text = confirmationText, modifier = Modifier.testTag("areYouSureText_$toDelete"))
         },
-        modifier = Modifier.testTag("deleteAllMeetingsDialog"),
+        modifier = Modifier.testTag("deleteAllDialog_$toDelete"),
         confirmButton = {
-          Button(
-              onClick = {
-                showDialog = false
-                meetingViewModel.deleteMeetingsForUser(
-                    userViewModel.getCurrentUser().value?.uid ?: "")
-              },
-              colors =
-                  ButtonDefaults.buttonColors(
-                      containerColor = Color.Red, contentColor = Color.White)) {
-                Text("Yes")
-              }
+          TextButton(modifier = Modifier.testTag("confirmButton"), onClick = onClick) {
+            Text("Confirm")
+          }
         },
         dismissButton = {
-          Button(
-              onClick = { showDialog = false },
-              colors =
-                  ButtonDefaults.buttonColors(
-                      containerColor = Color.Gray, contentColor = Color.White)) {
-                Text("No")
+          TextButton(
+              modifier = Modifier.testTag("cancelButton"), onClick = { showDialog = false }) {
+                Text("Cancel")
               }
         })
   }
