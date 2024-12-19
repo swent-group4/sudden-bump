@@ -52,14 +52,17 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
   val user = userViewModel.getSelectedContact().collectAsState().value
   var showDialog by remember { mutableStateOf(false) }
 
-  var isFriend =
-      userViewModel.getUserFriends().collectAsState().value.map { it.uid }.contains(user.uid)
-  var isFriendRequest =
-      userViewModel.getUserFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
-  var isFriendRequestSent =
-      userViewModel.getSentFriendRequests().collectAsState().value.map { it.uid }.contains(user.uid)
+  val currentUser = userViewModel.getCurrentUser().collectAsState().value
 
-  // a
+  // Check states from the ViewModel flows:
+  val friendsList = userViewModel.getUserFriends().collectAsState().value
+  val friendRequests = userViewModel.getUserFriendRequests().collectAsState().value
+  val sentFriendRequests = userViewModel.getSentFriendRequests().collectAsState().value
+
+  val isFriend = friendsList.any { it.uid == user.uid }
+  val isFriendRequest = friendRequests.any { it.uid == user.uid }
+  val isFriendRequestSent = sentFriendRequests.any { it.uid == user.uid }
+
   Scaffold(
       modifier = Modifier.fillMaxSize().background(Color.Black).testTag("contactScreen"),
       topBar = {
@@ -158,8 +161,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                   user.firstName + " " + user.lastName,
                   style =
                       androidx.compose.ui.text.TextStyle(
-                          fontSize = 20.sp, // Adjust the size as needed
-                          fontWeight = FontWeight.Bold),
+                          fontSize = 20.sp, fontWeight = FontWeight.Bold),
                   color = Color.White,
                   modifier = Modifier.testTag("userName"))
             }
@@ -183,111 +185,119 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                 }
           }
 
-          if (isFriend) {
-            Button(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 30.dp)
-                        .testTag("sendMessageButton"),
-                colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
-                onClick = {
-                  userViewModel.user = user
-                  navigationActions.navigateTo(Screen.CHAT)
-                }) {
-                  Text("Send a message", color = Color.White)
-                }
-          } else if (isFriendRequest) {
-            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp)) {
+          when {
+            isFriend -> {
+              // Friend: show "Send a message"
               Button(
                   modifier =
                       Modifier.fillMaxWidth()
-                          .padding(vertical = 5.dp)
-                          .testTag("acceptRequestButton"),
+                          .padding(horizontal = 50.dp, vertical = 30.dp)
+                          .testTag("sendMessageButton"),
                   colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                   onClick = {
-                    userViewModel.acceptFriendRequest(
-                        userViewModel.getCurrentUser().value,
-                        friend = user,
-                        onSuccess = {
-                          isFriend = true
-                          isFriendRequest = false
-                        },
-                        onFailure = { println("Error accepting friend request") })
+                    userViewModel.user = user
+                    navigationActions.navigateTo(Screen.CHAT)
                   }) {
-                    Text(
-                        "Accept friend request",
-                        color = Color.White,
-                    )
-                  }
-              Button(
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .padding(vertical = 10.dp)
-                          .testTag("declineRequestButton"),
-                  colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
-                  onClick = {
-                    userViewModel.declineFriendRequest(
-                        userViewModel.getCurrentUser().value,
-                        friend = user,
-                        onSuccess = {
-                          isFriend = false
-                          isFriendRequest = false
-                        },
-                        onFailure = { println("Error declining friend request") })
-                  }) {
-                    Text(
-                        "Decline friend request",
-                        color = Color.White,
-                    )
+                    Text("Send a message", color = Color.White)
                   }
             }
-          } else if (isFriendRequestSent) {
-            Text(
-                "Friend request sent",
-                color = Color.White,
-                modifier = Modifier.testTag("friendRequestSentText"),
-            )
-          } else {
-            Button(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 30.dp)
-                        .testTag("addToContactsButton"),
-                colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
-                onClick = {
-                  userViewModel.sendFriendRequest(
-                      userViewModel.getCurrentUser().value,
-                      friend = user,
-                      onSuccess = { isFriendRequestSent = true },
-                      onFailure = { println("Error sending friend request") })
-                }) {
-                  Text(
-                      "Send Friend Request",
-                      color = Color.White,
-                  )
-                }
-          }
-        }
-
-        if (showDialog) {
-          AlertDialog(
-              onDismissRequest = { showDialog = false },
-              title = { Text("Block User") },
-              text = { Text("Are you sure you want to block this user?") },
-              confirmButton = {
+            isFriendRequest -> {
+              // The user has a pending friend request from 'user':
+              // Show "Accept" and "Decline"
+              Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 50.dp)) {
                 Button(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(vertical = 5.dp)
+                            .testTag("acceptRequestButton"),
+                    colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
                     onClick = {
-                      showDialog = false
-                      userViewModel.blockUser(
-                          user = userViewModel.getCurrentUser().value,
-                          blockedUser = user,
-                          onSuccess = { navigationActions.goBack() },
-                          onFailure = { println("Error blocking user") })
+                      userViewModel.acceptFriendRequest(
+                          userViewModel.getCurrentUser().value,
+                          friend = user,
+                          onSuccess = { /* UI will automatically update */},
+                          onFailure = { println("Error accepting friend request") })
                     }) {
-                      Text("Yes")
+                      Text("Accept friend request", color = Color.White)
                     }
-              },
-              dismissButton = { Button(onClick = { showDialog = false }) { Text("No") } })
+                Button(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(vertical = 10.dp)
+                            .testTag("declineRequestButton"),
+                    colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
+                    onClick = {
+                      userViewModel.declineFriendRequest(
+                          userViewModel.getCurrentUser().value,
+                          friend = user,
+                          onSuccess = { /* UI will automatically update */},
+                          onFailure = { println("Error declining friend request") })
+                    }) {
+                      Text("Decline friend request", color = Color.White)
+                    }
+              }
+            }
+            isFriendRequestSent -> {
+              // The current user has sent a friend request to 'user'.
+              // Show "Requested" button in dark gray. Clicking it again will unsend the request.
+              Button(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 50.dp, vertical = 30.dp)
+                          .testTag("unsendFriendRequestButton"),
+                  colors = ButtonDefaults.buttonColors(Color.DarkGray),
+                  onClick = {
+                    // Unsend the friend request
+                    userViewModel.unsendFriendRequest(
+                        userViewModel.getCurrentUser().value,
+                        friend = user,
+                        onSuccess = { /* UI will update automatically */},
+                        onFailure = { println("Error unsending friend request") })
+                  }) {
+                    Text("Requested", color = Color.White)
+                  }
+            }
+            else -> {
+              // The user is not a friend, not a received request, and not sent request
+              // Show "Send Friend Request"
+              Button(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 50.dp, vertical = 30.dp)
+                          .testTag("addToContactsButton"),
+                  colors = ButtonDefaults.buttonColors(com.swent.suddenbump.ui.theme.Purple40),
+                  onClick = {
+                    userViewModel.sendFriendRequest(
+                        userViewModel.getCurrentUser().value,
+                        friend = user,
+                        onSuccess = { /* UI will change to isFriendRequestSent state */},
+                        onFailure = { println("Error sending friend request") })
+                  }) {
+                    Text("Send Friend Request", color = Color.White)
+                  }
+            }
+          }
+
+          if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("Block User") },
+                text = { Text("Are you sure you want to block this user?") },
+                confirmButton = {
+                  Button(
+                      onClick = {
+                        showDialog = false
+                        userViewModel.blockUser(
+                            user = userViewModel.getCurrentUser().value,
+                            blockedUser = user,
+                            onSuccess = { navigationActions.goBack() },
+                            onFailure = { println("Error blocking user") })
+                      }) {
+                        Text("Yes")
+                      }
+                },
+                dismissButton = { Button(onClick = { showDialog = false }) { Text("No") } })
+          }
         }
       })
 }
