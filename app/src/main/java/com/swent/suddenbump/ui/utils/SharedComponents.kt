@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swent.suddenbump.model.meeting_location.Location
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
 
 /**
@@ -175,7 +174,7 @@ fun AccountOption(label: String, backgroundColor: Color, onClick: () -> Unit, te
                 MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 16.sp,
                     fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    color = if (backgroundColor == Pink40) Color.White else Color.Black),
+                    color = if (backgroundColor == Color.White) Color.Black else Color.White),
             modifier = Modifier.padding(start = 16.dp))
       }
 }

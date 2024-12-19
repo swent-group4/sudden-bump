@@ -35,7 +35,6 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.DividerColor
-import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
 import com.swent.suddenbump.ui.theme.VibrantPurple
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
@@ -366,22 +365,22 @@ fun DeleteAllButton(onClick: () -> Unit, toDelete: String, confirmationText: Str
               .padding(horizontal = 8.dp) // Padding to keep space on the sides
       ) {
         // Text displayed on the button
-      Row(
-          verticalAlignment = Alignment.CenterVertically, // Center align icon and text
-          horizontalArrangement = Arrangement.spacedBy(8.dp) // Add spacing between icon and text
-      ) {
-          Icon(
-              imageVector = Icons.Default.Delete, // Use a default trash icon
-              contentDescription = "Delete Icon", // Accessibility description
-              tint = Color.White // Match the icon color to the text
-          )
-          Text(
-              text = "Delete all $toDelete",
-              style = MaterialTheme.typography.bodyLarge.copy(
-                  fontWeight = FontWeight.Bold // Bold font for emphasis
-              )
-          )
-      }
+        Row(
+            verticalAlignment = Alignment.CenterVertically, // Center align icon and text
+            horizontalArrangement = Arrangement.spacedBy(8.dp) // Add spacing between icon and text
+            ) {
+              Icon(
+                  imageVector = Icons.Default.Delete, // Use a default trash icon
+                  contentDescription = "Delete Icon", // Accessibility description
+                  tint = Color.White // Match the icon color to the text
+                  )
+              Text(
+                  text = "Delete all $toDelete",
+                  style =
+                      MaterialTheme.typography.bodyLarge.copy(
+                          fontWeight = FontWeight.Bold // Bold font for emphasis
+                          ))
+            }
       }
 
   // Confirmation Dialog

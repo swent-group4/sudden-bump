@@ -18,7 +18,7 @@ import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
-import com.swent.suddenbump.ui.theme.Pink40
+import com.swent.suddenbump.ui.theme.Purple40
 import com.swent.suddenbump.ui.utils.AccountOption
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 import com.swent.suddenbump.ui.utils.isRunningTest
@@ -44,34 +44,9 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
               item {
-                // Language Section with Pop-Up Menu
-                Box(modifier = Modifier.testTag("languageSection")) { // Only one testTag here
-                  AccountOption(
-                      label = "Language",
-                      backgroundColor = Color.White,
-                      onClick = { isLanguageMenuExpanded = true },
-                      testTag = "" // Remove redundant tag from the child
-                      )
-                  DropdownMenu(
-                      expanded = isLanguageMenuExpanded,
-                      onDismissRequest = { isLanguageMenuExpanded = false }) {
-                        listOf("English", "French", "German").forEach { language ->
-                          DropdownMenuItem(
-                              text = { Text(language) },
-                              onClick = {
-                                selectedLanguage = language
-                                isLanguageMenuExpanded = false
-                              },
-                              modifier = Modifier.testTag("languageMenuItem_$language"))
-                        }
-                      }
-                }
-              }
-
-              item {
                 AccountOption(
                     label = "Delete Account",
-                    backgroundColor = Pink40,
+                    backgroundColor = Color.Red,
                     onClick = { navigationActions.navigateTo("AccountScreen") },
                     testTag = "deleteAccountSection")
               }
@@ -79,7 +54,7 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
               item {
                 AccountOption(
                     label = "Log out",
-                    backgroundColor = Pink40,
+                    backgroundColor = Purple40,
                     onClick = {
                       userViewModel.logout()
                       if (isRunningTest()) {
