@@ -9,7 +9,9 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.model.meeting_location.Location
+import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -170,4 +172,35 @@ class UiUtilsTest {
     // Verify the selected location is updated
     assert(selectedLocation?.name == "Location 4")
   }
+
+
+    @Test
+    fun userProfileImage_NullPicture_ShowsPlaceholder() {
+        // Given a user with a null profile picture
+        val testUser =  User(
+            uid = "currentUserId",
+            firstName = "Jake",
+            lastName = "Paul",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "current@gmail.com",
+            lastKnownLocation = MutableStateFlow(android.location.Location("mock_provider"))
+        )
+        val size = 50
+
+        // When the UserProfileImage composable is displayed
+        composeTestRule.setContent {
+            UserProfileImage(user = testUser, size = size)
+        }
+
+        // Then the placeholder image should be displayed
+        composeTestRule
+            .onNodeWithTag("profileImage_${testUser.uid}")
+            .assertExists()
+
+        // Assert that the placeholder resource is used
+        composeTestRule
+            .onNodeWithContentDescription("Non-Existing profile picture")
+            .assertExists()
+    }
 }
