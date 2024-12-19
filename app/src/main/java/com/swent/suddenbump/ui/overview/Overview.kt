@@ -88,7 +88,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
               FloatingActionButton(
                   onClick = { navigationActions.navigateTo(Screen.SETTINGS) },
                   modifier = Modifier.testTag("settingsFab"),
-                  containerColor = com.swent.suddenbump.ui.theme.Purple40) {
+                  containerColor = Color.Black) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings",
@@ -106,7 +106,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
               FloatingActionButton(
                   onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
                   modifier = Modifier.testTag("seeFriendsFab"),
-                  containerColor = com.swent.suddenbump.ui.theme.Purple40) {
+                  containerColor = Color.Black) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "See Friends",
