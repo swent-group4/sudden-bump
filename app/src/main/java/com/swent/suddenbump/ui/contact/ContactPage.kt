@@ -149,21 +149,23 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 10.dp)
-                        .testTag("phoneCard")) {
-                  Text(modifier = Modifier.padding(10.dp), text = "Phone: " + user.phoneNumber)
-                }
+            if (isFriend) {
+              Card(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 50.dp, vertical = 10.dp)
+                          .testTag("phoneCard")) {
+                    Text(modifier = Modifier.padding(10.dp), text = "Phone: " + user.phoneNumber)
+                  }
 
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 10.dp)
-                        .testTag("emailCard")) {
-                  Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.emailAddress)
-                }
+              Card(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 50.dp, vertical = 10.dp)
+                          .testTag("emailCard")) {
+                    Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.emailAddress)
+                  }
+            }
           }
 
           when {
