@@ -1186,7 +1186,6 @@ class UserRepositoryFirestore(
     val phoneRef = db.collection(phoneCollectionPath)
     val emailRef = db.collection(emailCollectionPath)
     val chatsRef = db.collection("chats")
-    val meetingsRef = db.collection("Meetings")
 
     // Step 1: Get user document
     userRef.get().addOnCompleteListener { task ->
