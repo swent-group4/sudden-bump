@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -55,6 +56,7 @@ import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.theme.Pinkish
 import com.swent.suddenbump.ui.theme.violetColor
 import com.swent.suddenbump.ui.utils.UserProfileImage
 import kotlinx.coroutines.CoroutineScope
@@ -85,14 +87,13 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(horizontal = 16.dp, vertical = 15.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
-              FloatingActionButton(
+              IconButton(
                   onClick = { navigationActions.navigateTo(Screen.SETTINGS) },
-                  modifier = Modifier.testTag("settingsFab"),
-                  containerColor = Color.Black) {
+                  modifier = Modifier.testTag("settingsFab")) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings",
-                        tint = Color.White)
+                        tint = Pinkish)
                   }
               Text(
                   modifier = Modifier.testTag("appName").weight(1f),
@@ -100,17 +101,16 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                   style =
                       MaterialTheme.typography.headlineMedium.copy(
                           fontSize = 30.sp, lineHeight = 44.sp),
-                  color = violetColor,
+                  color = Pinkish,
                   fontWeight = FontWeight.Bold,
                   textAlign = TextAlign.Center)
-              FloatingActionButton(
+              IconButton(
                   onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
-                  modifier = Modifier.testTag("seeFriendsFab"),
-                  containerColor = Color.Black) {
+                  modifier = Modifier.testTag("seeFriendsFab")) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "See Friends",
-                        tint = Color.White)
+                        tint = Pinkish)
                   }
             }
       },

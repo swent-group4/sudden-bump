@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -158,28 +159,31 @@ fun PendingMeetingRow(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 // Accept Button
-                Button(
+                IconButton(
                     onClick = {
                         val updatedMeeting = meeting.copy(accepted = true)
                         meetingViewModel.updateMeeting(updatedMeeting)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Pinkish),
-                    shape = RoundedCornerShape(4.dp),
-                    contentPadding = PaddingValues(0.dp),
                     modifier = Modifier
                         .testTag("acceptButton")
-                        .height(32.dp)
-                        .wrapContentWidth()
+                        .size(36.dp)
                 ) {
-                    Text(
-                        text = "Accept",
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp)
-                    )
+                    Box {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Accept",
+                            tint = Pinkish,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .offset(x = 1.dp, y = 1.dp) // Slight offset
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Accept",
+                            tint = Pinkish,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(4.dp))
@@ -195,7 +199,7 @@ fun PendingMeetingRow(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Decline",
-                            tint = Purple40,
+                            tint = Pinkish,
                             modifier = Modifier
                                 .size(24.dp)
                                 .offset(x = 1.dp, y = 1.dp) // Slight offset
@@ -203,7 +207,7 @@ fun PendingMeetingRow(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Decline",
-                            tint = Purple40,
+                            tint = Pinkish,
                             modifier = Modifier.size(24.dp)
                         )
                     }
