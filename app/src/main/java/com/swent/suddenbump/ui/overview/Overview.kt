@@ -93,7 +93,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings",
-                        tint = Pinkish)
+                        tint = Color.White)
                   }
               Text(
                   modifier = Modifier.testTag("appName").weight(1f),
@@ -110,7 +110,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "See Friends",
-                        tint = Pinkish)
+                        tint = Color.White)
                   }
             }
       },
@@ -173,12 +173,12 @@ fun CategoryHeader(category: DistanceCategory) {
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically) {
         Canvas(modifier = Modifier.size(16.dp)) {
-          drawCircle(color = com.swent.suddenbump.ui.theme.Purple40, radius = size.minDimension / 2)
+          drawCircle(color = Pinkish, radius = size.minDimension / 2)
         }
         Text(
             text = category.title,
             style = MaterialTheme.typography.headlineSmall,
-            color = com.swent.suddenbump.ui.theme.Purple40,
+            color = Pinkish,
             modifier = Modifier.padding(start = 8.dp))
       }
 }
@@ -257,7 +257,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                   contentDescription =
                       if (isLocationShared) "Stop sharing location" else "Share location",
                   tint =
-                      if (isLocationShared) com.swent.suddenbump.ui.theme.Purple40
+                      if (isLocationShared) Pinkish
                       else com.swent.suddenbump.ui.theme.PurpleGrey40,
                   modifier = Modifier.size(24.dp).testTag("locationIcon_${user.uid}"))
             }

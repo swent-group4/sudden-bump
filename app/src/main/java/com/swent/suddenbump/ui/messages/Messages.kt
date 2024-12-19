@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -47,6 +48,8 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.Purple80
+import com.swent.suddenbump.ui.utils.UserProfileImage
+import kotlinx.coroutines.flow.filter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,21 +65,12 @@ fun MessagesScreen(viewModel: UserViewModel, navigationActions: NavigationAction
 
   Scaffold(
       topBar = {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = {
-              BasicTextField(
-                  value = search,
-                  onValueChange = { search = it },
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .background(Color.White, shape = MaterialTheme.shapes.small)
-                          .padding(12.dp),
-                  textStyle =
-                      LocalTextStyle.current.copy(
-                          color = Color.Black,
-                          fontSize = 16.sp,
-                      ),
-                  singleLine = true)
+                Text(
+                    "Messages",
+                    color = Color.White,
+                    modifier = Modifier.testTag("Messages Title"))
             },
             navigationIcon = {
               IconButton(
@@ -135,26 +129,11 @@ fun MessageItem(
                 navigationActions.navigateTo(Screen.CHAT)
               }
               .testTag("message_item_${message.sender}")) {
-        viewModel
-            .getUserFriends()
-            .collectAsState()
-            .value
-            .first {
-              it.uid ==
-                  message.participants
-                      .filterNot { it2 -> it2 == viewModel.getCurrentUser().value.uid }
-                      .first()
-            }
-            .profilePicture
-            ?.let {
-              Image(
-                  bitmap = it,
-                  contentDescription = "Profile Avatar",
-                  modifier =
-                      Modifier.size(40.dp)
-                          .padding(start = 8.dp)
-                          .testTag("profile_picture_${message.sender}"))
-            }
+              viewModel.getUserFriends().collectAsState().value.first { it.uid == message.participants.first { it2 -> it2 != viewModel.getCurrentUser().collectAsState().value.uid } }.let {
+                UserProfileImage(
+                    user = it,
+                    size = 40)
+              }
 
         Column(modifier = Modifier.padding(start = 16.dp).fillMaxWidth()) {
           Row(

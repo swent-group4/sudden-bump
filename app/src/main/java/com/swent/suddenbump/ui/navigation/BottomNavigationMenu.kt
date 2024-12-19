@@ -33,8 +33,6 @@ fun BottomNavigationMenu(
         tabList.forEach { tab ->
             val tabScreen = tab.route + " Screen"
             val isSelected = tabScreen == selectedItem
-            Log.d("BottomNavigationMenu", "tab.route: ${tab.route}")
-            Log.d("BottomNavigationMenu", "selectedItem: $selectedItem")
             NavigationBarItem(
                 icon = {
                     Icon(
