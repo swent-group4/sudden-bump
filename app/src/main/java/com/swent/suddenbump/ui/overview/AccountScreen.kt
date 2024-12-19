@@ -21,7 +21,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.swent.suddenbump.R
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
-import com.swent.suddenbump.ui.navigation.Route
+import com.swent.suddenbump.ui.navigation.TopLevelDestinations
 import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.utils.AccountOption
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
@@ -99,6 +99,7 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                         if (task.isSuccessful) {
                           Toast.makeText(context, "Logged out successfully!", Toast.LENGTH_LONG)
                               .show()
+                          navigationActions.navigateTo(TopLevelDestinations.AUTH)
                         }
                       }
 
@@ -108,7 +109,6 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                           Toast.makeText(context, "Failed to log out!", Toast.LENGTH_LONG).show()
                         }
                       }
-                      navigationActions.navigateTo(Route.AUTH)
                     },
                     testTag = "logoutSection")
               }

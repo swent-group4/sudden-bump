@@ -1,6 +1,7 @@
 package com.swent.suddenbump.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.MailOutline
 import androidx.compose.material.icons.outlined.Menu
@@ -50,6 +51,8 @@ object TopLevelDestinations {
   val OVERVIEW =
       TopLevelDestination(route = Route.OVERVIEW, icon = Icons.Outlined.Menu, textId = "Overview")
   val MAP = TopLevelDestination(route = Route.MAP, icon = Icons.Outlined.Place, textId = "Map")
+  val AUTH =
+      TopLevelDestination(route = Route.AUTH, icon = Icons.Outlined.AccountCircle, textId = "Auth")
 }
 
 val LIST_TOP_LEVEL_DESTINATION =
@@ -57,7 +60,8 @@ val LIST_TOP_LEVEL_DESTINATION =
         TopLevelDestinations.MESSAGES,
         TopLevelDestinations.CALENDAR,
         TopLevelDestinations.OVERVIEW,
-        TopLevelDestinations.MAP)
+        TopLevelDestinations.MAP,
+        TopLevelDestinations.AUTH)
 
 open class NavigationActions(
     private val navController: NavHostController,
