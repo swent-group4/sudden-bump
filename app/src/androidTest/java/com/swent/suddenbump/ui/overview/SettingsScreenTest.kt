@@ -7,10 +7,12 @@ import android.net.Uri
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.swent.suddenbump.model.chat.ChatRepository
@@ -20,10 +22,14 @@ import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.navigation.Screen
 import io.mockk.mockk
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -92,6 +98,14 @@ class SettingsScreenTest {
     composeTestRule.onNodeWithTag("profilePicture").assertIsDisplayed()
     composeTestRule.onNodeWithTag("uploadPhotoButton").assertIsDisplayed()
     composeTestRule.onNodeWithText("Add Photo").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("AccountOption").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("RadiusSlider").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("BlockedUsersOption").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(4)
+    composeTestRule.onNodeWithTag("NotificationsSwitch").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(6)
+    composeTestRule.onNodeWithTag("deleteAllButton_chats").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("deleteAllButton_meetings").assertIsDisplayed()
   }
 
   @Test
@@ -116,7 +130,7 @@ class SettingsScreenTest {
 
     // Verify that the Account option navigates to the Account screen
     composeTestRule.onNodeWithTag("AccountOption").performClick()
-    verify(navigationActions).navigateTo("AccountScreen")
+    verify(navigationActions).navigateTo(Screen.ACCOUNT)
   }
 
   @Test
@@ -141,13 +155,53 @@ class SettingsScreenTest {
   }
 
   @Test
-  fun discussionsButtonNavigatesToDiscussionsScreen() {
+  fun clickingDeleteAllChatsButtonShowsConfirmDialog() {
     setContentDefault()
-    composeTestRule.waitForIdle()
+    // Click the "Delete all chats" button
+    composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(6)
+    composeTestRule.onNodeWithTag("deleteAllButton_chats").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle
+    // Verify that the confirm delete dialog is displayed
+    composeTestRule.onNode(isDialog()).assertIsDisplayed()
+    composeTestRule.onNodeWithTag("delete_chats_text").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("areYouSureText_chats").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("confirmButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("cancelButton").assertIsDisplayed()
+  }
 
-    // Verify that the Discussions option navigates to the Discussions screen
-    composeTestRule.onNodeWithTag("DiscussionsOption").performClick()
-    verify(navigationActions).navigateTo("DiscussionsScreen")
+  @Test
+  fun clickingConfirmButtonCallsDeleteAllMessages() = runBlocking {
+    setContentDefault()
+    withTimeout(5_000) { // 5-second timeout to avoid getting stuck
+      // Click the "Delete all chats" button
+      composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(6)
+      composeTestRule.onNodeWithTag("deleteAllButton_chats").performClick()
+      composeTestRule.waitForIdle() // Wait for UI to settle
+
+      // Click on the confirm button
+      composeTestRule.onNodeWithTag("confirmButton").performClick()
+      composeTestRule.waitForIdle() // Wait for UI to settle
+
+      // Since we cannot mock UserViewModel directly, we will collect the messages Flow
+      val messages = userViewModel.messages.first()
+      assert(messages.isEmpty())
+    }
+  }
+
+  @Test
+  fun clickingCancelButtonDismissesDialog() {
+    setContentDefault()
+    // Click the "Delete all chats" button
+    composeTestRule.onNodeWithTag("settingsLazyColumn").performScrollToIndex(6)
+    composeTestRule.onNodeWithTag("deleteAllButton_chats").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle
+
+    // Click on the cancel button
+    composeTestRule.onNodeWithTag("cancelButton").performClick()
+    composeTestRule.waitForIdle() // Wait for UI to settle
+
+    // Verify that the confirm delete dialog is no longer displayed
+    composeTestRule.onNodeWithText("deleteAllDialog_chats").assertDoesNotExist()
   }
 
   @Test
