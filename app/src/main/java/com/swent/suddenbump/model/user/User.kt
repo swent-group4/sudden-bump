@@ -13,13 +13,25 @@ data class User(
     val emailAddress: String,
     val lastKnownLocation: MutableStateFlow<Location>,
 ) {
-  override fun equals(other: Any?): Boolean {
-    if (this === other) return true
-    if (other !is User) return false
-    return uid == other.uid && profilePicture == other.profilePicture
-  }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is User) return false
+        return uid == other.uid && profilePicture == other.profilePicture
+    }
 
-  override fun hashCode(): Int {
-    return uid.hashCode()
-  }
+    override fun hashCode(): Int {
+        return uid.hashCode()
+    }
 }
+
+val UnknownUser = User(
+    uid = "1111",
+    firstName = "Unknown",
+    lastName = "User",
+    phoneNumber = "+33 0 00 00 00 00",
+    null,
+    "mail@mail.com",
+    MutableStateFlow(
+        Location("provider")
+    )
+)
