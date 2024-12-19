@@ -289,7 +289,6 @@ fun UserProfileImage(user: User, size: Int) {
             .testTag("profileImage_${user.uid}")
     ) {
         if (user.profilePicture != null) {
-            Log.d("UserProfileImage", "User profile picture is not null")
             Image(
                 bitmap = user.profilePicture,
                 contentDescription = "Existing profile picture",
@@ -297,7 +296,6 @@ fun UserProfileImage(user: User, size: Int) {
                 contentScale = ContentScale.Crop // Crop and scale the image to fit the circle
             )
         } else {
-            Log.d("UserProfileImage", "User profile picture is null")
             Image(
                 painter = painterResource(R.drawable.profile),
                 contentDescription = "Non-Existing profile picture",
