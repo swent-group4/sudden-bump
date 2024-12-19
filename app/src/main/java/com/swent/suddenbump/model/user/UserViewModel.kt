@@ -532,7 +532,6 @@ open class UserViewModel(
       onFailure: (Exception) -> Unit
   ) {
     repository.updateTimestamp(user.uid, timestamp, onSuccess, onFailure)
-
   }
 
   fun loadFriends() {
