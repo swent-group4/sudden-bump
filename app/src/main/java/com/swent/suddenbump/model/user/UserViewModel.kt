@@ -164,8 +164,7 @@ open class UserViewModel(
           val preferencesManager = SharedPreferencesManager(appContext)
           val workerScheduler = WorkerScheduler(appContext)
           val userRepository =
-              UserRepositoryFirestore(
-                  Firebase.firestore, preferencesManager, workerScheduler, context)
+              UserRepositoryFirestore(Firebase.firestore, preferencesManager, workerScheduler)
           val chatRepository = ChatRepositoryFirestore(Firebase.firestore)
 
           return UserViewModel(userRepository, chatRepository) as T

@@ -162,8 +162,7 @@ class PhoneNumberTests {
     }
 
     userRepositoryFirestore =
-        UserRepositoryFirestore(
-            mockFirestore, mockSharedPreferencesManager, mockWorkerScheduler, mockContext)
+        UserRepositoryFirestore(mockFirestore, mockSharedPreferencesManager, mockWorkerScheduler)
 
     `when`(mockTaskVoid.isSuccessful).thenReturn(true)
     `when`(mockTaskVoid.isCanceled).thenReturn(false)

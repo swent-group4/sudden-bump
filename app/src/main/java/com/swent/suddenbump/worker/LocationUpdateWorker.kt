@@ -53,8 +53,7 @@ class LocationUpdateWorker(
             UserRepositoryFirestore(
                 Firebase.firestore,
                 SharedPreferencesManager(applicationContext),
-                WorkerScheduler(applicationContext),
-                applicationContext)
+                WorkerScheduler(applicationContext))
         val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
         val alreadyNotifiedFriends = repository.getSavedAlreadyNotifiedFriends().toMutableList()
 

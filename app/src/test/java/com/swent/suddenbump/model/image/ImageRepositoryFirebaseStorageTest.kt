@@ -13,6 +13,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.StorageTask
 import com.kaspersky.kaspresso.internal.extensions.other.createFileIfNeeded
+import com.swent.suddenbump.model.user.SharedPreferencesManager
 import com.swent.suddenbump.ui.utils.isMockUsingOfflineMode
 import com.swent.suddenbump.ui.utils.isMockUsingOnlineDefaultValue
 import com.swent.suddenbump.ui.utils.isUsingMockException
@@ -56,6 +57,8 @@ class ImageRepositoryFirebaseStorageTest {
 
   @Mock private lateinit var mockContext: Context
 
+  @Mock private lateinit var mockSharedPreferencesManager: SharedPreferencesManager
+
   @Before
   fun setUp() {
     MockitoAnnotations.openMocks(this)
@@ -67,7 +70,10 @@ class ImageRepositoryFirebaseStorageTest {
       FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
 
-    mockImageRepository = ImageRepositoryFirebaseStorage(mockFirebaseStorage, mockContext)
+    `when`(mockSharedPreferencesManager.getApplicationContext()).thenReturn(mockContext)
+
+    mockImageRepository =
+        ImageRepositoryFirebaseStorage(mockFirebaseStorage, mockSharedPreferencesManager)
   }
 
   @After

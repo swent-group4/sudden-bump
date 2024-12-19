@@ -1,6 +1,5 @@
 package com.swent.suddenbump.model.image
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -10,6 +9,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.google.firebase.storage.FileDownloadTask.TaskSnapshot
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.swent.suddenbump.model.user.SharedPreferencesManager
 import com.swent.suddenbump.ui.utils.isInternetAvailable
 import com.swent.suddenbump.ui.utils.isUsingMockException
 import com.swent.suddenbump.ui.utils.isUsingMockFileDownloadTask
@@ -28,10 +28,11 @@ import kotlinx.coroutines.withTimeout
 
 class ImageRepositoryFirebaseStorage(
     private val storage: FirebaseStorage,
-    private val context: Context
+    private val sharedPreferencesManager: SharedPreferencesManager,
 ) : ImageRepository {
 
   val profilePicturesPath = "/data/data/com.swent.suddenbump/files/"
+  val context = sharedPreferencesManager.getApplicationContext()
 
   private val imageBitMapIO = ImageBitMapIO()
 
