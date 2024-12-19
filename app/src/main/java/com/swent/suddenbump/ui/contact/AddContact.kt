@@ -58,7 +58,9 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
 
   val recommendedUsers =
       userViewModel.getUserRecommendedFriends().collectAsState().value.filter {
-        !blockedUsers.map { user: User -> user.uid }.contains(it.user.uid)
+        !blockedUsers.map { user: User -> user.uid }.contains(it.user.uid) &&
+            !sentFriendRequests.map { user: User -> user.uid }.contains(it.user.uid) &&
+            !friendRequests.value.map { user: User -> user.uid }.contains(it.user.uid)
       }
 
   val filteredUsers =
