@@ -133,7 +133,7 @@ fun RadiusSlider(radius: Float, onRadiusChange: (Float) -> Unit, modifier: Modif
               .background(DividerColor, RoundedCornerShape(8.dp))
               .padding(16.dp)) {
         Text(
-            text = "Adjust Radius",
+            text = "Notification Radius",
             style =
                 MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Bold, color = Color.Black),

@@ -7,10 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,13 +35,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.model.user.UserWithFriendsInCommon
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.theme.Pinkish
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
+import com.swent.suddenbump.ui.utils.UserProfileImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +120,7 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                       Text(
                           text = "Friend requests",
                           style = MaterialTheme.typography.headlineSmall,
-                          color = com.swent.suddenbump.ui.theme.Purple40,
+                          color = Pinkish,
                           modifier = Modifier.padding(start = 8.dp))
                     }
                 Column(
@@ -155,7 +153,7 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                     Text(
                         text = "Recommended friends",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = com.swent.suddenbump.ui.theme.Purple40,
+                        color = Pinkish,
                         modifier = Modifier.padding(start = 8.dp))
                   }
               if (filteredUsers.isNotEmpty()) {
@@ -210,11 +208,7 @@ fun UserRequestRow(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-              AsyncImage(
-                  model = "https://avatar.iran.liara.run/public/42",
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
+              UserProfileImage(user, 40)
               Text(
                   text = "${user.firstName} ${user.lastName.first()}.",
                   style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -288,11 +282,7 @@ fun UserRecommendedRow(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-              AsyncImage(
-                  model = "https://avatar.iran.liara.run/public/42",
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(50.dp).height(50.dp).padding(8.dp).testTag("profileImage"))
+              UserProfileImage(userWithFriends.user, 40)
               Text(
                   text =
                       "${userWithFriends.user.firstName} ${userWithFriends.user.lastName.first()}.",
