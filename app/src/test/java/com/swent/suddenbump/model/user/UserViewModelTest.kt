@@ -228,6 +228,126 @@ class UserViewModelTest {
   }
 
   @Test
+  fun unsendFriendRequest_shouldRemoveFriendFromSentRequestsOnSuccess() = runTest {
+    // Arrange
+    val currentUser =
+        User(
+            uid = "currentUserId",
+            firstName = "Current",
+            lastName = "User",
+            phoneNumber = "+41 00 000 00 01",
+            profilePicture = null,
+            emailAddress = "current.user@example.com",
+            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+
+    val friend =
+        User(
+            uid = "friendUserId",
+            firstName = "Friend",
+            lastName = "User",
+            phoneNumber = "+41 00 000 00 02",
+            profilePicture = null,
+            emailAddress = "friend.user@example.com",
+            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+
+    // Set the current user in the ViewModel
+    userViewModel.setUser(currentUser, onSuccess = {}, onFailure = {})
+
+    // Initially, add the friend to the sent friend requests
+    userViewModel.sendFriendRequest(currentUser, friend, onSuccess = {}, onFailure = {})
+    assertTrue(userViewModel.getSentFriendRequests().value.contains(friend))
+
+    // Mock repository.deleteFriendRequest to call onSuccess
+    doAnswer { invocation ->
+          val onSuccess = invocation.getArgument<() -> Unit>(2)
+          onSuccess()
+          null
+        }
+        .whenever(userRepository)
+        .deleteFriendRequest(eq(friend.uid), eq(currentUser.uid), any(), any())
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+
+    // Act
+    userViewModel.unsendFriendRequest(
+        user = currentUser,
+        friend = friend,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = { onFailureCalled = true })
+
+    // Assert
+    verify(userRepository).deleteFriendRequest(eq(friend.uid), eq(currentUser.uid), any(), any())
+    assertTrue(onSuccessCalled)
+    assertFalse(onFailureCalled)
+    assertFalse(userViewModel.getSentFriendRequests().value.contains(friend))
+  }
+
+  @Test
+  fun unsendFriendRequest_shouldCallOnFailureOnError() = runTest {
+    // Arrange
+    val currentUser =
+        User(
+            uid = "currentUserId",
+            firstName = "Current",
+            lastName = "User",
+            phoneNumber = "+41 00 000 00 01",
+            profilePicture = null,
+            emailAddress = "current.user@example.com",
+            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+
+    val friend =
+        User(
+            uid = "friendUserId",
+            firstName = "Friend",
+            lastName = "User",
+            phoneNumber = "+41 00 000 00 02",
+            profilePicture = null,
+            emailAddress = "friend.user@example.com",
+            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+
+    // Set the current user in the ViewModel
+    userViewModel.setUser(currentUser, onSuccess = {}, onFailure = {})
+
+    // Initially, add the friend to the sent friend requests
+    userViewModel.sendFriendRequest(currentUser, friend, onSuccess = {}, onFailure = {})
+    assertTrue(userViewModel.getSentFriendRequests().value.contains(friend))
+
+    val exception = Exception("Failed to unsend request")
+
+    // Mock repository.deleteFriendRequest to call onFailure
+    doAnswer { invocation ->
+          val onFailure = invocation.getArgument<(Exception) -> Unit>(3)
+          onFailure(exception)
+          null
+        }
+        .whenever(userRepository)
+        .deleteFriendRequest(eq(friend.uid), eq(currentUser.uid), any(), any())
+
+    var onSuccessCalled = false
+    var onFailureCalled = false
+    var caughtException: Exception? = null
+
+    // Act
+    userViewModel.unsendFriendRequest(
+        user = currentUser,
+        friend = friend,
+        onSuccess = { onSuccessCalled = true },
+        onFailure = {
+          onFailureCalled = true
+          caughtException = it
+        })
+
+    // Assert
+    verify(userRepository).deleteFriendRequest(eq(friend.uid), eq(currentUser.uid), any(), any())
+    assertFalse(onSuccessCalled)
+    assertTrue(onFailureCalled)
+    assertEquals(exception, caughtException)
+    // The friend should still be in the sent requests since it failed
+    assertTrue(userViewModel.getSentFriendRequests().value.contains(friend))
+  }
+
+  @Test
   fun deleteFriend_failure() = runTest {
     // Arrange
     val currentUser =
