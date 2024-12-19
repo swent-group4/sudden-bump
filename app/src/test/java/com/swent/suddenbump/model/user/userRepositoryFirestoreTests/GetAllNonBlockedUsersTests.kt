@@ -52,7 +52,7 @@ class GetAllNonBlockedUsersTests {
   @Mock private lateinit var mockTaskVoid: Task<Void>
 
   private lateinit var userRepositoryFirestore: UserRepositoryFirestore
-
+  //
   private val location =
       MutableStateFlow(
           Location("mock_provider").apply {
