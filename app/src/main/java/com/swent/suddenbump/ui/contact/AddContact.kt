@@ -44,6 +44,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.model.user.UserWithFriendsInCommon
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.theme.Pinkish
 import com.swent.suddenbump.ui.utils.CustomCenterAlignedTopBar
 import com.swent.suddenbump.ui.utils.UserProfileImage
 
@@ -121,7 +122,7 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                       Text(
                           text = "Friend requests",
                           style = MaterialTheme.typography.headlineSmall,
-                          color = com.swent.suddenbump.ui.theme.Purple40,
+                          color = Pinkish,
                           modifier = Modifier.padding(start = 8.dp))
                     }
                 Column(
@@ -154,7 +155,7 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
                     Text(
                         text = "Recommended friends",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = com.swent.suddenbump.ui.theme.Purple40,
+                        color = Pinkish,
                         modifier = Modifier.padding(start = 8.dp))
                   }
               if (filteredUsers.isNotEmpty()) {

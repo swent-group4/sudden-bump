@@ -1152,6 +1152,27 @@ class UserRepositoryFirestore(
     }
   }
 
+    override fun saveNotifiedMeeting(meetingUID: List<String>) {
+        val gson = Gson()
+        val jsonString = gson.toJson(meetingUID) // Convert list to JSON string
+        sharedPreferencesManager.saveString("notified_meetings", jsonString)
+    }
+
+    /**
+     * Retrieves the saved meetings ID from shared preferences.
+     *
+     * @return The saved meetings ID as a String, or an empty string if no user is logged in.
+     */
+    override fun getSavedAlreadyNotifiedMeetings(): List<String> {
+        val gson = Gson()
+        val jsonString = sharedPreferencesManager.getString("notified_meetings")
+        return if (jsonString != "") {
+            gson.fromJson(jsonString, object : TypeToken<List<String>>() {}.type)
+        } else {
+            emptyList() // Return an empty list if no data is found
+        }
+    }
+
   override fun saveRadius(radius: Float) {
     sharedPreferencesManager.saveString("radius", radius.toString())
   }

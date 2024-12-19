@@ -56,6 +56,7 @@ class LocationUpdateWorker(
                 WorkerScheduler(applicationContext))
         val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
         val alreadyNotifiedFriends = repository.getSavedAlreadyNotifiedFriends().toMutableList()
+          val alreadyNotifiedMeetings = repository.getSavedAlreadyNotifiedMeetings().toMutableList()
 
         val uid = repository.getSavedUid()
         val radius = repository.getSavedRadius() * 1000
@@ -109,7 +110,12 @@ class LocationUpdateWorker(
 
                   if (filteredMeetings.isNotEmpty()) {
                     filteredMeetings.forEach { meeting ->
+                        if (meeting.meetingId in alreadyNotifiedMeetings) {
+                          return@forEach
+                        }
                       showMeetingScheduledNotification(applicationContext, meeting)
+                        alreadyNotifiedMeetings.add(meeting.meetingId)
+                        repository.saveNotifiedMeeting(alreadyNotifiedMeetings)
                     }
                   } else {
                     Log.d("MeetingCheck", "No new pending meetings found")
