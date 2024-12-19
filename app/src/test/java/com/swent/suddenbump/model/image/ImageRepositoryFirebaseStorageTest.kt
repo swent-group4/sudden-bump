@@ -13,6 +13,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.StorageTask
 import com.kaspersky.kaspresso.internal.extensions.other.createFileIfNeeded
+import com.swent.suddenbump.ui.utils.isMockUsingOfflineMode
 import com.swent.suddenbump.ui.utils.isMockUsingOnlineDefaultValue
 import com.swent.suddenbump.ui.utils.isUsingMockException
 import com.swent.suddenbump.ui.utils.isUsingMockFileDownloadTask
@@ -24,6 +25,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.fail
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,6 +68,15 @@ class ImageRepositoryFirebaseStorageTest {
     }
 
     mockImageRepository = ImageRepositoryFirebaseStorage(mockFirebaseStorage, mockContext)
+  }
+
+  @After
+  fun tearDown() {
+    isUsingMockFileDownloadTask = false
+    isUsingMockException = false
+    isMockUsingOfflineMode = false
+    isMockUsingOnlineDefaultValue = false
+    testableOnlineDefaultValue = false
   }
 
   @Test
@@ -385,6 +396,9 @@ class ImageRepositoryFirebaseStorageTest {
       `when`(mockFirebaseStorage.reference).thenReturn(mockFirebaseReference)
       `when`(mockFirebaseReference.child(anyString())).thenReturn(mockFirebaseReference)
       `when`(mockFirebaseReference.getFile(any<File>())).thenThrow(testException)
+
+      isMockUsingOnlineDefaultValue = true
+      testableOnlineDefaultValue = true
 
       val results =
           mockImageRepository.downloadImageAsync(

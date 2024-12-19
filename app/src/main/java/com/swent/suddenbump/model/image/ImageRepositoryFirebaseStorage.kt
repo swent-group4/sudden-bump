@@ -230,7 +230,6 @@ class ImageRepositoryFirebaseStorage(
   ) {
     try {
       if (isUsingMockException) {
-        isUsingMockException = false
         throw Exception("TEST")
       }
       val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
