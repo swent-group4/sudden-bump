@@ -80,7 +80,10 @@ class ContactScreenTest {
 
     composeTestRule.onNodeWithTag("contactScreen").assertIsDisplayed()
     composeTestRule.onNodeWithText("Contact").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("profileImage").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
     composeTestRule.onNodeWithTag("userName").assertIsDisplayed()
     composeTestRule.onNodeWithTag("phoneCard").assertIsDisplayed()
     composeTestRule.onNodeWithTag("emailCard").assertIsDisplayed()
@@ -92,8 +95,11 @@ class ContactScreenTest {
   @Test
   fun testNavigationBackButton() {
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed().performClick()
+    // Verify the back button is displayed
+    composeTestRule.onNodeWithTag("backButton").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("backButton").performClick()
 
     verify { navigationActions.goBack() }
   }
@@ -214,15 +220,17 @@ class ContactScreenTest {
 
   @Test
   fun havingProfilePictureDisplaysComponent() {
-    val userWithPic = friend.value.copy(profilePicture = ImageBitmap(30, 30))
-    val userWithPicFlow = MutableStateFlow(userWithPic)
+    val userCopied =
+        userViewModel.getSelectedContact().value.copy(profilePicture = ImageBitmap(30, 30))
+    val userCopiedFlow = MutableStateFlow(userCopied)
 
-    every { userViewModel.getSelectedContact() } returns userWithPicFlow
+    every { userViewModel.getSelectedContact() } returns userCopiedFlow
 
     composeTestRule.setContent { ContactScreen(navigationActions, userViewModel) }
+    composeTestRule.waitForIdle()
 
     // Verify the profile picture image
-    composeTestRule.onNodeWithTag("profileImageNotNull").assertIsDisplayed()
+    composeTestRule.onNodeWithTag("profileImage_1").assertIsDisplayed()
   }
 
   @Test

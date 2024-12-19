@@ -1,8 +1,10 @@
 package com.swent.suddenbump.ui.utils
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -13,15 +15,22 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.R
 import com.swent.suddenbump.model.meeting_location.Location
+import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.Gray
+import com.swent.suddenbump.ui.theme.Pink40
 import com.swent.suddenbump.ui.theme.Purple40
 
 /**
@@ -212,7 +221,7 @@ fun LocationField(
             onValueChange = {
               onLocationQueryChange(it)
               onDropdownChange(true) // Show dropdown when user starts typing
-              maxItemsToShow.value = 3 // Reset to show initial 3 items when query changes
+              maxItemsToShow.intValue = 3 // Reset to show initial 3 items when query changes
             },
             label = { Text("Location") },
             textStyle = TextStyle(color = Color.White),
@@ -229,7 +238,8 @@ fun LocationField(
             expanded = showDropdown && locationSuggestions.isNotEmpty(),
             onDismissRequest = { onDropdownChange(false) },
             modifier = Modifier.background(Color.Black).testTag("DropDownMenu")) {
-              locationSuggestions.filterNotNull().take(maxItemsToShow.value).forEach { location ->
+              locationSuggestions.filterNotNull().take(maxItemsToShow.intValue).forEach { location
+                ->
                 DropdownMenuItem(
                     text = {
                       Text(
@@ -252,7 +262,7 @@ fun LocationField(
                     modifier =
                         Modifier.padding(8.dp).background(Color.Black).testTag("DropDownMenuItem"))
               }
-              if (locationSuggestions.size > maxItemsToShow.value) {
+              if (locationSuggestions.size > maxItemsToShow.intValue) {
                 DropdownMenuItem(
                     text = { Text(text = "More...", color = Color.White) },
                     onClick = {
@@ -261,5 +271,36 @@ fun LocationField(
                     modifier = Modifier.padding(8.dp).background(Color.Black).testTag("MoreButton"))
               }
             }
+      }
+}
+
+/**
+ * Composable that displays a user's profile image.
+ *
+ * @param user The user whose profile image is to be displayed.
+ */
+@Composable
+fun UserProfileImage(user: User, size: Int) {
+  Box(
+      modifier =
+          Modifier.size(size.dp) // Set the size of the circular container
+              .clip(CircleShape) // Clip the content to a circle
+              .background(Gray)
+              .testTag("profileImage_${user.uid}")) {
+        if (user.profilePicture != null) {
+          Image(
+              bitmap = user.profilePicture,
+              contentDescription = "Existing profile picture",
+              modifier = Modifier.fillMaxSize(), // Ensure the image fills the Box
+              contentScale = ContentScale.Crop // Crop and scale the image to fit the circle
+              )
+        } else {
+          Image(
+              painter = painterResource(R.drawable.profile),
+              contentDescription = "Non-Existing profile picture",
+              modifier = Modifier.fillMaxSize(), // Ensure the image fills the Box
+              contentScale = ContentScale.Crop // Crop and scale the image to fit the circle
+              )
+        }
       }
 }

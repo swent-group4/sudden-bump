@@ -1,7 +1,6 @@
 package com.swent.suddenbump.ui.contact
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -40,10 +38,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
+import com.swent.suddenbump.ui.utils.UserProfileImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -51,8 +49,6 @@ import com.swent.suddenbump.ui.navigation.Screen
 fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
   val user = userViewModel.getSelectedContact().collectAsState().value
   var showDialog by remember { mutableStateOf(false) }
-
-  val currentUser = userViewModel.getCurrentUser().collectAsState().value
 
   // Check states from the ViewModel flows:
   val friendsList = userViewModel.getUserFriends().collectAsState().value
@@ -137,22 +133,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
               horizontalAlignment = Alignment.CenterHorizontally,
               verticalArrangement = Arrangement.Top,
           ) {
-            if (user.profilePicture != null) {
-              Image(
-                  bitmap = user.profilePicture,
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(150.dp)
-                          .height(150.dp)
-                          .padding(8.dp)
-                          .testTag("profileImageNotNull"))
-            } else {
-              AsyncImage(
-                  model = "https://avatar.iran.liara.run/public/42",
-                  contentDescription = null,
-                  modifier =
-                      Modifier.width(150.dp).height(150.dp).padding(8.dp).testTag("profileImage"))
-            }
+            UserProfileImage(user, 120)
             Column(
                 Modifier.fillMaxWidth().padding(top = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,

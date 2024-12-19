@@ -175,7 +175,7 @@ class OverviewScreenTest {
         .onNodeWithTag("profileImage_${user1.uid}", useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag("profileImageNotNull_${user2.uid}", useUnmergedTree = true)
+        .onNodeWithTag("profileImage_${user2.uid}", useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
