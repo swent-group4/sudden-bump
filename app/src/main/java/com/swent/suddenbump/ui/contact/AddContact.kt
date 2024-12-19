@@ -70,7 +70,7 @@ fun AddContactScreen(navigationActions: NavigationActions, userViewModel: UserVi
           .sortedByDescending { it.friendsInCommon }
           .take(5)
 
-    //
+  //
   val filteredUsers =
       allNonBlockedUsers.filter { user ->
         user.firstName.contains(searchQuery.text, ignoreCase = true) ||
