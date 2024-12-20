@@ -16,8 +16,8 @@ We’ve designed the app to make connecting and staying in touch effortless, eve
 - Already scheduled meetings can also be spotted on the calendar while offline.
 - Additionally one can still see their friends on Overview, but without their location.
 - Settings can also be accessed and the user can change their preferences.
-  
-<img src="https://github.com/user-attachments/assets/a531a7d5-caeb-48ad-a293-1399e128dbf7" width=25% height=25%><img src="https://github.com/user-attachments/assets/6ec90747-e5ac-47e1-a944-ac75990c4d0b" width=25% height=25%><img src="https://github.com/user-attachments/assets/d561be2a-180f-49e2-a24f-d2b65ef1673d" width=25% height=25%><img src="https://github.com/user-attachments/assets/6d0d1cd1-57d3-4358-a7e3-320ed800b93a" width=25% height=25%>
+# Overview of the app:
+<img src="https://github.com/user-attachments/assets/57706521-d5e9-4455-8641-8ae9ea351e59" width=25% height=25%><img src="https://github.com/user-attachments/assets/4c4df350-3dbe-47ca-86c7-9c81f09343b7" width=25% height=25%><img src="https://github.com/user-attachments/assets/591bd5e0-6b3f-4dbd-a85d-90d8f935d05b" width=25% height=25%><img src="https://github.com/user-attachments/assets/38c2e80a-f03d-4c8a-8519-028980b35d4f" width=25% height=25%>
 
 
 
