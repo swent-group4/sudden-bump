@@ -40,6 +40,20 @@ class ChatSummaryTest {
           "martin.vetterli@epfl.ch",
           locationDummy)
 
+  private val unknownUser =
+      User(
+          uid = "unknown",
+          firstName = "Unknown",
+          lastName = "User",
+          phoneNumber = "+33 0 00 00 00 00",
+          null,
+          "mail@mail.com",
+          MutableStateFlow(
+              Location("provider").apply {
+                latitude = 0.0
+                longitude = 0.0
+              }))
+
   private val users = listOf(userDummy1, userDummy2)
 
   @Before fun setUp() {}
@@ -78,7 +92,7 @@ class ChatSummaryTest {
   fun convertParticipantsUidToDisplayWorksWithTwoUsers() {
     val chatSummary = ChatSummary(participants = users.map { it.uid })
 
-    val result = convertParticipantsUidToDisplay(chatSummary, userDummy1, users)
+    val result = convertParticipantsUidToDisplay(chatSummary, userDummy1, users, unknownUser)
     assertEquals("Martin Vetterli", result)
   }
 
@@ -97,7 +111,8 @@ class ChatSummaryTest {
     val usersModified = listOf(userDummy1, userDummy2, userDummy3)
     val chatSummary = ChatSummary(participants = usersModified.map { it.uid })
 
-    val result = convertParticipantsUidToDisplay(chatSummary, userDummy1, usersModified)
+    val result =
+        convertParticipantsUidToDisplay(chatSummary, userDummy1, usersModified, unknownUser)
     assertEquals("Martin Vetterli, Martine Veto early", result)
   }
 
@@ -105,7 +120,7 @@ class ChatSummaryTest {
   fun convertLastSenderUidToDisplayWorksWithTwoUsers() {
     val chatSummary = ChatSummary(lastMessageSenderId = userDummy1.uid)
 
-    val result = convertLastSenderUidToDisplay(chatSummary, userDummy1, users)
+    val result = convertLastSenderUidToDisplay(chatSummary, userDummy1, users, unknownUser)
     assertEquals("You", result)
   }
 
@@ -124,13 +139,14 @@ class ChatSummaryTest {
     val usersModified = listOf(userDummy1, userDummy2, userDummy3)
     val chatSummary = ChatSummary(lastMessageSenderId = userDummy2.uid)
 
-    val result = convertLastSenderUidToDisplay(chatSummary, userDummy1, usersModified)
+    val result = convertLastSenderUidToDisplay(chatSummary, userDummy1, usersModified, unknownUser)
     assertEquals("Martin Vetterli", result)
 
     val usersModified2 = listOf(userDummy1, userDummy2, userDummy3)
     val chatSummary2 = ChatSummary(lastMessageSenderId = userDummy3.uid)
 
-    val result2 = convertLastSenderUidToDisplay(chatSummary2, userDummy1, usersModified2)
+    val result2 =
+        convertLastSenderUidToDisplay(chatSummary2, userDummy1, usersModified2, unknownUser)
     assertEquals("Martine Veto early", result2)
   }
 
@@ -149,7 +165,7 @@ class ChatSummaryTest {
     val usersModified = listOf(userDummy1, userDummy3)
     val chatSummary = ChatSummary(participants = usersModified.map { it.uid })
 
-    val result = convertFirstParticipantToUser(chatSummary, usersModified)
+    val result = convertFirstParticipantToUser(chatSummary, usersModified, unknownUser)
     assertEquals(userDummy1.uid, result.uid)
   }
 }

@@ -1,5 +1,6 @@
 package com.swent.suddenbump.ui.messages
 
+import android.location.Location
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +39,7 @@ import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.convertFirstParticipantToUser
 import com.swent.suddenbump.model.chat.convertLastSenderUidToDisplay
 import com.swent.suddenbump.model.chat.convertParticipantsUidToDisplay
+import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
@@ -45,6 +47,7 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.Purple80
 import com.swent.suddenbump.ui.utils.UserProfileImage
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,17 +109,28 @@ fun MessageItem(
     viewModel: UserViewModel,
     navigationActions: NavigationActions
 ) {
+  val unknownUser =
+      User(
+          uid = "0000000",
+          firstName = "Unknown",
+          lastName = "User",
+          phoneNumber = "+33 0 00 00 00 00",
+          null,
+          "mail@mail.com",
+          MutableStateFlow(Location("")))
   Row(
       modifier =
           Modifier.fillMaxWidth()
               .padding(vertical = 8.dp)
               .clickable {
                 viewModel.user =
-                    convertFirstParticipantToUser(message, viewModel.getUserFriends().value)
+                    convertFirstParticipantToUser(
+                        message, viewModel.getUserFriends().value, unknownUser)
                 navigationActions.navigateTo(Screen.CHAT)
               }
               .testTag("message_item_${message.sender}")) {
-        convertFirstParticipantToUser(message, viewModel.getUserFriends().collectAsState().value)
+        convertFirstParticipantToUser(
+                message, viewModel.getUserFriends().collectAsState().value, unknownUser)
             .let { UserProfileImage(user = it, size = 40) }
 
         Column(modifier = Modifier.padding(start = 16.dp).fillMaxWidth()) {
@@ -129,7 +143,8 @@ fun MessageItem(
                         convertParticipantsUidToDisplay(
                             message,
                             viewModel.getCurrentUser().collectAsState().value,
-                            viewModel.getUserFriends().collectAsState().value),
+                            viewModel.getUserFriends().collectAsState().value,
+                            unknownUser),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp)
@@ -148,8 +163,8 @@ fun MessageItem(
                         convertLastSenderUidToDisplay(
                             message,
                             viewModel.getCurrentUser().collectAsState().value,
-                            viewModel.getUserFriends().collectAsState().value) +
-                            " : ${message.content}",
+                            viewModel.getUserFriends().collectAsState().value,
+                            unknownUser) + " : ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
                     maxLines = 1,
