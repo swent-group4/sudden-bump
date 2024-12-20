@@ -1458,7 +1458,7 @@ class UserRepositoryFirestore(
     )*/
 
 
-    override fun getBlockedBy(
+   /* override fun getBlockedBy(
         uid: String,
         onSuccess: (List<User>) -> Unit,
         onFailure: (Exception) -> Unit
@@ -1495,7 +1495,7 @@ class UserRepositoryFirestore(
                     )
                 }
             }
-    }
+    }*/
 
 
     /**
