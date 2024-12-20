@@ -3,7 +3,6 @@ package com.swent.suddenbump.model.user
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
@@ -13,7 +12,6 @@ import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
-import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.network.RetrofitInstance
 import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.worker.WorkerScheduler
@@ -35,15 +33,9 @@ open class UserViewModel(
     private val repository: UserRepository,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
-
-  private val chatSummaryDummy =
-      ChatSummary("1", "message content", "chat456", Timestamp.now(), 0, listOf("1", "2"))
-
   private val logTag = "UserViewModel"
   private val _chatSummaries = MutableStateFlow<List<ChatSummary>>(emptyList())
   val chatSummaries: StateFlow<List<ChatSummary>> = _chatSummaries.asStateFlow()
-  private val profilePicture = ImageBitMapIO()
-  val friendsLocations = mutableStateOf<Map<User, Location?>>(emptyMap())
 
   private val locationDummy =
       MutableStateFlow(
@@ -96,10 +88,11 @@ open class UserViewModel(
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
   private val _friendIsOnline: MutableStateFlow<Boolean> = MutableStateFlow(false)
-  val friendIsOnline = _friendIsOnline.asStateFlow()
   private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
-
   val locationSharedWith: StateFlow<List<User>> = _locationSharedWith.asStateFlow()
+
+  private val _isLoading = MutableStateFlow(false)
+  val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
   // LiveData for verification status
   private val _verificationStatus = MutableLiveData<String>()
@@ -113,18 +106,15 @@ open class UserViewModel(
   private val _verificationId = MutableLiveData<String>()
   val verificationId: LiveData<String> = _verificationId
 
-  val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>?> =
+  val groupedFriends: StateFlow<Map<DistanceCategory, List<Pair<User, Float>>>> =
       combine(_user, _userFriends) { user, friends ->
-            // Only compute grouped friends if friends are loaded
-            if (friends.isNotEmpty()) {
+            if (friends.isEmpty()) {
+              emptyMap()
+            } else {
               val friendsWithDistances =
                   friends.mapNotNull { friend ->
                     val distance = getRelativeDistance(friend)
-                    if (distance != Float.MAX_VALUE) {
-                      friend to distance
-                    } else {
-                      null
-                    }
+                    if (distance != Float.MAX_VALUE) friend to distance else null
                   }
 
               friendsWithDistances.groupBy { (_, distance) ->
@@ -137,11 +127,9 @@ open class UserViewModel(
                   else -> DistanceCategory.FURTHER
                 }
               }
-            } else {
-              null // Indicate that friends are not yet loaded
             }
           }
-          .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+          .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
   /** Initializes the ViewModel by configuring the repository. */
   init {
@@ -178,6 +166,7 @@ open class UserViewModel(
    * friend requests, and recommendations.
    */
   fun setCurrentUser() {
+    _isLoading.value = true
     repository.getUserAccount(
         onSuccess = { user ->
           _user.value = user
@@ -188,6 +177,17 @@ open class UserViewModel(
               onSuccess = { friendsList ->
                 Log.d(logTag, friendsList.toString())
                 _userFriends.value = friendsList
+                repository.getSharedWithFriends(
+                    uid = _user.value.uid,
+                    onSuccess = { list ->
+                      _locationSharedWith.value = list
+                      Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
+                      _isLoading.value = false
+                    },
+                    onFailure = { error ->
+                      _isLoading.value = false
+                      Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
+                    })
                 repository.getBlockedFriends(
                     uid = _user.value.uid,
                     onSuccess = { blockedFriendsList ->
@@ -195,7 +195,11 @@ open class UserViewModel(
                     },
                     onFailure = { e -> Log.e(logTag, e.toString()) })
               },
-              onFailure = { e -> Log.e(logTag, e.toString()) })
+              onFailure = { e ->
+                _userFriends.value = emptyList()
+                _isLoading.value = false
+                Log.e(logTag, e.toString())
+              })
           repository.getSentFriendRequests(
               uid = _user.value.uid,
               onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
@@ -211,7 +215,11 @@ open class UserViewModel(
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
         },
-        onFailure = { e -> Log.e(logTag, e.toString()) })
+        onFailure = { e ->
+          _userFriends.value = emptyList()
+          _isLoading.value = false
+          Log.e(logTag, e.toString())
+        })
   }
 
   /**
@@ -222,6 +230,7 @@ open class UserViewModel(
    * @param onFailure Called with an exception if the operation fails.
    */
   fun setCurrentUser(uid: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    _isLoading.value = true
     scheduleWorker(uid)
     repository.getUserAccount(
         uid,
@@ -232,6 +241,17 @@ open class UserViewModel(
               onSuccess = { friendsList ->
                 Log.i(logTag, friendsList.toString())
                 _userFriends.value = friendsList
+                repository.getSharedWithFriends(
+                    uid = _user.value.uid,
+                    onSuccess = { list ->
+                      _locationSharedWith.value = list
+                      _isLoading.value = false
+                      Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
+                    },
+                    onFailure = { error ->
+                      _isLoading.value = false
+                      Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
+                    })
                 repository.getBlockedFriends(
                     uid = _user.value.uid,
                     onSuccess = { blockedFriendsList ->
@@ -240,7 +260,11 @@ open class UserViewModel(
                     },
                     onFailure = { e -> Log.e(logTag, e.toString()) })
               },
-              onFailure = { e -> Log.e(logTag, e.toString()) })
+              onFailure = { e ->
+                _userFriends.value = emptyList()
+                _isLoading.value = false
+                Log.e(logTag, e.toString())
+              })
           repository.getSentFriendRequests(
               uid = _user.value.uid,
               onSuccess = { sentRequestsList -> _sentFriendRequests.value = sentRequestsList },
@@ -256,7 +280,12 @@ open class UserViewModel(
               },
               onFailure = { e -> Log.e(logTag, e.toString()) })
         },
-        onFailure)
+        onFailure = { e ->
+          _userFriends.value = emptyList()
+          _isLoading.value = false
+          Log.e(logTag, e.toString())
+          onFailure(e)
+        })
   }
 
   /**
@@ -542,20 +571,19 @@ open class UserViewModel(
             // Update the state with the locations of friends
             _userFriends.value = friends
             Log.d("UserViewModel", "On success load Friends ${_userFriends.value}")
+            repository.getSharedWithFriends(
+                uid = _user.value.uid,
+                onSuccess = { list ->
+                  _locationSharedWith.value = list
+                  Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
+                },
+                onFailure = { error ->
+                  Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
+                })
           },
           onFailure = { error ->
             // Handle the error, e.g., log or show error message
             Log.e("UserViewModel", "Failed to load friends' : ${error.message}")
-          })
-      Log.d("UserViewModel", "Loading sharedLocationWith...")
-      repository.getSharedWithFriends(
-          uid = _user.value.uid,
-          onSuccess = { list ->
-            _locationSharedWith.value = list
-            Log.d("UserViewModel", "Successfully loaded sharedLocationWith: $list")
-          },
-          onFailure = { error ->
-            Log.e("UserViewModel", "Failed to load sharedLocationWith : ${error.message}")
           })
     }
   }
@@ -810,8 +838,10 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    _locationSharedWith.value = _locationSharedWith.value.plus(friend)
-    repository.shareLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
+    if (_locationSharedWith.value.none { it.uid == friend.uid }) {
+      _locationSharedWith.value = _locationSharedWith.value.plus(friend).distinctBy { it.uid }
+      repository.shareLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
+    }
   }
 
   /**
@@ -829,11 +859,7 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    _locationSharedWith.value.forEach {
-      if (it.uid == friend.uid) {
-        _locationSharedWith.value = _locationSharedWith.value.minus(it)
-      }
-    }
+    _locationSharedWith.value = _locationSharedWith.value.filterNot { it.uid == friend.uid }
     repository.stopSharingLocationWithFriend(uid, friend.uid, onSuccess, onFailure)
   }
 

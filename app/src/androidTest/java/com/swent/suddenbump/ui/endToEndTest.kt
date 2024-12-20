@@ -169,6 +169,11 @@ class EndToEndTest2 {
           lambda<(User) -> Unit>().invoke(user)
         }
 
+    every { mockFirestore.getSharedWithFriends(any(), captureLambda(), any()) } answers
+        {
+          lambda<(List<User>) -> Unit>().invoke(listOf(friend))
+        }
+
     // Trigger initialization of the UserViewModel
     userViewModel.setCurrentUser()
   }

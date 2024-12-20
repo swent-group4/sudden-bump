@@ -182,6 +182,7 @@ class MainActivity : ComponentActivity() {
         status = true,
         onSuccess = { Log.d("UserStatus", "Online status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
+    userViewModelActivity.loadFriends()
   }
 
   override fun onDestroy() {
@@ -227,11 +228,11 @@ class MainActivity : ComponentActivity() {
     val meetingViewModelFactory: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
     val meetingViewModel: MeetingViewModel =
         if (isUsingMockViewModel) testableMeetingViewModel else meetingViewModelFactory
-    val userViewModelFactory: UserViewModel by viewModels {
+    /*val userViewModelFactory: UserViewModel by viewModels {
       UserViewModel.provideFactory(applicationContext)
-    }
+    }*/
     val userViewModel: UserViewModel =
-        if (isUsingMockViewModel) testableUserViewModel else userViewModelFactory
+        if (isUsingMockViewModel) testableUserViewModel else userViewModelActivity
 
     LaunchedEffect(newLocation.asStateFlow()) {
       Log.d("UserviewModel", "coordinates : $newLocation")

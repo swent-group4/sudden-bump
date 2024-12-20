@@ -364,7 +364,10 @@ class MiscellaneousTests {
           urfClass.declaredFunctions.first { it.name == "documentSnapshotToUserList" }
       documentSnapshotToUserListFunction.isAccessible = true
       documentSnapshotToUserListFunction.call(
-          userRepositoryFirestore, uidJsonList, { it: List<User> -> println(it) })
+          userRepositoryFirestore,
+          uidJsonList,
+          { it: List<User> -> println(it) },
+          { e: Exception -> println(e) })
 
       verify(mockImageRepository).downloadImageAsync(any(), any(), any())
     }

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
@@ -67,6 +68,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
+import com.swent.suddenbump.ui.theme.Pinkish
 import java.text.SimpleDateFormat
 import java.util.Locale
 import retrofit2.Retrofit
@@ -144,60 +146,61 @@ fun SimpleMap(
         (it.creatorId == currentUserId || it.friendId == currentUserId) && it.accepted
       }
 
-  Column(modifier = modifier.fillMaxSize()) {
-    // Transport Mode Selector
-    TransportModeSelector { mode -> transportMode = mode }
+  Box(modifier = modifier.fillMaxSize().testTag("mapView")) {
+    // Map content
+    GoogleMap(
+        modifier = Modifier.fillMaxSize(),
+        cameraPositionState = cameraPositionState,
+        uiSettings = MapUiSettings(zoomControlsEnabled = false),
+        properties = MapProperties(mapType = MapType.HYBRID)) {
+          // Your own position marker with click handling
+          val markerBitmap = getLocationMarkerBitmap()
+          Marker(
+              state = markerState,
+              title = "Current Location",
+              snippet = "You are here",
+              icon = BitmapDescriptorFactory.fromBitmap(markerBitmap),
+              onClick = {
+                selectedLocation = markerState.position
+                true
+              })
 
-    Box(modifier = Modifier.fillMaxSize().testTag("mapView")) {
-      GoogleMap(
-          modifier = Modifier.fillMaxSize(),
-          cameraPositionState = cameraPositionState,
-          uiSettings = MapUiSettings(zoomControlsEnabled = false),
-          properties = MapProperties(mapType = MapType.SATELLITE)) {
-            // Your own position marker with click handling
-            val markerBitmap = getLocationMarkerBitmap()
-            Marker(
-                state = markerState,
-                title = "Current Location",
-                snippet = "You are here",
-                icon = BitmapDescriptorFactory.fromBitmap(markerBitmap),
-                onClick = {
-                  selectedLocation = markerState.position
-                  true
-                })
-
-            // Friends' markers
-            FriendsMarkers(userViewModel) { friendLatLng ->
-              selectedLocation = friendLatLng
-              showConfirmationDialog = true // Show confirmation dialog when info window is clicked
-            }
-
-            // Meeting markers
-            filteredMeetings.forEach { meeting ->
-              val meetingLatLng =
-                  LatLng(
-                      meeting.location?.latitude ?: 48.7855465,
-                      meeting.location?.longitude ?: 2.3147013)
-
-              Marker(
-                  state = rememberMarkerState(position = meetingLatLng),
-                  title = "Meeting at ${meeting.location?.name ?: "Unknown Location"}",
-                  snippet =
-                      "Scheduled on ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(meeting.date.toDate())}",
-                  icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
-            }
+          // Friends' markers
+          FriendsMarkers(userViewModel) { friendLatLng ->
+            selectedLocation = friendLatLng
+            showConfirmationDialog = true // Show confirmation dialog when info window is clicked
           }
 
-      // FloatingActionButton to open directions in Google Maps
-      selectedLocation?.let {
-        FloatingActionButton(
-            onClick = { showConfirmationDialog = true },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
-              Icon(
-                  imageVector = Icons.Filled.Place, // Use the desired icon
-                  contentDescription = "Open in Google Maps")
-            }
-      }
+          // Meeting markers
+          filteredMeetings.forEach { meeting ->
+            val meetingLatLng =
+                LatLng(
+                    meeting.location?.latitude ?: 48.7855465,
+                    meeting.location?.longitude ?: 2.3147013)
+
+            Marker(
+                state = rememberMarkerState(position = meetingLatLng),
+                title = "Meeting at ${meeting.location?.name ?: "Unknown Location"}",
+                snippet =
+                    "Scheduled on ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(meeting.date.toDate())}",
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+          }
+        }
+
+    // Transport Mode Selector positioned over the map
+    Box(modifier = Modifier.align(Alignment.TopStart).padding(16.dp)) {
+      TransportModeSelector { mode -> transportMode = mode }
+    }
+
+    // FloatingActionButton to open directions in Google Maps
+    selectedLocation?.let {
+      FloatingActionButton(
+          onClick = { showConfirmationDialog = true },
+          modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) {
+            Icon(
+                imageVector = Icons.Filled.Place, // Use the desired icon
+                contentDescription = "Open in Google Maps")
+          }
     }
   }
 
@@ -239,9 +242,11 @@ fun TransportModeSelector(onModeSelected: (String) -> Unit) {
   var selectedMode by remember { mutableStateOf("driving") }
 
   Box {
-    Button(onClick = { expanded = true }) {
-      Text(text = selectedMode.replaceFirstChar { it.uppercaseChar() })
-    }
+    Button(
+        onClick = { expanded = true },
+        colors = ButtonDefaults.buttonColors(containerColor = Pinkish)) {
+          Text(text = selectedMode.replaceFirstChar { it.uppercaseChar() })
+        }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       val modes = listOf("driving", "walking", "transit")
       modes.forEach { mode ->

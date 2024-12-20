@@ -23,6 +23,7 @@ import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import com.swent.suddenbump.worker.WorkerScheduler
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
@@ -962,7 +963,9 @@ class UserRepositoryFirestore(
             emptyList<User>()
           } else {
             documentSnapshotToUserList(
-                result.data?.get("blockedList").toString(), onSuccess = { onSuccess(it) })
+                result.data?.get("blockedList").toString(),
+                onSuccess = { onSuccess(it) },
+                onFailure = { onFailure(it) })
           }
         }
   }
@@ -1381,18 +1384,13 @@ class UserRepositoryFirestore(
             emptyList<User>()
           } else {
             documentSnapshotToUserList(
-                result.data?.get("locationSharedBy").toString(), onSuccess = { onSuccess(it) })
+                result.data?.get("locationSharedBy").toString(),
+                onSuccess = { onSuccess(it) },
+                onFailure = onFailure)
           }
         }
   }
 
-  /**
-   * Retrieves the list of friends with whom the user has shared their location.
-   *
-   * @param uid The user ID of the person retrieving the list.
-   * @param onSuccess Called with a list of User objects if retrieval succeeds.
-   * @param onFailure Called with an exception if retrieval fails.
-   */
   override fun getSharedWithFriends(
       uid: String,
       onSuccess: (List<User>) -> Unit,
@@ -1403,55 +1401,73 @@ class UserRepositoryFirestore(
         .get()
         .addOnFailureListener { e -> onFailure(e) }
         .addOnSuccessListener { result ->
-          if (result.data?.get("locationSharedWith") == null) {
-            emptyList<User>()
+          val locationSharedWith = result.data?.get("locationSharedWith")
+          if (locationSharedWith == null) {
+            onSuccess(emptyList()) // Return empty list if no data.
           } else {
             documentSnapshotToUserList(
-                result.data?.get("locationSharedWith").toString(), onSuccess = { onSuccess(it) })
+                locationSharedWith.toString(),
+                onSuccess = onSuccess,
+                onFailure = onFailure // Propagate errors from document parsing.
+                )
           }
         }
   }
 
-  /**
-   * Converts a JSON list of user IDs into a list of User objects by fetching their details from
-   * Firestore.
-   *
-   * @param uidJsonList The JSON-formatted String containing user IDs.
-   * @param onFailure Called with an exception if any user data retrieval fails.
-   * @return A list of User objects corresponding to the IDs in the input JSON.
-   */
   private fun documentSnapshotToUserList(
       uidJsonList: String,
       onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
   ) {
-    val uidList = helper.documentSnapshotToList(uidJsonList)
+    val uidList =
+        try {
+          helper.documentSnapshotToList(uidJsonList)
+        } catch (e: Exception) {
+          Log.e(logTag, "Failed to parse uidJsonList: $uidJsonList", e)
+          onFailure(e) // Propagate parsing errors.
+          return
+        }
 
     val tasks = uidList.map { db.collection(usersCollectionPath).document(it).get() }
-    Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
-      val friendsListMutable = mutableListOf<User>()
-      for (doc in documents) {
-        var profilePicture: ImageBitmap? = null
-        val path =
-            doc.data?.get("uid")?.let {
-              helper.uidToProfilePicturePath(it.toString(), profilePicturesRef)
-            }
-
-        if (path != null) {
-          imageRepository.downloadImageAsync(
-              path,
-              onSuccess = { image ->
-                profilePicture = image
-                val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
-                friendsListMutable.add(userFriend)
-                onSuccess(friendsListMutable)
-              },
-              onFailure = {
-                Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
-                onSuccess(friendsListMutable)
-              })
+    Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
+        .addOnFailureListener { exception ->
+          Log.e(logTag, "Failed to fetch user documents", exception)
+          onFailure(exception)
         }
-      }
-    }
+        .addOnSuccessListener { documents ->
+          val friendsList = mutableListOf<User>()
+          val remainingImages = AtomicInteger(documents.size)
+
+          documents.forEach { doc ->
+            val path =
+                doc.data?.get("uid")?.let {
+                  helper.uidToProfilePicturePath(it.toString(), profilePicturesRef)
+                }
+
+            if (path != null) {
+              imageRepository.downloadImageAsync(
+                  path,
+                  onSuccess = { image ->
+                    friendsList.add(helper.documentSnapshotToUser(doc, profilePicture = image))
+                    if (remainingImages.decrementAndGet() == 0) {
+                      onSuccess(friendsList)
+                    }
+                  },
+                  onFailure = {
+                    Log.e(logTag, "Failed to retrieve image for id: ${doc.id}")
+                    friendsList.add(helper.documentSnapshotToUser(doc, profilePicture = null))
+                    if (remainingImages.decrementAndGet() == 0) {
+                      onSuccess(friendsList)
+                    }
+                  })
+            } else {
+              friendsList.add(helper.documentSnapshotToUser(doc, profilePicture = null))
+              if (remainingImages.decrementAndGet() == 0) {
+                onSuccess(friendsList)
+              }
+            }
+          }
+        }
   }
 
   override fun unblockUser(
