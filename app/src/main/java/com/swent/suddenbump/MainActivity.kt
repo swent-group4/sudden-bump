@@ -250,7 +250,7 @@ class MainActivity : ComponentActivity() {
     }
 
     val startRoute =
-        if (!isRunningTest() && userViewModel.isUserLoggedIn()) {
+        if (!isRunningTest() && (userViewModel.isUserLoggedIn() || auth.currentUser != null)) {
           val uid = userViewModel.getSavedUid()
           Log.d("MainActivity", "User logged in: $uid")
           userViewModel.setCurrentUser(

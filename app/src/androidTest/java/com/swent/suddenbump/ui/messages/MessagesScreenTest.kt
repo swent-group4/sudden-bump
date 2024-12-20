@@ -111,4 +111,22 @@ class MessagesScreenTest {
     composeTestRule.onNodeWithTag("message_item_${chatSummaryDummy.sender}").assertIsDisplayed()
     composeTestRule.onNodeWithTag("message_item_${chatSummaryDummy2.sender}").assertIsDisplayed()
   }
+
+  @Test
+  fun showsNoMessagesTextWhenListIsEmpty() {
+    // Arrange: Provide an empty list of chat summaries
+    val emptyFlowMock = flowOf(emptyList<ChatSummary>())
+    whenever(chatRepository.getChatSummaries(userDummy2.uid)).thenAnswer { emptyFlowMock }
+
+    // Recompose after changing the mock return
+    composeTestRule.setContent { MessagesScreen(userViewModel, navigationActions) }
+
+    // Wait for the UI to update
+    composeTestRule.waitForIdle()
+
+    // Act & Assert: Verify that the "no messages" text is displayed
+    composeTestRule.onNodeWithTag("no_messages_text").assertIsDisplayed()
+    // Verify that the messages_list is not displayed in this scenario
+    composeTestRule.onNodeWithTag("messages_list").assertDoesNotExist()
+  }
 }

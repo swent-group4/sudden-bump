@@ -87,13 +87,28 @@ fun MessagesScreen(viewModel: UserViewModel, navigationActions: NavigationAction
             selectedItem = navigationActions.currentRoute())
       }) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).background(Color.Black)) {
-          LazyColumn(modifier = Modifier.background(Color.Black).testTag("messages_list")) {
-            itemsIndexed(list) { index, message ->
-              MessageItem(message, viewModel, navigationActions)
-              if (index < messages.value.size - 1) {
-                // Ajouter un Divider seulement si ce n'est pas le dernier message
-                Divider(
-                    color = Color.Gray, thickness = 1.dp, modifier = Modifier.testTag("divider"))
+          if (list.isEmpty()) {
+            // Display a message when there are no messages
+            Column(
+                modifier = Modifier.fillMaxSize().background(Color.Black),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally) {
+                  Text(
+                      text = "Chat with a friend to see your conversations",
+                      color = Color.Gray,
+                      fontSize = 16.sp,
+                      modifier = Modifier.testTag("no_messages_text"))
+                }
+          } else {
+            // Display the list of messages
+            LazyColumn(modifier = Modifier.background(Color.Black).testTag("messages_list")) {
+              itemsIndexed(list) { index, message ->
+                MessageItem(message, viewModel, navigationActions)
+                if (index < list.size - 1) {
+                  // Ajouter un Divider seulement si ce n'est pas le dernier message
+                  Divider(
+                      color = Color.Gray, thickness = 1.dp, modifier = Modifier.testTag("divider"))
+                }
               }
             }
           }

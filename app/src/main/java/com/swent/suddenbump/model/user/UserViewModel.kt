@@ -96,7 +96,6 @@ open class UserViewModel(
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
   private val _friendIsOnline: MutableStateFlow<Boolean> = MutableStateFlow(false)
-  val friendIsOnline = _friendIsOnline.asStateFlow()
   private val _locationSharedWith: MutableStateFlow<List<User>> = MutableStateFlow(emptyList())
 
   val locationSharedWith: StateFlow<List<User>> = _locationSharedWith.asStateFlow()
