@@ -5,7 +5,6 @@ import com.google.firebase.Timestamp
 import com.swent.suddenbump.model.image.ImageRepository
 
 interface UserRepository {
-
   val imageRepository: ImageRepository
 
   fun init(onSuccess: () -> Unit)

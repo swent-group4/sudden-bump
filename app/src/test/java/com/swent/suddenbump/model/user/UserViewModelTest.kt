@@ -518,27 +518,28 @@ class UserViewModelTest {
 
     doAnswer { invocationOnMock ->
           val onSuccess = invocationOnMock.getArgument<(User) -> Unit>(0)
-          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(1)
           onSuccess(user2)
-          onFailure(exception)
         }
         .whenever(userRepository)
         .getUserAccount(any(), any())
 
     doAnswer { invocationOnMock ->
           val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
-          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
           onSuccess(listOf(user2))
-          onFailure(exception)
         }
         .whenever(userRepository)
         .getUserFriends(any(), any(), any())
 
     doAnswer { invocationOnMock ->
           val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
-          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
           onSuccess(listOf(user2))
-          onFailure(exception)
+        }
+        .whenever(userRepository)
+        .getSharedWithFriends(any(), any(), any())
+
+    doAnswer { invocationOnMock ->
+          val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
+          onSuccess(listOf(user2))
         }
         .whenever(userRepository)
         .getBlockedFriends(any(), any(), any())
@@ -572,28 +573,29 @@ class UserViewModelTest {
     doAnswer { invocationOnMock ->
           val uid = invocationOnMock.getArgument<String>(0)
           val onSuccess = invocationOnMock.getArgument<(User) -> Unit>(1)
-          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
           uid
           onSuccess(user2)
-          onFailure(exception)
         }
         .whenever(userRepository)
         .getUserAccount(any(), any(), any())
 
     doAnswer { invocationOnMock ->
           val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
-          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
           onSuccess(listOf(user2))
-          onFailure(exception)
+        }
+        .whenever(userRepository)
+        .getSharedWithFriends(any(), any(), any())
+
+    doAnswer { invocationOnMock ->
+          val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
+          onSuccess(listOf(user2))
         }
         .whenever(userRepository)
         .getUserFriends(any(), any(), any())
 
     doAnswer { invocationOnMock ->
           val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)
-          val onFailure = invocationOnMock.getArgument<(Exception) -> Unit>(2)
           onSuccess(listOf(user2))
-          onFailure(exception)
         }
         .whenever(userRepository)
         .getBlockedFriends(any(), any(), any())

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -62,10 +63,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
-
+  val isLoading by userViewModel.isLoading.collectAsState()
   val groupedFriends by userViewModel.groupedFriends.collectAsState()
-
-  // Charge les emplacements des amis lorsque l'écran est composé
   LaunchedEffect(Unit) {
     CoroutineScope(Dispatchers.IO).launch {
       Log.i("FirebaseDownload", "Request made !")
@@ -124,73 +123,66 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(pd)
                     .padding(horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
-              if (groupedFriends?.isNotEmpty() == true) {
-                groupedFriends!!
-                    .entries
-                    .sortedBy { it.key.ordinal }
-                    .forEach { (category, friendsList) ->
-                      item { CategoryHeader(category) }
-                      item {
-                        Box(
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Color.White)
-                                    .padding(8.dp)
-                                    .testTag("userList")) {
-                              LazyColumn(
-                                  modifier =
-                                      Modifier.fillMaxWidth()
-                                          .heightIn(max = 400.dp) // Constrain height of the inner
-                                  // LazyColumn
-                                  ) {
-                                    items(friendsList.size) { index ->
-                                      val (friend, _) = friendsList[index]
-                                      Column(
-                                          modifier =
-                                              Modifier
-                                                  .fillMaxWidth() // Add vertical space around each
-                                          // user
-                                          ) {
-                                            UserRow(
-                                                user = friend,
-                                                navigationActions = navigationActions,
-                                                userViewModel = userViewModel,
-                                            )
-                                            // Add a divider after each user except the last one
-                                            if (index < friendsList.size - 1) {
-                                              HorizontalDivider(
-                                                  color = Color.Gray,
-                                                  thickness = 0.5.dp,
-                                                  modifier =
-                                                      Modifier.fillMaxWidth()
-                                                          .testTag("divider")
-                                                          .padding(vertical = 4.dp))
-                                            }
-                                          }
-                                    }
-                                  }
-                            }
-                      }
+              when {
+                isLoading -> {
+                  item {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                      CircularProgressIndicator(
+                          color = Color.White, modifier = Modifier.testTag("loadingFriends"))
                     }
-              } else if (groupedFriends == null) {
-                item {
-                  Box(
-                      modifier = Modifier.fillMaxSize().padding(vertical = 4.dp),
-                      contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(
-                            color = Color.White, modifier = Modifier.testTag("loadingFriends"))
-                      }
+                  }
                 }
-              } else {
-                item {
-                  Text(
-                      text = "No friends nearby, add friends to see their location",
-                      color = Color.White,
-                      modifier =
-                          Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 4.dp),
-                      style = MaterialTheme.typography.titleLarge,
-                      textAlign = TextAlign.Center)
+                groupedFriends.isEmpty() -> {
+                  item {
+                    Text(
+                        text = "No friends nearby, add friends to see their location",
+                        color = Color.White,
+                        modifier =
+                            Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 4.dp),
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center)
+                  }
+                }
+                else -> {
+                  groupedFriends.entries
+                      .sortedBy { it.key.ordinal }
+                      .forEach { (category, friendsList) ->
+                        item { CategoryHeader(category) }
+                        item {
+                          Box(
+                              modifier =
+                                  Modifier.fillMaxWidth()
+                                      .clip(RoundedCornerShape(10.dp))
+                                      .background(Color.White)
+                                      .padding(8.dp)
+                                      .testTag("userList")) {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
+                                      items(friendsList.size) { index ->
+                                        val (friend, _) = friendsList[index]
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                          UserRow(
+                                              user = friend,
+                                              navigationActions = navigationActions,
+                                              userViewModel = userViewModel,
+                                          )
+
+                                          // Add a divider after each user except the last one
+                                          if (index < friendsList.size - 1) {
+                                            HorizontalDivider(
+                                                color = Color.Gray,
+                                                thickness = 0.5.dp,
+                                                modifier =
+                                                    Modifier.fillMaxWidth()
+                                                        .testTag("divider")
+                                                        .padding(vertical = 4.dp))
+                                          }
+                                        }
+                                      }
+                                    }
+                              }
+                        }
+                      }
                 }
               }
             }
@@ -221,10 +213,8 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
   val coroutineScope = rememberCoroutineScope()
   var locationText by remember { mutableStateOf("Loading...") }
   val locationSharedWith by userViewModel.locationSharedWith.collectAsState()
-  var isLocationShared = false
-  locationSharedWith.forEach { friend ->
-    isLocationShared = isLocationShared || friend.uid == user.uid
-  }
+  val isLocationShared =
+      remember(locationSharedWith) { locationSharedWith.any { it.uid == user.uid } }
 
   LaunchedEffect(user.uid) {
     coroutineScope.launch {
@@ -232,7 +222,6 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
       locationText = userViewModel.getCityAndCountry(location)
     }
   }
-
   Row(
       modifier =
           Modifier.fillMaxWidth()
@@ -263,7 +252,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                 userViewModel.shareLocationWithFriend(
                     uid = userViewModel.getCurrentUser().value.uid,
                     friend = user,
-                    onSuccess = { isLocationShared = true },
+                    onSuccess = {},
                     onFailure = { exception ->
                       Log.e("Overview", "Failed to share location: ${exception.message}")
                     })
@@ -271,7 +260,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                 userViewModel.stopSharingLocationWithFriend(
                     uid = userViewModel.getCurrentUser().value.uid,
                     friend = user,
-                    onSuccess = { isLocationShared = false },
+                    onSuccess = {},
                     onFailure = { exception ->
                       Log.e("Overview", "Failed to stop sharing location: ${exception.message}")
                     })

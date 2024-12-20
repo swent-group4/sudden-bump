@@ -47,7 +47,9 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                 AccountOption(
                     label = "Delete Account",
                     backgroundColor = Color.Red,
-                    onClick = { navigationActions.navigateTo("AccountScreen") },
+                    onClick = {
+                      Toast.makeText(context, "Failure to reach database", Toast.LENGTH_LONG).show()
+                    },
                     testTag = "deleteAccountSection")
               }
 

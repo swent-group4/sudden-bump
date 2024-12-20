@@ -66,13 +66,6 @@ class AccountScreenTest {
   }
 
   @Test
-  fun deleteAccountButtonNavigatesToAccountScreen() {
-    // Perform a click on the "Delete Account" section
-    composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
-    verify(navigationActions).navigateTo("AccountScreen")
-  }
-
-  @Test
   fun testLogoutSectionVisibility() {
     // Assert that the logout section is displayed
     composeTestRule.onNodeWithTag("logoutSection").assertIsDisplayed()
