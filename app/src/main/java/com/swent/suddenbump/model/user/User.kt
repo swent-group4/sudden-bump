@@ -13,21 +13,6 @@ data class User(
     val emailAddress: String,
     val lastKnownLocation: MutableStateFlow<Location>,
 ) {
-  companion object {
-    lateinit var lastKnownLocation: MutableStateFlow<Location>
-
-    val UnknownUser by lazy {
-      User(
-          uid = "unknown",
-          firstName = "Unknown",
-          lastName = "User",
-          phoneNumber = "+33 0 00 00 00 00",
-          profilePicture = null,
-          emailAddress = "mail@mail.com",
-          lastKnownLocation = lastKnownLocation)
-    }
-  }
-
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is User) return false

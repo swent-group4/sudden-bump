@@ -112,11 +112,13 @@ fun MessageItem(
               .padding(vertical = 8.dp)
               .clickable {
                 viewModel.user =
-                    convertFirstParticipantToUser(message, viewModel.getUserFriends().value)
+                    convertFirstParticipantToUser(
+                        message, viewModel.getUserFriends().value, viewModel.unknownUser)
                 navigationActions.navigateTo(Screen.CHAT)
               }
               .testTag("message_item_${message.sender}")) {
-        convertFirstParticipantToUser(message, viewModel.getUserFriends().collectAsState().value)
+        convertFirstParticipantToUser(
+                message, viewModel.getUserFriends().collectAsState().value, viewModel.unknownUser)
             .let { UserProfileImage(user = it, size = 40) }
 
         Column(modifier = Modifier.padding(start = 16.dp).fillMaxWidth()) {
@@ -129,7 +131,8 @@ fun MessageItem(
                         convertParticipantsUidToDisplay(
                             message,
                             viewModel.getCurrentUser().collectAsState().value,
-                            viewModel.getUserFriends().collectAsState().value),
+                            viewModel.getUserFriends().collectAsState().value,
+                            viewModel.unknownUser),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp)
@@ -148,8 +151,8 @@ fun MessageItem(
                         convertLastSenderUidToDisplay(
                             message,
                             viewModel.getCurrentUser().collectAsState().value,
-                            viewModel.getUserFriends().collectAsState().value) +
-                            " : ${message.content}",
+                            viewModel.getUserFriends().collectAsState().value,
+                            viewModel.unknownUser) + " : ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
                     maxLines = 1,

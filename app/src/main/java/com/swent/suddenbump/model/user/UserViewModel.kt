@@ -81,6 +81,9 @@ open class UserViewModel(
           "martin.vetterli@epfl.ch",
           locationDummy)
 
+  val unknownUser =
+      User("unknown", "Unknown", "User", "+33 0 00 00 00 00", null, "mail@mail.com", locationDummy)
+
   private val _user: MutableStateFlow<User> = MutableStateFlow(userDummy2)
 
   private val _userFriendRequests: MutableStateFlow<List<User>> =
