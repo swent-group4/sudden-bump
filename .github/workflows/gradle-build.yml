@@ -48,7 +48,7 @@ jobs:
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
         run: |
           echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
-          echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
+          echo "$MAPS_LOCAL_PROPERTIES" | base64 --decode > ./local.properties
 
       - name: Build APK
         run: |
@@ -58,3 +58,9 @@ jobs:
       # Save time to environment variable
       - name: Set current date and time as environment variables
         run: echo "date_time=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-apk
+          path: ${{ env.main_project_module }}/build/outputs/apk/**/**/*.apk

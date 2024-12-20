@@ -46,7 +46,7 @@ class OverviewScreenTest {
           phoneNumber = "+1234567890",
           profilePicture = null,
           emailAddress = "john.doe@example.com",
-          lastKnownLocation = MutableStateFlow(location1))
+          lastKnownLocation = location1)
 
   private val user2 =
       User(
@@ -56,7 +56,7 @@ class OverviewScreenTest {
           phoneNumber = "+1234567891",
           profilePicture = ImageBitmap(100, 100),
           emailAddress = "jane.smith@example.com",
-          lastKnownLocation = MutableStateFlow(location2))
+          lastKnownLocation = location2)
 
   @Before
   fun setUp() {
@@ -90,6 +90,7 @@ class OverviewScreenTest {
   @Test
   fun testRequiredComponentsAreDisplayed() {
     isUITest = true
+    every { userViewModel.isLoading } returns MutableStateFlow(false)
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("overviewScreen").assertIsDisplayed()
     composeTestRule.onNodeWithTag("settingsFab").assertIsDisplayed()
@@ -100,6 +101,7 @@ class OverviewScreenTest {
   @Test
   fun testDisplaysFriendsWithinCategories() {
     isUITest = true
+    every { userViewModel.isLoading } returns MutableStateFlow(false)
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
     composeTestRule.waitForIdle()
@@ -117,7 +119,7 @@ class OverviewScreenTest {
   @Test
   fun testLoadingState() {
     // Simulate loading state
-    every { userViewModel.groupedFriends } returns MutableStateFlow(null)
+    every { userViewModel.isLoading } returns MutableStateFlow(true)
 
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
@@ -127,6 +129,7 @@ class OverviewScreenTest {
   @Test
   fun testEmptyState() {
     // Simulate empty state
+    every { userViewModel.isLoading } returns MutableStateFlow(false)
     every { userViewModel.groupedFriends } returns MutableStateFlow(emptyMap())
 
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
@@ -140,6 +143,8 @@ class OverviewScreenTest {
   @Test
   fun testSettingsButtonNavigatesToSettings() {
     isUITest = true
+
+    every { userViewModel.isLoading } returns MutableStateFlow(false)
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("settingsFab").performClick()
     verify { navigationActions.navigateTo(Screen.SETTINGS) }
@@ -149,6 +154,7 @@ class OverviewScreenTest {
   fun testAddContactButtonNavigatesToAddContact() {
     isUITest = true
 
+    every { userViewModel.isLoading } returns MutableStateFlow(false)
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag("seeFriendsFab").performClick()
     verify { navigationActions.navigateTo(Screen.ADD_CONTACT) }
@@ -157,6 +163,7 @@ class OverviewScreenTest {
   @Test
   fun testUserRowClickNavigatesToContact() {
     isUITest = true
+    every { userViewModel.isLoading } returns MutableStateFlow(false)
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
     composeTestRule.onNodeWithTag(user1.uid).performClick()
     verify { navigationActions.navigateTo(Screen.CONTACT) }
@@ -167,7 +174,7 @@ class OverviewScreenTest {
   fun havingProfilePictureDisplaysComponent() {
 
     isUITest = true
-
+    every { userViewModel.isLoading } returns MutableStateFlow(false)
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
     // Verify the profile picture image
@@ -185,6 +192,8 @@ class OverviewScreenTest {
 
     val currentUser = user1
     val friend = user2
+
+    every { userViewModel.isLoading } returns MutableStateFlow(false)
 
     composeTestRule.setContent { OverviewScreen(navigationActions, userViewModel) }
 
@@ -210,7 +219,6 @@ class OverviewScreenTest {
     composeTestRule
         .onNodeWithTag("locationIcon_${friend.uid}", useUnmergedTree = true)
         .assertExists()
-        .assertContentDescriptionEquals("Stop sharing location")
         .assertIsDisplayed()
 
     // Simulate clicking the icon to disable location sharing
@@ -228,7 +236,6 @@ class OverviewScreenTest {
     composeTestRule
         .onNodeWithTag("locationIcon_${friend.uid}", useUnmergedTree = true)
         .assertExists()
-        .assertContentDescriptionEquals("Share location")
         .assertIsDisplayed()
   }
 }

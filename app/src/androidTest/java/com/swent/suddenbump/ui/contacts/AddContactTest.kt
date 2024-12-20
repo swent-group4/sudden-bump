@@ -42,11 +42,10 @@ class AddContactScreenTest {
             profilePicture = null,
             emailAddress = "",
             lastKnownLocation =
-                MutableStateFlow(
-                    Location("mock_provider").apply {
-                      latitude = 46.5180
-                      longitude = 6.5680
-                    }))
+                Location("mock_provider").apply {
+                  latitude = 46.5180
+                  longitude = 6.5680
+                })
     val user1 =
         UserWithFriendsInCommon(
             user =
@@ -58,11 +57,10 @@ class AddContactScreenTest {
                     profilePicture = null,
                     emailAddress = "",
                     lastKnownLocation =
-                        MutableStateFlow(
-                            Location("mock_provider").apply {
-                              latitude = 46.5180
-                              longitude = 6.5680
-                            })),
+                        Location("mock_provider").apply {
+                          latitude = 46.5180
+                          longitude = 6.5680
+                        }),
             friendsInCommon = 2,
         )
     val user2 =
@@ -74,11 +72,10 @@ class AddContactScreenTest {
             profilePicture = null,
             emailAddress = "",
             lastKnownLocation =
-                MutableStateFlow(
-                    Location("mock_provider").apply {
-                      latitude = 46.5180
-                      longitude = 6.5681
-                    }))
+                Location("mock_provider").apply {
+                  latitude = 46.5180
+                  longitude = 6.5681
+                })
 
     every { navigationActions.currentRoute() } returns (Route.OVERVIEW)
     every { navigationActions.goBack() } returns Unit
@@ -162,11 +159,10 @@ class UserRowsTest {
             profilePicture = null,
             emailAddress = "",
             lastKnownLocation =
-                MutableStateFlow(
-                    Location("mock_provider").apply {
-                      latitude = 46.5180
-                      longitude = 6.5680
-                    }))
+                Location("mock_provider").apply {
+                  latitude = 46.5180
+                  longitude = 6.5680
+                })
 
     testUser =
         UserWithFriendsInCommon(
@@ -179,11 +175,10 @@ class UserRowsTest {
                     profilePicture = null,
                     emailAddress = "",
                     lastKnownLocation =
-                        MutableStateFlow(
-                            Location("mock_provider").apply {
-                              latitude = 46.5181
-                              longitude = 6.5681
-                            })),
+                        Location("mock_provider").apply {
+                          latitude = 46.5181
+                          longitude = 6.5681
+                        }),
             friendsInCommon = 2,
         )
 

@@ -21,7 +21,6 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -86,11 +85,10 @@ class GetAllNonBlockedUsersTests {
   @Test
   fun getAllNonBlockedUsers_shouldReturnNonBlockedUsers() {
     val location =
-        MutableStateFlow(
-            Location("mock_provider").apply {
-              latitude = 0.0
-              longitude = 0.0
-            })
+        Location("mock_provider").apply {
+          latitude = 0.0
+          longitude = 0.0
+        }
     // Create test users
     val currentUser =
         User(
@@ -174,11 +172,10 @@ class GetAllNonBlockedUsersTests {
   @Test
   fun getAllNonBlockedUsers_shouldHandleEmptyBlockedList() {
     val location =
-        MutableStateFlow(
-            Location("mock_provider").apply {
-              latitude = 0.0
-              longitude = 0.0
-            })
+        Location("mock_provider").apply {
+          latitude = 0.0
+          longitude = 0.0
+        }
     val currentUser =
         User(
             uid = "1",

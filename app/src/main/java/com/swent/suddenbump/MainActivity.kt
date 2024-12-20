@@ -182,6 +182,7 @@ class MainActivity : ComponentActivity() {
         status = true,
         onSuccess = { Log.d("UserStatus", "Online status updated") },
         onFailure = { e -> Log.e("UserStatus", "Error updating online status: ${e.message}") })
+    userViewModelActivity.loadFriends()
   }
 
   override fun onDestroy() {
@@ -227,11 +228,11 @@ class MainActivity : ComponentActivity() {
     val meetingViewModelFactory: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)
     val meetingViewModel: MeetingViewModel =
         if (isUsingMockViewModel) testableMeetingViewModel else meetingViewModelFactory
-    val userViewModelFactory: UserViewModel by viewModels {
+    /*val userViewModelFactory: UserViewModel by viewModels {
       UserViewModel.provideFactory(applicationContext)
-    }
+    }*/
     val userViewModel: UserViewModel =
-        if (isUsingMockViewModel) testableUserViewModel else userViewModelFactory
+        if (isUsingMockViewModel) testableUserViewModel else userViewModelActivity
 
     LaunchedEffect(newLocation.asStateFlow()) {
       Log.d("UserviewModel", "coordinates : $newLocation")
@@ -250,7 +251,7 @@ class MainActivity : ComponentActivity() {
     }
 
     val startRoute =
-        if (!isRunningTest() && userViewModel.isUserLoggedIn()) {
+        if (!isRunningTest() && (userViewModel.isUserLoggedIn() || auth.currentUser != null)) {
           val uid = userViewModel.getSavedUid()
           Log.d("MainActivity", "User logged in: $uid")
           userViewModel.setCurrentUser(
@@ -292,7 +293,9 @@ class MainActivity : ComponentActivity() {
         }
         composable(Screen.ACCOUNT) { AccountScreen(navigationActions, userViewModel) }
         composable(Screen.BLOCKED_USERS) { BlockedUsersScreen(navigationActions, userViewModel) }
-        composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+        composable(Screen.CONTACT) {
+          ContactScreen(navigationActions, userViewModel, meetingViewModel)
+        }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
         composable(Screen.ADD_MEETING) {
           AddMeetingScreen(navigationActions, userViewModel, meetingViewModel, locationViewModel)

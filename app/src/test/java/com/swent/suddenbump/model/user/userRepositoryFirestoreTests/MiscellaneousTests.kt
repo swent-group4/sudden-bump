@@ -28,7 +28,6 @@ import com.swent.suddenbump.worker.WorkerScheduler
 import junit.framework.TestCase.assertTrue
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.jvm.isAccessible
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -104,11 +103,10 @@ class MiscellaneousTests {
   val snapshot2: DocumentSnapshot = mock(DocumentSnapshot::class.java)
 
   private val location =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
   private val user =
       User(
           uid = "1",
@@ -240,7 +238,7 @@ class MiscellaneousTests {
     `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
     userRepositoryFirestore.updateUserLocation(
-        uid = user.uid, location = location.value, onSuccess = {}, onFailure = {})
+        uid = user.uid, location = location, onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle()
 
@@ -364,7 +362,10 @@ class MiscellaneousTests {
           urfClass.declaredFunctions.first { it.name == "documentSnapshotToUserList" }
       documentSnapshotToUserListFunction.isAccessible = true
       documentSnapshotToUserListFunction.call(
-          userRepositoryFirestore, uidJsonList, { it: List<User> -> println(it) })
+          userRepositoryFirestore,
+          uidJsonList,
+          { it: List<User> -> println(it) },
+          { e: Exception -> println(e) })
 
       verify(mockImageRepository).downloadImageAsync(any(), any(), any())
     }

@@ -88,7 +88,7 @@ fun SettingsScreen(
                 SettingsOption(
                     label = "Blocked Users",
                     backgroundColor = Color.White,
-                    onClick = { navigationActions.navigateTo("BlockedUsersScreen") },
+                    onClick = { navigationActions.navigateTo(Screen.BLOCKED_USERS) },
                     modifier = Modifier.testTag("BlockedUsersOption"))
               }
               item {

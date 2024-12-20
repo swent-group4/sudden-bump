@@ -1,5 +1,10 @@
 name: Build Android APK
 
+env:
+  # The name of the main module repository
+  main_project_module: app
+
+
 on:
   workflow_dispatch:
 
@@ -11,27 +16,44 @@ jobs:
       pull-requests: write
       repository-projects: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+
+      # Set Current Date As Env Variable
+      - name: Set current date as env variable
+        run: echo "date_today=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      # Set Repository Name As Env Variable
+      - name: Set repository name as env variable
+        run: echo "repository_name=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: gradle
+
+      - name: Change wrapper permissions
+        run: chmod +x ./gradlew
+
       - name: Create local.properties and set API key
         env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
         run: |
           echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
-          echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "17"
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release.apk
-          path: app/build/outputs/apk/release/app-release.apk
+          echo "$MAPS_LOCAL_PROPERTIES" | base64 --decode > ./local.properties
 
+      - name: Build APK
+        run: |
+          ./gradlew build assemble
+          ls -R ${{ env.main_project_module }}/build/outputs/apk/
+
+      # Save time to environment variable
+      - name: Set current date and time as environment variables
+        run: echo "date_time=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+
+      # Create Release
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -42,15 +64,15 @@ jobs:
           release_name: Release ${{ github.ref_name }} Version ${{ github.run_number }}
           draft: false
           prerelease: false
-          body: "Changes in this release:\n${{ join('\n', github.event.commits.*.message) }}"
-        if: startsWith(github.ref, 'refs/heads/release/')
-      - name: Upload Release Asset
+
+      # Upload Debug APK to Release
+      - name: Upload Debug APK to Release
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/build/outputs/apk/release/app-release.apk
-          asset_name: app-release.apk
-          asset_content_type: application/vnd.android.package-archive
-        if: startsWith(github.ref, 'refs/heads/release/')
+          asset_path: app/build/outputs/apk/debug/app-debug.apk
+          asset_name: SuddenBump-Debug.apk
+          asset_content_type: application/zip
