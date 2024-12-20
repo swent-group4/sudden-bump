@@ -38,6 +38,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
@@ -46,7 +48,11 @@ import com.swent.suddenbump.ui.utils.UserProfileImage
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+fun ContactScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel,
+    meetingViewModel: MeetingViewModel
+) {
   val user = userViewModel.getSelectedContact().collectAsState().value
   var showDialog by remember { mutableStateOf(false) }
 
@@ -98,8 +104,8 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                       modifier = Modifier.testTag("deleteFriendButton"),
                       onClick = {
                         expanded = false
-                        // Show a confirmation dialog or directly call deleteFriend
-                        // For simplicity, directly call deleteFriend here:
+                        meetingViewModel.deleteAllMeetingsWithSpecificFriend(
+                            user.uid, currentUser.uid)
                         userViewModel.deleteFriend(
                             user = userViewModel.getCurrentUser().value,
                             friend = user,

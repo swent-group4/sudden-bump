@@ -222,7 +222,9 @@ class EndToEndTest2 {
           composable(Screen.SETTINGS) {
             SettingsScreen(navigationActions, userViewModel, meetingViewModel)
           }
-          composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+          composable(Screen.CONTACT) {
+            ContactScreen(navigationActions, userViewModel, meetingViewModel)
+          }
           composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
           composable(Screen.ADD_MEETING) {
             AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
@@ -255,7 +257,9 @@ class EndToEndTest2 {
         }
 
         // Add new screens from Settings.kt
-        composable("AccountScreen") { AccountScreen(navigationActions, userViewModel) }
+
+        composable("AccountScreen") { AccountScreen(navigationActions, userViewModel, meetingViewModel) }
+
       }
     }
 

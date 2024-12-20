@@ -8,8 +8,15 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import androidx.work.testing.WorkManagerTestInitHelper
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.Message
+import com.swent.suddenbump.ui.navigation.NavigationActions
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +56,16 @@ class UserViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
   private lateinit var chatRepository: ChatRepository
+  private lateinit var mockUserDocumentReference: DocumentReference
+  private lateinit var mockUserDocumentSnapshot: DocumentSnapshot
+  private lateinit var mockFirestore: FirebaseFirestore
+  private lateinit var mockUserQuerySnapshot: QuerySnapshot
+  private lateinit var mockUserCollectionReference: CollectionReference
+  private lateinit var mockPhoneCollectionReference: CollectionReference
+  private lateinit var mockEmailCollectionReference: CollectionReference
+  private lateinit var mockChatCollectionReference: CollectionReference
+  private lateinit var mockQuerySnapshot: QuerySnapshot
+  private lateinit var mockQuery: Query
   private val mutableState = MutableStateFlow(0)
 
   private val exception = Exception()
@@ -69,6 +86,16 @@ class UserViewModelTest {
     userRepository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
     userViewModel = UserViewModel(userRepository, chatRepository)
+    mockUserDocumentReference = mock(DocumentReference::class.java)
+    mockUserDocumentSnapshot = mock(DocumentSnapshot::class.java)
+    mockFirestore = mock(FirebaseFirestore::class.java)
+    mockUserQuerySnapshot = mock(QuerySnapshot::class.java)
+    mockUserCollectionReference = mock(CollectionReference::class.java)
+    mockPhoneCollectionReference = mock(CollectionReference::class.java)
+    mockEmailCollectionReference = mock(CollectionReference::class.java)
+    mockChatCollectionReference = mock(CollectionReference::class.java)
+    mockQuery = mock(Query::class.java)
+    mockQuerySnapshot = mock(QuerySnapshot::class.java)
     Dispatchers.setMain(testDispatcher)
 
     val config = Configuration.Builder().setMinimumLoggingLevel(android.util.Log.DEBUG).build()
@@ -1396,5 +1423,101 @@ class UserViewModelTest {
 
     // Assert
     verify(userRepository).saveNotificationStatus(notificationStatus)
+  }
+
+  @Test
+  fun deleteUserAccount_successfulDeletion() = runTest {
+    val currentUser = userViewModel.getCurrentUser().value
+
+    // Mocking a navigation actions instance
+    val navigationActions = mock(NavigationActions::class.java)
+
+    // Mock repository.deleteFriend calls to succeed
+    whenever(userRepository.deleteFriend(eq(currentUser.uid), any(), any(), any())).thenAnswer {
+      val onSuccess = it.arguments[2] as () -> Unit
+      onSuccess()
+      null
+    }
+
+    // Mock repository.deleteFriendRequest calls to succeed
+    whenever(userRepository.deleteFriendRequest(any(), any(), any(), any())).thenAnswer {
+      val onSuccess = it.arguments[2] as () -> Unit
+      onSuccess()
+      null
+    }
+
+    // Mock repository.deleteUserAccount call to succeed
+    whenever(userRepository.deleteUserAccount(eq(currentUser.uid), any(), any())).thenAnswer {
+      val onSuccess = it.arguments[1] as () -> Unit
+      onSuccess()
+      null
+    }
+
+    // Act
+    userViewModel.deleteUserAccount(navigationActions)
+
+    // Assert
+    // Check that logout was called and user state was reset
+    assertEquals(currentUser.uid, userViewModel.userDummy2.uid)
+    assertTrue(userViewModel.getUserFriends().value.isEmpty())
+    assertTrue(userViewModel.getUserFriendRequests().value.isEmpty())
+    assertTrue(userViewModel.getSentFriendRequests().value.isEmpty())
+
+    userViewModel.getUserFriends().value.forEach {
+      // Verify that each friend was attempted to be removed
+      verify(userRepository).deleteFriend(eq(currentUser.uid), eq(it.uid), any(), any())
+      // Verify that the requests were cleaned up
+      verify(userRepository).deleteFriendRequest(eq(currentUser.uid), eq(it.uid), any(), any())
+    }
+
+    // Verify that the user account deletion was called
+    verify(userRepository).deleteUserAccount(eq(currentUser.uid), any(), any())
+  }
+
+  @Test
+  fun deleteUserAccount_partialCleanupFailureStillDeletesAccount() = runTest {
+    // Arrange
+    val currentUser = userViewModel.getCurrentUser().value
+
+    // Mock navigation actions
+    val navigationActions = mock(NavigationActions::class.java)
+
+    val friend =
+        User(
+            uid = "friendFail",
+            firstName = "Friend",
+            lastName = "Fail",
+            phoneNumber = "+41 00 000 00 02",
+            profilePicture = null,
+            emailAddress = "friend.fail@example.com",
+            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+
+    // Mock a failure in deleting a friend
+    val deletionException = Exception("Failed to delete friend")
+
+    whenever(userRepository.deleteFriend(eq(currentUser.uid), eq(friend.uid), any(), any()))
+        .thenAnswer {
+          val onFailure = it.arguments[3] as (Exception) -> Unit
+          onFailure(deletionException)
+          null
+        }
+
+    // Mock repository.deleteUserAccount call to succeed
+    whenever(userRepository.deleteUserAccount(eq(currentUser.uid), any(), any())).thenAnswer {
+      val onSuccess = it.arguments[1] as () -> Unit
+      onSuccess()
+      null
+    }
+
+    // Act
+    userViewModel.deleteUserAccount(navigationActions)
+
+    // Assert
+    // Even if friend deletion fails, we still call deleteUserAccount
+    verify(userRepository).deleteUserAccount(eq(currentUser.uid), any(), any())
+
+    // User should be logged out
+    assertEquals(userViewModel.getCurrentUser().value.uid, userViewModel.userDummy2.uid)
+    assertTrue(userViewModel.getUserFriends().value.isEmpty())
   }
 }

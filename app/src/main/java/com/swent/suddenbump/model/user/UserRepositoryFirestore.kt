@@ -267,25 +267,6 @@ class UserRepositoryFirestore(
   }
 
   /**
-   * Deletes a user account by user ID.
-   *
-   * @param uid The user ID of the account to delete.
-   * @param onSuccess Called when the account deletion is successful.
-   * @param onFailure Called with an exception if deletion fails.
-   */
-  override fun deleteUserAccount(
-      uid: String,
-      onSuccess: () -> Unit,
-      onFailure: (Exception) -> Unit
-  ) {
-    db.collection(usersCollectionPath)
-        .document(uid)
-        .delete()
-        .addOnSuccessListener { onSuccess() }
-        .addOnFailureListener { e -> onFailure(e) }
-  }
-
-  /**
    * Retrieves friend requests received by the specified user.
    *
    * @param uid The user id whose friend requests are being retrieved.
@@ -1007,6 +988,7 @@ class UserRepositoryFirestore(
         .addOnFailureListener { onFailure(it) }
         .addOnSuccessListener { onSuccess() }
   }
+
   /**
    * Retrieves the online status of a specific user.
    *
@@ -1245,6 +1227,88 @@ class UserRepositoryFirestore(
     sharedPreferencesManager.clearPreferences()
   }
 
+  override fun deleteUserAccount(
+      uid: String,
+      onSuccess: () -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+    // References to collections
+    val userRef = db.collection(usersCollectionPath).document(uid)
+    val phoneRef = db.collection(phoneCollectionPath)
+    val emailRef = db.collection(emailCollectionPath)
+    val chatsRef = db.collection("chats")
+
+    // Step 1: Get user document
+    userRef.get().addOnCompleteListener { task ->
+      if (!task.isSuccessful || task.result?.data == null) {
+        onFailure(task.exception ?: Exception("User not found"))
+        return@addOnCompleteListener
+      }
+
+      val userData = task.result!!.data!!
+      val phoneNumber = userData["phoneNumber"]?.toString() ?: ""
+      val emailAddress = userData["emailAddress"]?.toString() ?: ""
+
+      // Prepare a list to hold all deletion tasks
+      val deletionTasks = mutableListOf<com.google.android.gms.tasks.Task<Void>>()
+
+      // Step 2 & 3: Delete from Phones and Emails collections
+      // Delete phone doc
+      if (phoneNumber.isNotEmpty()) {
+        val deletePhoneTask = phoneRef.document(phoneNumber).delete()
+        deletionTasks.add(deletePhoneTask)
+      }
+
+      // Delete email doc
+      if (emailAddress.isNotEmpty()) {
+        val deleteEmailTask = emailRef.document(emailAddress).delete()
+        deletionTasks.add(deleteEmailTask)
+      }
+
+      // Step 4: Delete all chats where uid is in participants
+      // This assumes your "chats" collection documents have a field "participants" which is an
+      // array of user uids.
+      val chatsQuery = chatsRef.whereArrayContains("participants", uid)
+      val chatsQueryTask =
+          chatsQuery
+              .get()
+              .addOnSuccessListener { snapshot ->
+                // For each chat found, delete it
+                for (doc in snapshot.documents) {
+                  val deleteChatTask = doc.reference.delete()
+                  deletionTasks.add(deleteChatTask)
+                }
+              }
+              .addOnFailureListener { onFailure(it) }
+
+      // After queries finish, we want to delete the user doc itself
+      // We must wait for chats and meetings queries to finish first before scheduling user
+      // deletion.
+      Tasks.whenAllComplete(chatsQueryTask)
+          .addOnSuccessListener {
+            // Now all queries have completed. We should have appended all delete tasks to
+            // 'deletionTasks'.
+
+            // Finally, Step 5: Delete the user document itself
+            val deleteUserTask = userRef.delete()
+            deletionTasks.add(deleteUserTask)
+
+            // Wait for all deletion tasks to complete
+            Tasks.whenAllComplete(deletionTasks).addOnCompleteListener { allTask ->
+              // Check if any task failed
+              val failedTask = allTask.result?.firstOrNull { !it.isSuccessful }
+              if (failedTask != null) {
+                onFailure(failedTask.exception ?: Exception("Unknown error during deletion"))
+              } else {
+                // All tasks succeeded
+                onSuccess()
+              }
+            }
+          }
+          .addOnFailureListener { onFailure(it) }
+    }
+  }
+
   /**
    * Shares the user's location with a friend.
    *
@@ -1382,6 +1446,72 @@ class UserRepositoryFirestore(
           }
         }
   }
+  /*getBlockedBy(uid,
+  onSuccess = { usersWhoBlockedMe ->
+      // For each user who blocked 'uid', remove 'uid' from their blockedList
+      val unblockTasks = mutableListOf<com.google.android.gms.tasks.Task<Void>>()
+      if (usersWhoBlockedMe.isEmpty()) {
+      } else {
+          for (blockingUser in usersWhoBlockedMe) {
+              val blockingUserRef = db.collection(usersCollectionPath).document(blockingUser.uid)
+              blockingUserRef.get()
+                  .addOnFailureListener { e ->
+                      onFailure(e)
+                  }
+                  .addOnSuccessListener { docSnap ->
+                      val blockedList = docSnap.get("blockedList") as? List<String> ?: emptyList()
+                      val updatedBlockedList = blockedList.filter { it != uid }
+
+                      val unblockTask = blockingUserRef.update("blockedList", updatedBlockedList)
+                      unblockTasks.add(unblockTask)
+                  }
+          }
+      }
+  },
+  onFailure = { e ->
+      // Failed to get the users who blocked me
+      onFailure(e)
+  }
+  )*/
+
+  /* override fun getBlockedBy(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  ) {
+      db.collection(usersCollectionPath)
+          .get()
+          .addOnFailureListener { exception -> onFailure(exception) }
+          .addOnSuccessListener { querySnapshot ->
+              val blockingUsers = mutableListOf<String>()
+              for (doc in querySnapshot.documents) {
+                  val blockedList = doc.data?.get("blockedList") as? List<String> ?: emptyList()
+                  // If this user has our uid in their blockedList, add their uid to blockingUsers
+                  if (blockedList.contains(uid)) {
+                      val otherUserUid = doc.data?.get("uid")?.toString()
+                      if (otherUserUid != null) {
+                          blockingUsers.add(otherUserUid)
+                      }
+                  }
+              }
+
+              if (blockingUsers.isEmpty()) {
+                  // No one has blocked this user
+                  onSuccess(emptyList())
+              } else {
+                  // Convert the blockingUsers list to a JSON-like string format
+                  // For example, if blockingUsers = ["uid1","uid2"], we want "[uid1, uid2]"
+                  val uidJsonList = blockingUsers.joinToString(prefix = "[", postfix = "]", separator = ", ")
+
+                  documentSnapshotToUserList(
+                      uidJsonList,
+                      onSuccess = { userList ->
+                          onSuccess(userList)
+                      }
+                  )
+              }
+          }
+  }*/
 
   /**
    * Retrieves the list of friends with whom the user has shared their location.

@@ -215,6 +215,11 @@ interface UserRepository {
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   )
+  /*fun getBlockedBy(
+        uid: String,
+        onSuccess: (List<User>) -> Unit,
+        onFailure: (Exception) -> Unit
+  )*/
 
   fun unblockUser(
       currentUserId: String,

@@ -42,7 +42,6 @@ import com.yalantis.ucrop.UCrop
 import java.io.File
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navigationActions: NavigationActions,
