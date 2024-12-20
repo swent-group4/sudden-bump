@@ -24,7 +24,6 @@ import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import com.swent.suddenbump.worker.WorkerScheduler
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * A Firebase Firestore-backed implementation of the UserRepository interface, managing user
