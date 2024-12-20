@@ -104,7 +104,6 @@ class AccountScreenTest {
     verify(navigationActions).navigateTo(Route.AUTH)
   }
 
-
   @Test
   fun clickingDeleteAccountShowsConfirmationDialog() {
 
@@ -114,10 +113,11 @@ class AccountScreenTest {
     composeTestRule.onNode(isDialog()).assertIsDisplayed()
     // The confirmation dialog should appear
     composeTestRule.onNodeWithText("Delete Account Confirmation").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Are you sure you want to delete your account?").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithText("Are you sure you want to delete your account?")
+        .assertIsDisplayed()
     composeTestRule.onNodeWithText("Yes").assertIsDisplayed()
     composeTestRule.onNodeWithText("No").assertIsDisplayed()
-
   }
 
   @Test
@@ -132,8 +132,9 @@ class AccountScreenTest {
 
     // The dialog should be gone now
     // Using `assertDoesNotExist` to ensure the dialog is dismissed
-    composeTestRule.onNodeWithText("Are you sure you want to delete your account?")
-      .assertDoesNotExist()
+    composeTestRule
+        .onNodeWithText("Are you sure you want to delete your account?")
+        .assertDoesNotExist()
   }
 
   /*@Test

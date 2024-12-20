@@ -26,7 +26,7 @@ import org.junit.Test
 class ContactScreenTest {
   private lateinit var navigationActions: NavigationActions
   private lateinit var userViewModel: UserViewModel
-  private lateinit var meetingViewModel : MeetingViewModel
+  private lateinit var meetingViewModel: MeetingViewModel
 
   private val friend =
       MutableStateFlow(

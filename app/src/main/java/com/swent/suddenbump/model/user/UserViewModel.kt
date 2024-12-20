@@ -751,7 +751,7 @@ open class UserViewModel(
             onFailure = { e -> Log.e(logTag, "Failed to unsend friend request: ${e.message}") })
       }
 
-      //After all references are removed, delete the user account
+      // After all references are removed, delete the user account
       repository.deleteUserAccount(
           uid = uidToDelete,
           onSuccess = {

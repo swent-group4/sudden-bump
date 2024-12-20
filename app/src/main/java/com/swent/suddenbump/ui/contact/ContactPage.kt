@@ -49,7 +49,11 @@ import com.swent.suddenbump.ui.navigation.Screen
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel, meetingViewModel: MeetingViewModel) {
+fun ContactScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel,
+    meetingViewModel: MeetingViewModel
+) {
   val user = userViewModel.getSelectedContact().collectAsState().value
   var showDialog by remember { mutableStateOf(false) }
 
@@ -103,7 +107,8 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                       modifier = Modifier.testTag("deleteFriendButton"),
                       onClick = {
                         expanded = false
-                        meetingViewModel.deleteAllMeetingsWithSpecificFriend(user.uid, currentUser.uid)
+                        meetingViewModel.deleteAllMeetingsWithSpecificFriend(
+                            user.uid, currentUser.uid)
                         userViewModel.deleteFriend(
                             user = userViewModel.getCurrentUser().value,
                             friend = user,
