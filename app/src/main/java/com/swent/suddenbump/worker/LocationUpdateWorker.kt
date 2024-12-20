@@ -56,6 +56,7 @@ class LocationUpdateWorker(
                 WorkerScheduler(applicationContext))
         val meetingRepository = MeetingRepositoryFirestore(Firebase.firestore)
         val alreadyNotifiedFriends = repository.getSavedAlreadyNotifiedFriends().toMutableList()
+        val alreadyNotifiedMeetings = repository.getSavedAlreadyNotifiedMeetings().toMutableList()
 
         val uid = repository.getSavedUid()
         val radius = repository.getSavedRadius() * 1000
@@ -86,6 +87,9 @@ class LocationUpdateWorker(
                       repository.userFriendsInRadius(
                           userLocation = location, friends = friends, radius = radius.toDouble())
                   friendsInRadius.forEach { friend ->
+                    if (!(friend.lastKnownLocation.provider == "fused" ||
+                        friend.lastKnownLocation.provider == "GPS"))
+                        return@forEach
                     if (friend.uid !in alreadyNotifiedFriends) {
                       Log.d("WorkerSuddenBump", "alreadyNotifiedFriends: $alreadyNotifiedFriends")
                       showFriendNearbyNotification(applicationContext, user.uid, friend)
@@ -109,7 +113,12 @@ class LocationUpdateWorker(
 
                   if (filteredMeetings.isNotEmpty()) {
                     filteredMeetings.forEach { meeting ->
+                      if (meeting.meetingId in alreadyNotifiedMeetings) {
+                        return@forEach
+                      }
                       showMeetingScheduledNotification(applicationContext, meeting)
+                      alreadyNotifiedMeetings.add(meeting.meetingId)
+                      repository.saveNotifiedMeeting(alreadyNotifiedMeetings)
                     }
                   } else {
                     Log.d("MeetingCheck", "No new pending meetings found")

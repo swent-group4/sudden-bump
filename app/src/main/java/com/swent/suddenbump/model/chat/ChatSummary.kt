@@ -36,3 +36,16 @@ fun convertParticipantsUidToDisplay(
       }
       .joinToString(", ")
 }
+
+/** Helper function to get last sender name */
+fun convertLastSenderUidToDisplay(
+    chatSummary: ChatSummary,
+    currentUser: User,
+    friendsList: List<User>
+): String {
+  return if (chatSummary.lastMessageSenderId == currentUser.uid) "You"
+  else
+      friendsList
+          .first { it.uid == chatSummary.lastMessageSenderId }
+          .let { "${it.firstName} ${it.lastName}" }
+}

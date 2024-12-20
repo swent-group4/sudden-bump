@@ -182,6 +182,10 @@ interface UserRepository {
 
   fun getSavedAlreadyNotifiedFriends(): List<String>
 
+  fun saveNotifiedMeeting(meetingUID: List<String>)
+
+  fun getSavedAlreadyNotifiedMeetings(): List<String>
+
   fun isUserLoggedIn(): Boolean
 
   fun logoutUser()

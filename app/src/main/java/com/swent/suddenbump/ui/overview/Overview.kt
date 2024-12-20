@@ -3,28 +3,26 @@ package com.swent.suddenbump.ui.overview
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,8 +37,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -55,17 +53,17 @@ import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
 import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
-import com.swent.suddenbump.ui.theme.violetColor
+import com.swent.suddenbump.ui.theme.Gray
+import com.swent.suddenbump.ui.theme.Pinkish
+import com.swent.suddenbump.ui.utils.UserProfileImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
-  val currentUser by userViewModel.getCurrentUser().collectAsState()
-  val groupedFriends by userViewModel.groupedFriends.collectAsState()
 
-  val context = LocalContext.current
+  val groupedFriends by userViewModel.groupedFriends.collectAsState()
 
   // Charge les emplacements des amis lorsque l'écran est composé
   LaunchedEffect(Unit) {
@@ -84,10 +82,9 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .padding(horizontal = 16.dp, vertical = 15.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
-              FloatingActionButton(
+              IconButton(
                   onClick = { navigationActions.navigateTo(Screen.SETTINGS) },
-                  modifier = Modifier.testTag("settingsFab"),
-                  containerColor = com.swent.suddenbump.ui.theme.Purple40) {
+                  modifier = Modifier.testTag("settingsFab")) {
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "Settings",
@@ -99,13 +96,12 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                   style =
                       MaterialTheme.typography.headlineMedium.copy(
                           fontSize = 30.sp, lineHeight = 44.sp),
-                  color = violetColor,
+                  color = Pinkish,
                   fontWeight = FontWeight.Bold,
                   textAlign = TextAlign.Center)
-              FloatingActionButton(
+              IconButton(
                   onClick = { navigationActions.navigateTo(Screen.ADD_CONTACT) },
-                  modifier = Modifier.testTag("seeFriendsFab"),
-                  containerColor = com.swent.suddenbump.ui.theme.Purple40) {
+                  modifier = Modifier.testTag("seeFriendsFab")) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "See Friends",
@@ -123,10 +119,10 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
       content = { pd ->
         LazyColumn(
             modifier =
-                Modifier.fillMaxHeight()
+                Modifier.fillMaxSize()
                     .background(Color.Black)
                     .padding(pd)
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
               if (groupedFriends?.isNotEmpty() == true) {
                 groupedFriends!!
@@ -134,17 +130,53 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                     .sortedBy { it.key.ordinal }
                     .forEach { (category, friendsList) ->
                       item { CategoryHeader(category) }
-                      items(friendsList) { (friend, _) ->
-                        UserRow(
-                            user = friend,
-                            navigationActions = navigationActions,
-                            userViewModel = userViewModel)
+                      item {
+                        Box(
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color.White)
+                                    .padding(8.dp)
+                                    .testTag("userList")) {
+                              LazyColumn(
+                                  modifier =
+                                      Modifier.fillMaxWidth()
+                                          .heightIn(max = 400.dp) // Constrain height of the inner
+                                  // LazyColumn
+                                  ) {
+                                    items(friendsList.size) { index ->
+                                      val (friend, _) = friendsList[index]
+                                      Column(
+                                          modifier =
+                                              Modifier
+                                                  .fillMaxWidth() // Add vertical space around each
+                                          // user
+                                          ) {
+                                            UserRow(
+                                                user = friend,
+                                                navigationActions = navigationActions,
+                                                userViewModel = userViewModel,
+                                            )
+                                            // Add a divider after each user except the last one
+                                            if (index < friendsList.size - 1) {
+                                              HorizontalDivider(
+                                                  color = Color.Gray,
+                                                  thickness = 0.5.dp,
+                                                  modifier =
+                                                      Modifier.fillMaxWidth()
+                                                          .testTag("divider")
+                                                          .padding(vertical = 4.dp))
+                                            }
+                                          }
+                                    }
+                                  }
+                            }
                       }
                     }
               } else if (groupedFriends == null) {
                 item {
                   Box(
-                      modifier = Modifier.fillMaxSize().padding(vertical = 8.dp),
+                      modifier = Modifier.fillMaxSize().padding(vertical = 4.dp),
                       contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(
                             color = Color.White, modifier = Modifier.testTag("loadingFriends"))
@@ -156,7 +188,7 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
                       text = "No friends nearby, add friends to see their location",
                       color = Color.White,
                       modifier =
-                          Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 8.dp),
+                          Modifier.testTag("noFriends").fillMaxWidth().padding(vertical = 4.dp),
                       style = MaterialTheme.typography.titleLarge,
                       textAlign = TextAlign.Center)
                 }
@@ -172,12 +204,12 @@ fun CategoryHeader(category: DistanceCategory) {
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically) {
         Canvas(modifier = Modifier.size(16.dp)) {
-          drawCircle(color = com.swent.suddenbump.ui.theme.Purple40, radius = size.minDimension / 2)
+          drawCircle(color = Pinkish, radius = size.minDimension / 2)
         }
         Text(
             text = category.title,
             style = MaterialTheme.typography.headlineSmall,
-            color = com.swent.suddenbump.ui.theme.Purple40,
+            color = Pinkish,
             modifier = Modifier.padding(start = 8.dp))
       }
 }
@@ -208,40 +240,20 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                 userViewModel.setSelectedContact(user)
                 navigationActions.navigateTo(Screen.CONTACT)
               }
-              .testTag(user.uid),
+              .testTag(user.uid)
+              .padding(vertical = 4.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-              if (user.profilePicture != null) {
-                Image(
-                    bitmap = user.profilePicture,
-                    contentDescription = "Existing profile pictures",
-                    modifier =
-                        Modifier.width(50.dp)
-                            .height(50.dp)
-                            .padding(8.dp)
-                            .testTag("profileImageNotNull_${user.uid}"))
-              } else {
-                Image(
-                    painter = painterResource(R.drawable.profile),
-                    contentDescription = "Non-Existing profile pictures",
-                    modifier =
-                        Modifier.width(50.dp)
-                            .height(50.dp)
-                            .padding(8.dp)
-                            .testTag("profileImage_${user.uid}"))
-              }
+              UserProfileImage(user, 40)
               Column {
                 Text(
                     text = "${user.firstName} ${user.lastName.first()}.",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White)
-                Text(
-                    text = locationText,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White)
+                    color = Color.Black)
+                Text(text = locationText, style = MaterialTheme.typography.bodyLarge, color = Gray)
               }
             }
         IconToggleButton(
@@ -274,8 +286,7 @@ fun UserRow(user: User, navigationActions: NavigationActions, userViewModel: Use
                   contentDescription =
                       if (isLocationShared) "Stop sharing location" else "Share location",
                   tint =
-                      if (isLocationShared) com.swent.suddenbump.ui.theme.Purple40
-                      else com.swent.suddenbump.ui.theme.PurpleGrey40,
+                      if (isLocationShared) Pinkish else com.swent.suddenbump.ui.theme.PurpleGrey40,
                   modifier = Modifier.size(24.dp).testTag("locationIcon_${user.uid}"))
             }
       }

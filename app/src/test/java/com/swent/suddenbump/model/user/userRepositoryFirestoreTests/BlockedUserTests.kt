@@ -1,5 +1,6 @@
 package com.swent.suddenbump.model.user.userRepositoryFirestoreTests
 
+import android.content.Context
 import android.location.Location
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
@@ -23,7 +24,6 @@ import com.swent.suddenbump.worker.WorkerScheduler
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -87,6 +87,8 @@ class BlockedUserTests {
 
   @Mock private lateinit var mockFriendDocumentReference: DocumentReference
 
+  @Mock private lateinit var mockContext: Context
+
   @Mock private lateinit var mockFriendDocumentSnapshot: DocumentSnapshot
   @Mock private lateinit var transaction: Transaction
 
@@ -96,11 +98,10 @@ class BlockedUserTests {
   val snapshot2: DocumentSnapshot = mock(DocumentSnapshot::class.java)
 
   private val location =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
   private val user =
       User(
           uid = "1",
@@ -121,6 +122,8 @@ class BlockedUserTests {
     if (FirebaseApp.getApps(ApplicationProvider.getApplicationContext()).isEmpty()) {
       FirebaseApp.initializeApp(ApplicationProvider.getApplicationContext())
     }
+
+    mockContext = mock(Context::class.java)
 
     userRepositoryFirestore =
         UserRepositoryFirestore(mockFirestore, mockSharedPreferencesManager, mockWorkerScheduler)

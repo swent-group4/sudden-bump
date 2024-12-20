@@ -17,7 +17,6 @@ import com.swent.suddenbump.ui.utils.testableMeetingViewModel
 import com.swent.suddenbump.ui.utils.testableUserViewModel
 import io.mockk.invoke
 import kotlin.test.assertEquals
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -75,7 +74,7 @@ class MainActivityTest {
             phoneNumber = "1234567890",
             profilePicture = null,
             emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(userLocation))
+            lastKnownLocation = userLocation)
 
     val friend =
         User(
@@ -85,7 +84,7 @@ class MainActivityTest {
             phoneNumber = "0987654321",
             profilePicture = null,
             emailAddress = "friend.user@example.com",
-            lastKnownLocation = MutableStateFlow(friendLocation))
+            lastKnownLocation = friendLocation)
 
     doAnswer { invocationOnMock ->
           val onSuccess = invocationOnMock.getArgument<(List<User>) -> Unit>(1)

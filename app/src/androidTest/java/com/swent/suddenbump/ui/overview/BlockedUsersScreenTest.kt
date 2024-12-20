@@ -31,11 +31,10 @@ class BlockedUsersScreenTest {
 
     // Create a mock location
     val mockLocation =
-        MutableStateFlow(
-            Location("mock_provider").apply {
-              latitude = 46.5180
-              longitude = 6.5680
-            })
+        Location("mock_provider").apply {
+          latitude = 46.5180
+          longitude = 6.5680
+        }
 
     // Set up test users
     currentUser =

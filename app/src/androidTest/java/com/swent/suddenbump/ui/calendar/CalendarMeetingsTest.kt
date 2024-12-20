@@ -57,7 +57,7 @@ class CalendarMeetingsScreenTest {
             phoneNumber = "+1234567890",
             profilePicture = null,
             emailAddress = "current@gmail.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
     val userFriends =
         listOf(
             User(
@@ -67,7 +67,7 @@ class CalendarMeetingsScreenTest {
                 "+12345678",
                 null,
                 "mike@example.com",
-                MutableStateFlow(Location("mock_provider"))),
+                Location("mock_provider")),
             User(
                 "friendId2",
                 "Joe",
@@ -75,7 +75,7 @@ class CalendarMeetingsScreenTest {
                 "+123456789",
                 null,
                 "joe@example.com",
-                MutableStateFlow(Location("mock_provider"))))
+                Location("mock_provider")))
 
     every { userViewModel.getUserFriends() } returns MutableStateFlow(userFriends)
     every { userViewModel.getCurrentUser() } returns MutableStateFlow(currentUser)
@@ -156,6 +156,8 @@ class CalendarMeetingsScreenTest {
 
   @Test
   fun asyncImageIsDisplayedForMeeting() {
-    composeTestRule.onNodeWithTag("profileImage", useUnmergedTree = true).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag("profileImage_friendId2", useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }
