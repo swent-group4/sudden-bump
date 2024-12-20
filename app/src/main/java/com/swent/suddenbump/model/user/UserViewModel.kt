@@ -91,7 +91,8 @@ open class UserViewModel(
   private val _recommendedFriends: MutableStateFlow<List<UserWithFriendsInCommon>> =
       if (!isRunningTest()) MutableStateFlow(emptyList())
       else MutableStateFlow(listOf(UserWithFriendsInCommon(userDummy1, 1)))
-  private val _blockedFriends: MutableStateFlow<List<User>> = MutableStateFlow(listOf(userDummy1))
+  private val _blockedFriends: MutableStateFlow<List<User>> =
+      if (isRunningTest()) MutableStateFlow(listOf(userDummy1)) else MutableStateFlow(emptyList())
   private val _userProfilePictureChanging: MutableStateFlow<Boolean> = MutableStateFlow(false)
   private val _selectedContact: MutableStateFlow<User> = MutableStateFlow(userDummy1)
   private val _friendIsOnline: MutableStateFlow<Boolean> = MutableStateFlow(false)
