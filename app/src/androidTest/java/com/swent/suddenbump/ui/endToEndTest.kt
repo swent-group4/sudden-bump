@@ -222,7 +222,9 @@ class EndToEndTest2 {
           composable(Screen.SETTINGS) {
             SettingsScreen(navigationActions, userViewModel, meetingViewModel)
           }
-          composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
+          composable(Screen.CONTACT) {
+            ContactScreen(navigationActions, userViewModel, meetingViewModel)
+          }
           composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
           composable(Screen.ADD_MEETING) {
             AddMeetingScreen(navigationActions, userViewModel, meetingViewModel)
@@ -316,7 +318,9 @@ class EndToEndTest2 {
           }
           composable(Screen.ACCOUNT) { AccountScreen(navigationActions, userViewModel) }
           composable(Screen.BLOCKED_USERS) { BlockedUsersScreen(navigationActions, userViewModel) }
-          composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel, meetingViewModel) }
+          composable(Screen.CONTACT) {
+            ContactScreen(navigationActions, userViewModel, meetingViewModel)
+          }
           composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
           composable(Screen.ADD_MEETING) {
             AddMeetingScreen(navigationActions, userViewModel, meetingViewModel, locationViewModel)

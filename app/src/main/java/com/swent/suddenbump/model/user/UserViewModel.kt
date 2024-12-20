@@ -3,7 +3,6 @@ package com.swent.suddenbump.model.user
 import android.content.Context
 import android.location.Location
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.ktx.firestore
@@ -13,7 +12,6 @@ import com.swent.suddenbump.model.chat.ChatRepository
 import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.chat.ChatSummary
 import com.swent.suddenbump.model.chat.Message
-import com.swent.suddenbump.model.image.ImageBitMapIO
 import com.swent.suddenbump.network.RetrofitInstance
 import com.swent.suddenbump.ui.utils.isRunningTest
 import com.swent.suddenbump.worker.WorkerScheduler

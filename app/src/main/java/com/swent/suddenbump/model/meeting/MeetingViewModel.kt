@@ -152,7 +152,7 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
     viewModelScope.launch {
       meetings.value.forEach { meeting ->
         if ((meeting.friendId == friendId && meeting.creatorId == currentUserID) ||
-          (meeting.friendId == currentUserID && meeting.creatorId == friendId)) {
+            (meeting.friendId == currentUserID && meeting.creatorId == friendId)) {
           deleteMeeting(meeting.meetingId)
         }
       }
