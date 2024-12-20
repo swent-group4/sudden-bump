@@ -25,7 +25,7 @@ data class User(
 }
 
 val UnknownUser = User(
-    uid = "1111",
+    uid = "unknown",
     firstName = "Unknown",
     lastName = "User",
     phoneNumber = "+33 0 00 00 00 00",
