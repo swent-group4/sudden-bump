@@ -111,7 +111,7 @@ fun MessageItem(
 ) {
   val unknownUser =
       User(
-          uid = "unknown",
+          uid = "0000000",
           firstName = "Unknown",
           lastName = "User",
           phoneNumber = "+33 0 00 00 00 00",
