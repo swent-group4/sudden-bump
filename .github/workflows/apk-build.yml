@@ -24,14 +24,16 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "17"
-      - name: Build Release APK
-        run: ./gradlew assembleRelease
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release.apk
-          path: app/build/outputs/apk/release/app-release.apk
+      - name: Build Debug APK
+        run: |
+          ./gradlew assembleDebug
+          ls -R ${{ env.main_project_module }}/build/outputs/apk/
 
+      # Save time to environment variable
+      - name: Set current date and time as environment variables
+        run: echo "date_time=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
+
+      # Create Release
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -42,15 +44,15 @@ jobs:
           release_name: Release ${{ github.ref_name }} Version ${{ github.run_number }}
           draft: false
           prerelease: false
-          body: "Changes in this release:\n${{ join('\n', github.event.commits.*.message) }}"
-        if: startsWith(github.ref, 'refs/heads/release/')
-      - name: Upload Release Asset
+
+      # Upload Debug APK to Release
+      - name: Upload Debug APK to Release
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: app/build/outputs/apk/release/app-release.apk
-          asset_name: app-release.apk
-          asset_content_type: application/vnd.android.package-archive
-        if: startsWith(github.ref, 'refs/heads/release/')
+          asset_path: app/build/outputs/apk/debug/app-debug.apk
+          asset_name: SuddenBump-Debug.apk
+          asset_content_type: application/zip
