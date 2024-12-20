@@ -10,6 +10,7 @@ import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.TopLevelDestination
+import com.swent.suddenbump.ui.utils.defaultUserOnlineValue
 import io.mockk.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
@@ -135,6 +136,8 @@ class ChatScreenTest {
   fun testFriendIsOnline_DisplaysOnlineText() {
     // **Arrange**
 
+    defaultUserOnlineValue = true
+
     // Define the user and the other friend
     val uid = "friend_id"
     val user =
@@ -182,11 +185,15 @@ class ChatScreenTest {
     // **Assert**
     composeTestRule.onNodeWithText("Online").assertIsDisplayed()
     composeTestRule.onNodeWithText("Offline").assertDoesNotExist()
+
+    defaultUserOnlineValue = false
   }
 
   @Test
   fun testFriendIsOffline_DisplaysOfflineText() {
     // **Arrange**
+
+    defaultUserOnlineValue = false
 
     // Define the user and the other friend
     val uid = "friend_id"
