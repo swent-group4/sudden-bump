@@ -1490,7 +1490,7 @@ class UserViewModelTest {
             phoneNumber = "+41 00 000 00 02",
             profilePicture = null,
             emailAddress = "friend.fail@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
 
     // Mock a failure in deleting a friend
     val deletionException = Exception("Failed to delete friend")

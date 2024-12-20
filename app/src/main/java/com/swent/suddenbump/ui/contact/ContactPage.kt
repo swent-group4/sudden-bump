@@ -38,7 +38,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
@@ -60,6 +59,7 @@ fun ContactScreen(
   val friendsList = userViewModel.getUserFriends().collectAsState().value
   val friendRequests = userViewModel.getUserFriendRequests().collectAsState().value
   val sentFriendRequests = userViewModel.getSentFriendRequests().collectAsState().value
+  val currentUser = userViewModel.getCurrentUser().collectAsState().value
 
   val isFriend = friendsList.any { it.uid == user.uid }
   val isFriendRequest = friendRequests.any { it.uid == user.uid }

@@ -291,9 +291,13 @@ class MainActivity : ComponentActivity() {
           SettingsScreen(navigationActions, userViewModel, meetingViewModel)
         }
 
-        composable(Screen.ACCOUNT) { AccountScreen(navigationActions, userViewModel) }
+        composable(Screen.ACCOUNT) {
+          AccountScreen(navigationActions, userViewModel, meetingViewModel)
+        }
         composable(Screen.BLOCKED_USERS) { BlockedUsersScreen(navigationActions, userViewModel) }
-        composable(Screen.CONTACT) {  ContactScreen(navigationActions, userViewModel, meetingViewModel) }
+        composable(Screen.CONTACT) {
+          ContactScreen(navigationActions, userViewModel, meetingViewModel)
+        }
 
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
         composable(Screen.ADD_MEETING) {
