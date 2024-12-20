@@ -36,6 +36,7 @@ import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.meeting_location.LocationViewModel
 import com.swent.suddenbump.model.meeting_location.NominatimLocationRepository
 import com.swent.suddenbump.model.notifications.NotificationsPermission
+import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.resources.C
 import com.swent.suddenbump.ui.authentication.SignInScreen
@@ -222,6 +223,13 @@ class MainActivity : ComponentActivity() {
   fun SuddenBumpApp() {
     val navController = rememberNavController()
     val navigationActions = NavigationActions(navController)
+
+    User.lastKnownLocation =
+        MutableStateFlow(
+            Location("provider").apply {
+              latitude = 0.0
+              longitude = 0.0
+            })
 
     val locationViewModel = LocationViewModel(NominatimLocationRepository(OkHttpClient()))
     val meetingViewModelFactory: MeetingViewModel = viewModel(factory = MeetingViewModel.Factory)

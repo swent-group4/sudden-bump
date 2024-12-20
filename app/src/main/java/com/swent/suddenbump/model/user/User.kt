@@ -14,6 +14,8 @@ data class User(
     val lastKnownLocation: MutableStateFlow<Location>,
 ) {
   companion object {
+    lateinit var lastKnownLocation: MutableStateFlow<Location>
+
     val UnknownUser by lazy {
       User(
           uid = "unknown",
@@ -22,12 +24,7 @@ data class User(
           phoneNumber = "+33 0 00 00 00 00",
           profilePicture = null,
           emailAddress = "mail@mail.com",
-          lastKnownLocation =
-              MutableStateFlow(
-                  Location("provider").apply {
-                    latitude = 0.0
-                    longitude = 0.0
-                  }))
+          lastKnownLocation = lastKnownLocation)
     }
   }
 
