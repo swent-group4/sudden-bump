@@ -94,32 +94,32 @@ class GetAllNonBlockedUsersTests {
     // Create test users
     val currentUser =
         User(
-            "1",
-            "Current",
-            "User",
-            "+1234567890",
-            null,
-            "current.user@example.com",
+            uid = "1",
+            firstName = "Current",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "current.user@example.com",
             lastKnownLocation = location)
 
     val nonBlockedUser =
         User(
-            "2",
-            "Non",
-            "Blocked",
-            "+0987654321",
-            null,
-            "non.blocked@example.com",
+            uid = "2",
+            firstName = "Non",
+            lastName = "Blocked",
+            phoneNumber = "+0987654321",
+            profilePicture = null,
+            emailAddress = "non.blocked@example.com",
             lastKnownLocation = location)
 
     val blockedUser =
         User(
-            "3",
-            "Blocked",
-            "User",
-            "+1122334455",
-            null,
-            "blocked.user@example.com",
+            uid = "3",
+            firstName = "Blocked",
+            lastName = "User",
+            phoneNumber = "+1122334455",
+            profilePicture = null,
+            emailAddress = "blocked.user@example.com",
             lastKnownLocation = location)
 
     // Mock query snapshot and document snapshots
@@ -175,22 +175,22 @@ class GetAllNonBlockedUsersTests {
   fun getAllNonBlockedUsers_shouldHandleEmptyBlockedList() {
     val currentUser =
         User(
-            "1",
-            "Current",
-            "User",
-            "+1234567890",
-            null,
-            "current.user@example.com",
+            uid = "1",
+            firstName = "Current",
+            lastName = "User",
+            phoneNumber = "+1234567890",
+            profilePicture = null,
+            emailAddress = "current.user@example.com",
             lastKnownLocation = location)
 
     val otherUser =
         User(
-            "2",
-            "Other",
-            "User",
-            "+0987654321",
-            null,
-            "other.user@example.com",
+            uid = "2",
+            firstName = "Other",
+            lastName = "User",
+            phoneNumber = "+0987654321",
+            profilePicture = null,
+            emailAddress = "other.user@example.com",
             lastKnownLocation = location)
 
     // Mock query snapshot and document snapshots
