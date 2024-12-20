@@ -1,5 +1,10 @@
 name: Build Android APK
 
+env:
+  # The name of the main module repository
+  main_project_module: app
+
+
 on:
   workflow_dispatch:
 
