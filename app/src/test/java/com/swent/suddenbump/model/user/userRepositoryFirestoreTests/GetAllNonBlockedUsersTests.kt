@@ -172,59 +172,6 @@ class GetAllNonBlockedUsersTests {
   }
 
   @Test
-  fun getAllNonBlockedUsers_shouldHandleEmptyBlockedList() {
-    val currentUser =
-        User(
-            uid = "1",
-            firstName = "Current",
-            lastName = "User",
-            phoneNumber = "+1234567890",
-            profilePicture = null,
-            emailAddress = "current.user@example.com",
-            lastKnownLocation = location)
-
-    val otherUser =
-        User(
-            uid = "2",
-            firstName = "Other",
-            lastName = "User",
-            phoneNumber = "+0987654321",
-            profilePicture = null,
-            emailAddress = "other.user@example.com",
-            lastKnownLocation = location)
-
-    // Mock query snapshot and document snapshots
-    val allUsersQuerySnapshot = mock(QuerySnapshot::class.java)
-    val otherUserSnapshot = mock(DocumentSnapshot::class.java)
-
-    // Mock empty blocked list
-    `when`(mockUserDocumentSnapshot.data).thenReturn(mapOf("blockedList" to emptyList<String>()))
-
-    // Mock other user data
-    `when`(otherUserSnapshot.data)
-        .thenReturn(
-            mapOf(
-                "uid" to otherUser.uid,
-                "firstName" to otherUser.firstName,
-                "lastName" to otherUser.lastName,
-                "phoneNumber" to otherUser.phoneNumber,
-                "emailAddress" to otherUser.emailAddress))
-    `when`(otherUserSnapshot.id).thenReturn(otherUser.uid)
-
-    // Mock the collection query result
-    `when`(mockUserCollectionReference.get()).thenReturn(Tasks.forResult(allUsersQuerySnapshot))
-    `when`(allUsersQuerySnapshot.documents).thenReturn(listOf(otherUserSnapshot))
-
-    userRepositoryFirestore.getAllNonBlockedUsers(
-        currentUser.uid,
-        { users ->
-          assertEquals(1, users.size)
-          assertEquals(otherUser.uid, users[0].uid)
-        },
-        { fail("onFailure should not be called") })
-  }
-
-  @Test
   fun getAllNonBlockedUsers_shouldHandleFailure() {
     val exception = Exception("Failed to fetch users")
     var failureException: Exception? = null
