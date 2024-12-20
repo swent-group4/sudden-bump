@@ -1244,33 +1244,7 @@ class UserRepositoryFirestore(
                 deletionTasks.add(deleteEmailTask)
             }
 
-            getBlockedBy(uid,
-                onSuccess = { usersWhoBlockedMe ->
-                    // For each user who blocked 'uid', remove 'uid' from their blockedList
-                    val unblockTasks = mutableListOf<com.google.android.gms.tasks.Task<Void>>()
-                    if (usersWhoBlockedMe.isEmpty()) {
-                    } else {
-                        for (blockingUser in usersWhoBlockedMe) {
-                            val blockingUserRef = db.collection(usersCollectionPath).document(blockingUser.uid)
-                            blockingUserRef.get()
-                                .addOnFailureListener { e ->
-                                    onFailure(e)
-                                }
-                                .addOnSuccessListener { docSnap ->
-                                    val blockedList = docSnap.get("blockedList") as? List<String> ?: emptyList()
-                                    val updatedBlockedList = blockedList.filter { it != uid }
 
-                                    val unblockTask = blockingUserRef.update("blockedList", updatedBlockedList)
-                                    unblockTasks.add(unblockTask)
-                                }
-                        }
-                    }
-                },
-                onFailure = { e ->
-                    // Failed to get the users who blocked me
-                    onFailure(e)
-                }
-            )
 
             // Step 4: Delete all chats where uid is in participants
             // This assumes your "chats" collection documents have a field "participants" which is an

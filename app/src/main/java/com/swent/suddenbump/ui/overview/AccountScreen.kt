@@ -109,7 +109,7 @@ fun AccountScreen(
   if (showDeleteAccountDialog) {
     AlertDialog(
         onDismissRequest = { showDeleteAccountDialog = false },
-        title = { Text(text = "Delete Account") },
+        title = { Text(text = "Delete Account Confirmation") },
         text = { Text(text = "Are you sure you want to delete your account?") },
         confirmButton = {
           Button(

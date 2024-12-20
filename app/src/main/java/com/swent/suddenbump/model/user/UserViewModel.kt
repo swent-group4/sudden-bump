@@ -738,7 +738,7 @@ open class UserViewModel(
         declineFriendRequest(
             user = currentUser,
             friend = requester,
-            onSuccess = { {} },
+            onSuccess = {},
             onFailure = { e -> Log.e(logTag, "Failed to decline friend request: ${e.message}") })
       }
 
@@ -751,7 +751,7 @@ open class UserViewModel(
             onFailure = { e -> Log.e(logTag, "Failed to unsend friend request: ${e.message}") })
       }
 
-      // 3. After all references are removed, delete the user account
+      //After all references are removed, delete the user account
       repository.deleteUserAccount(
           uid = uidToDelete,
           onSuccess = {
@@ -771,23 +771,6 @@ open class UserViewModel(
             Log.e(logTag, "Failed to delete user account after error: ${exception.message}")
           })
     }
-  }
-
-  private fun finalizeAccountDeletion(uid: String) {
-    // First logout the user and clear local state
-    logout()
-
-    // Now call the repository method to delete the account from Firestore and related data
-    repository.deleteUserAccount(
-        uid = uid,
-        onSuccess = {
-          // Show a success message
-          _statusMessage.postValue("User account successfully deleted!")
-        },
-        onFailure = { exception ->
-          // Handle the failure
-          _statusMessage.postValue("Failed to delete user account: ${exception.message}")
-        })
   }
 
   private val _messages = MutableStateFlow<List<Message>>(emptyList())

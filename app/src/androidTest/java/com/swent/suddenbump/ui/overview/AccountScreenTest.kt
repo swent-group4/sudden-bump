@@ -2,6 +2,7 @@ package com.swent.suddenbump.ui.overview
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -99,5 +100,52 @@ class AccountScreenTest {
     composeTestRule.onNodeWithTag("logoutSection").assertHasClickAction()
     composeTestRule.onNodeWithTag("logoutSection").performClick()
     verify(navigationActions).navigateTo(Route.AUTH)
+  }
+
+
+  @Test
+  fun clickingDeleteAccountShowsConfirmationDialog() {
+
+    // Click on the "Delete Account" section
+    composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
+
+    composeTestRule.onNode(isDialog()).assertIsDisplayed()
+    // The confirmation dialog should appear
+    composeTestRule.onNodeWithText("Delete Account Confirmation").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Are you sure you want to delete your account?").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Yes").assertIsDisplayed()
+    composeTestRule.onNodeWithText("No").assertIsDisplayed()
+
+  }
+
+  @Test
+  fun clickingNoOnDeleteAccountDialogDismissesIt() {
+    // Show the dialog
+    composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
+
+    composeTestRule.onNode(isDialog()).assertIsDisplayed()
+
+    // Click "No" to dismiss
+    composeTestRule.onNodeWithText("No").performClick()
+
+    // The dialog should be gone now
+    // Using `assertDoesNotExist` to ensure the dialog is dismissed
+    composeTestRule.onNodeWithText("Are you sure you want to delete your account?")
+      .assertDoesNotExist()
+  }
+
+  @Test
+  fun clickingYesOnDeleteAccountDialogCallsViewModelAndNavigates() {
+    // Show the dialog
+    composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
+
+    composeTestRule.onNode(isDialog()).assertIsDisplayed()
+
+    // Click "Yes" to confirm
+    composeTestRule.onNodeWithText("Yes").performClick()
+
+    // Verify that the userViewModel and meetingViewModel methods are called
+    verify(meetingViewModel).deleteMeetingsForUser("testUid")
+    verify(userViewModel).deleteUserAccount(navigationActions)
   }
 }
