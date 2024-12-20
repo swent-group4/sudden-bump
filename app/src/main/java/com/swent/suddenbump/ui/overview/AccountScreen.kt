@@ -25,9 +25,6 @@ import com.swent.suddenbump.ui.utils.isRunningTest
 
 @Composable
 fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
-  var selectedLanguage by remember { mutableStateOf("English") }
-  var isLanguageMenuExpanded by remember { mutableStateOf(false) }
-
   val context = LocalContext.current
 
   Scaffold(
@@ -43,14 +40,6 @@ fun AccountScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                     .padding(paddingValues)
                     .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
-              item {
-                AccountOption(
-                    label = "Delete Account",
-                    backgroundColor = Color.Red,
-                    onClick = { navigationActions.navigateTo("AccountScreen") },
-                    testTag = "deleteAccountSection")
-              }
-
               item {
                 AccountOption(
                     label = "Log out",

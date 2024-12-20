@@ -65,7 +65,6 @@ fun OverviewScreen(navigationActions: NavigationActions, userViewModel: UserView
 
   val groupedFriends by userViewModel.groupedFriends.collectAsState()
 
-  // Charge les emplacements des amis lorsque l'écran est composé
   LaunchedEffect(Unit) {
     CoroutineScope(Dispatchers.IO).launch {
       Log.i("FirebaseDownload", "Request made !")

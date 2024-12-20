@@ -54,7 +54,6 @@ class AccountScreenTest {
   fun hasRequiredComponents() {
     // Verify that the top bar title "Account" is displayed
     composeTestRule.onNodeWithText("Account").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("deleteAccountSection").assertIsDisplayed()
     composeTestRule.onNodeWithTag("logoutSection").assertIsDisplayed()
   }
 
@@ -63,13 +62,6 @@ class AccountScreenTest {
     // Perform a click on the back button and verify that the goBack navigation action is triggered
     composeTestRule.onNodeWithTag("backButton").performClick()
     verify(navigationActions).goBack()
-  }
-
-  @Test
-  fun deleteAccountButtonNavigatesToAccountScreen() {
-    // Perform a click on the "Delete Account" section
-    composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
-    verify(navigationActions).navigateTo("AccountScreen")
   }
 
   @Test
