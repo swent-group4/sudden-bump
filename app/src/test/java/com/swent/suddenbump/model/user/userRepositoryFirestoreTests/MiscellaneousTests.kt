@@ -18,6 +18,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.storage.StorageReference
+import com.google.gson.Gson
 import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.user.SharedPreferencesManager
 import com.swent.suddenbump.model.user.User
@@ -27,7 +28,6 @@ import com.swent.suddenbump.worker.WorkerScheduler
 import junit.framework.TestCase.assertTrue
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.jvm.isAccessible
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -103,11 +103,10 @@ class MiscellaneousTests {
   val snapshot2: DocumentSnapshot = mock(DocumentSnapshot::class.java)
 
   private val location =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
   private val user =
       User(
           uid = "1",
@@ -239,7 +238,7 @@ class MiscellaneousTests {
     `when`(mockUserDocumentReference.update(anyString(), any())).thenReturn(mockTaskVoid)
 
     userRepositoryFirestore.updateUserLocation(
-        uid = user.uid, location = location.value, onSuccess = {}, onFailure = {})
+        uid = user.uid, location = location, onSuccess = {}, onFailure = {})
 
     shadowOf(Looper.getMainLooper()).idle()
 
@@ -472,5 +471,46 @@ class MiscellaneousTests {
 
     // Verify that shared preferences were cleared
     verify(mockSharedPreferencesManager).clearPreferences()
+  }
+
+  @Test
+  fun saveNotifiedMeetings_shouldSaveListAsJsonString() {
+    val meetingsID = listOf("meeting1", "meeting2", "meeting3")
+    val gson = Gson()
+    val expectedJson = gson.toJson(meetingsID)
+
+    // Act
+    userRepositoryFirestore.saveNotifiedMeeting(meetingsID)
+
+    // Verify JSON string is saved in SharedPreferences
+    verify(sharedPreferencesEditor).putString("notified_meetings", expectedJson)
+    verify(sharedPreferencesEditor).apply()
+  }
+
+  @Test
+  fun getSavedAlreadyNotifiedMeetings_shouldReturnSavedList() {
+    val meetingsID = listOf("meeting1", "meeting2", "meeting3")
+    val gson = Gson()
+    val jsonString = gson.toJson(meetingsID)
+
+    // Mock SharedPreferences to return the JSON string
+    `when`(mockSharedPreferencesManager.getString("notified_meetings")).thenReturn(jsonString)
+    // Act
+    val result = userRepositoryFirestore.getSavedAlreadyNotifiedMeetings()
+
+    // Assert the result matches the expected list
+    assertEquals(meetingsID, result)
+  }
+
+  @Test
+  fun getSavedAlreadyNotifiedMeetings_shouldReturnEmptyListWhenNoData() {
+    // Mock SharedPreferences to return null
+    `when`(mockSharedPreferencesManager.getString("notified_meetings")).thenReturn("")
+
+    // Act
+    val result = userRepositoryFirestore.getSavedAlreadyNotifiedMeetings()
+
+    // Assert the result is an empty list
+    assertEquals(emptyList<String>(), result)
   }
 }

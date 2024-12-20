@@ -46,7 +46,7 @@ class OverviewScreenTest {
           phoneNumber = "+1234567890",
           profilePicture = null,
           emailAddress = "john.doe@example.com",
-          lastKnownLocation = MutableStateFlow(location1))
+          lastKnownLocation = location1)
 
   private val user2 =
       User(
@@ -56,7 +56,7 @@ class OverviewScreenTest {
           phoneNumber = "+1234567891",
           profilePicture = ImageBitmap(100, 100),
           emailAddress = "jane.smith@example.com",
-          lastKnownLocation = MutableStateFlow(location2))
+          lastKnownLocation = location2)
 
   @Before
   fun setUp() {
@@ -175,7 +175,7 @@ class OverviewScreenTest {
         .onNodeWithTag("profileImage_${user1.uid}", useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag("profileImageNotNull_${user2.uid}", useUnmergedTree = true)
+        .onNodeWithTag("profileImage_${user2.uid}", useUnmergedTree = true)
         .assertIsDisplayed()
   }
 

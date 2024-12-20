@@ -23,7 +23,6 @@ import com.swent.suddenbump.model.image.ImageRepository
 import com.swent.suddenbump.model.image.ImageRepositoryFirebaseStorage
 import com.swent.suddenbump.worker.WorkerScheduler
 import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
  * A Firebase Firestore-backed implementation of the UserRepository interface, managing user
@@ -36,7 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class UserRepositoryFirestore(
     private val db: FirebaseFirestore,
     private val sharedPreferencesManager: SharedPreferencesManager,
-    private val workerScheduler: WorkerScheduler
+    private val workerScheduler: WorkerScheduler,
 ) : UserRepository {
 
   private val logTag = "UserRepositoryFirestore"
@@ -49,7 +48,8 @@ class UserRepositoryFirestore(
   private val storage = Firebase.storage("gs://sudden-bump-swent.appspot.com")
   private val profilePicturesRef: StorageReference = storage.reference.child("profilePictures")
 
-  override val imageRepository: ImageRepository = ImageRepositoryFirebaseStorage(storage)
+  override val imageRepository: ImageRepository =
+      ImageRepositoryFirebaseStorage(storage, sharedPreferencesManager)
 
   private lateinit var verificationId: String
 
@@ -296,7 +296,22 @@ class UserRepositoryFirestore(
                 .addOnSuccessListener { documents ->
                   val friendRequestsList =
                       documents.mapNotNull { document ->
-                        helper.documentSnapshotToUser(document, null)
+                        var profilePicture: ImageBitmap? = null
+                        val path =
+                            helper.uidToProfilePicturePath(
+                                document.data!!["uid"].toString(), profilePicturesRef)
+                        imageRepository.downloadImage(
+                            path,
+                            onSuccess = { image ->
+                              profilePicture = image
+                              Log.d(
+                                  logTag,
+                                  "Successfully retrieved image for id : ${document.id}, picture : $profilePicture")
+                            },
+                            onFailure = {
+                              Log.e(logTag, "Failed to retrieve image for id : ${document.id}")
+                            })
+                        helper.documentSnapshotToUser(document, profilePicture)
                       }
                   onSuccess(friendRequestsList)
                 }
@@ -682,6 +697,9 @@ class UserRepositoryFirestore(
                       },
                       onFailure = {
                         Log.e(logTag, "Failed to retrieve image for id : ${doc.id}")
+                        val userFriend = helper.documentSnapshotToUser(doc, profilePicture)
+                        friendsListMutable = friendsListMutable + userFriend
+
                         counterFriend++
                         if (counterFriend == documents.size) {
                           onSuccess(friendsListMutable)
@@ -792,10 +810,24 @@ class UserRepositoryFirestore(
                         // Calculate number of friends in common
                         val commonFriendsCount =
                             currentUserFriendsList.intersect(otherUserFriendsList.toSet()).size
-
+                        var profilePicture: ImageBitmap? = null
+                        val path =
+                            helper.uidToProfilePicturePath(
+                                document.data!!["uid"].toString(), profilePicturesRef)
+                        imageRepository.downloadImage(
+                            path,
+                            onSuccess = { image ->
+                              profilePicture = image
+                              Log.d(
+                                  logTag,
+                                  "Successfully retrieved image for id : ${document.id}, picture : $profilePicture")
+                            },
+                            onFailure = {
+                              Log.e(logTag, "Failed to retrieve image for id : ${document.id}")
+                            })
                         // Create RecommendedFriend object with user and common friends count
                         UserWithFriendsInCommon(
-                            user = helper.documentSnapshotToUser(document, null),
+                            user = helper.documentSnapshotToUser(document, profilePicture),
                             friendsInCommon = commonFriendsCount)
                       } else {
                         null
@@ -1030,9 +1062,7 @@ class UserRepositoryFirestore(
       friends: List<User>,
       radius: Double
   ): List<User> {
-    return friends.filter { friend ->
-      userLocation.distanceTo(friend.lastKnownLocation.value) <= radius
-    }
+    return friends.filter { friend -> userLocation.distanceTo(friend.lastKnownLocation) <= radius }
   }
 
   /**
@@ -1143,6 +1173,27 @@ class UserRepositoryFirestore(
     }
   }
 
+  override fun saveNotifiedMeeting(meetingUID: List<String>) {
+    val gson = Gson()
+    val jsonString = gson.toJson(meetingUID) // Convert list to JSON string
+    sharedPreferencesManager.saveString("notified_meetings", jsonString)
+  }
+
+  /**
+   * Retrieves the saved meetings ID from shared preferences.
+   *
+   * @return The saved meetings ID as a String, or an empty string if no user is logged in.
+   */
+  override fun getSavedAlreadyNotifiedMeetings(): List<String> {
+    val gson = Gson()
+    val jsonString = sharedPreferencesManager.getString("notified_meetings")
+    return if (jsonString != "") {
+      gson.fromJson(jsonString, object : TypeToken<List<String>>() {}.type)
+    } else {
+      emptyList() // Return an empty list if no data is found
+    }
+  }
+
   override fun saveRadius(radius: Float) {
     sharedPreferencesManager.saveString("radius", radius.toString())
   }
@@ -1213,32 +1264,6 @@ class UserRepositoryFirestore(
         val deleteEmailTask = emailRef.document(emailAddress).delete()
         deletionTasks.add(deleteEmailTask)
       }
-
-      getBlockedBy(
-          uid,
-          onSuccess = { usersWhoBlockedMe ->
-            // For each user who blocked 'uid', remove 'uid' from their blockedList
-            val unblockTasks = mutableListOf<com.google.android.gms.tasks.Task<Void>>()
-            if (usersWhoBlockedMe.isEmpty()) {} else {
-              for (blockingUser in usersWhoBlockedMe) {
-                val blockingUserRef = db.collection(usersCollectionPath).document(blockingUser.uid)
-                blockingUserRef
-                    .get()
-                    .addOnFailureListener { e -> onFailure(e) }
-                    .addOnSuccessListener { docSnap ->
-                      val blockedList = docSnap.get("blockedList") as? List<String> ?: emptyList()
-                      val updatedBlockedList = blockedList.filter { it != uid }
-
-                      val unblockTask = blockingUserRef.update("blockedList", updatedBlockedList)
-                      unblockTasks.add(unblockTask)
-                    }
-              }
-            }
-          },
-          onFailure = { e ->
-            // Failed to get the users who blocked me
-            onFailure(e)
-          })
 
       // Step 4: Delete all chats where uid is in participants
       // This assumes your "chats" collection documents have a field "participants" which is an
@@ -1420,41 +1445,71 @@ class UserRepositoryFirestore(
                 result.data?.get("locationSharedBy").toString(), onSuccess = { onSuccess(it) })
           }
         }
-  }
+  getBlockedBy(uid,
+  onSuccess = { usersWhoBlockedMe ->
+      // For each user who blocked 'uid', remove 'uid' from their blockedList
+      val unblockTasks = mutableListOf<com.google.android.gms.tasks.Task<Void>>()
+      if (usersWhoBlockedMe.isEmpty()) {
+      } else {
+          for (blockingUser in usersWhoBlockedMe) {
+              val blockingUserRef = db.collection(usersCollectionPath).document(blockingUser.uid)
+              blockingUserRef.get()
+                  .addOnFailureListener { e ->
+                      onFailure(e)
+                  }
+                  .addOnSuccessListener { docSnap ->
+                      val blockedList = docSnap.get("blockedList") as? List<String> ?: emptyList()
+                      val updatedBlockedList = blockedList.filter { it != uid }
 
-  override fun getBlockedBy(
+                      val unblockTask = blockingUserRef.update("blockedList", updatedBlockedList)
+                      unblockTasks.add(unblockTask)
+                  }
+          }
+      }
+  },
+  onFailure = { e ->
+      // Failed to get the users who blocked me
+      onFailure(e)
+  }
+  ) }
+
+   override fun getBlockedBy(
       uid: String,
       onSuccess: (List<User>) -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    db.collection(usersCollectionPath)
-        .get()
-        .addOnFailureListener { exception -> onFailure(exception) }
-        .addOnSuccessListener { querySnapshot ->
-          val blockingUsers = mutableListOf<String>()
-          for (doc in querySnapshot.documents) {
-            val blockedList = doc.data?.get("blockedList") as? List<String> ?: emptyList()
-            // If this user has our uid in their blockedList, add their uid to blockingUsers
-            if (blockedList.contains(uid)) {
-              val otherUserUid = doc.data?.get("uid")?.toString()
-              if (otherUserUid != null) {
-                blockingUsers.add(otherUserUid)
+      db.collection(usersCollectionPath)
+          .get()
+          .addOnFailureListener { exception -> onFailure(exception) }
+          .addOnSuccessListener { querySnapshot ->
+              val blockingUsers = mutableListOf<String>()
+              for (doc in querySnapshot.documents) {
+                  val blockedList = doc.data?.get("blockedList") as? List<String> ?: emptyList()
+                  // If this user has our uid in their blockedList, add their uid to blockingUsers
+                  if (blockedList.contains(uid)) {
+                      val otherUserUid = doc.data?.get("uid")?.toString()
+                      if (otherUserUid != null) {
+                          blockingUsers.add(otherUserUid)
+                      }
+                  }
               }
-            }
-          }
 
-          if (blockingUsers.isEmpty()) {
-            // No one has blocked this user
-            onSuccess(emptyList())
-          } else {
-            // Convert the blockingUsers list to a JSON-like string format
-            // For example, if blockingUsers = ["uid1","uid2"], we want "[uid1, uid2]"
-            val uidJsonList =
-                blockingUsers.joinToString(prefix = "[", postfix = "]", separator = ", ")
+              if (blockingUsers.isEmpty()) {
+                  // No one has blocked this user
+                  onSuccess(emptyList())
+              } else {
+                  // Convert the blockingUsers list to a JSON-like string format
+                  // For example, if blockingUsers = ["uid1","uid2"], we want "[uid1, uid2]"
+                  val uidJsonList = blockingUsers.joinToString(prefix = "[", postfix = "]", separator = ", ")
 
-            documentSnapshotToUserList(uidJsonList, onSuccess = { userList -> onSuccess(userList) })
+                  documentSnapshotToUserList(
+                      uidJsonList,
+                      onSuccess = { userList ->
+                          onSuccess(userList)
+                      }
+                  )
+              }
           }
-        }
   }
 
   /**
@@ -1571,7 +1626,7 @@ class UserRepositoryFirestoreHelper {
         "lastName" to user.lastName,
         "phoneNumber" to user.phoneNumber,
         "emailAddress" to user.emailAddress,
-        "lastKnownLocation" to locationToString(user.lastKnownLocation.value))
+        "lastKnownLocation" to locationToString(user.lastKnownLocation))
   }
 
   /**
@@ -1669,7 +1724,7 @@ class UserRepositoryFirestoreHelper {
         phoneNumber = document.data?.get("phoneNumber").toString(),
         emailAddress = document.data?.get("emailAddress").toString(),
         profilePicture = profilePicture,
-        lastKnownLocation = MutableStateFlow(lastKnownLocation ?: Location("")),
+        lastKnownLocation = lastKnownLocation ?: Location(""),
     )
   }
 

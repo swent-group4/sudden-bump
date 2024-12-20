@@ -182,6 +182,10 @@ interface UserRepository {
 
   fun getSavedAlreadyNotifiedFriends(): List<String>
 
+  fun saveNotifiedMeeting(meetingUID: List<String>)
+
+  fun getSavedAlreadyNotifiedMeetings(): List<String>
+
   fun isUserLoggedIn(): Boolean
 
   fun logoutUser()
@@ -212,7 +216,11 @@ interface UserRepository {
       onFailure: (Exception) -> Unit
   )
 
-  fun getBlockedBy(uid: String, onSuccess: (List<User>) -> Unit, onFailure: (Exception) -> Unit)
+  fun getBlockedBy(
+      uid: String,
+      onSuccess: (List<User>) -> Unit,
+      onFailure: (Exception) -> Unit
+  )
 
   fun unblockUser(
       currentUserId: String,

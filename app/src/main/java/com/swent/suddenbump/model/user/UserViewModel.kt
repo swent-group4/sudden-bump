@@ -41,11 +41,10 @@ open class UserViewModel(
   val chatSummaries: StateFlow<List<ChatSummary>> = _chatSummaries.asStateFlow()
 
   private val locationDummy =
-      MutableStateFlow(
-          Location("dummy").apply {
-            latitude = 0.0 // Latitude fictive
-            longitude = 0.0 // Longitude fictive
-          })
+      Location("dummy").apply {
+        latitude = 0.0 // Latitude fictive
+        longitude = 0.0 // Longitude fictive
+      }
   val testUser =
       User(
           "h33lbxyJpcj4OZQAA4QM",
@@ -467,8 +466,8 @@ open class UserViewModel(
     repository.setBlockedFriends(user.uid, blockedFriendsList, onSuccess, onFailure)
   }
 
-  fun getLocation(): StateFlow<Location> {
-    return _user.value.lastKnownLocation.asStateFlow()
+  fun getLocation(): Location {
+    return _user.value.lastKnownLocation
   }
 
   /**
@@ -485,7 +484,7 @@ open class UserViewModel(
       onSuccess: () -> Unit,
       onFailure: (Exception) -> Unit
   ) {
-    _user.value.lastKnownLocation.value = location
+    _user.value.lastKnownLocation.set(location)
     repository.updateUserLocation(user.uid, location, onSuccess, onFailure)
   }
 
@@ -570,9 +569,9 @@ open class UserViewModel(
   }
 
   fun getRelativeDistance(friend: User): Float {
-    val userLocation = _user.value.lastKnownLocation.value
-    val friendLocation = friend.lastKnownLocation.value
-    if (userLocation == locationDummy.value || friendLocation == locationDummy.value) {
+    val userLocation = _user.value.lastKnownLocation
+    val friendLocation = friend.lastKnownLocation
+    if (userLocation == locationDummy || friendLocation == locationDummy) {
       return Float.MAX_VALUE
     }
     return userLocation.distanceTo(friendLocation)
@@ -582,8 +581,8 @@ open class UserViewModel(
   private val locationCache = mutableMapOf<String, String>()
 
   /** Fetches the city and country for a given location */
-  suspend fun getCityAndCountry(location: StateFlow<Location>): String {
-    val latLng = "${location.value.latitude},${location.value.longitude}"
+  suspend fun getCityAndCountry(location: Location): String {
+    val latLng = "${location.latitude},${location.longitude}"
 
     // Check cache first
     locationCache[latLng]?.let {
@@ -632,8 +631,7 @@ open class UserViewModel(
   fun isFriendsInRadius(radius: Int): Boolean {
     loadFriends()
     _userFriends.value.forEach { friend ->
-      if (_user.value.lastKnownLocation.value.distanceTo(friend.lastKnownLocation.value) <=
-          radius) {
+      if (_user.value.lastKnownLocation.distanceTo(friend.lastKnownLocation) <= radius) {
         return true
       }
     }
@@ -738,7 +736,7 @@ open class UserViewModel(
         declineFriendRequest(
             user = currentUser,
             friend = requester,
-            onSuccess = { {} },
+            onSuccess = {},
             onFailure = { e -> Log.e(logTag, "Failed to decline friend request: ${e.message}") })
       }
 
@@ -751,7 +749,7 @@ open class UserViewModel(
             onFailure = { e -> Log.e(logTag, "Failed to unsend friend request: ${e.message}") })
       }
 
-      // 3. After all references are removed, delete the user account
+      // After all references are removed, delete the user account
       repository.deleteUserAccount(
           uid = uidToDelete,
           onSuccess = {

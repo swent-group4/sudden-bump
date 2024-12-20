@@ -14,7 +14,6 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Before
 import org.junit.Rule
@@ -31,11 +30,10 @@ class MessagesScreenTest {
   private lateinit var flowMock: Flow<List<ChatSummary>>
 
   private val locationDummy =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0 // Set latitude
-            longitude = 0.0 // Set longitude
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0 // Set latitude
+        longitude = 0.0 // Set longitude
+      }
 
   private val userDummy1 =
       User(
@@ -72,12 +70,12 @@ class MessagesScreenTest {
       }
 
   private val chatSummaryDummy =
-      ChatSummary("chat1", "this is a message1", "chat456", Timestamp.now(), 0, listOf("1", "2"))
+      ChatSummary("chat1", "this is a message1", "1", Timestamp.now(), 0, listOf("1", "2"))
   private val chatSummaryDummy2 =
       ChatSummary(
           "chat2",
           "this is a message2",
-          "chat456",
+          "2",
           Timestamp(seconds = 1729515283, nanoseconds = 0),
           0,
           listOf("2", "3"))

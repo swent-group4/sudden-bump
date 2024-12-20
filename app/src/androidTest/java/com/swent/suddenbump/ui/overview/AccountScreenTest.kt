@@ -2,6 +2,7 @@ package com.swent.suddenbump.ui.overview
 
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -13,6 +14,8 @@ import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
+import com.swent.suddenbump.ui.utils.isMockUsingOnlineDefaultValue
+import com.swent.suddenbump.ui.utils.testableOnlineDefaultValue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -42,6 +45,9 @@ class AccountScreenTest {
 
     doNothing().`when`(userRepository).logoutUser()
 
+    isMockUsingOnlineDefaultValue = true
+    testableOnlineDefaultValue = true
+
     userViewModel = UserViewModel(userRepository, chatRepository)
     composeTestRule.setContent {
       AccountScreen(
@@ -55,9 +61,6 @@ class AccountScreenTest {
   fun hasRequiredComponents() {
     // Verify that the top bar title "Account" is displayed
     composeTestRule.onNodeWithText("Account").assertIsDisplayed()
-
-    // Verify that each key section is displayed
-    composeTestRule.onNodeWithTag("languageSection").assertIsDisplayed()
     composeTestRule.onNodeWithTag("deleteAccountSection").assertIsDisplayed()
     composeTestRule.onNodeWithTag("logoutSection").assertIsDisplayed()
   }
@@ -70,22 +73,14 @@ class AccountScreenTest {
   }
 
   @Test
-  fun languageButtonOpensLanguageMenu() {
-    // Perform a click on the "Language" section
-    composeTestRule.onNodeWithTag("languageSection").performClick()
 
-    // Verify that the dropdown menu appears
-    composeTestRule.onNodeWithTag("languageMenuItem_English").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("languageMenuItem_French").assertIsDisplayed()
-    composeTestRule.onNodeWithTag("languageMenuItem_German").assertIsDisplayed()
-  }
-
-  @Test
   fun deleteAccountButtonNavigatesToAccountScreen() {
     // Perform a click on the "Delete Account" section
     composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
     verify(navigationActions).navigateTo("AccountScreen")
-  }
+
+
+  }*/
 
   @Test
   fun testLogoutSectionVisibility() {
@@ -100,4 +95,52 @@ class AccountScreenTest {
     composeTestRule.onNodeWithTag("logoutSection").performClick()
     verify(navigationActions).navigateTo(Route.AUTH)
   }
+
+  @Test
+  fun clickingDeleteAccountShowsConfirmationDialog() {
+
+    // Click on the "Delete Account" section
+    composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
+
+    composeTestRule.onNode(isDialog()).assertIsDisplayed()
+    // The confirmation dialog should appear
+    composeTestRule.onNodeWithText("Delete Account Confirmation").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithText("Are you sure you want to delete your account?")
+        .assertIsDisplayed()
+    composeTestRule.onNodeWithText("Yes").assertIsDisplayed()
+    composeTestRule.onNodeWithText("No").assertIsDisplayed()
+  }
+
+  @Test
+  fun clickingNoOnDeleteAccountDialogDismissesIt() {
+    // Show the dialog
+    composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
+
+    composeTestRule.onNode(isDialog()).assertIsDisplayed()
+
+    // Click "No" to dismiss
+    composeTestRule.onNodeWithText("No").performClick()
+
+    // The dialog should be gone now
+    // Using `assertDoesNotExist` to ensure the dialog is dismissed
+    composeTestRule
+        .onNodeWithText("Are you sure you want to delete your account?")
+        .assertDoesNotExist()
+  }
+
+  /*@Test
+  fun clickingYesOnDeleteAccountDialogCallsViewModelAndNavigates() {
+    // Show the dialog
+    composeTestRule.onNodeWithTag("deleteAccountSection").performClick()
+
+    composeTestRule.onNode(isDialog()).assertIsDisplayed()
+
+    // Click "Yes" to confirm
+    composeTestRule.onNodeWithText("Yes").performClick()
+
+    // Verify that the userViewModel and meetingViewModel methods are called
+    verify(meetingViewModel).deleteMeetingsForUser("testUid")
+    verify(userViewModel).deleteUserAccount(navigationActions)
+  }*/
 }

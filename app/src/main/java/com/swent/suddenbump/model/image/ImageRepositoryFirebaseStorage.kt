@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.google.firebase.storage.FileDownloadTask.TaskSnapshot
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.swent.suddenbump.model.user.SharedPreferencesManager
+import com.swent.suddenbump.ui.utils.isInternetAvailable
 import com.swent.suddenbump.ui.utils.isUsingMockException
 import com.swent.suddenbump.ui.utils.isUsingMockFileDownloadTask
 import com.swent.suddenbump.ui.utils.testableFileDownloadTask
@@ -24,9 +26,13 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 
-class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : ImageRepository {
+class ImageRepositoryFirebaseStorage(
+    private val storage: FirebaseStorage,
+    private val sharedPreferencesManager: SharedPreferencesManager,
+) : ImageRepository {
 
   val profilePicturesPath = "/data/data/com.swent.suddenbump/files/"
+  val context = sharedPreferencesManager.getApplicationContext()
 
   private val imageBitMapIO = ImageBitMapIO()
 
@@ -174,6 +180,46 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
     uploadTask.addOnFailureListener { onFailure(it) }.addOnSuccessListener { onSuccess() }
   }
 
+  /**
+   * Handles the downloading and decoding of an image from a remote source or local fallback.
+   *
+   * This function attempts to download an image file from a remote Firebase Storage reference,
+   * decode it into an `ImageBitmap`, and pass it to a success callback. If the device is offline or
+   * the download times out, it falls back to offline processing using the local file.
+   *
+   * @param path The relative path of the image file to be downloaded.
+   * @param imageRef The Firebase Storage reference pointing to the remote image file.
+   * @param localFile The local file where the image will be saved or read from.
+   * @param onSuccess A callback invoked upon successful decoding of the image. Receives the decoded
+   *   `ImageBitmap` as a parameter.
+   * @param onFailure A callback invoked when the download or decoding process fails. Receives the
+   *   thrown `Exception` as a parameter.
+   *
+   * The function workflow:
+   * 1. Opens a `FileInputStream` for the local file using `Dispatchers.IO` for safe disk
+   *    operations.
+   * 2. Checks for internet availability:
+   *     - If offline, invokes the `offlineDownloadImageFactory` to process the local file.
+   * 3. If online:
+   *     - Attempts to download the file from Firebase Storage within a timeout period (1,500 ms).
+   *     - Decodes the downloaded image into a `Bitmap`, converts it to an `ImageBitmap`, and
+   *       invokes the `onSuccess` callback.
+   *     - Handles task cancellation or exceptions by invoking the `onFailure` callback and ensuring
+   *       resources are cleaned up.
+   *     - If the download times out, falls back to offline processing using
+   *       `offlineDownloadImageFactory`.
+   *
+   * Exception Handling:
+   * - `CancellationException`: Logs a timeout and falls back to offline processing.
+   * - General exceptions: Logs errors, closes resources, and invokes the `onFailure` callback.
+   *
+   * Note:
+   * - The function ensures the `fileInputStream` is always closed, regardless of success or
+   *   failure.
+   * - Mocking behaviors (`isUsingMockFileDownloadTask` and `testableFileDownloadTask`) are
+   *   available for testing scenarios.
+   * - The method is `suspend`, meaning it must be called within a coroutine scope.
+   */
   private suspend fun downloadImageFactory(
       path: String,
       imageRef: StorageReference,
@@ -182,47 +228,93 @@ class ImageRepositoryFirebaseStorage(private val storage: FirebaseStorage) : Ima
       onFailure: (Exception) -> Unit
   ) {
     val fileInputStream = withContext(Dispatchers.IO) { FileInputStream(localFile) }
-    try {
-      val timeoutMillis = 1_500L
-      withTimeout(timeoutMillis) {
-        val fileDownloadTask: TaskSnapshot =
-            if (!isUsingMockFileDownloadTask) imageRef.getFile(localFile).await()
-            else testableFileDownloadTask
-        if (fileDownloadTask.task.isCanceled) {
-          fileInputStream.close()
-          Log.e("FirebaseDownload", "Download failed : $path")
-          val storageTask = fileDownloadTask.task
-          onFailure(fileDownloadTask.task.exception!!)
-        } else {
-          val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-          Log.i(
-              "FirebaseDownload",
-              "Finished online : ${profilePicturesPath + path.substringAfterLast('/')}")
-          onSuccess(bitmap.asImageBitmap())
-        }
-      }
-    } catch (e: CancellationException) {
-      Log.e("FirebaseDownload", "Download timed out", e)
+    if (!isInternetAvailable(context)) {
+      Log.i("FirebaseDownload", "Offline mode : $path")
+      offlineDownloadImageFactory(path, onSuccess, onFailure, fileInputStream)
+    } else {
       try {
-        if (isUsingMockException) {
-          isUsingMockException = false
-          throw Exception("TEST")
+        val timeoutMillis = 1_500L
+        withTimeout(timeoutMillis) {
+          val fileDownloadTask: TaskSnapshot =
+              if (!isUsingMockFileDownloadTask) imageRef.getFile(localFile).await()
+              else testableFileDownloadTask
+          if (fileDownloadTask.task.isCanceled) {
+            fileInputStream.close()
+            Log.e("FirebaseDownload", "Download failed : $path")
+            val storageTask = fileDownloadTask.task
+            onFailure(fileDownloadTask.task.exception!!)
+          } else {
+            val bitmap =
+                BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+            Log.i(
+                "FirebaseDownload",
+                "Finished online : ${profilePicturesPath + path.substringAfterLast('/')}")
+            onSuccess(bitmap.asImageBitmap())
+          }
         }
-        val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
-        Log.i(
-            "FirebaseDownload",
-            "Finished offline : ${profilePicturesPath + path.substringAfterLast('/')}")
-        onSuccess(bitmap.asImageBitmap())
-      } catch (e2: Exception) {
-        Log.e("FirebaseDownload", "Failed to download file locally", e2)
-        println(e2)
+      } catch (e: CancellationException) {
+        Log.e("FirebaseDownload", "Download timed out", e)
+        offlineDownloadImageFactory(path, onSuccess, onFailure, fileInputStream)
+      } catch (e: Exception) {
+        Log.e("FirebaseDownload", "Failed to download file", e)
         withContext(Dispatchers.IO) { fileInputStream.close() }
         onFailure(e)
       }
-    } catch (e: Exception) {
-      Log.e("FirebaseDownload", "Failed to download file", e)
+    }
+  }
+
+  /**
+   * Handles offline image download and decoding for a given file path.
+   *
+   * This function processes an image file stored locally, decoding it into an `ImageBitmap` for
+   * further use. It includes mock exception handling for testing scenarios and ensures proper
+   * resource cleanup.
+   *
+   * @param path The relative path of the image file to process.
+   * @param onSuccess A callback invoked upon successful decoding of the image. Receives the decoded
+   *   `ImageBitmap` as a parameter.
+   * @param onFailure A callback invoked when the image decoding process fails. Receives the thrown
+   *   `Exception` as a parameter.
+   * @param fileInputStream The `FileInputStream` for reading the local image file.
+   *
+   * The function works as follows:
+   * 1. Checks whether the `isUsingMockException` flag is enabled. If so, it throws a test
+   *    exception.
+   * 2. Decodes the image stream into a `Bitmap` using `BitmapFactory`.
+   * 3. Converts the `Bitmap` to an `ImageBitmap` and invokes the `onSuccess` callback.
+   * 4. Logs the completion of the decoding process.
+   * 5. Catches any exceptions that occur during the process:
+   *     - Logs the error and prints the exception.
+   *     - Closes the `fileInputStream` to release resources.
+   *     - Invokes the `onFailure` callback with the exception.
+   *
+   * @throws Exception If `isUsingMockException` is enabled or other unexpected issues occur during
+   *   file decoding.
+   *
+   * Note:
+   * - The function ensures the `fileInputStream` is closed regardless of success or failure.
+   * - All operations are performed within a coroutine scope, ensuring suspension safety.
+   */
+  private suspend fun offlineDownloadImageFactory(
+      path: String,
+      onSuccess: (ImageBitmap) -> Unit,
+      onFailure: (Exception) -> Unit,
+      fileInputStream: FileInputStream
+  ) {
+    try {
+      if (isUsingMockException) {
+        throw Exception("TEST")
+      }
+      val bitmap = BitmapFactory.decodeStream(fileInputStream).also { fileInputStream.close() }
+      Log.i(
+          "FirebaseDownload",
+          "Finished offline : ${profilePicturesPath + path.substringAfterLast('/')}")
+      onSuccess(bitmap.asImageBitmap())
+    } catch (e2: Exception) {
+      Log.e("FirebaseDownload", "Failed to download file locally", e2)
+      println(e2)
       withContext(Dispatchers.IO) { fileInputStream.close() }
-      onFailure(e)
+      onFailure(e2)
     }
   }
 }

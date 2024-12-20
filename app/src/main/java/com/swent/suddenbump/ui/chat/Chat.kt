@@ -57,6 +57,7 @@ import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.purple
+import com.swent.suddenbump.ui.utils.UserProfileImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -96,6 +97,10 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
             TopAppBar(
                 title = {
                   Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (otherUser != null) {
+                      UserProfileImage(otherUser, 40)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         "${otherUser?.firstName?.replaceFirstChar { it.uppercase() }} ${otherUser?.lastName?.replaceFirstChar { it.uppercase() }}",
                         color = Color.White)

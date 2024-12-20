@@ -36,6 +36,8 @@ object Screen {
   const val ADD_MEETING = "Add Meeting Screen"
   const val EDIT_MEETING = "Edit Meeting Screen"
   const val PENDING_MEETINGS = "Pending Meetings Screen"
+  const val BLOCKED_USERS = "Blocked Users Screen"
+  const val ACCOUNT = "Account Screen"
 }
 
 data class TopLevelDestination(val route: String, val icon: ImageVector, val textId: String)

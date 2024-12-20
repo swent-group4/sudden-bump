@@ -1,6 +1,5 @@
 package com.swent.suddenbump.ui.messages
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,18 +11,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -40,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.swent.suddenbump.model.chat.ChatSummary
+import com.swent.suddenbump.model.chat.convertLastSenderUidToDisplay
 import com.swent.suddenbump.model.chat.convertParticipantsUidToDisplay
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.BottomNavigationMenu
@@ -47,6 +44,8 @@ import com.swent.suddenbump.ui.navigation.LIST_TOP_LEVEL_DESTINATION
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.Purple80
+import com.swent.suddenbump.ui.utils.UserProfileImage
+import kotlinx.coroutines.flow.filter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,21 +61,9 @@ fun MessagesScreen(viewModel: UserViewModel, navigationActions: NavigationAction
 
   Scaffold(
       topBar = {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = {
-              BasicTextField(
-                  value = search,
-                  onValueChange = { search = it },
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .background(Color.White, shape = MaterialTheme.shapes.small)
-                          .padding(12.dp),
-                  textStyle =
-                      LocalTextStyle.current.copy(
-                          color = Color.Black,
-                          fontSize = 16.sp,
-                      ),
-                  singleLine = true)
+              Text("Messages", color = Color.White, modifier = Modifier.testTag("Messages Title"))
             },
             navigationIcon = {
               IconButton(
@@ -141,20 +128,11 @@ fun MessageItem(
             .value
             .first {
               it.uid ==
-                  message.participants
-                      .filterNot { it2 -> it2 == viewModel.getCurrentUser().value.uid }
-                      .first()
+                  message.participants.first { it2 ->
+                    it2 != viewModel.getCurrentUser().collectAsState().value.uid
+                  }
             }
-            .profilePicture
-            ?.let {
-              Image(
-                  bitmap = it,
-                  contentDescription = "Profile Avatar",
-                  modifier =
-                      Modifier.size(40.dp)
-                          .padding(start = 8.dp)
-                          .testTag("profile_picture_${message.sender}"))
-            }
+            .let { UserProfileImage(user = it, size = 40) }
 
         Column(modifier = Modifier.padding(start = 16.dp).fillMaxWidth()) {
           Row(
@@ -181,7 +159,12 @@ fun MessageItem(
               horizontalArrangement = Arrangement.SpaceBetween,
               modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "You: ${message.content}",
+                    text =
+                        convertLastSenderUidToDisplay(
+                            message,
+                            viewModel.getCurrentUser().collectAsState().value,
+                            viewModel.getUserFriends().collectAsState().value) +
+                            " : ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
                     maxLines = 1,

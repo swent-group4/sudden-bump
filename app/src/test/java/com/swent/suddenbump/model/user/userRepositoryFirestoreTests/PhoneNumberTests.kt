@@ -30,7 +30,6 @@ import com.swent.suddenbump.model.user.UserRepositoryFirestoreHelper
 import com.swent.suddenbump.worker.WorkerScheduler
 import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -111,11 +110,10 @@ class PhoneNumberTests {
   val snapshot2: DocumentSnapshot = mock(DocumentSnapshot::class.java)
 
   private val location =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
   private val user =
       User(
           uid = "1",

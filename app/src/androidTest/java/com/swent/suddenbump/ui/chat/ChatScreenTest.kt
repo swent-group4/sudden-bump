@@ -25,11 +25,10 @@ class ChatScreenTest {
   private lateinit var fakeNavigationActions: FakeNavigationActions
   private lateinit var mockNavController: NavHostController
   private val location =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("dummy").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
 
   // **Set up method to initialize mocks before each test**
   @Before
@@ -101,6 +100,8 @@ class ChatScreenTest {
       ChatScreen(viewModel = mockViewModel, navigationActions = fakeNavigationActions)
     }
 
+    composeTestRule.waitForIdle()
+
     // **Assert**
     composeTestRule.onNodeWithText("Hello").assertIsDisplayed()
     composeTestRule.onNodeWithText("Hi there").assertIsDisplayed()
@@ -112,6 +113,10 @@ class ChatScreenTest {
 
     // Since we already initialized mockViewModel and fakeNavigationActions in setUp(),
     // we can directly use them here.
+
+    val otherUser =
+        User("otherUserId", "Other", "User", "987654321", null, "other@example.com", location)
+    every { mockViewModel.user } returns otherUser
 
     // **Act**
     composeTestRule.setContent {

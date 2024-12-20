@@ -1,14 +1,11 @@
 package com.swent.suddenbump.model.chat
 
 import android.location.Location
-import com.google.firebase.firestore.*
 import com.swent.suddenbump.model.user.User
-import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.*
 
 class ChatSummaryTest {
 
@@ -16,11 +13,10 @@ class ChatSummaryTest {
   private val participants = listOf("uidUser1", "uidUser2")
 
   private val locationDummy =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0 // Set latitude
-            longitude = 0.0 // Set longitude
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0 // Set latitude
+        longitude = 0.0 // Set longitude
+      }
 
   private val userDummy1 =
       User(
@@ -101,5 +97,38 @@ class ChatSummaryTest {
 
     val result = convertParticipantsUidToDisplay(chatSummary, userDummy1, usersModified)
     assertEquals("Martin Vetterli, Martine Veto early", result)
+  }
+
+  @Test
+  fun convertLastSenderUidToDisplayWorksWithTwoUsers() {
+    val chatSummary = ChatSummary(lastMessageSenderId = userDummy1.uid)
+
+    val result = convertLastSenderUidToDisplay(chatSummary, userDummy1, users)
+    assertEquals("You", result)
+  }
+
+  @Test
+  fun convertLastSenderUidToDisplayWorksWithMultipleUsers() {
+    val userDummy3 =
+        User(
+            "3",
+            "Martine",
+            "Veto early",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            locationDummy)
+
+    val usersModified = listOf(userDummy1, userDummy2, userDummy3)
+    val chatSummary = ChatSummary(lastMessageSenderId = userDummy2.uid)
+
+    val result = convertLastSenderUidToDisplay(chatSummary, userDummy1, usersModified)
+    assertEquals("Martin Vetterli", result)
+
+    val usersModified2 = listOf(userDummy1, userDummy2, userDummy3)
+    val chatSummary2 = ChatSummary(lastMessageSenderId = userDummy3.uid)
+
+    val result2 = convertLastSenderUidToDisplay(chatSummary2, userDummy1, usersModified2)
+    assertEquals("Martine Veto early", result2)
   }
 }
