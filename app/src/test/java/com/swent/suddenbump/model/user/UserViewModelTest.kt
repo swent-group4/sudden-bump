@@ -1786,67 +1786,10 @@ class UserViewModelTest {
     }
     @Test
     fun deleteUserAccount_successfulDeletion() = runTest {
-        // Arrange
-        val currentUser = User(
-            uid = "testUserId",
-            firstName = "Test",
-            lastName = "User",
-            phoneNumber = "+41 00 000 00 01",
-            profilePicture = null,
-            emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider"))
-        )
+        val currentUser = userViewModel.getCurrentUser().value
 
         // Mocking a navigation actions instance
         val navigationActions = mock(NavigationActions::class.java)
-
-        // Mock some friends and requests to be cleaned up before deletion
-        val friend1 = User(
-            uid = "friend1",
-            firstName = "Friend",
-            lastName = "One",
-            phoneNumber = "+41 00 000 00 02",
-            profilePicture = null,
-            emailAddress = "friend.one@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider"))
-        )
-        val friend2 = User(
-            uid = "friend2",
-            firstName = "Friend",
-            lastName = "Two",
-            phoneNumber = "+41 00 000 00 03",
-            profilePicture = null,
-            emailAddress = "friend.two@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider"))
-        )
-
-        val requestFrom = User(
-            uid = "requestFrom",
-            firstName = "Requester",
-            lastName = "Inbound",
-            phoneNumber = "+41 00 000 00 04",
-            profilePicture = null,
-            emailAddress = "requester.inbound@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider"))
-        )
-
-        val requestTo = User(
-            uid = "requestTo",
-            firstName = "Requested",
-            lastName = "Outbound",
-            phoneNumber = "+41 00 000 00 05",
-            profilePicture = null,
-            emailAddress = "requested.outbound@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider"))
-        )
-
-        // Set the current user in the ViewModel
-        userViewModel.setUser(currentUser, {}, {})
-
-        // Populate friends and requests
-        (userViewModel.getUserFriends() as MutableStateFlow).value = listOf(friend1, friend2)
-        (userViewModel.getUserFriendRequests() as MutableStateFlow).value = listOf(requestFrom)
-        (userViewModel.getSentFriendRequests() as MutableStateFlow).value = listOf(requestTo)
 
         // Mock repository.deleteFriend calls to succeed
         whenever(userRepository.deleteFriend(eq(currentUser.uid), any(), any(), any())).thenAnswer {
@@ -1874,61 +1817,48 @@ class UserViewModelTest {
 
         // Assert
         // Check that logout was called and user state was reset
-        assertEquals(userViewModel.getCurrentUser().value.uid, userViewModel.userDummy2.uid)
+        assertEquals(currentUser.uid, userViewModel.userDummy2.uid)
         assertTrue(userViewModel.getUserFriends().value.isEmpty())
         assertTrue(userViewModel.getUserFriendRequests().value.isEmpty())
         assertTrue(userViewModel.getSentFriendRequests().value.isEmpty())
 
-        // Verify that each friend was attempted to be removed
-        verify(userRepository).deleteFriend(eq(currentUser.uid), eq(friend1.uid), any(), any())
-        verify(userRepository).deleteFriend(eq(currentUser.uid), eq(friend2.uid), any(), any())
-
-        // Verify that the requests were cleaned up
-        verify(userRepository).deleteFriendRequest(eq(currentUser.uid), eq(requestFrom.uid), any(), any())
-        verify(userRepository).deleteFriendRequest(eq(requestTo.uid), eq(currentUser.uid), any(), any())
+        userViewModel.getUserFriends().value.forEach {
+            // Verify that each friend was attempted to be removed
+            verify(userRepository).deleteFriend(eq(currentUser.uid), eq(it.uid), any(), any())
+            // Verify that the requests were cleaned up
+            verify(userRepository).deleteFriendRequest(eq(currentUser.uid), eq(it.uid), any(), any())
+        }
 
         // Verify that the user account deletion was called
         verify(userRepository).deleteUserAccount(eq(currentUser.uid), any(), any())
-
     }
-
     @Test
     fun deleteUserAccount_partialCleanupFailureStillDeletesAccount() = runTest {
         // Arrange
-        val currentUser = User(
-            uid = "testUserId",
-            firstName = "Test",
-            lastName = "User",
-            phoneNumber = "+41 00 000 00 01",
-            profilePicture = null,
-            emailAddress = "test.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider"))
-        )
+        val currentUser = userViewModel.getCurrentUser().value
 
         // Mock navigation actions
         val navigationActions = mock(NavigationActions::class.java)
 
-        val friend = User(
-            uid = "friendFail",
-            firstName = "Friend",
-            lastName = "Fail",
-            phoneNumber = "+41 00 000 00 02",
-            profilePicture = null,
-            emailAddress = "friend.fail@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider"))
-        )
-
-        userViewModel.setUser(currentUser, {}, {})
-        (userViewModel.getUserFriends() as MutableStateFlow).value = listOf(friend)
+        val friend =
+            User(
+                uid = "friendFail",
+                firstName = "Friend",
+                lastName = "Fail",
+                phoneNumber = "+41 00 000 00 02",
+                profilePicture = null,
+                emailAddress = "friend.fail@example.com",
+                lastKnownLocation = MutableStateFlow(Location("mock_provider")))
 
         // Mock a failure in deleting a friend
         val deletionException = Exception("Failed to delete friend")
 
-        whenever(userRepository.deleteFriend(eq(currentUser.uid), eq(friend.uid), any(), any())).thenAnswer {
-            val onFailure = it.arguments[3] as (Exception) -> Unit
-            onFailure(deletionException)
-            null
-        }
+        whenever(userRepository.deleteFriend(eq(currentUser.uid), eq(friend.uid), any(), any()))
+            .thenAnswer {
+                val onFailure = it.arguments[3] as (Exception) -> Unit
+                onFailure(deletionException)
+                null
+            }
 
         // Mock repository.deleteUserAccount call to succeed
         whenever(userRepository.deleteUserAccount(eq(currentUser.uid), any(), any())).thenAnswer {
@@ -1944,10 +1874,10 @@ class UserViewModelTest {
         // Even if friend deletion fails, we still call deleteUserAccount
         verify(userRepository).deleteUserAccount(eq(currentUser.uid), any(), any())
 
-
         // User should be logged out
         assertEquals(userViewModel.getCurrentUser().value.uid, userViewModel.userDummy2.uid)
         assertTrue(userViewModel.getUserFriends().value.isEmpty())
     }
+
 
 }
