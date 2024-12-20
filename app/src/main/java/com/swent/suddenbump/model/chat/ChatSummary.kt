@@ -2,7 +2,6 @@ package com.swent.suddenbump.model.chat
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentId
-import com.swent.suddenbump.model.user.UnknownUser
 import com.swent.suddenbump.model.user.User
 
 data class ChatSummary(
@@ -34,7 +33,7 @@ fun convertParticipantsUidToDisplay(
       .map { it2 ->
         var correctUser = friendsList.firstOrNull { it3 -> it3.uid == it2 }
         if (correctUser == null) {
-          correctUser = UnknownUser
+          correctUser = User.UnknownUser
         }
         "${correctUser.firstName} ${correctUser.lastName}"
       }
@@ -51,7 +50,7 @@ fun convertLastSenderUidToDisplay(
   else {
     var correctUser = friendsList.firstOrNull() { it.uid == chatSummary.lastMessageSenderId }
     if (correctUser == null) {
-      correctUser = UnknownUser
+      correctUser = User.UnknownUser
     }
     "${correctUser.firstName} ${correctUser.lastName}"
   }
@@ -60,7 +59,7 @@ fun convertLastSenderUidToDisplay(
 /** Helper function to get first non-current user in participants list from uid */
 fun convertFirstParticipantToUser(chatSummary: ChatSummary, friendsList: List<User>): User {
   val correctUserUid = friendsList.map { it.uid }.firstOrNull { it in chatSummary.participants }
-  var correctUser = UnknownUser
+  var correctUser = User.UnknownUser
   if (correctUserUid != null) {
     correctUser = friendsList.first { it.uid == correctUserUid }
   }
