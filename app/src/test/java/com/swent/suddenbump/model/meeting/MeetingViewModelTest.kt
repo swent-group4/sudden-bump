@@ -182,4 +182,74 @@ class MeetingViewModelTest {
     // Verify that the meeting with no matching userId was not deleted
     verify(meetingRepository, never()).deleteMeetingById(eq("meeting3"), any(), any())
   }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun deleteAllMeetingsWithSpecificFriend_deletesOnlyMatchingMeetings() = runTest {
+    // Given: Multiple mock meetings with various friendId and creatorId pairs
+    val friendId = "friendId"
+    val currentUserID = "currentUserID"
+
+    val meeting1 =
+        Meeting(
+            meetingId = "meeting1",
+            location = Location(),
+            date = Timestamp(Date()),
+            friendId = friendId,
+            creatorId = currentUserID,
+            accepted = false) // Should be deleted (matches friendId/currentUserID)
+
+    val meeting2 =
+        Meeting(
+            meetingId = "meeting2",
+            location = Location(),
+            date = Timestamp(Date()),
+            friendId = currentUserID,
+            creatorId = friendId,
+            accepted = false) // Should be deleted (inverse match: currentUserID/friendId)
+
+    val meeting3 =
+        Meeting(
+            meetingId = "meeting3",
+            location = Location(),
+            date = Timestamp(Date()),
+            friendId = "anotherUser",
+            creatorId = currentUserID,
+            accepted =
+                true) // Should NOT be deleted (does not match friendId and currentUserID pair)
+
+    val meeting4 =
+        Meeting(
+            meetingId = "meeting4",
+            location = Location(),
+            date = Timestamp(Date()),
+            friendId = friendId,
+            creatorId = "anotherUser",
+            accepted = true) // Should NOT be deleted (creatorId not currentUserID)
+
+    val mockMeetings = listOf(meeting1, meeting2, meeting3, meeting4)
+
+    // Mock the repository to return the prepared list of meetings
+    `when`(meetingRepository.getMeetings(any(), any())).thenAnswer { invocation ->
+      val onSuccess = invocation.arguments[0] as (List<Meeting>) -> Unit
+      onSuccess(mockMeetings)
+    }
+
+    // When: We fetch the meetings to populate the ViewModel
+    meetingViewModel.getMeetings()
+
+    // And: We delete all meetings with a specific friend for currentUserID
+    meetingViewModel.deleteAllMeetingsWithSpecificFriend(friendId, currentUserID)
+
+    // Advance the coroutine until idle to ensure all operations complete
+    advanceUntilIdle()
+
+    // Then: Verify that only the matching meetings (meeting1 and meeting2) are deleted
+    verify(meetingRepository).deleteMeetingById(eq("meeting1"), any(), any())
+    verify(meetingRepository).deleteMeetingById(eq("meeting2"), any(), any())
+
+    // Verify that non-matching meetings (meeting3 and meeting4) are not deleted
+    verify(meetingRepository, never()).deleteMeetingById(eq("meeting3"), any(), any())
+    verify(meetingRepository, never()).deleteMeetingById(eq("meeting4"), any(), any())
+  }
 }

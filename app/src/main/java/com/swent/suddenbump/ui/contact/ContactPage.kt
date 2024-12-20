@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.swent.suddenbump.model.meeting.MeetingViewModel
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
@@ -46,7 +47,11 @@ import com.swent.suddenbump.ui.utils.UserProfileImage
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewModel) {
+fun ContactScreen(
+    navigationActions: NavigationActions,
+    userViewModel: UserViewModel,
+    meetingViewModel: MeetingViewModel
+) {
   val user = userViewModel.getSelectedContact().collectAsState().value
   var showDialog by remember { mutableStateOf(false) }
 
@@ -58,6 +63,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
   val isFriend = friendsList.any { it.uid == user.uid }
   val isFriendRequest = friendRequests.any { it.uid == user.uid }
   val isFriendRequestSent = sentFriendRequests.any { it.uid == user.uid }
+  val currentUser = userViewModel.getCurrentUser().collectAsState().value
 
   Scaffold(
       modifier = Modifier.fillMaxSize().background(Color.Black).testTag("contactScreen"),
@@ -98,6 +104,8 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                       modifier = Modifier.testTag("deleteFriendButton"),
                       onClick = {
                         expanded = false
+                        meetingViewModel.deleteAllMeetingsWithSpecificFriend(
+                            user.uid, currentUser.uid)
                         // Show a confirmation dialog or directly call deleteFriend
                         // For simplicity, directly call deleteFriend here:
                         userViewModel.deleteFriend(
@@ -149,20 +157,30 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 50.dp, vertical = 10.dp)
-                        .testTag("phoneCard")) {
-                  Text(modifier = Modifier.padding(10.dp), text = "Phone: " + user.phoneNumber)
-                }
+            // Conditionally display the Phone Card only if users are friends
+            if (isFriend) {
+              Card(
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(horizontal = 50.dp, vertical = 10.dp)
+                          .testTag("phoneCard")) {
+                    Text(
+                        modifier = Modifier.padding(10.dp),
+                        text = "Phone: ${user.phoneNumber}",
+                        color = Color.White)
+                  }
+            }
 
+            // Always display the Email Card
             Card(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 50.dp, vertical = 10.dp)
                         .testTag("emailCard")) {
-                  Text(modifier = Modifier.padding(10.dp), text = "Email: " + user.emailAddress)
+                  Text(
+                      modifier = Modifier.padding(10.dp),
+                      text = "Email: ${user.emailAddress}",
+                      color = Color.White)
                 }
           }
 
