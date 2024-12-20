@@ -251,7 +251,7 @@ class MainActivity : ComponentActivity() {
     }
 
     val startRoute =
-        if (!isRunningTest() && userViewModel.isUserLoggedIn()) {
+        if (!isRunningTest() && (userViewModel.isUserLoggedIn() || auth.currentUser != null)) {
           val uid = userViewModel.getSavedUid()
           Log.d("MainActivity", "User logged in: $uid")
           userViewModel.setCurrentUser(
@@ -293,7 +293,9 @@ class MainActivity : ComponentActivity() {
         }
         composable(Screen.ACCOUNT) { AccountScreen(navigationActions, userViewModel) }
         composable(Screen.BLOCKED_USERS) { BlockedUsersScreen(navigationActions, userViewModel) }
-        composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+        composable(Screen.CONTACT) {
+          ContactScreen(navigationActions, userViewModel, meetingViewModel)
+        }
         composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
         composable(Screen.ADD_MEETING) {
           AddMeetingScreen(navigationActions, userViewModel, meetingViewModel, locationViewModel)

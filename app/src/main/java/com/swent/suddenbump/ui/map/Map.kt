@@ -102,7 +102,7 @@ fun SimpleMap(
 ) {
   // Initialize necessary variables and states
   val context = LocalContext.current
-  val markerState = rememberMarkerState(position = LatLng(0.0, 0.0))
+  val markerState = rememberMarkerState(position = LatLng(100.0, 200.0))
   val cameraPositionState = rememberCameraPositionState()
   var zoomDone by remember { mutableStateOf(false) }
   var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -129,12 +129,15 @@ fun SimpleMap(
   // Update user location and camera position
   LaunchedEffect(userViewModel.getLocation()) {
     userViewModel.getLocation().let {
-      val latLng = LatLng(it.value.latitude, it.value.longitude)
-      markerState.position = latLng
-      if (!zoomDone) {
-        cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
-        fetchLocationToServer(it.value, userViewModel)
-        zoomDone = true
+      Log.d("LocationUpdate", "Location updated provider: ${it.provider}")
+      if (it.provider == "fused" || it.provider == "GPS") {
+        val latLng = LatLng(it.latitude, it.longitude)
+        markerState.position = latLng
+        if (!zoomDone) {
+          cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 13f)
+          fetchLocationToServer(it, userViewModel)
+          zoomDone = true
+        }
       }
     }
   }
@@ -270,8 +273,10 @@ fun FriendsMarkers(userViewModel: UserViewModel, onFriendMarkerInfoWindowClick: 
 
   // Initialize marker states for each friend
   friends.forEach { friend ->
-    val friendLatLng =
-        LatLng(friend.lastKnownLocation.value.latitude, friend.lastKnownLocation.value.longitude)
+    if (!(friend.lastKnownLocation.provider == "fused" ||
+        friend.lastKnownLocation.provider == "GPS"))
+        return@forEach
+    val friendLatLng = LatLng(friend.lastKnownLocation.latitude, friend.lastKnownLocation.longitude)
     if (!markerStates.containsKey(friend.uid)) {
       markerStates[friend.uid] = MarkerState(position = friendLatLng)
     } else {
@@ -282,6 +287,7 @@ fun FriendsMarkers(userViewModel: UserViewModel, onFriendMarkerInfoWindowClick: 
   }
 
   friends.forEach { friend ->
+    if (friend.lastKnownLocation.provider == "incomplete") return@forEach
     val markerState = markerStates[friend.uid] ?: return@forEach
 
     // Show info window with friend's name when marker is clicked

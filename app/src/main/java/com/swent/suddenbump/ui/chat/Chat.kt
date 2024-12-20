@@ -58,6 +58,7 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.theme.purple
 import com.swent.suddenbump.ui.utils.UserProfileImage
+import com.swent.suddenbump.ui.utils.defaultUserOnlineValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -72,7 +73,7 @@ fun ChatScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
   val messages by viewModel.messages.collectAsState(emptyList())
   val user by viewModel.getCurrentUser().collectAsState()
   val otherUser = viewModel.user
-  val friendIsOnline = remember { mutableStateOf(false) }
+  val friendIsOnline = remember { mutableStateOf(defaultUserOnlineValue) }
   LaunchedEffect(Unit) {
     CoroutineScope(Dispatchers.IO).launch {
       if (otherUser != null) {

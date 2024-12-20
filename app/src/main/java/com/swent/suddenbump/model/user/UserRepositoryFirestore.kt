@@ -701,6 +701,7 @@ class UserRepositoryFirestore(
                 var friendsListMutable = emptyList<User>()
                 for (doc in documents) {
                   var profilePicture: ImageBitmap? = null
+                  Log.i(logTag, "Doing for doc : $doc")
                   val path =
                       helper.uidToProfilePicturePath(
                           doc.data!!["uid"].toString(), profilePicturesRef)
@@ -1084,9 +1085,7 @@ class UserRepositoryFirestore(
       friends: List<User>,
       radius: Double
   ): List<User> {
-    return friends.filter { friend ->
-      userLocation.distanceTo(friend.lastKnownLocation.value) <= radius
-    }
+    return friends.filter { friend -> userLocation.distanceTo(friend.lastKnownLocation) <= radius }
   }
 
   /**
@@ -1391,6 +1390,13 @@ class UserRepositoryFirestore(
         }
   }
 
+  /**
+   * Retrieves the list of friends with whom the user has shared their location.
+   *
+   * @param uid The user ID of the person retrieving the list.
+   * @param onSuccess Called with a list of User objects if retrieval succeeds.
+   * @param onFailure Called with an exception if retrieval fails.
+   */
   override fun getSharedWithFriends(
       uid: String,
       onSuccess: (List<User>) -> Unit,
@@ -1414,6 +1420,14 @@ class UserRepositoryFirestore(
         }
   }
 
+  /**
+   * Converts a JSON list of user IDs into a list of User objects by fetching their details from
+   * Firestore.
+   *
+   * @param uidJsonList The JSON-formatted String containing user IDs.
+   * @param onFailure Called with an exception if any user data retrieval fails.
+   * @return A list of User objects corresponding to the IDs in the input JSON.
+   */
   private fun documentSnapshotToUserList(
       uidJsonList: String,
       onSuccess: (List<User>) -> Unit,
@@ -1516,7 +1530,7 @@ class UserRepositoryFirestoreHelper {
         "lastName" to user.lastName,
         "phoneNumber" to user.phoneNumber,
         "emailAddress" to user.emailAddress,
-        "lastKnownLocation" to locationToString(user.lastKnownLocation.value))
+        "lastKnownLocation" to locationToString(user.lastKnownLocation))
   }
 
   /**
@@ -1614,7 +1628,7 @@ class UserRepositoryFirestoreHelper {
         phoneNumber = document.data?.get("phoneNumber").toString(),
         emailAddress = document.data?.get("emailAddress").toString(),
         profilePicture = profilePicture,
-        lastKnownLocation = MutableStateFlow(lastKnownLocation ?: Location("")),
+        lastKnownLocation = lastKnownLocation ?: Location(""),
     )
   }
 

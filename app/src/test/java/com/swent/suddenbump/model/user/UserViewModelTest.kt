@@ -1,7 +1,6 @@
 package com.swent.suddenbump.model.user
 
 import android.location.Location
-import android.util.Log
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -32,7 +31,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
@@ -51,14 +49,14 @@ class UserViewModelTest {
   private lateinit var userRepository: UserRepository
   private lateinit var userViewModel: UserViewModel
   private lateinit var chatRepository: ChatRepository
+  private val mutableState = MutableStateFlow(0)
 
   private val exception = Exception()
   private val location =
-      MutableStateFlow(
-          Location("mock_provider").apply {
-            latitude = 0.0
-            longitude = 0.0
-          })
+      Location("mock_provider").apply {
+        latitude = 0.0
+        longitude = 0.0
+      }
   private val user =
       User("2", "Martin", "Vetterli", "+41 00 000 00 01", null, "martin.vetterli@epfl.ch", location)
 
@@ -161,7 +159,7 @@ class UserViewModelTest {
             phoneNumber = "+41 00 000 00 01",
             profilePicture = null,
             emailAddress = "current.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
 
     val friend =
         User(
@@ -171,7 +169,7 @@ class UserViewModelTest {
             phoneNumber = "+41 00 000 00 02",
             profilePicture = null,
             emailAddress = "friend.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
 
     // Set current user in the ViewModel
     userViewModel.setUser(currentUser, onSuccess = {}, onFailure = {})
@@ -238,7 +236,7 @@ class UserViewModelTest {
             phoneNumber = "+41 00 000 00 01",
             profilePicture = null,
             emailAddress = "current.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
 
     val friend =
         User(
@@ -248,7 +246,7 @@ class UserViewModelTest {
             phoneNumber = "+41 00 000 00 02",
             profilePicture = null,
             emailAddress = "friend.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
 
     // Set the current user in the ViewModel
     userViewModel.setUser(currentUser, onSuccess = {}, onFailure = {})
@@ -294,7 +292,7 @@ class UserViewModelTest {
             phoneNumber = "+41 00 000 00 01",
             profilePicture = null,
             emailAddress = "current.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
 
     val friend =
         User(
@@ -304,7 +302,7 @@ class UserViewModelTest {
             phoneNumber = "+41 00 000 00 02",
             profilePicture = null,
             emailAddress = "friend.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
 
     // Set the current user in the ViewModel
     userViewModel.setUser(currentUser, onSuccess = {}, onFailure = {})
@@ -358,7 +356,7 @@ class UserViewModelTest {
             phoneNumber = "+41 00 000 00 01",
             profilePicture = null,
             emailAddress = "current.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
 
     val friend =
         User(
@@ -368,7 +366,7 @@ class UserViewModelTest {
             phoneNumber = "+41 00 000 00 02",
             profilePicture = null,
             emailAddress = "friend.user@example.com",
-            lastKnownLocation = MutableStateFlow(Location("mock_provider")))
+            lastKnownLocation = Location("mock_provider"))
 
     // Set current user in the ViewModel
     userViewModel.setUser(currentUser, onSuccess = {}, onFailure = {})
@@ -791,7 +789,7 @@ class UserViewModelTest {
             "+1234567890",
             null,
             "john.doe@example.com",
-            MutableStateFlow(Location("mock_provider")))
+            Location("mock_provider"))
     val blockedUser =
         User(
             "2",
@@ -800,7 +798,7 @@ class UserViewModelTest {
             "+0987654321",
             null,
             "jane.doe@example.com",
-            MutableStateFlow(Location("mock_provider")))
+            Location("mock_provider"))
 
     var onSuccessCalled = false
     var onFailureCalled = false
@@ -854,22 +852,22 @@ class UserViewModelTest {
           longitude = 0.0
         }
 
-    assertThat(userViewModel.getLocation().value.latitude, `is`(0.0))
-    assertThat(userViewModel.getLocation().value.longitude, `is`(0.0))
+    assertThat(userViewModel.getLocation().latitude, `is`(0.0))
+    assertThat(userViewModel.getLocation().longitude, `is`(0.0))
   }
 
   @Test
   fun updateLocation() {
-    val mockLocation = Mockito.mock(Location::class.java)
-
-    // Set up the mock to return specific values
-    Mockito.`when`(mockLocation.latitude).thenReturn(1.0)
-    Mockito.`when`(mockLocation.longitude).thenReturn(1.0)
+    val mockLocation =
+        Location("mock_provider").apply {
+          latitude = 1.0
+          longitude = 1.0
+        }
 
     userViewModel.updateLocation(location = mockLocation, onSuccess = {}, onFailure = {})
     verify(userRepository).updateUserLocation(any(), any(), any(), any())
-    assertThat(userViewModel.getLocation().value.latitude, `is`(1.0))
-    assertThat(userViewModel.getLocation().value.longitude, `is`(1.0))
+    assertThat(userViewModel.getLocation().latitude, `is`(1.0))
+    assertThat(userViewModel.getLocation().longitude, `is`(1.0))
   }
 
   @Test
@@ -882,11 +880,10 @@ class UserViewModelTest {
   fun loadFriends_success() {
 
     val friendLocation =
-        MutableStateFlow(
-            Location("mock_provider").apply {
-              latitude = 1.0
-              longitude = 1.0
-            })
+        Location("mock_provider").apply {
+          latitude = 1.0
+          longitude = 1.0
+        }
 
     // Arrange
     val friend =
@@ -939,14 +936,13 @@ class UserViewModelTest {
     // Arrange
     userViewModel.setUser(user, {}, {})
     val friendLocation =
-        MutableStateFlow(
-            Location("mock_provider").apply {
-              latitude = 1.0
-              longitude = 1.0
-            })
+        Location("mock_provider").apply {
+          latitude = 1.0
+          longitude = 1.0
+        }
     val friend =
         User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", friendLocation)
-    val friendsMap = mapOf(friend to friendLocation.value)
+    val friendsMap = mapOf(friend to friendLocation)
 
     // Mock repository method for loading friend locations
     whenever(userRepository.getUserFriends(any(), any(), any())).thenAnswer {
@@ -955,7 +951,7 @@ class UserViewModelTest {
     }
 
     // Update the user location
-    userViewModel.updateLocation(friend, friendLocation.value, onSuccess = {}, onFailure = {})
+    userViewModel.updateLocation(friend, friendLocation, onSuccess = {}, onFailure = {})
 
     // Act
     val distance = userViewModel.getRelativeDistance(friend)
@@ -969,7 +965,7 @@ class UserViewModelTest {
   @Test
   fun getRelativeDistance_unknownFriendLocation() {
     // Arrange
-    userViewModel.updateLocation(location = location.value, onSuccess = {}, onFailure = {})
+    userViewModel.updateLocation(location = location, onSuccess = {}, onFailure = {})
 
     val friend =
         User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", location)
@@ -985,15 +981,14 @@ class UserViewModelTest {
   fun getRelativeDistance_noUserLocation() {
     // Arrange
     val friendLocation =
-        MutableStateFlow(
-            Location("mock_provider").apply {
-              latitude = 1.0
-              longitude = 1.0
-            })
+        Location("mock_provider").apply {
+          latitude = 1.0
+          longitude = 1.0
+        }
     val friend =
         User("2", "Jane", "Doe", "+41 00 000 00 02", null, "jane.doe@example.com", friendLocation)
 
-    userViewModel.updateLocation(friend, friendLocation.value, onSuccess = {}, onFailure = {})
+    userViewModel.updateLocation(friend, friendLocation, onSuccess = {}, onFailure = {})
 
     // Act
     val distance = userViewModel.getRelativeDistance(friend)
@@ -1222,7 +1217,7 @@ class UserViewModelTest {
             "+41789123450",
             null,
             "current.user@example.com",
-            MutableStateFlow(Location("mock_provider")))
+            Location("mock_provider"))
     val blockedUser =
         User(
             "blocked_id",
@@ -1231,7 +1226,7 @@ class UserViewModelTest {
             "+41789123456",
             null,
             "blocked.user@example.com",
-            MutableStateFlow(Location("mock_provider")))
+            Location("mock_provider"))
 
     // Set current user
     userViewModel.setUser(currentUser, {}, {})
@@ -1289,7 +1284,7 @@ class UserViewModelTest {
             "+41789123450",
             null,
             "current.user@example.com",
-            MutableStateFlow(Location("mock_provider")))
+            Location("mock_provider"))
     val blockedUser =
         User(
             "blocked_id",
@@ -1298,7 +1293,7 @@ class UserViewModelTest {
             "+41789123456",
             null,
             "blocked.user@example.com",
-            MutableStateFlow(Location("mock_provider")))
+            Location("mock_provider"))
     val error = Exception("Failed to unblock user")
 
     // Set current user
