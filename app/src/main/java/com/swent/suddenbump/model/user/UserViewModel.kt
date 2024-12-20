@@ -773,23 +773,6 @@ open class UserViewModel(
     }
   }
 
-  private fun finalizeAccountDeletion(uid: String) {
-    // First logout the user and clear local state
-    logout()
-
-    // Now call the repository method to delete the account from Firestore and related data
-    repository.deleteUserAccount(
-        uid = uid,
-        onSuccess = {
-          // Show a success message
-          _statusMessage.postValue("User account successfully deleted!")
-        },
-        onFailure = { exception ->
-          // Handle the failure
-          _statusMessage.postValue("Failed to delete user account: ${exception.message}")
-        })
-  }
-
   private val _messages = MutableStateFlow<List<Message>>(emptyList())
   val messages: StateFlow<List<Message>> = _messages
 

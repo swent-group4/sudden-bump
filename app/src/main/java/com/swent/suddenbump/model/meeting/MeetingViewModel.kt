@@ -148,15 +148,14 @@ open class MeetingViewModel(private val repositoryMeeting: MeetingRepository) : 
    * @param friendId The ID of the friend whose meetings are to be deleted.
    * @param currentUserID The ID of the current user.
    */
-  fun deleteAllMeetingsWithSpecificFriend(friendId: String, currentUserID : String) {
+  fun deleteAllMeetingsWithSpecificFriend(friendId: String, currentUserID: String) {
     viewModelScope.launch {
       meetings.value.forEach { meeting ->
-        if ((meeting.friendId == friendId && meeting.creatorId == currentUserID)
-          || (meeting.friendId == currentUserID && meeting.creatorId == friendId)) {
+        if ((meeting.friendId == friendId && meeting.creatorId == currentUserID) ||
+            (meeting.friendId == currentUserID && meeting.creatorId == friendId)) {
           deleteMeeting(meeting.meetingId)
         }
       }
     }
   }
-
 }
