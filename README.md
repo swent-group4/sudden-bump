@@ -16,10 +16,11 @@ We’ve designed the app to make connecting and staying in touch effortless, eve
 - Already scheduled meetings can also be spotted on the calendar while offline.
 - Additionally one can still see their friends on Overview, but without their location.
 - Settings can also be accessed and the user can change their preferences.
-![photo_2024-12-20_05-02-21](https://github.com/user-attachments/assets/a531a7d5-caeb-48ad-a293-1399e128dbf7)
-![photo_2024-12-20_05-02-24](https://github.com/user-attachments/assets/6ec90747-e5ac-47e1-a944-ac75990c4d0b)
-![photo_2024-12-20_05-02-06](https://github.com/user-attachments/assets/d561be2a-180f-49e2-a24f-d2b65ef1673d)
-![photo_2024-12-20_05-02-27](https://github.com/user-attachments/assets/6d0d1cd1-57d3-4358-a7e3-320ed800b93a)
+  
+<img src="https://github.com/user-attachments/assets/a531a7d5-caeb-48ad-a293-1399e128dbf7" width=25% height=25%><img src="https://github.com/user-attachments/assets/6ec90747-e5ac-47e1-a944-ac75990c4d0b" width=25% height=25%><img src="https://github.com/user-attachments/assets/d561be2a-180f-49e2-a24f-d2b65ef1673d" width=25% height=25%><img src="https://github.com/user-attachments/assets/6d0d1cd1-57d3-4358-a7e3-320ed800b93a" width=25% height=25%>
+
+
+
 
 # Figma link:
 [figma link](https://www.figma.com/files/team/1423706194443129018/project/285510868/Team-project?fuid=1235884815250065385)
