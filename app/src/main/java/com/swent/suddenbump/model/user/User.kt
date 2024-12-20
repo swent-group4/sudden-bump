@@ -32,4 +32,8 @@ val UnknownUser =
         phoneNumber = "+33 0 00 00 00 00",
         null,
         "mail@mail.com",
-        MutableStateFlow(Location("provider")))
+        MutableStateFlow(
+            Location("provider").apply {
+              latitude = 0.0
+              longitude = 0.0
+            }))
