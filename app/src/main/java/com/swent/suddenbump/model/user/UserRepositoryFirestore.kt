@@ -700,7 +700,7 @@ class UserRepositoryFirestore(
                 var friendsListMutable = emptyList<User>()
                 for (doc in documents) {
                   var profilePicture: ImageBitmap? = null
-                    Log.i(logTag, "Doing for doc : $doc")
+                  Log.i(logTag, "Doing for doc : $doc")
                   val path =
                       helper.uidToProfilePicturePath(
                           doc.data!!["uid"].toString(), profilePicturesRef)

@@ -49,70 +49,55 @@ import com.swent.suddenbump.ui.utils.UserProfileImage
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessagesScreen(viewModel: UserViewModel, navigationActions: NavigationActions) {
-    viewModel.getChatSummaries()
-    var search by remember { mutableStateOf("") }
+  viewModel.getChatSummaries()
+  var search by remember { mutableStateOf("") }
 
-    val messages = viewModel.chatSummaries.collectAsState()
-    val list =
-        messages.value.filter { summary ->
-            summary.date != "" && summary.sender.contains(search, true)
-        }
+  val messages = viewModel.chatSummaries.collectAsState()
+  val list =
+      messages.value.filter { summary ->
+        summary.date != "" && summary.sender.contains(search, true)
+      }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Messages",
-                        color = Color.White,
-                        modifier = Modifier.testTag("Messages Title")
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigationActions.goBack() },
-                        modifier =
-                        Modifier.testTag("back_button") // Ajout du testTag pour le bouton de retour
-                    ) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors =
+  Scaffold(
+      topBar = {
+        CenterAlignedTopAppBar(
+            title = {
+              Text("Messages", color = Color.White, modifier = Modifier.testTag("Messages Title"))
+            },
+            navigationIcon = {
+              IconButton(
+                  onClick = { navigationActions.goBack() },
+                  modifier =
+                      Modifier.testTag("back_button") // Ajout du testTag pour le bouton de retour
+                  ) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                  }
+            },
+            colors =
                 TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Black,
                     titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
-        bottomBar = {
-            BottomNavigationMenu(
-                onTabSelect = { route -> navigationActions.navigateTo(route) },
-                tabList = LIST_TOP_LEVEL_DESTINATION,
-                selectedItem = navigationActions.currentRoute()
-            )
-        }) { padding ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .background(Color.Black)) {
-            LazyColumn(modifier = Modifier
-                .background(Color.Black)
-                .testTag("messages_list")) {
-                itemsIndexed(list) { index, message ->
-                    MessageItem(message, viewModel, navigationActions)
-                    if (index < messages.value.size - 1) {
-                        // Ajouter un Divider seulement si ce n'est pas le dernier message
-                        Divider(
-                            color = Color.Gray,
-                            thickness = 1.dp,
-                            modifier = Modifier.testTag("divider")
-                        )
-                    }
-                }
+                    navigationIconContentColor = Color.White))
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            onTabSelect = { route -> navigationActions.navigateTo(route) },
+            tabList = LIST_TOP_LEVEL_DESTINATION,
+            selectedItem = navigationActions.currentRoute())
+      }) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding).background(Color.Black)) {
+          LazyColumn(modifier = Modifier.background(Color.Black).testTag("messages_list")) {
+            itemsIndexed(list) { index, message ->
+              MessageItem(message, viewModel, navigationActions)
+              if (index < messages.value.size - 1) {
+                // Ajouter un Divider seulement si ce n'est pas le dernier message
+                Divider(
+                    color = Color.Gray, thickness = 1.dp, modifier = Modifier.testTag("divider"))
+              }
             }
+          }
         }
-    }
+      }
 }
 
 @Composable
@@ -121,60 +106,49 @@ fun MessageItem(
     viewModel: UserViewModel,
     navigationActions: NavigationActions
 ) {
-    Row(
-        modifier =
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = 8.dp)
+              .clickable {
                 viewModel.user =
                     convertFirstParticipantToUser(message, viewModel.getUserFriends().value)
                 navigationActions.navigateTo(Screen.CHAT)
-            }
-            .testTag("message_item_${message.sender}")) {
-        convertFirstParticipantToUser(
-            message,
-            viewModel.getUserFriends().collectAsState().value
-        ).let { UserProfileImage(user = it, size = 40) }
+              }
+              .testTag("message_item_${message.sender}")) {
+        convertFirstParticipantToUser(message, viewModel.getUserFriends().collectAsState().value)
+            .let { UserProfileImage(user = it, size = 40) }
 
-        Column(modifier = Modifier
-            .padding(start = 16.dp)
-            .fillMaxWidth()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+        Column(modifier = Modifier.padding(start = 16.dp).fillMaxWidth()) {
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween,
+              modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text =
-                    convertParticipantsUidToDisplay(
-                        message,
-                        viewModel.getCurrentUser().collectAsState().value,
-                        viewModel.getUserFriends().collectAsState().value
-                    ),
+                        convertParticipantsUidToDisplay(
+                            message,
+                            viewModel.getCurrentUser().collectAsState().value,
+                            viewModel.getUserFriends().collectAsState().value),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                    fontSize = 16.sp)
                 Text(
                     text = message.date,
                     color = Purple80,
                     fontSize = 12.sp,
-                    modifier = Modifier.padding(horizontal = 5.dp)
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+                    modifier = Modifier.padding(horizontal = 5.dp))
+              }
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.SpaceBetween,
+              modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text =
-                    convertLastSenderUidToDisplay(
-                        message,
-                        viewModel.getCurrentUser().collectAsState().value,
-                        viewModel.getUserFriends().collectAsState().value
-                    ) +
+                        convertLastSenderUidToDisplay(
+                            message,
+                            viewModel.getCurrentUser().collectAsState().value,
+                            viewModel.getUserFriends().collectAsState().value) +
                             " : ${message.content}",
                     color = Color.Gray,
                     fontSize = 14.sp,
@@ -207,7 +181,7 @@ fun MessageItem(
                         }context
                     }
                 }*/
-            }
+              }
         }
-    }
+      }
 }

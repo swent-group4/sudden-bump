@@ -134,22 +134,22 @@ class ChatSummaryTest {
     assertEquals("Martine Veto early", result2)
   }
 
-    @Test
-    fun convertFirstParticipantToUserWorksWithTwoUsers() {
-        val userDummy3 =
-            User(
-                "3",
-                "Martine",
-                "Veto early",
-                "+41 00 000 00 01",
-                null,
-                "martin.vetterli@epfl.ch",
-                locationDummy)
+  @Test
+  fun convertFirstParticipantToUserWorksWithTwoUsers() {
+    val userDummy3 =
+        User(
+            "3",
+            "Martine",
+            "Veto early",
+            "+41 00 000 00 01",
+            null,
+            "martin.vetterli@epfl.ch",
+            locationDummy)
 
-        val usersModified = listOf(userDummy1, userDummy3)
-        val chatSummary = ChatSummary(participants = usersModified.map { it.uid })
+    val usersModified = listOf(userDummy1, userDummy3)
+    val chatSummary = ChatSummary(participants = usersModified.map { it.uid })
 
-        val result = convertFirstParticipantToUser(chatSummary, usersModified)
-        assertEquals(userDummy1.uid, result.uid)
-    }
+    val result = convertFirstParticipantToUser(chatSummary, usersModified)
+    assertEquals(userDummy1.uid, result.uid)
+  }
 }
