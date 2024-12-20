@@ -18,6 +18,8 @@ fun isRunningTest(): Boolean {
   }
 }
 
+var defaultUserOnlineValue = false
+
 var isUsingMockViewModel = false
 lateinit var testableMeetingViewModel: MeetingViewModel
 lateinit var testableUserViewModel: UserViewModel
