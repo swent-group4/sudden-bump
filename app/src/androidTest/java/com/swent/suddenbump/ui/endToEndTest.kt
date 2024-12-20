@@ -17,6 +17,8 @@ import com.swent.suddenbump.MainActivity
 import com.swent.suddenbump.model.chat.ChatRepositoryFirestore
 import com.swent.suddenbump.model.meeting.MeetingRepositoryFirestore
 import com.swent.suddenbump.model.meeting.MeetingViewModel
+import com.swent.suddenbump.model.meeting_location.LocationViewModel
+import com.swent.suddenbump.model.meeting_location.NominatimLocationRepository
 import com.swent.suddenbump.model.user.User
 import com.swent.suddenbump.model.user.UserRepositoryFirestore
 import com.swent.suddenbump.model.user.UserViewModel
@@ -35,6 +37,7 @@ import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
 import com.swent.suddenbump.ui.navigation.Screen
 import com.swent.suddenbump.ui.overview.AccountScreen
+import com.swent.suddenbump.ui.overview.BlockedUsersScreen
 import com.swent.suddenbump.ui.overview.FriendsListScreen
 import com.swent.suddenbump.ui.overview.OverviewScreen
 import com.swent.suddenbump.ui.overview.SettingsScreen
@@ -112,6 +115,8 @@ class EndToEndTest2 {
   private lateinit var userViewModel: UserViewModel
   private lateinit var meetingViewModel: MeetingViewModel
   private lateinit var mockMeetingRepositoryFirestore: MeetingRepositoryFirestore
+  private lateinit var locationViewModel: LocationViewModel
+  private lateinit var mockLocationRepository: NominatimLocationRepository
 
   @Before
   fun setUp() {
@@ -120,7 +125,9 @@ class EndToEndTest2 {
     mockChatRepository = mockk(relaxed = true)
     mockQuery = mockk(relaxed = true)
     mockMeetingRepositoryFirestore = mockk(relaxed = true)
+    mockLocationRepository = mockk(relaxed = true)
     meetingViewModel = MeetingViewModel(mockMeetingRepositoryFirestore)
+    locationViewModel = LocationViewModel(mockLocationRepository)
 
     userViewModel = UserViewModel(mockFirestore, mockChatRepository)
 
@@ -171,6 +178,19 @@ class EndToEndTest2 {
     // Trigger initialization of the UserViewModel
     userViewModel.setCurrentUser()
   }
+
+  //    @After
+  //    fun tearDown() {
+  //        // Clean up
+  //        mockFirestore
+  //        mockChatRepository
+  //        mockQuery
+  //        userViewModel
+  //        meetingViewModel
+  //        mockMeetingRepositoryFirestore
+  //        locationViewModel
+  //        mockLocationRepository
+  //    }
 
   /** Tests the end-to-end flow of sending a message. */
   @Test
@@ -248,7 +268,7 @@ class EndToEndTest2 {
 
     composeTestRule.waitForIdle()
 
-    // conversation scree/message screen
+    // conversation screen/message screen
     // Step 2: Navigate to user row and send message
 
     composeTestRule.onNodeWithTag("1").assertExists().performClick()
@@ -265,5 +285,100 @@ class EndToEndTest2 {
         .performTextInput("Do you want to meet at Rolex today at 10?")
     composeTestRule.onNodeWithTag("SendButton").performClick()
     composeTestRule.waitForIdle()
+  }
+
+  /** Tests the end-to-end flow of blocking a friend. */
+  @Test
+  fun blockFriend() {
+
+    composeTestRule.setContent {
+      val navController = rememberNavController()
+      val navigationActions = NavigationActions(navController)
+      Log.d("TAG", "userViewModel userFriends: ${userViewModel.getUserFriends().value}")
+
+      NavHost(navController = navController, startDestination = Route.AUTH) {
+        navigation(
+            startDestination = Screen.AUTH,
+            route = Route.AUTH,
+        ) {
+          composable(Screen.AUTH) { SignInScreen(navigationActions, userViewModel) }
+          composable(Screen.SIGNUP) { SignUpScreen(navigationActions, userViewModel) }
+        }
+        navigation(
+            startDestination = Screen.OVERVIEW,
+            route = Route.OVERVIEW,
+        ) {
+          composable(Screen.OVERVIEW) { OverviewScreen(navigationActions, userViewModel) }
+          composable(Screen.FRIENDS_LIST) { FriendsListScreen(navigationActions, userViewModel) }
+          composable(Screen.ADD_CONTACT) { AddContactScreen(navigationActions, userViewModel) }
+          composable(Screen.SETTINGS) {
+            SettingsScreen(navigationActions, userViewModel, meetingViewModel)
+          }
+          composable(Screen.ACCOUNT) { AccountScreen(navigationActions, userViewModel) }
+          composable(Screen.BLOCKED_USERS) { BlockedUsersScreen(navigationActions, userViewModel) }
+          composable(Screen.CONTACT) { ContactScreen(navigationActions, userViewModel) }
+          composable(Screen.CHAT) { ChatScreen(userViewModel, navigationActions) }
+          composable(Screen.ADD_MEETING) {
+            AddMeetingScreen(navigationActions, userViewModel, meetingViewModel, locationViewModel)
+          }
+        }
+        navigation(
+            startDestination = Screen.CALENDAR,
+            route = Route.CALENDAR,
+        ) {
+          composable(Screen.CALENDAR) {
+            CalendarMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+          }
+          composable(Screen.EDIT_MEETING) {
+            EditMeetingScreen(navigationActions, meetingViewModel, locationViewModel)
+          }
+          composable(Screen.PENDING_MEETINGS) {
+            PendingMeetingsScreen(navigationActions, meetingViewModel, userViewModel)
+          }
+        }
+
+        navigation(
+            startDestination = Screen.MAP,
+            route = Route.MAP,
+        ) {
+          composable(Screen.MAP) { MapScreen(navigationActions, userViewModel, meetingViewModel) }
+        }
+        navigation(
+            startDestination = Screen.MESS,
+            route = Route.MESS,
+        ) {
+          composable(Screen.MESS) { MessagesScreen(userViewModel, navigationActions) }
+        }
+      }
+    }
+
+    // Step 1: Simulate user interaction for authentication
+    composeTestRule.onNodeWithTag("loginButton").assertExists().performClick()
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("overviewScreen").assertExists()
+
+    composeTestRule.waitForIdle()
+
+    // block user friend
+    // Step 2: Navigate to settings and go to blocked users screen
+
+    composeTestRule.onNodeWithTag("1").assertExists().performClick()
+
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("moreOptionsButton").performClick()
+
+    composeTestRule.onNodeWithTag("blockUserButton").performClick()
+    composeTestRule.onNodeWithTag("blockUserConfirmButton").performClick()
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag("backButton").performClick()
+
+    composeTestRule.onNodeWithTag("overviewScreen").assertExists()
+    composeTestRule.onNodeWithTag("settingsFab").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("BlockedUsersOption").performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag("blockedUsersScreen").assertExists()
   }
 }

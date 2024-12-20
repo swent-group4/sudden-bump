@@ -266,6 +266,7 @@ fun ContactScreen(navigationActions: NavigationActions, userViewModel: UserViewM
                 text = { Text("Are you sure you want to block this user?") },
                 confirmButton = {
                   Button(
+                      modifier = Modifier.testTag("blockUserConfirmButton"),
                       onClick = {
                         showDialog = false
                         userViewModel.blockUser(
