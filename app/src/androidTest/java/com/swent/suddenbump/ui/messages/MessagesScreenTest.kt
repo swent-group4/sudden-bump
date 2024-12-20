@@ -13,8 +13,7 @@ import com.swent.suddenbump.model.user.UserRepository
 import com.swent.suddenbump.model.user.UserViewModel
 import com.swent.suddenbump.ui.navigation.NavigationActions
 import com.swent.suddenbump.ui.navigation.Route
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -27,7 +26,7 @@ class MessagesScreenTest {
   private lateinit var repository: UserRepository
   private lateinit var chatRepository: ChatRepository
   private lateinit var userViewModel: UserViewModel
-  private lateinit var flowMock: Flow<List<ChatSummary>>
+  private lateinit var flowMock: MutableStateFlow<List<ChatSummary>>
 
   private val locationDummy =
       Location("mock_provider").apply {
@@ -63,12 +62,6 @@ class MessagesScreenTest {
           "martin.vetterli@epfl.ch",
           locationDummy)
 
-  private val location =
-      Location("mock_provider").apply {
-        latitude = 0.0
-        longitude = 0.0
-      }
-
   private val chatSummaryDummy =
       ChatSummary("chat1", "this is a message1", "1", Timestamp.now(), 0, listOf("1", "2"))
   private val chatSummaryDummy2 =
@@ -88,23 +81,27 @@ class MessagesScreenTest {
     repository = mock(UserRepository::class.java)
     chatRepository = mock(ChatRepository::class.java)
     userViewModel = UserViewModel(repository = repository, chatRepository = chatRepository)
-    flowMock = flowOf(listOf(chatSummaryDummy, chatSummaryDummy2))
 
+    // Set the current user and friends
     userViewModel.setUser(userDummy2, {}, {})
     userViewModel.setUserFriends(userDummy2, listOf(userDummy1, userDummy3), {}, {})
 
     `when`(navigationActions.currentRoute()).thenReturn(Route.MESS)
-
-    whenever(chatRepository.getChatSummaries(userDummy2.uid)).thenAnswer { flowMock }
-
-    composeTestRule.setContent { MessagesScreen(userViewModel, navigationActions) }
   }
 
   @Test
   fun hasRequiredComponents() {
-    // Wait for the Screen to be fully displayed before running tests
+    // Arrange: mock the repository to return a non-empty list
+    flowMock = MutableStateFlow(listOf(chatSummaryDummy, chatSummaryDummy2))
+    whenever(chatRepository.getChatSummaries(userDummy2.uid)).thenReturn(flowMock)
+
+    // Act: set the content after configuring the mock
+    composeTestRule.setContent { MessagesScreen(userViewModel, navigationActions) }
+
+    // Wait for the UI to settle
     composeTestRule.waitForIdle()
 
+    // Assert: check that all required components are displayed
     composeTestRule.onNodeWithTag("back_button").assertIsDisplayed()
     composeTestRule.onNodeWithTag("messages_list").assertIsDisplayed()
     composeTestRule.onNodeWithTag("divider").assertIsDisplayed()
@@ -114,19 +111,18 @@ class MessagesScreenTest {
 
   @Test
   fun showsNoMessagesTextWhenListIsEmpty() {
-    // Arrange: Provide an empty list of chat summaries
-    val emptyFlowMock = flowOf(emptyList<ChatSummary>())
-    whenever(chatRepository.getChatSummaries(userDummy2.uid)).thenAnswer { emptyFlowMock }
+    // Arrange: mock the repository to return an empty list
+    flowMock = MutableStateFlow(emptyList())
+    whenever(chatRepository.getChatSummaries(userDummy2.uid)).thenReturn(flowMock)
 
-    // Recompose after changing the mock return
+    // Act: set the content after configuring the mock
     composeTestRule.setContent { MessagesScreen(userViewModel, navigationActions) }
 
-    // Wait for the UI to update
+    // Wait for the UI to settle
     composeTestRule.waitForIdle()
 
-    // Act & Assert: Verify that the "no messages" text is displayed
+    // Assert: check that the "no messages" text is displayed and the messages list is not
     composeTestRule.onNodeWithTag("no_messages_text").assertIsDisplayed()
-    // Verify that the messages_list is not displayed in this scenario
     composeTestRule.onNodeWithTag("messages_list").assertDoesNotExist()
   }
 }
