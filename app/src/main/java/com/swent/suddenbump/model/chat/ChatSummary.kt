@@ -26,12 +26,16 @@ data class ChatSummary(
 fun convertParticipantsUidToDisplay(
     chatSummary: ChatSummary,
     currentUser: User,
-    friendsList: List<User>
+    friendsList: List<User>,
+    unknownUser: User
 ): String {
   return chatSummary.participants
       .filter { stringParticipant -> currentUser.uid != stringParticipant }
       .map { it2 ->
-        val correctUser = friendsList.first { it3 -> it3.uid == it2 }
+        var correctUser = friendsList.firstOrNull { it3 -> it3.uid == it2 }
+        if (correctUser == null) {
+          correctUser = unknownUser
+        }
         "${correctUser.firstName} ${correctUser.lastName}"
       }
       .joinToString(", ")
@@ -41,11 +45,29 @@ fun convertParticipantsUidToDisplay(
 fun convertLastSenderUidToDisplay(
     chatSummary: ChatSummary,
     currentUser: User,
-    friendsList: List<User>
+    friendsList: List<User>,
+    unknownUser: User
 ): String {
   return if (chatSummary.lastMessageSenderId == currentUser.uid) "You"
-  else
-      friendsList
-          .first { it.uid == chatSummary.lastMessageSenderId }
-          .let { "${it.firstName} ${it.lastName}" }
+  else {
+    var correctUser = friendsList.firstOrNull() { it.uid == chatSummary.lastMessageSenderId }
+    if (correctUser == null) {
+      correctUser = unknownUser
+    }
+    "${correctUser.firstName} ${correctUser.lastName}"
+  }
+}
+
+/** Helper function to get first non-current user in participants list from uid */
+fun convertFirstParticipantToUser(
+    chatSummary: ChatSummary,
+    friendsList: List<User>,
+    unknownUser: User
+): User {
+  val correctUserUid = friendsList.map { it.uid }.firstOrNull { it in chatSummary.participants }
+  var correctUser = unknownUser
+  if (correctUserUid != null) {
+    correctUser = friendsList.first { it.uid == correctUserUid }
+  }
+  return correctUser
 }
